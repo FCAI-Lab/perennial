@@ -806,7 +806,7 @@ func (d FuncDecl) CoqDecl() string {
 	func() {
 		pp.Indent(2)
 		defer pp.Indent(-2)
-		pp.Add("rec: \"%s\" %s :=", d.Name, d.Signature())
+		pp.Add("λ: %s,", d.Signature())
 		pp.Indent(2)
 		defer pp.Indent(-2)
 		pp.AddLine(d.Body.Coq(false) + ".")
@@ -884,7 +884,7 @@ type Decl interface {
 }
 
 func TypeMethod(typeName string, methodName string) string {
-	return fmt.Sprintf("%s__%s", typeName, methodName)
+	return fmt.Sprintf("%s__%sⁱᵐᵖˡ", typeName, methodName)
 }
 
 // The header to use normally (replaced only if bootstrapping).

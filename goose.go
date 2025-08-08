@@ -2682,14 +2682,14 @@ func funcName(f *types.Func) string {
 
 // Returns a glang.FuncDecl and maybe also a glang.NameDecl. If the function is an `init` or `_`, this
 // returns None.
-func (ctx *Ctx) funcDecl(d *ast.FuncDecl) []glang.Decl {
+func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 	funcName := funcName(ctx.info.ObjectOf(d.Name).(*types.Func))
 	if funcName == "_" {
 		return nil
 	}
 
 	ctx.usesDefer = false
-	fd := glang.FuncDecl{Name: d.Name.Name}
+	var fd glang.FuncDecl
 	addSourceDoc(d.Doc, &fd.Comment)
 	ctx.addSourceFile(d, &fd.Comment)
 
@@ -2738,17 +2738,25 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) []glang.Decl {
 		}
 		fd.RecvArg = &glang.Binder{Name: name}
 	} else {
+		funcId := ctx.info.Defs[d.Name].Pkg().Path() + "." + ctx.info.Defs[d.Name].Name()
+		fmt.Println(funcId)
+		ret = append(ret, glang.ConstDecl{
+			Name: d.Name.Name,
+			Val: glang.StringLiteral{Value: funcId},
+			Type: glang.GallinaIdent("go_string"),
+		})
+		fd.Name = d.Name.Name + "ⁱᵐᵖˡ"
 		switch ctx.filter.GetAction(funcName) {
 		case declfilter.Skip:
-			return nil
+			return
 		case declfilter.Trust:
 			ctx.functions = append(ctx.functions, d.Name.Name)
-			return nil
+			return
 		case declfilter.Axiomatize:
 			ctx.functions = append(ctx.functions, d.Name.Name)
-			return []glang.Decl{glang.AxiomDecl{DeclName: fd.Name, Type: glang.GallinaIdent("val")}}
+			ret = append(ret, glang.AxiomDecl{DeclName: fd.Name, Type: glang.GallinaIdent("val")})
+			return
 		}
-
 		ctx.dep.SetCurrentName(fd.Name)
 		defer ctx.dep.UnsetCurrentName()
 	}
@@ -2847,7 +2855,8 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) []glang.Decl {
 	} else {
 		fd.Body = glang.NewCallExpr(glang.GallinaIdent("exception_do"), fd.Body)
 	}
-	return []glang.Decl{fd}
+	ret = append(ret, fd)
+	return
 }
 
 // this should only be used for untyped constant literals
@@ -3046,7 +3055,7 @@ func (ctx *Ctx) initFunctions() []glang.Decl {
 
 	var functions glang.ListExpr
 	for _, functionName := range ctx.functions {
-		functions = append(functions, glang.TupleExpr{glang.StringLiteral{Value: functionName}, glang.GallinaIdent(functionName)})
+		functions = append(functions, glang.TupleExpr{glang.GallinaIdent(functionName), glang.GallinaIdent(functionName + "ⁱᵐᵖˡ")})
 	}
 
 	functionsDecl := glang.ConstDecl{
@@ -3204,8 +3213,8 @@ InitLoop:
 	}
 
 	e = glang.NewCallExpr(glang.GallinaIdent("exception_do"), e)
-	e = glang.NewCallExpr(glang.GallinaIdent("globals.package_init"),
-		glang.GallinaIdent(ctx.pkgIdent),
+	e = glang.NewCallExpr(glang.GallinaIdent("package.init"),
+		glang.StringVal{Value: glang.GallinaIdent(ctx.pkgIdent)},
 		glang.FuncLit{Args: nil, Body: e},
 	)
 
