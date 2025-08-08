@@ -2742,7 +2742,7 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 		fmt.Println(funcId)
 		ret = append(ret, glang.ConstDecl{
 			Name: d.Name.Name,
-			Val: glang.StringLiteral{Value: funcId},
+			Val:  glang.StringLiteral{Value: funcId},
 			Type: glang.GallinaIdent("go_string"),
 		})
 		fd.Name = d.Name.Name + "ⁱᵐᵖˡ"
@@ -2945,6 +2945,13 @@ func (ctx *Ctx) globalVarDecl(d *ast.GenDecl) []glang.Decl {
 			}
 			switch ctx.filter.GetAction(name.Name) {
 			case declfilter.Translate:
+				decls = append(decls, glang.ConstDecl{
+					Name: name.Name,
+					Val: glang.StringLiteral{
+						Value: ctx.info.Defs[name].Pkg().Path() + "." + ctx.info.Defs[name].Name(),
+					},
+					Type: glang.GallinaIdent("go_string"),
+				})
 				ctx.globalVars = append(ctx.globalVars, name)
 			default:
 				if s.Values != nil {
@@ -3204,8 +3211,17 @@ InitLoop:
 		}
 	}
 
+	e = glang.NewDoSeq(
+		glang.NewCallExpr(
+			glang.GallinaIdent("package.alloc"), glang.GallinaIdent(ctx.pkgIdent), glang.Tt),
+		e)
+
 	for _, importName := range ctx.importNamesOrdered {
-		e = glang.NewDoSeq(glang.GallinaIdent(importName.Imported().Name()+"."+"initialize'"), e)
+		e = glang.NewDoSeq(
+			glang.NewCallExpr(
+				glang.GallinaIdent(importName.Imported().Name()+"."+"initialize'"),
+				glang.Tt),
+			e)
 	}
 
 	if e == nil {
