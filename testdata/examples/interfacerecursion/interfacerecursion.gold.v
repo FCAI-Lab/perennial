@@ -16,8 +16,8 @@ Definition c : go_type := structT [
 ].
 
 (* go: x.go:14:13 *)
-Definition c__Foo : val :=
-  rec: "c__Foo" "c" <> :=
+Definition c__Fooⁱᵐᵖˡ : val :=
+  λ: "c" <>,
     exception_do (let: "c" := (mem.alloc "c") in
     let: "y" := (mem.alloc (type.zero_val #B)) in
     let: "$r0" := (interface.make (#interfacerecursion.interfacerecursion, #"c'ptr") (![#ptrT] "c")) in
@@ -26,8 +26,8 @@ Definition c__Foo : val :=
     return: #()).
 
 (* go: x.go:19:13 *)
-Definition c__Bar : val :=
-  rec: "c__Bar" "c" <> :=
+Definition c__Barⁱᵐᵖˡ : val :=
+  λ: "c" <>,
     exception_do (let: "c" := (mem.alloc "c") in
     let: "y" := (mem.alloc (type.zero_val #A)) in
     let: "$r0" := (interface.make (#interfacerecursion.interfacerecursion, #"c'ptr") (![#ptrT] "c")) in
@@ -39,7 +39,7 @@ Definition vars' : list (go_string * go_type) := [].
 
 Definition functions' : list (go_string * val) := [].
 
-Definition msets' : list (go_string * (list (go_string * val))) := [("c"%go, []); ("c'ptr"%go, [("Bar"%go, c__Bar); ("Foo"%go, c__Foo)])].
+Definition msets' : list (go_string * (list (go_string * val))) := [("c"%go, []); ("c'ptr"%go, [("Bar"%go, c__Barⁱᵐᵖˡ); ("Foo"%go, c__Fooⁱᵐᵖˡ)])].
 
 #[global] Instance info' : PkgInfo interfacerecursion.interfacerecursion :=
   {|
@@ -50,9 +50,9 @@ Definition msets' : list (go_string * (list (go_string * val))) := [("c"%go, [])
   |}.
 
 Definition initialize' : val :=
-  rec: "initialize'" <> :=
-    globals.package_init interfacerecursion.interfacerecursion (λ: <>,
-      exception_do (do:  #())
+  λ: <>,
+    package.init #interfacerecursion.interfacerecursion (λ: <>,
+      exception_do (do:  (package.alloc interfacerecursion.interfacerecursion #()))
       ).
 
 End code.

@@ -31,9 +31,9 @@ Definition msets' : list (go_string * (list (go_string * val))) := [("Foo"%go, [
   |}.
 
 Definition initialize' : val :=
-  rec: "initialize'" <> :=
-    globals.package_init comments.comments (λ: <>,
-      exception_do (do:  #())
+  λ: <>,
+    package.init #comments.comments (λ: <>,
+      exception_do (do:  (package.alloc comments.comments #()))
       ).
 
 End code.

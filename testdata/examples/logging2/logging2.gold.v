@@ -30,8 +30,8 @@ Definition Log : go_type := structT [
 ].
 
 (* go: logging2.go:25:16 *)
-Definition Log__writeHdr : val :=
-  rec: "Log__writeHdr" "log" "len" :=
+Definition Log__writeHdrⁱᵐᵖˡ : val :=
+  λ: "log" "len",
     exception_do (let: "log" := (mem.alloc "log") in
     let: "len" := (mem.alloc "len") in
     let: "hdr" := (mem.alloc (type.zero_val #sliceT)) in
@@ -39,15 +39,17 @@ Definition Log__writeHdr : val :=
     do:  ("hdr" <-[#sliceT] "$r0");;;
     do:  (let: "$a0" := (![#sliceT] "hdr") in
     let: "$a1" := (![#uint64T] "len") in
-    (func_call #primitive.primitive #"UInt64Put"%go) "$a0" "$a1");;;
+    (func_call #primitive.UInt64Put) "$a0" "$a1");;;
     do:  (let: "$a0" := LOGCOMMIT in
     let: "$a1" := (![#sliceT] "hdr") in
-    (func_call #disk.disk #"Write"%go) "$a0" "$a1");;;
+    (func_call #disk.Write) "$a0" "$a1");;;
     return: #()).
 
+Definition Init : go_string := "github.com/goose-lang/goose/testdata/examples/logging2.Init"%go.
+
 (* go: logging2.go:31:6 *)
-Definition Init : val :=
-  rec: "Init" "logSz" :=
+Definition Initⁱᵐᵖˡ : val :=
+  λ: "logSz",
     exception_do (let: "logSz" := (mem.alloc "logSz") in
     let: "log" := (mem.alloc (type.zero_val #Log)) in
     let: "$r0" := (let: "$logLock" := (mem.alloc (type.zero_val #sync.Mutex)) in
@@ -72,22 +74,22 @@ Definition Init : val :=
     return: (![#Log] "log")).
 
 (* go: logging2.go:45:16 *)
-Definition Log__readHdr : val :=
-  rec: "Log__readHdr" "log" <> :=
+Definition Log__readHdrⁱᵐᵖˡ : val :=
+  λ: "log" <>,
     exception_do (let: "log" := (mem.alloc "log") in
     let: "hdr" := (mem.alloc (type.zero_val #sliceT)) in
     let: "$r0" := (let: "$a0" := LOGCOMMIT in
-    (func_call #disk.disk #"Read"%go) "$a0") in
+    (func_call #disk.Read) "$a0") in
     do:  ("hdr" <-[#sliceT] "$r0");;;
     let: "disklen" := (mem.alloc (type.zero_val #uint64T)) in
     let: "$r0" := (let: "$a0" := (![#sliceT] "hdr") in
-    (func_call #primitive.primitive #"UInt64Get"%go) "$a0") in
+    (func_call #primitive.UInt64Get) "$a0") in
     do:  ("disklen" <-[#uint64T] "$r0");;;
     return: (![#uint64T] "disklen")).
 
 (* go: logging2.go:51:16 *)
-Definition Log__readBlocks : val :=
-  rec: "Log__readBlocks" "log" "len" :=
+Definition Log__readBlocksⁱᵐᵖˡ : val :=
+  λ: "log" "len",
     exception_do (let: "log" := (mem.alloc "log") in
     let: "len" := (mem.alloc "len") in
     let: "blks" := (mem.alloc (type.zero_val #sliceT)) in
@@ -99,7 +101,7 @@ Definition Log__readBlocks : val :=
     (for: (λ: <>, (![#uint64T] "i") < (![#uint64T] "len")); (λ: <>, do:  ("i" <-[#uint64T] ((![#uint64T] "i") + #(W64 1)))) := λ: <>,
       let: "blk" := (mem.alloc (type.zero_val #sliceT)) in
       let: "$r0" := (let: "$a0" := (LOGSTART + (![#uint64T] "i")) in
-      (func_call #disk.disk #"Read"%go) "$a0") in
+      (func_call #disk.Read) "$a0") in
       do:  ("blk" <-[#sliceT] "$r0");;;
       let: "$r0" := (let: "$a0" := (![#sliceT] "blks") in
       let: "$a1" := ((let: "$sl0" := (![#sliceT] "blk") in
@@ -109,8 +111,8 @@ Definition Log__readBlocks : val :=
     return: (![#sliceT] "blks")).
 
 (* go: logging2.go:60:16 *)
-Definition Log__Read : val :=
-  rec: "Log__Read" "log" <> :=
+Definition Log__Readⁱᵐᵖˡ : val :=
+  λ: "log" <>,
     exception_do (let: "log" := (mem.alloc "log") in
     do:  ((method_call #sync #"Mutex'ptr" #"Lock" (![#ptrT] (struct.field_ref #Log #"logLock"%go "log"))) #());;;
     let: "disklen" := (mem.alloc (type.zero_val #uint64T)) in
@@ -124,8 +126,8 @@ Definition Log__Read : val :=
     return: (![#sliceT] "blks")).
 
 (* go: logging2.go:68:16 *)
-Definition Log__memWrite : val :=
-  rec: "Log__memWrite" "log" "l" :=
+Definition Log__memWriteⁱᵐᵖˡ : val :=
+  λ: "log" "l",
     exception_do (let: "log" := (mem.alloc "log") in
     let: "l" := (mem.alloc "l") in
     let: "n" := (mem.alloc (type.zero_val #uint64T)) in
@@ -144,8 +146,8 @@ Definition Log__memWrite : val :=
     return: #()).
 
 (* go: logging2.go:75:16 *)
-Definition Log__memAppend : val :=
-  rec: "Log__memAppend" "log" "l" :=
+Definition Log__memAppendⁱᵐᵖˡ : val :=
+  λ: "log" "l",
     exception_do (let: "log" := (mem.alloc "log") in
     let: "l" := (mem.alloc "l") in
     do:  ((method_call #sync #"Mutex'ptr" #"Lock" (![#ptrT] (struct.field_ref #Log #"memLock"%go "log"))) #());;;
@@ -172,8 +174,8 @@ Definition Log__memAppend : val :=
 (* XXX just an atomic read?
 
    go: logging2.go:90:16 *)
-Definition Log__readLogTxnNxt : val :=
-  rec: "Log__readLogTxnNxt" "log" <> :=
+Definition Log__readLogTxnNxtⁱᵐᵖˡ : val :=
+  λ: "log" <>,
     exception_do (let: "log" := (mem.alloc "log") in
     do:  ((method_call #sync #"Mutex'ptr" #"Lock" (![#ptrT] (struct.field_ref #Log #"memLock"%go "log"))) #());;;
     let: "n" := (mem.alloc (type.zero_val #uint64T)) in
@@ -183,8 +185,8 @@ Definition Log__readLogTxnNxt : val :=
     return: (![#uint64T] "n")).
 
 (* go: logging2.go:97:16 *)
-Definition Log__diskAppendWait : val :=
-  rec: "Log__diskAppendWait" "log" "txn" :=
+Definition Log__diskAppendWaitⁱᵐᵖˡ : val :=
+  λ: "log" "txn",
     exception_do (let: "log" := (mem.alloc "log") in
     let: "txn" := (mem.alloc "txn") in
     (for: (λ: <>, #true); (λ: <>, Skip) := λ: <>,
@@ -198,8 +200,8 @@ Definition Log__diskAppendWait : val :=
     return: #()).
 
 (* go: logging2.go:107:16 *)
-Definition Log__Append : val :=
-  rec: "Log__Append" "log" "l" :=
+Definition Log__Appendⁱᵐᵖˡ : val :=
+  λ: "log" "l",
     exception_do (let: "log" := (mem.alloc "log") in
     let: "l" := (mem.alloc "l") in
     let: "txn" := (mem.alloc (type.zero_val #uint64T)) in
@@ -218,8 +220,8 @@ Definition Log__Append : val :=
     return: (![#boolT] "ok")).
 
 (* go: logging2.go:115:16 *)
-Definition Log__writeBlocks : val :=
-  rec: "Log__writeBlocks" "log" "l" "pos" :=
+Definition Log__writeBlocksⁱᵐᵖˡ : val :=
+  λ: "log" "l" "pos",
     exception_do (let: "log" := (mem.alloc "log") in
     let: "pos" := (mem.alloc "pos") in
     let: "l" := (mem.alloc "l") in
@@ -236,12 +238,12 @@ Definition Log__writeBlocks : val :=
       do:  ("bk" <-[#sliceT] "$r0");;;
       do:  (let: "$a0" := ((![#uint64T] "pos") + (![#uint64T] "i")) in
       let: "$a1" := (![#sliceT] "bk") in
-      (func_call #disk.disk #"Write"%go) "$a0" "$a1")));;;
+      (func_call #disk.Write) "$a0" "$a1")));;;
     return: #()).
 
 (* go: logging2.go:123:16 *)
-Definition Log__diskAppend : val :=
-  rec: "Log__diskAppend" "log" <> :=
+Definition Log__diskAppendⁱᵐᵖˡ : val :=
+  λ: "log" <>,
     exception_do (let: "log" := (mem.alloc "log") in
     do:  ((method_call #sync #"Mutex'ptr" #"Lock" (![#ptrT] (struct.field_ref #Log #"logLock"%go "log"))) #());;;
     let: "disklen" := (mem.alloc (type.zero_val #uint64T)) in
@@ -273,8 +275,8 @@ Definition Log__diskAppend : val :=
     return: #()).
 
 (* go: logging2.go:142:16 *)
-Definition Log__Logger : val :=
-  rec: "Log__Logger" "log" <> :=
+Definition Log__Loggerⁱᵐᵖˡ : val :=
+  λ: "log" <>,
     exception_do (let: "log" := (mem.alloc "log") in
     (for: (λ: <>, #true); (λ: <>, Skip) := λ: <>,
       do:  ((method_call #logging2.logging2 #"Log" #"diskAppend" (![#Log] "log")) #()));;;
@@ -285,11 +287,13 @@ Definition Txn : go_type := structT [
   "blks" :: mapT uint64T sliceT
 ].
 
+Definition Begin : go_string := "github.com/goose-lang/goose/testdata/examples/logging2.Begin"%go.
+
 (* XXX wait if cannot reserve space in log
 
    go: txn.go:13:6 *)
-Definition Begin : val :=
-  rec: "Begin" "log" :=
+Definition Beginⁱᵐᵖˡ : val :=
+  λ: "log",
     exception_do (let: "log" := (mem.alloc "log") in
     let: "txn" := (mem.alloc (type.zero_val #Txn)) in
     let: "$r0" := (let: "$log" := (![#ptrT] "log") in
@@ -302,8 +306,8 @@ Definition Begin : val :=
     return: (![#Txn] "txn")).
 
 (* go: txn.go:21:16 *)
-Definition Txn__Write : val :=
-  rec: "Txn__Write" "txn" "addr" "blk" :=
+Definition Txn__Writeⁱᵐᵖˡ : val :=
+  λ: "txn" "addr" "blk",
     exception_do (let: "txn" := (mem.alloc "txn") in
     let: "blk" := (mem.alloc "blk") in
     let: "addr" := (mem.alloc "addr") in
@@ -334,8 +338,8 @@ Definition Txn__Write : val :=
     return: (![#boolT] "ret")).
 
 (* go: txn.go:38:16 *)
-Definition Txn__Read : val :=
-  rec: "Txn__Read" "txn" "addr" :=
+Definition Txn__Readⁱᵐᵖˡ : val :=
+  λ: "txn" "addr",
     exception_do (let: "txn" := (mem.alloc "txn") in
     let: "addr" := (mem.alloc "addr") in
     let: "ok" := (mem.alloc (type.zero_val #boolT)) in
@@ -349,11 +353,11 @@ Definition Txn__Read : val :=
     then return: (![#sliceT] "v")
     else
       return: (let: "$a0" := ((![#uint64T] "addr") + LOGEND) in
-       (func_call #disk.disk #"Read"%go) "$a0"))).
+       (func_call #disk.Read) "$a0"))).
 
 (* go: txn.go:47:16 *)
-Definition Txn__Commit : val :=
-  rec: "Txn__Commit" "txn" <> :=
+Definition Txn__Commitⁱᵐᵖˡ : val :=
+  λ: "txn" <>,
     exception_do (let: "txn" := (mem.alloc "txn") in
     let: "blks" := (mem.alloc (type.zero_val #ptrT)) in
     let: "$r0" := (mem.alloc (type.zero_val #sliceT)) in
@@ -376,9 +380,9 @@ Definition Txn__Commit : val :=
 
 Definition vars' : list (go_string * go_type) := [].
 
-Definition functions' : list (go_string * val) := [("Init"%go, Init); ("Begin"%go, Begin)].
+Definition functions' : list (go_string * val) := [(Init, Initⁱᵐᵖˡ); (Begin, Beginⁱᵐᵖˡ)].
 
-Definition msets' : list (go_string * (list (go_string * val))) := [("Log"%go, [("Append"%go, Log__Append); ("Logger"%go, Log__Logger); ("Read"%go, Log__Read); ("diskAppend"%go, Log__diskAppend); ("diskAppendWait"%go, Log__diskAppendWait); ("memAppend"%go, Log__memAppend); ("memWrite"%go, Log__memWrite); ("readBlocks"%go, Log__readBlocks); ("readHdr"%go, Log__readHdr); ("readLogTxnNxt"%go, Log__readLogTxnNxt); ("writeBlocks"%go, Log__writeBlocks); ("writeHdr"%go, Log__writeHdr)]); ("Log'ptr"%go, [("Append"%go, (λ: "$recvAddr",
+Definition msets' : list (go_string * (list (go_string * val))) := [("Log"%go, [("Append"%go, Log__Appendⁱᵐᵖˡ); ("Logger"%go, Log__Loggerⁱᵐᵖˡ); ("Read"%go, Log__Readⁱᵐᵖˡ); ("diskAppend"%go, Log__diskAppendⁱᵐᵖˡ); ("diskAppendWait"%go, Log__diskAppendWaitⁱᵐᵖˡ); ("memAppend"%go, Log__memAppendⁱᵐᵖˡ); ("memWrite"%go, Log__memWriteⁱᵐᵖˡ); ("readBlocks"%go, Log__readBlocksⁱᵐᵖˡ); ("readHdr"%go, Log__readHdrⁱᵐᵖˡ); ("readLogTxnNxt"%go, Log__readLogTxnNxtⁱᵐᵖˡ); ("writeBlocks"%go, Log__writeBlocksⁱᵐᵖˡ); ("writeHdr"%go, Log__writeHdrⁱᵐᵖˡ)]); ("Log'ptr"%go, [("Append"%go, (λ: "$recvAddr",
                  method_call #logging2.logging2 #"Log" #"Append" (![#Log] "$recvAddr")
                  )%V); ("Logger"%go, (λ: "$recvAddr",
                  method_call #logging2.logging2 #"Log" #"Logger" (![#Log] "$recvAddr")
@@ -402,7 +406,7 @@ Definition msets' : list (go_string * (list (go_string * val))) := [("Log"%go, [
                  method_call #logging2.logging2 #"Log" #"writeBlocks" (![#Log] "$recvAddr")
                  )%V); ("writeHdr"%go, (λ: "$recvAddr",
                  method_call #logging2.logging2 #"Log" #"writeHdr" (![#Log] "$recvAddr")
-                 )%V)]); ("Txn"%go, [("Commit"%go, Txn__Commit); ("Read"%go, Txn__Read); ("Write"%go, Txn__Write)]); ("Txn'ptr"%go, [("Commit"%go, (λ: "$recvAddr",
+                 )%V)]); ("Txn"%go, [("Commit"%go, Txn__Commitⁱᵐᵖˡ); ("Read"%go, Txn__Readⁱᵐᵖˡ); ("Write"%go, Txn__Writeⁱᵐᵖˡ)]); ("Txn'ptr"%go, [("Commit"%go, (λ: "$recvAddr",
                  method_call #logging2.logging2 #"Txn" #"Commit" (![#Txn] "$recvAddr")
                  )%V); ("Read"%go, (λ: "$recvAddr",
                  method_call #logging2.logging2 #"Txn" #"Read" (![#Txn] "$recvAddr")
@@ -419,11 +423,12 @@ Definition msets' : list (go_string * (list (go_string * val))) := [("Log"%go, [
   |}.
 
 Definition initialize' : val :=
-  rec: "initialize'" <> :=
-    globals.package_init logging2.logging2 (λ: <>,
-      exception_do (do:  sync.initialize';;;
-      do:  disk.initialize';;;
-      do:  primitive.initialize')
+  λ: <>,
+    package.init #logging2.logging2 (λ: <>,
+      exception_do (do:  (sync.initialize' #());;;
+      do:  (disk.initialize' #());;;
+      do:  (primitive.initialize' #());;;
+      do:  (package.alloc logging2.logging2 #()))
       ).
 
 End code.

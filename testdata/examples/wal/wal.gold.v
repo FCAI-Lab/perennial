@@ -23,35 +23,41 @@ Definition Log : go_type := structT [
   "length" :: ptrT
 ].
 
+Definition intToBlock : go_string := "github.com/goose-lang/goose/testdata/examples/wal.intToBlock"%go.
+
 (* go: log.go:25:6 *)
-Definition intToBlock : val :=
-  rec: "intToBlock" "a" :=
+Definition intToBlockⁱᵐᵖˡ : val :=
+  λ: "a",
     exception_do (let: "a" := (mem.alloc "a") in
     let: "b" := (mem.alloc (type.zero_val #sliceT)) in
     let: "$r0" := (slice.make2 #byteT disk.BlockSize) in
     do:  ("b" <-[#sliceT] "$r0");;;
     do:  (let: "$a0" := (![#sliceT] "b") in
     let: "$a1" := (![#uint64T] "a") in
-    (func_call #primitive.primitive #"UInt64Put"%go) "$a0" "$a1");;;
+    (func_call #primitive.UInt64Put) "$a0" "$a1");;;
     return: (![#sliceT] "b")).
 
+Definition blockToInt : go_string := "github.com/goose-lang/goose/testdata/examples/wal.blockToInt"%go.
+
 (* go: log.go:31:6 *)
-Definition blockToInt : val :=
-  rec: "blockToInt" "v" :=
+Definition blockToIntⁱᵐᵖˡ : val :=
+  λ: "v",
     exception_do (let: "v" := (mem.alloc "v") in
     let: "a" := (mem.alloc (type.zero_val #uint64T)) in
     let: "$r0" := (let: "$a0" := (![#sliceT] "v") in
-    (func_call #primitive.primitive #"UInt64Get"%go) "$a0") in
+    (func_call #primitive.UInt64Get) "$a0") in
     do:  ("a" <-[#uint64T] "$r0");;;
     return: (![#uint64T] "a")).
+
+Definition New : go_string := "github.com/goose-lang/goose/testdata/examples/wal.New"%go.
 
 (* New initializes a fresh log
 
    go: log.go:37:6 *)
-Definition New : val :=
-  rec: "New" <> :=
+Definition Newⁱᵐᵖˡ : val :=
+  λ: <>,
     exception_do (let: "d" := (mem.alloc (type.zero_val #disk.Disk)) in
-    let: "$r0" := ((func_call #disk.disk #"Get"%go) #()) in
+    let: "$r0" := ((func_call #disk.Get) #()) in
     do:  ("d" <-[#disk.Disk] "$r0");;;
     let: "diskSize" := (mem.alloc (type.zero_val #uint64T)) in
     let: "$r0" := ((interface.get #"Size"%go (![#disk.Disk] "d")) #()) in
@@ -66,7 +72,7 @@ Definition New : val :=
     do:  ("cache" <-[type.mapT #uint64T #sliceT] "$r0");;;
     let: "header" := (mem.alloc (type.zero_val #sliceT)) in
     let: "$r0" := (let: "$a0" := #(W64 0) in
-    (func_call #wal.awol #"intToBlock"%go) "$a0") in
+    (func_call #intToBlock) "$a0") in
     do:  ("header" <-[#sliceT] "$r0");;;
     do:  (let: "$a0" := #(W64 0) in
     let: "$a1" := (![#sliceT] "header") in
@@ -91,15 +97,15 @@ Definition New : val :=
      }])).
 
 (* go: log.go:52:14 *)
-Definition Log__lock : val :=
-  rec: "Log__lock" "l" <> :=
+Definition Log__lockⁱᵐᵖˡ : val :=
+  λ: "l" <>,
     exception_do (let: "l" := (mem.alloc "l") in
     do:  ((method_call #sync #"Mutex'ptr" #"Lock" (![#ptrT] (struct.field_ref #Log #"l"%go "l"))) #());;;
     return: #()).
 
 (* go: log.go:56:14 *)
-Definition Log__unlock : val :=
-  rec: "Log__unlock" "l" <> :=
+Definition Log__unlockⁱᵐᵖˡ : val :=
+  λ: "l" <>,
     exception_do (let: "l" := (mem.alloc "l") in
     do:  ((method_call #sync #"Mutex'ptr" #"Unlock" (![#ptrT] (struct.field_ref #Log #"l"%go "l"))) #());;;
     return: #()).
@@ -109,8 +115,8 @@ Definition Log__unlock : val :=
    Returns true if the allocation succeeded.
 
    go: log.go:63:14 *)
-Definition Log__BeginTxn : val :=
-  rec: "Log__BeginTxn" "l" <> :=
+Definition Log__BeginTxnⁱᵐᵖˡ : val :=
+  λ: "l" <>,
     exception_do (let: "l" := (mem.alloc "l") in
     do:  ((method_call #wal.awol #"Log" #"lock" (![#Log] "l")) #());;;
     let: "length" := (mem.alloc (type.zero_val #uint64T)) in
@@ -129,8 +135,8 @@ Definition Log__BeginTxn : val :=
    Reads must go through the log to return committed but un-applied writes.
 
    go: log.go:77:14 *)
-Definition Log__Read : val :=
-  rec: "Log__Read" "l" "a" :=
+Definition Log__Readⁱᵐᵖˡ : val :=
+  λ: "l" "a",
     exception_do (let: "l" := (mem.alloc "l") in
     let: "a" := (mem.alloc "a") in
     do:  ((method_call #wal.awol #"Log" #"lock" (![#Log] "l")) #());;;
@@ -154,8 +160,8 @@ Definition Log__Read : val :=
     return: (![#sliceT] "dv")).
 
 (* go: log.go:90:14 *)
-Definition Log__Size : val :=
-  rec: "Log__Size" "l" <> :=
+Definition Log__Sizeⁱᵐᵖˡ : val :=
+  λ: "l" <>,
     exception_do (let: "l" := (mem.alloc "l") in
     let: "sz" := (mem.alloc (type.zero_val #uint64T)) in
     let: "$r0" := ((interface.get #"Size"%go (![#disk.Disk] (struct.field_ref #Log #"d"%go "l"))) #()) in
@@ -165,8 +171,8 @@ Definition Log__Size : val :=
 (* Write to the disk through the log.
 
    go: log.go:97:14 *)
-Definition Log__Write : val :=
-  rec: "Log__Write" "l" "a" "v" :=
+Definition Log__Writeⁱᵐᵖˡ : val :=
+  λ: "l" "a" "v",
     exception_do (let: "l" := (mem.alloc "l") in
     let: "v" := (mem.alloc "v") in
     let: "a" := (mem.alloc "a") in
@@ -181,7 +187,7 @@ Definition Log__Write : val :=
     else do:  #());;;
     let: "aBlock" := (mem.alloc (type.zero_val #sliceT)) in
     let: "$r0" := (let: "$a0" := (![#uint64T] "a") in
-    (func_call #wal.awol #"intToBlock"%go) "$a0") in
+    (func_call #intToBlock) "$a0") in
     do:  ("aBlock" <-[#sliceT] "$r0");;;
     let: "nextAddr" := (mem.alloc (type.zero_val #uint64T)) in
     let: "$r0" := (#(W64 1) + (#(W64 2) * (![#uint64T] "length"))) in
@@ -202,8 +208,8 @@ Definition Log__Write : val :=
 (* Commit the current transaction.
 
    go: log.go:113:14 *)
-Definition Log__Commit : val :=
-  rec: "Log__Commit" "l" <> :=
+Definition Log__Commitⁱᵐᵖˡ : val :=
+  λ: "l" <>,
     exception_do (let: "l" := (mem.alloc "l") in
     do:  ((method_call #wal.awol #"Log" #"lock" (![#Log] "l")) #());;;
     let: "length" := (mem.alloc (type.zero_val #uint64T)) in
@@ -212,16 +218,18 @@ Definition Log__Commit : val :=
     do:  ((method_call #wal.awol #"Log" #"unlock" (![#Log] "l")) #());;;
     let: "header" := (mem.alloc (type.zero_val #sliceT)) in
     let: "$r0" := (let: "$a0" := (![#uint64T] "length") in
-    (func_call #wal.awol #"intToBlock"%go) "$a0") in
+    (func_call #intToBlock) "$a0") in
     do:  ("header" <-[#sliceT] "$r0");;;
     do:  (let: "$a0" := #(W64 0) in
     let: "$a1" := (![#sliceT] "header") in
     (interface.get #"Write"%go (![#disk.Disk] (struct.field_ref #Log #"d"%go "l"))) "$a0" "$a1");;;
     return: #()).
 
+Definition getLogEntry : go_string := "github.com/goose-lang/goose/testdata/examples/wal.getLogEntry"%go.
+
 (* go: log.go:122:6 *)
-Definition getLogEntry : val :=
-  rec: "getLogEntry" "d" "logOffset" :=
+Definition getLogEntryⁱᵐᵖˡ : val :=
+  λ: "d" "logOffset",
     exception_do (let: "logOffset" := (mem.alloc "logOffset") in
     let: "d" := (mem.alloc "d") in
     let: "diskAddr" := (mem.alloc (type.zero_val #uint64T)) in
@@ -233,7 +241,7 @@ Definition getLogEntry : val :=
     do:  ("aBlock" <-[#sliceT] "$r0");;;
     let: "a" := (mem.alloc (type.zero_val #uint64T)) in
     let: "$r0" := (let: "$a0" := (![#sliceT] "aBlock") in
-    (func_call #wal.awol #"blockToInt"%go) "$a0") in
+    (func_call #blockToInt) "$a0") in
     do:  ("a" <-[#uint64T] "$r0");;;
     let: "v" := (mem.alloc (type.zero_val #sliceT)) in
     let: "$r0" := (let: "$a0" := ((![#uint64T] "diskAddr") + #(W64 1)) in
@@ -241,11 +249,13 @@ Definition getLogEntry : val :=
     do:  ("v" <-[#sliceT] "$r0");;;
     return: (![#uint64T] "a", ![#sliceT] "v")).
 
+Definition applyLog : go_string := "github.com/goose-lang/goose/testdata/examples/wal.applyLog"%go.
+
 (* applyLog assumes we are running sequentially
 
    go: log.go:131:6 *)
-Definition applyLog : val :=
-  rec: "applyLog" "d" "length" :=
+Definition applyLogⁱᵐᵖˡ : val :=
+  λ: "d" "length",
     exception_do (let: "length" := (mem.alloc "length") in
     let: "d" := (mem.alloc "d") in
     (let: "i" := (mem.alloc (type.zero_val #uint64T)) in
@@ -258,7 +268,7 @@ Definition applyLog : val :=
         let: "a" := (mem.alloc (type.zero_val #uint64T)) in
         let: ("$ret0", "$ret1") := (let: "$a0" := (![#disk.Disk] "d") in
         let: "$a1" := (![#uint64T] "i") in
-        (func_call #wal.awol #"getLogEntry"%go) "$a0" "$a1") in
+        (func_call #getLogEntry) "$a0" "$a1") in
         let: "$r0" := "$ret0" in
         let: "$r1" := "$ret1" in
         do:  ("a" <-[#uint64T] "$r0");;;
@@ -273,13 +283,15 @@ Definition applyLog : val :=
       break: #()));;;
     return: #()).
 
+Definition clearLog : go_string := "github.com/goose-lang/goose/testdata/examples/wal.clearLog"%go.
+
 (* go: log.go:142:6 *)
-Definition clearLog : val :=
-  rec: "clearLog" "d" :=
+Definition clearLogⁱᵐᵖˡ : val :=
+  λ: "d",
     exception_do (let: "d" := (mem.alloc "d") in
     let: "header" := (mem.alloc (type.zero_val #sliceT)) in
     let: "$r0" := (let: "$a0" := #(W64 0) in
-    (func_call #wal.awol #"intToBlock"%go) "$a0") in
+    (func_call #intToBlock) "$a0") in
     do:  ("header" <-[#sliceT] "$r0");;;
     do:  (let: "$a0" := #(W64 0) in
     let: "$a1" := (![#sliceT] "header") in
@@ -291,8 +303,8 @@ Definition clearLog : val :=
    Frees all the space in the log.
 
    go: log.go:150:14 *)
-Definition Log__Apply : val :=
-  rec: "Log__Apply" "l" <> :=
+Definition Log__Applyⁱᵐᵖˡ : val :=
+  λ: "l" <>,
     exception_do (let: "l" := (mem.alloc "l") in
     do:  ((method_call #wal.awol #"Log" #"lock" (![#Log] "l")) #());;;
     let: "length" := (mem.alloc (type.zero_val #uint64T)) in
@@ -300,21 +312,23 @@ Definition Log__Apply : val :=
     do:  ("length" <-[#uint64T] "$r0");;;
     do:  (let: "$a0" := (![#disk.Disk] (struct.field_ref #Log #"d"%go "l")) in
     let: "$a1" := (![#uint64T] "length") in
-    (func_call #wal.awol #"applyLog"%go) "$a0" "$a1");;;
+    (func_call #applyLog) "$a0" "$a1");;;
     do:  (let: "$a0" := (![#disk.Disk] (struct.field_ref #Log #"d"%go "l")) in
-    (func_call #wal.awol #"clearLog"%go) "$a0");;;
+    (func_call #clearLog) "$a0");;;
     let: "$r0" := #(W64 0) in
     do:  ((![#ptrT] (struct.field_ref #Log #"length"%go "l")) <-[#uint64T] "$r0");;;
     do:  ((method_call #wal.awol #"Log" #"unlock" (![#Log] "l")) #());;;
     return: #()).
 
+Definition Open : go_string := "github.com/goose-lang/goose/testdata/examples/wal.Open"%go.
+
 (* Open recovers the log following a crash or shutdown
 
    go: log.go:163:6 *)
-Definition Open : val :=
-  rec: "Open" <> :=
+Definition Openⁱᵐᵖˡ : val :=
+  λ: <>,
     exception_do (let: "d" := (mem.alloc (type.zero_val #disk.Disk)) in
-    let: "$r0" := ((func_call #disk.disk #"Get"%go) #()) in
+    let: "$r0" := ((func_call #disk.Get) #()) in
     do:  ("d" <-[#disk.Disk] "$r0");;;
     let: "header" := (mem.alloc (type.zero_val #sliceT)) in
     let: "$r0" := (let: "$a0" := #(W64 0) in
@@ -322,13 +336,13 @@ Definition Open : val :=
     do:  ("header" <-[#sliceT] "$r0");;;
     let: "length" := (mem.alloc (type.zero_val #uint64T)) in
     let: "$r0" := (let: "$a0" := (![#sliceT] "header") in
-    (func_call #wal.awol #"blockToInt"%go) "$a0") in
+    (func_call #blockToInt) "$a0") in
     do:  ("length" <-[#uint64T] "$r0");;;
     do:  (let: "$a0" := (![#disk.Disk] "d") in
     let: "$a1" := (![#uint64T] "length") in
-    (func_call #wal.awol #"applyLog"%go) "$a0" "$a1");;;
+    (func_call #applyLog) "$a0" "$a1");;;
     do:  (let: "$a0" := (![#disk.Disk] "d") in
-    (func_call #wal.awol #"clearLog"%go) "$a0");;;
+    (func_call #clearLog) "$a0");;;
     let: "cache" := (mem.alloc (type.zero_val (type.mapT #uint64T #sliceT))) in
     let: "$r0" := (map.make #uint64T #sliceT) in
     do:  ("cache" <-[type.mapT #uint64T #sliceT] "$r0");;;
@@ -353,9 +367,9 @@ Definition Open : val :=
 
 Definition vars' : list (go_string * go_type) := [].
 
-Definition functions' : list (go_string * val) := [("intToBlock"%go, intToBlock); ("blockToInt"%go, blockToInt); ("New"%go, New); ("getLogEntry"%go, getLogEntry); ("applyLog"%go, applyLog); ("clearLog"%go, clearLog); ("Open"%go, Open)].
+Definition functions' : list (go_string * val) := [(intToBlock, intToBlockⁱᵐᵖˡ); (blockToInt, blockToIntⁱᵐᵖˡ); (New, Newⁱᵐᵖˡ); (getLogEntry, getLogEntryⁱᵐᵖˡ); (applyLog, applyLogⁱᵐᵖˡ); (clearLog, clearLogⁱᵐᵖˡ); (Open, Openⁱᵐᵖˡ)].
 
-Definition msets' : list (go_string * (list (go_string * val))) := [("Log"%go, [("Apply"%go, Log__Apply); ("BeginTxn"%go, Log__BeginTxn); ("Commit"%go, Log__Commit); ("Read"%go, Log__Read); ("Size"%go, Log__Size); ("Write"%go, Log__Write); ("lock"%go, Log__lock); ("unlock"%go, Log__unlock)]); ("Log'ptr"%go, [("Apply"%go, (λ: "$recvAddr",
+Definition msets' : list (go_string * (list (go_string * val))) := [("Log"%go, [("Apply"%go, Log__Applyⁱᵐᵖˡ); ("BeginTxn"%go, Log__BeginTxnⁱᵐᵖˡ); ("Commit"%go, Log__Commitⁱᵐᵖˡ); ("Read"%go, Log__Readⁱᵐᵖˡ); ("Size"%go, Log__Sizeⁱᵐᵖˡ); ("Write"%go, Log__Writeⁱᵐᵖˡ); ("lock"%go, Log__lockⁱᵐᵖˡ); ("unlock"%go, Log__unlockⁱᵐᵖˡ)]); ("Log'ptr"%go, [("Apply"%go, (λ: "$recvAddr",
                  method_call #wal.awol #"Log" #"Apply" (![#Log] "$recvAddr")
                  )%V); ("BeginTxn"%go, (λ: "$recvAddr",
                  method_call #wal.awol #"Log" #"BeginTxn" (![#Log] "$recvAddr")
@@ -382,11 +396,12 @@ Definition msets' : list (go_string * (list (go_string * val))) := [("Log"%go, [
   |}.
 
 Definition initialize' : val :=
-  rec: "initialize'" <> :=
-    globals.package_init wal.awol (λ: <>,
-      exception_do (do:  disk.initialize';;;
-      do:  primitive.initialize';;;
-      do:  sync.initialize')
+  λ: <>,
+    package.init #wal.awol (λ: <>,
+      exception_do (do:  (disk.initialize' #());;;
+      do:  (primitive.initialize' #());;;
+      do:  (sync.initialize' #());;;
+      do:  (package.alloc wal.awol #()))
       ).
 
 End code.

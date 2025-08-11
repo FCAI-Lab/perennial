@@ -8,16 +8,18 @@ Section code.
 Context `{ffi_syntax}.
 
 
+Definition mapliteral : go_string := "github.com/goose-lang/goose/testdata/examples/mapliteral.mapliteral"%go.
+
 (* go: mapliteral.go:3:6 *)
-Definition mapliteral : val :=
-  rec: "mapliteral" <> :=
+Definition mapliteralⁱᵐᵖˡ : val :=
+  λ: <>,
     exception_do (return: ((let: "$v0" := #(W64 2) in
      let: "$k0" := #(W64 1) in
      map.literal #uint64T #uint64T [("$k0", "$v0")]))).
 
 Definition vars' : list (go_string * go_type) := [].
 
-Definition functions' : list (go_string * val) := [("mapliteral"%go, mapliteral)].
+Definition functions' : list (go_string * val) := [(mapliteral, mapliteralⁱᵐᵖˡ)].
 
 Definition msets' : list (go_string * (list (go_string * val))) := [].
 
@@ -30,9 +32,9 @@ Definition msets' : list (go_string * (list (go_string * val))) := [].
   |}.
 
 Definition initialize' : val :=
-  rec: "initialize'" <> :=
-    globals.package_init mapliteral.example (λ: <>,
-      exception_do (do:  #())
+  λ: <>,
+    package.init #mapliteral.example (λ: <>,
+      exception_do (do:  (package.alloc mapliteral.example #()))
       ).
 
 End code.
