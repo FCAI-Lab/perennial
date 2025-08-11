@@ -805,7 +805,7 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 				ctx.info.TypeOf(e),
 				glang.NewCallExpr(
 					glang.GallinaIdent("func_call"),
-					glang.GallinaIdent(f.Pkg().Name()+"."+f.Name()),
+					glang.StringVal{Value: glang.GallinaIdent(f.Pkg().Name() + "." + f.Name())},
 				).Append(
 					typesToExprs(ctx.convertTypeArgsToGlang(nil, typeArgs))...,
 				),
