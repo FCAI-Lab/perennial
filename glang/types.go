@@ -24,6 +24,7 @@ func (t GallinaType) Coq(needs_paren bool) string {
 	return t.Ty.Gallina(needs_paren)
 }
 
+// TODO: this is only used in one place. Delete?
 type TypeCallExpr struct {
 	MethodName Expr
 	Args       []Type

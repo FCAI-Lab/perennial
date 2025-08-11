@@ -606,12 +606,9 @@ func (ctx *Ctx) getPkgAndName(obj types.Object) (pkg string, name string) {
 func (ctx *Ctx) selectorExprAddr(e *ast.SelectorExpr) glang.Expr {
 	selection := ctx.info.Selections[e]
 	if selection == nil {
-		pkg := ctx.info.ObjectOf(e.Sel).Pkg()
-		pkgIdent := fmt.Sprintf("%s.%s", filepath.Base(pkg.Path()), pkg.Name())
-		if _, ok := ctx.info.ObjectOf(e.Sel).(*types.Var); ok {
+		if v, ok := ctx.info.ObjectOf(e.Sel).(*types.Var); ok {
 			return glang.NewCallExpr(glang.GallinaIdent("globals.get"),
-				glang.StringVal{Value: glang.GallinaIdent(pkgIdent)},
-				glang.StringVal{Value: glang.StringLiteral{Value: e.Sel.Name}},
+				glang.StringVal{Value: glang.GallinaIdent(v.Pkg().Name() + "." + v.Name())},
 			)
 		} else {
 			ctx.unsupported(e, "address of external package selection that is not a variable")
@@ -1901,11 +1898,8 @@ func (ctx *Ctx) exprAddr(e ast.Expr) glang.Expr {
 		obj := ctx.info.ObjectOf(e)
 		if _, ok := obj.(*types.Var); ok {
 			if obj.Pkg().Scope() == obj.Parent() {
-				pkg := obj.Pkg()
-				pkgIdent := fmt.Sprintf("%s.%s", filepath.Base(pkg.Path()), pkg.Name())
 				return glang.NewCallExpr(glang.GallinaIdent("globals.get"),
-					glang.StringVal{Value: glang.GallinaIdent(pkgIdent)},
-					glang.StringVal{Value: glang.StringLiteral{Value: e.Name}},
+					glang.StringVal{Value: glang.GallinaIdent(e.Name)},
 				)
 			} else {
 				return glang.IdentExpr(e.Name)
@@ -3048,7 +3042,7 @@ func (ctx *Ctx) initFunctions() []glang.Decl {
 		t := ctx.glangType(varIdent, ctx.info.TypeOf(varIdent))
 		globalVars = append(globalVars,
 			glang.TupleExpr{
-				glang.StringLiteral{Value: varIdent.Name},
+				glang.GallinaIdent(varIdent.Name),
 				glang.GallinaType{Ty: t},
 			},
 		)
@@ -3153,8 +3147,7 @@ InitLoop:
 				e = glang.NewDoSeq(
 					glang.StoreStmt{
 						Dst: glang.NewCallExpr(glang.GallinaIdent("globals.get"),
-							glang.StringVal{Value: glang.GallinaIdent(ctx.pkgIdent)},
-							glang.StringVal{Value: glang.StringLiteral{Value: init.Lhs[i-1].Name()}},
+							glang.StringVal{Value: glang.GallinaIdent(init.Lhs[i-1].Name())},
 						),
 						X:  glang.IdentExpr(fmt.Sprintf("$r%d", i-1)),
 						Ty: ctx.glangType(init.Lhs[i-1], init.Lhs[i-1].Type()),
