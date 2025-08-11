@@ -801,17 +801,14 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 			ctx.nope(e, "global variable from external package should be handled by exprAddr")
 			// return glang.IdentExpr(fmt.Sprintf("global:%s", e.Sel.Name))
 		} else if f, ok := ctx.info.ObjectOf(e.Sel).(*types.Func); ok {
-			pkg := f.Pkg()
 			// If there are type arguments, we must pass them
 			typeArgs := ctx.info.Instances[e.Sel].TypeArgs
-			pkgIdent := fmt.Sprintf("%s.%s", filepath.Base(pkg.Path()), pkg.Name())
 			return ctx.handleImplicitConversion(e,
 				ctx.info.TypeOf(e.Sel),
 				ctx.info.TypeOf(e),
 				glang.NewCallExpr(
 					glang.GallinaIdent("func_call"),
-					glang.StringVal{Value: glang.GallinaIdent(pkgIdent)},
-					glang.StringVal{Value: glang.StringLiteral{Value: e.Sel.Name}},
+					glang.GallinaIdent(f.Pkg().Name()+"."+f.Name()),
 				).Append(
 					typesToExprs(ctx.convertTypeArgsToGlang(nil, typeArgs))...,
 				),
@@ -1278,15 +1275,20 @@ func (ctx *Ctx) function(s *ast.Ident) glang.Expr {
 	if ctx.info.ObjectOf(s).Pkg().Path() != ctx.pkgPath {
 		ctx.nope(s, "expected function ident to refer to local function")
 	}
-	f_expr := glang.NewCallExpr(glang.GallinaIdent("func_call"),
-		glang.StringVal{Value: glang.GallinaIdent(ctx.pkgIdent)},
-		glang.StringVal{Value: glang.StringLiteral{Value: s.Name}},
+
+	f, ok := ctx.info.ObjectOf(s).(*types.Func)
+	if !ok {
+		ctx.nope(s, "expected to get a types.Func object for function ident")
+	}
+	fExpr := glang.NewCallExpr(glang.GallinaIdent("func_call"),
+		glang.StringVal{Value: glang.GallinaIdent(f.Name())},
 	)
+	ctx.dep.Add(f.Name())
 	if typeArgs.Len() == 0 {
-		return f_expr
+		return fExpr
 	}
 	return glang.TypeCallExpr{
-		MethodName: f_expr,
+		MethodName: fExpr,
 		Args:       ctx.convertTypeArgsToGlang(nil, typeArgs),
 	}
 }
@@ -2739,7 +2741,6 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 		fd.RecvArg = &glang.Binder{Name: name}
 	} else {
 		funcId := ctx.info.Defs[d.Name].Pkg().Path() + "." + ctx.info.Defs[d.Name].Name()
-		fmt.Println(funcId)
 		ret = append(ret, glang.ConstDecl{
 			Name: d.Name.Name,
 			Val:  glang.StringLiteral{Value: funcId},
