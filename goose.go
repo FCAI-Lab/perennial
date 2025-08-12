@@ -3009,9 +3009,8 @@ func (ctx *Ctx) initFunctions() []glang.Decl {
 	var msets glang.ListExpr
 	for _, namedType := range ctx.namedTypes {
 		mset, msetPtr := ctx.methodSet(namedType)
-		typeName := namedType.Obj().Name()
-		msets = append(msets, glang.TupleExpr{glang.StringLiteral{Value: typeName}, mset})
-		msets = append(msets, glang.TupleExpr{glang.StringLiteral{Value: typeName + "'ptr"}, msetPtr})
+		msets = append(msets, glang.TupleExpr{ctx.typeId(namedType.Obj(), namedType), mset})
+		msets = append(msets, glang.TupleExpr{ctx.typeId(namedType.Obj(), types.NewPointer(namedType)), msetPtr})
 	}
 
 	msetsDecl := glang.ConstDecl{
