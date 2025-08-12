@@ -191,7 +191,7 @@ Definition Log__diskAppendWaitⁱᵐᵖˡ : val :=
   λ: "log" "txn",
     exception_do (let: "log" := (mem.alloc "log") in
     let: "txn" := (mem.alloc "txn") in
-    (for: (λ: <>, #true); (λ: <>, Skip) := λ: <>,
+    (for: (λ: <>, #true); (λ: <>, #()) := λ: <>,
       let: "logtxn" := (mem.alloc (type.zero_val #uint64T)) in
       let: "$r0" := ((method_call #logging2.logging2 #"Log" #"readLogTxnNxt" (![#Log] "log")) #()) in
       do:  ("logtxn" <-[#uint64T] "$r0");;;
@@ -280,7 +280,7 @@ Definition Log__diskAppendⁱᵐᵖˡ : val :=
 Definition Log__Loggerⁱᵐᵖˡ : val :=
   λ: "log" <>,
     exception_do (let: "log" := (mem.alloc "log") in
-    (for: (λ: <>, #true); (λ: <>, Skip) := λ: <>,
+    (for: (λ: <>, #true); (λ: <>, #()) := λ: <>,
       do:  ((method_call #logging2.logging2 #"Log" #"diskAppend" (![#Log] "log")) #()));;;
     return: #()).
 

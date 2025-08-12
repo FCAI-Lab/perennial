@@ -263,7 +263,7 @@ Definition applyLogⁱᵐᵖˡ : val :=
     (let: "i" := (mem.alloc (type.zero_val #uint64T)) in
     let: "$r0" := #(W64 0) in
     do:  ("i" <-[#uint64T] "$r0");;;
-    (for: (λ: <>, #true); (λ: <>, Skip) := λ: <>,
+    (for: (λ: <>, #true); (λ: <>, #()) := λ: <>,
       (if: (![#uint64T] "i") < (![#uint64T] "length")
       then
         let: "v" := (mem.alloc (type.zero_val #sliceT)) in

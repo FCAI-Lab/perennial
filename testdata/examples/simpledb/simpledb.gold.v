@@ -179,7 +179,7 @@ Definition readTableIndexⁱᵐᵖˡ : val :=
       "next" ::= "$next"
     }]) in
     do:  ("buf" <-[#lazyFileBuf] "$r0");;;
-    (for: (λ: <>, #true); (λ: <>, Skip) := λ: <>,
+    (for: (λ: <>, #true); (λ: <>, #()) := λ: <>,
       let: "l" := (mem.alloc (type.zero_val #uint64T)) in
       let: "e" := (mem.alloc (type.zero_val #Entry)) in
       let: ("$ret0", "$ret1") := (let: "$a0" := (![#sliceT] (struct.field_ref #lazyFileBuf #"next"%go "buf")) in
@@ -784,7 +784,7 @@ Definition tablePutOldTableⁱᵐᵖˡ : val :=
       "next" ::= "$next"
     }]) in
     do:  ("buf" <-[#lazyFileBuf] "$r0");;;
-    (for: (λ: <>, #true); (λ: <>, Skip) := λ: <>,
+    (for: (λ: <>, #true); (λ: <>, #()) := λ: <>,
       let: "l" := (mem.alloc (type.zero_val #uint64T)) in
       let: "e" := (mem.alloc (type.zero_val #Entry)) in
       let: ("$ret0", "$ret1") := (let: "$a0" := (![#sliceT] (struct.field_ref #lazyFileBuf #"next"%go "buf")) in
@@ -1006,7 +1006,7 @@ Definition deleteOtherFilesⁱᵐᵖˡ : val :=
     (let: "i" := (mem.alloc (type.zero_val #uint64T)) in
     let: "$r0" := #(W64 0) in
     do:  ("i" <-[#uint64T] "$r0");;;
-    (for: (λ: <>, #true); (λ: <>, Skip) := λ: <>,
+    (for: (λ: <>, #true); (λ: <>, #()) := λ: <>,
       (if: (![#uint64T] "i") = (![#uint64T] "nfiles")
       then break: #()
       else do:  #());;;
