@@ -1574,7 +1574,7 @@ func (ctx *Ctx) funcLit(e *ast.FuncLit) glang.FuncLit {
 
 func (ctx *Ctx) typeAssertExpr(e *ast.TypeAssertExpr, multipleBindings bool) glang.Expr {
 	ty := ctx.typeOf(e.Type)
-	typeIdent := ctx.typeIdentity(e, ty)
+	typeIdent := ctx.typeId(e, ty)
 	if multipleBindings {
 		return glang.NewCallExpr(glang.GallinaIdent("interface.checked_type_assert"),
 			ctx.glangType(e.Type, ty),
@@ -1971,42 +1971,6 @@ func isIntegerKind(t types.BasicKind) bool {
 	return isUnsignedIntegerKind(t) || isSignedIntegerKind(t)
 }
 
-// typeIdentity gives the string-based representation of a type, used for
-// interface values and type assertions.
-//
-// To be fully accurate to Go's type-comparison semantics, this should mimic
-// Go's internal (*types.Type).LinkString():
-// https://github.com/golang/go/blob/b5d555991ab73e06e09741952a66dd7eeaf2a185/src/cmd/compile/internal/types/fmt.go#L220-L227.
-func (ctx *Ctx) typeIdentity(n locatable, from types.Type) glang.Expr {
-	maybePtrSuffix := ""
-	if fromPointer, ok := from.(*types.Pointer); ok {
-		from = fromPointer.Elem()
-		maybePtrSuffix = "'ptr"
-	}
-	if fromNamed, ok := from.(*types.Named); ok {
-		pkgName, typeName := ctx.getPkgAndName(fromNamed.Obj())
-		// TODO: is this ever needed?
-		if ctx.pkgIdent == pkgName {
-			ctx.dep.Add(typeName)
-		}
-		return glang.TupleExpr([]glang.Expr{
-			glang.StringVal{Value: glang.GallinaIdent(pkgName)},
-			glang.StringVal{Value: glang.GallinaString(typeName + maybePtrSuffix)},
-		})
-	} else if fromBasic, ok := from.(*types.Basic); ok {
-		typeName := fromBasic.Name() + maybePtrSuffix
-		return glang.TupleExpr([]glang.Expr{glang.NewStringVal(""), glang.NewStringVal(typeName)})
-	} else if _, ok := from.(*types.Slice); ok {
-		typeName := "slice" + maybePtrSuffix
-		return glang.TupleExpr([]glang.Expr{glang.NewStringVal(""), glang.NewStringVal(typeName)})
-	} else if _, ok := from.(*types.Map); ok {
-		typeName := "map" + maybePtrSuffix
-		return glang.TupleExpr([]glang.Expr{glang.NewStringVal(""), glang.NewStringVal(typeName)})
-	}
-	ctx.unsupported(n, "unsupported type for interface representation: %v", from)
-	panic("unreachable")
-}
-
 // This handles conversions arising from the notion of "assignability" in the Go spec.
 func (ctx *Ctx) handleImplicitConversion(n locatable, from, to types.Type, e glang.Expr) glang.Expr {
 	if to == nil {
@@ -2064,7 +2028,7 @@ func (ctx *Ctx) handleImplicitConversion(n locatable, from, to types.Type, e gla
 			// independent of the particular interface type.
 			return e
 		}
-		typeIdent := ctx.typeIdentity(n, from)
+		typeIdent := ctx.typeId(n, from)
 		return glang.NewCallExpr(glang.GallinaIdent("interface.make"), typeIdent, e)
 	}
 
@@ -2567,7 +2531,7 @@ func (ctx *Ctx) typeSwitchStmt(s *ast.TypeSwitchStmt, cont glang.Expr) (e glang.
 						glang.NewCallExpr(glang.GallinaIdent("interface.checked_type_assert"),
 							ctx.glangType(c.List[i], ty),
 							glang.IdentExpr("$y"),
-							ctx.typeIdentity(c.List[i], ty),
+							ctx.typeId(c.List[i], ty),
 						),
 					)
 				}
@@ -2597,7 +2561,7 @@ func (ctx *Ctx) typeSwitchStmt(s *ast.TypeSwitchStmt, cont glang.Expr) (e glang.
 					ValExpr: glang.NewCallExpr(glang.GallinaIdent("interface.checked_type_assert"),
 						ctx.glangType(c.List[0], ty),
 						glang.IdentExpr("$y"),
-						ctx.typeIdentity(c.List[0], ty),
+						ctx.typeId(c.List[0], ty),
 					),
 					Cont: e,
 				}

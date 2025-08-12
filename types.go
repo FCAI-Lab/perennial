@@ -122,7 +122,7 @@ func (ctx *Ctx) createTypeIdDecl(spec *ast.TypeSpec) glang.Decl {
 
 	// If this is an alias declaration, reference the RHS type's typeId
 	if spec.Assign != 0 {
-		rhsTypeId := ctx.getTypeId(spec, ctx.typeOf(spec.Type))
+		rhsTypeId := ctx.typeId(spec, ctx.typeOf(spec.Type))
 		return glang.ConstDecl{
 			Name: typeIdName,
 			Type: glang.GallinaIdent("go_string"),
@@ -137,8 +137,13 @@ func (ctx *Ctx) createTypeIdDecl(spec *ast.TypeSpec) glang.Decl {
 	}
 }
 
-// getTypeId returns the typeId expression for any Go type
-func (ctx *Ctx) getTypeId(location locatable, t types.Type) glang.Expr {
+// typeId returns the typeId expression for any Go type (it will be of type
+// `go_string` in Gallina).
+//
+// To be fully accurate to Go's type-comparison semantics, this should mimic
+// Go's internal (*types.Type).LinkString():
+// https://github.com/golang/go/blob/b5d555991ab73e06e09741952a66dd7eeaf2a185/src/cmd/compile/internal/types/fmt.go#L220-L227.
+func (ctx *Ctx) typeId(location locatable, t types.Type) glang.Expr {
 	t = types.Unalias(t)
 
 	switch t := t.(type) {
@@ -157,9 +162,9 @@ func (ctx *Ctx) getTypeId(location locatable, t types.Type) glang.Expr {
 	case *types.Signature:
 		return ctx.signatureTypeId(location, t)
 	case *types.Slice:
-		return glang.NewCallExpr(glang.GallinaIdent("sliceTⁱᵈ"), ctx.getTypeId(location, t.Elem()))
+		return glang.NewCallExpr(glang.GallinaIdent("sliceTⁱᵈ"), ctx.typeId(location, t.Elem()))
 	case *types.Pointer:
-		return glang.NewCallExpr(glang.GallinaIdent("ptrTⁱᵈ"), ctx.getTypeId(location, t.Elem()))
+		return glang.NewCallExpr(glang.GallinaIdent("ptrTⁱᵈ"), ctx.typeId(location, t.Elem()))
 	case *types.Chan:
 		chanTypeId := "chanⁱᵈ"
 		switch t.Dir() {
@@ -168,7 +173,7 @@ func (ctx *Ctx) getTypeId(location locatable, t types.Type) glang.Expr {
 		case types.RecvOnly:
 			chanTypeId = "recv" + chanTypeId
 		}
-		return glang.NewCallExpr(glang.GallinaIdent(chanTypeId), ctx.getTypeId(location, t.Elem()))
+		return glang.NewCallExpr(glang.GallinaIdent(chanTypeId), ctx.typeId(location, t.Elem()))
 	default:
 		ctx.unsupported(location, "typeId for type %v", t)
 		return nil
@@ -178,12 +183,12 @@ func (ctx *Ctx) getTypeId(location locatable, t types.Type) glang.Expr {
 func (ctx *Ctx) signatureTypeId(location locatable, sig *types.Signature) glang.Expr {
 	var paramTypeIds glang.ListExpr
 	for i := range sig.Params().Len() {
-		paramTypeIds = append(paramTypeIds, ctx.getTypeId(location, sig.Params().At(i).Type()))
+		paramTypeIds = append(paramTypeIds, ctx.typeId(location, sig.Params().At(i).Type()))
 	}
 
 	var resultTypeIds glang.ListExpr
 	for i := range sig.Results().Len() {
-		resultTypeIds = append(resultTypeIds, ctx.getTypeId(location, sig.Results().At(i).Type()))
+		resultTypeIds = append(resultTypeIds, ctx.typeId(location, sig.Results().At(i).Type()))
 	}
 
 	variadicFlag := glang.GallinaIdent("false")
