@@ -59,59 +59,55 @@ func TypeIsGooseLang(t types.Type) bool {
 	return false
 }
 
-func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) []glang.Decl {
+func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
+	if ctx.filter.GetAction(spec.Name.Name) == declfilter.Skip {
+		return
+	}
+
+	decls = append(decls, ctx.createTypeIdDecl(spec))
+
 	switch ctx.filter.GetAction(spec.Name.Name) {
 	case declfilter.Axiomatize:
 		if t, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
 			ctx.namedTypes = append(ctx.namedTypes, t)
-			return []glang.Decl{glang.AxiomDecl{
+			decls = append(decls, glang.AxiomDecl{
 				DeclName: spec.Name.Name,
 				Type:     glang.GallinaVerbatim("go_type"),
-			}}
+			})
+			return
 		}
 		ctx.unsupported(spec, "axiomatized type should be a named type")
-		return nil
 	case declfilter.Trust:
 		if t, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
 			if _, ok := t.Underlying().(*types.Interface); !ok {
 				ctx.namedTypes = append(ctx.namedTypes, t)
 			}
 		}
-		return nil
 	case declfilter.Translate:
-		var decls []glang.Decl
+		ctx.dep.SetCurrentName(spec.Name.Name)
+		defer ctx.dep.UnsetCurrentName()
 
-		func() {
-			ctx.dep.SetCurrentName(spec.Name.Name)
-			defer ctx.dep.UnsetCurrentName()
-
-			if t, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
-				if _, ok := t.Underlying().(*types.Interface); !ok {
-					ctx.namedTypes = append(ctx.namedTypes, t)
-				}
+		if t, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
+			if _, ok := t.Underlying().(*types.Interface); !ok {
+				ctx.namedTypes = append(ctx.namedTypes, t)
 			}
-			ty := ctx.typeOf(spec.Type)
-			decl := glang.TypeDecl{
-				Name:       spec.Name.Name,
-				Body:       ctx.glangType(spec, ty),
-				TypeParams: ctx.typeParamList(spec.TypeParams),
-			}
+		}
+		ty := ctx.typeOf(spec.Type)
+		decl := glang.TypeDecl{
+			Name:       spec.Name.Name,
+			Body:       ctx.glangType(spec, ty),
+			TypeParams: ctx.typeParamList(spec.TypeParams),
+		}
 
-			if ctx.typeSpecIsGooseLang(spec) {
-				decls = append(decls, decl)
-			} else {
-				decls = append(decls, glang.GallinaTypeDecl{
-					Decl: decl,
-				})
-			}
-		}()
-
-		decls = append(decls, ctx.createTypeIdDecl(spec))
-
-		return decls
-	default:
-		return nil
+		if ctx.typeSpecIsGooseLang(spec) {
+			decls = append(decls, decl)
+		} else {
+			decls = append(decls, glang.GallinaTypeDecl{
+				Decl: decl,
+			})
+		}
 	}
+	return
 }
 
 func (ctx *Ctx) createTypeIdDecl(spec *ast.TypeSpec) glang.Decl {

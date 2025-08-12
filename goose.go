@@ -864,7 +864,7 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 		f := ctx.info.ObjectOf(e.Sel).(*types.Func)
 		receiver := ctx.expr(e.X)
 		receiverType := types.Unalias(ctx.typeOf(e.X))
-		typeIdExpr := ctx.typeId(e.X, receiverType)
+		typeIdExpr := glang.StringVal{Value: ctx.typeId(e.X, receiverType)}
 		methodExpr := glang.NewStringVal(e.Sel.Name)
 
 		// figure out if this is shorthand for (&x).m().
@@ -2831,6 +2831,9 @@ func (ctx *Ctx) constSpec(spec *ast.ValueSpec) []glang.Decl {
 	// if using iota, and spec.Names has more than 1 item only for something like
 	// `C, D = 2, 3`.
 	for i := range spec.Names {
+		if spec.Names[i].Name == "_" {
+			continue
+		}
 		switch ctx.filter.GetAction(spec.Names[i].Name) {
 		case declfilter.Axiomatize:
 			cds = append(cds, glang.AxiomDecl{DeclName: spec.Names[i].Name,
