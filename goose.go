@@ -2029,7 +2029,7 @@ func (ctx *Ctx) handleImplicitConversion(n locatable, from, to types.Type, e gla
 			return e
 		}
 		typeIdent := ctx.typeId(n, from)
-		return glang.NewCallExpr(glang.GallinaIdent("interface.make"), typeIdent, e)
+		return glang.NewCallExpr(glang.GallinaIdent("interface.make"), glang.StringVal{Value: typeIdent}, e)
 	}
 
 	if fromBasic, ok := fromUnder.(*types.Basic); ok && fromBasic.Kind() == types.UntypedBool {
