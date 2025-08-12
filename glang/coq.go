@@ -113,12 +113,31 @@ type Expr interface {
 	Coq(needs_paren bool) string
 }
 
-// GallinaIdent is a identifier in Gallina (and not a variable)
-//
-// A GallinaIdent is translated literally to Coq.
+var GallinaKeywords map[string]bool = map[string]bool{
+	"is": true,
+	"as": true,
+}
+
+// GallinaIdent is treated as a possibly qualified Gallina identifier (and thus
+// deconflicted with keywords).
 type GallinaIdent string
 
 func (e GallinaIdent) Coq(needs_paren bool) string {
+	base := string(e)
+	lastDotIndex := strings.LastIndex(base, ".")
+	if lastDotIndex > 0 {
+		base = base[lastDotIndex+1:]
+	}
+	if GallinaKeywords[string(base)] {
+		e = e + "'"
+	}
+	return string(e)
+}
+
+// GallinaVerbatim is translated literally to Coq.
+type GallinaVerbatim string
+
+func (e GallinaVerbatim) Coq(needs_paren bool) string {
 	return string(e)
 }
 
@@ -133,7 +152,7 @@ func (e PackageIdent) Coq(needs_paren bool) string {
 	return fmt.Sprintf("%s.%s", ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(e.Package), e.Ident)
 }
 
-var Skip Expr = GallinaIdent("Skip")
+var Skip Expr = GallinaVerbatim("Skip")
 
 type ParenExpr struct {
 	Inner Expr
@@ -586,7 +605,7 @@ type RefExpr struct {
 }
 
 func (e RefExpr) Coq(needs_paren bool) string {
-	return NewCallExpr(GallinaIdent("mem.alloc"), e.X).Coq(needs_paren)
+	return NewCallExpr(GallinaVerbatim("mem.alloc"), e.X).Coq(needs_paren)
 }
 
 type StoreStmt struct {
@@ -802,7 +821,7 @@ func (d FuncDecl) CoqDecl() string {
 	var pp buffer
 	pp.AddComment(d.Comment)
 
-	pp.Add("Definition %s : val :=", d.Name)
+	pp.Add("Definition %s : val :=", GallinaIdent(d.Name).Coq(false))
 	func() {
 		pp.Indent(2)
 		defer pp.Indent(-2)
@@ -829,7 +848,7 @@ func (d ConstDecl) CoqDecl() string {
 	var pp buffer
 	pp.AddComment(d.Comment)
 	indent := pp.Block("Definition ", "%s : %s := %s.",
-		d.Name, d.Type.Coq(false), d.Val.Coq(false))
+		GallinaIdent(d.Name).Coq(false), d.Type.Coq(false), d.Val.Coq(false))
 	pp.Indent(-indent)
 	return pp.Build()
 }

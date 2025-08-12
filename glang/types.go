@@ -209,11 +209,11 @@ var _ Type = MapType{}
 
 // Coq is the GooseLang type
 func (t MapType) Coq(needs_paren bool) string {
-	return NewCallExpr(GallinaIdent("type.mapT"), t.Key, t.Value).Coq(needs_paren)
+	return NewCallExpr(GallinaVerbatim("type.mapT"), t.Key, t.Value).Coq(needs_paren)
 }
 
 func (t MapType) Gallina(needs_paren bool) string {
-	return NewTypeCallExpr(GallinaIdent("mapT"), t.Key, t.Value).Gallina(needs_paren)
+	return NewTypeCallExpr(GallinaVerbatim("mapT"), t.Key, t.Value).Gallina(needs_paren)
 }
 
 type ChanType struct {
@@ -222,11 +222,11 @@ type ChanType struct {
 
 // Coq is the GooseLang type
 func (t ChanType) Coq(needs_paren bool) string {
-	return NewCallExpr(GallinaIdent("type.chanT"), t.Elem).Coq(needs_paren)
+	return NewCallExpr(GallinaVerbatim("type.chanT"), t.Elem).Coq(needs_paren)
 }
 
 func (t ChanType) Gallina(needs_paren bool) string {
-	return NewTypeCallExpr(GallinaIdent("chanT"), t.Elem).Gallina(needs_paren)
+	return NewTypeCallExpr(GallinaVerbatim("chanT"), t.Elem).Gallina(needs_paren)
 }
 
 type FuncType struct{}
@@ -276,12 +276,12 @@ var _ Type = ArrayType{}
 // Coq is the GooseLang type
 func (t ArrayType) Coq(needs_paren bool) string {
 	len_e := Int64Val{IntToZ(int64(t.Len))}
-	return NewCallExpr(GallinaIdent("type.arrayT"), len_e, t.Elem).Coq(needs_paren)
+	return NewCallExpr(GallinaVerbatim("type.arrayT"), len_e, t.Elem).Coq(needs_paren)
 }
 
 func (t ArrayType) Gallina(needs_paren bool) string {
-	len_e := NewCallExpr(GallinaIdent("W64"), IntToZ(int64(t.Len)))
-	return NewCallExpr(GallinaIdent("arrayT"), len_e, GallinaType{t.Elem}).Coq(needs_paren)
+	len_e := NewCallExpr(GallinaVerbatim("W64"), IntToZ(int64(t.Len)))
+	return NewCallExpr(GallinaVerbatim("arrayT"), len_e, GallinaType{t.Elem}).Coq(needs_paren)
 }
 
 type PtrType struct{}
