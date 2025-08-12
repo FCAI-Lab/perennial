@@ -107,6 +107,11 @@ func isAnyConstraint(expr ast.Expr) bool {
 	return ok && ident.Name == "any"
 }
 
+func (ctx *Ctx) gallinaIdent(x string) glang.Expr {
+	ctx.dep.Add(x)
+	return glang.GallinaIdent(x)
+}
+
 func (ctx *Ctx) typeParamList(fs *ast.FieldList) []glang.TypeIdent {
 	var typeParams []glang.TypeIdent
 	if fs == nil {
@@ -177,7 +182,7 @@ func (ctx *Ctx) methodSet(t *types.Named) (glang.Expr, glang.Expr) {
 			}
 		} else {
 			n := glang.TypeMethod(typeName, t.Method(selection.Index()[0]).Name())
-			expr = glang.GallinaIdent(n)
+			expr = ctx.gallinaIdent(n)
 			ctx.dep.Add(n)
 		}
 
@@ -202,7 +207,7 @@ func (ctx *Ctx) methodSet(t *types.Named) (glang.Expr, glang.Expr) {
 			// the ptr-receiver method to use the spec for the direct method
 			// call.
 			n := glang.TypeMethod(typeName, t.Method(selection.Index()[0]).Name())
-			expr = glang.GallinaIdent(n)
+			expr = ctx.gallinaIdent(n)
 			ctx.dep.Add(n)
 		} else {
 			expr = glang.IdentExpr("$recvAddr")
@@ -608,7 +613,7 @@ func (ctx *Ctx) selectorExprAddr(e *ast.SelectorExpr) glang.Expr {
 	if selection == nil {
 		if v, ok := ctx.info.ObjectOf(e.Sel).(*types.Var); ok {
 			return glang.NewCallExpr(glang.GallinaVerbatim("globals.get"),
-				glang.StringVal{Value: glang.GallinaIdent(v.Pkg().Name() + "." + v.Name())},
+				glang.StringVal{Value: ctx.gallinaIdent(v.Pkg().Name() + "." + v.Name())},
 			)
 		} else {
 			ctx.unsupported(e, "address of external package selection that is not a variable")
@@ -741,7 +746,7 @@ func (ctx *Ctx) selectionMethod(addressable bool, expr glang.Expr,
 			ctx.dep.Add(typeName)
 
 			return glang.NewCallExpr(glang.GallinaVerbatim("method_call"),
-				glang.StringVal{Value: glang.GallinaIdent(pkgName)},
+				glang.StringVal{Value: ctx.gallinaIdent(pkgName)},
 				glang.StringVal{Value: glang.GallinaString(typeName + "'ptr")},
 				glang.StringVal{Value: glang.GallinaString(methodName)},
 				expr,
@@ -754,7 +759,7 @@ func (ctx *Ctx) selectionMethod(addressable bool, expr glang.Expr,
 			ctx.dep.Add(typeName)
 
 			return glang.NewCallExpr(glang.GallinaVerbatim("method_call"),
-				glang.StringVal{Value: glang.GallinaIdent(pkgName)},
+				glang.StringVal{Value: ctx.gallinaIdent(pkgName)},
 				glang.StringVal{Value: glang.GallinaString(typeName)},
 				glang.StringVal{Value: glang.GallinaString(methodName)},
 				glang.DerefExpr{X: expr, Ty: ctx.glangType(l, t)},
@@ -777,7 +782,7 @@ func (ctx *Ctx) selectionMethod(addressable bool, expr glang.Expr,
 			ctx.dep.Add(pkgName)
 			ctx.dep.Add(typeName)
 			return glang.NewCallExpr(glang.GallinaVerbatim("method_call"),
-				glang.StringVal{Value: glang.GallinaIdent(pkgName)},
+				glang.StringVal{Value: ctx.gallinaIdent(pkgName)},
 				glang.StringVal{Value: glang.GallinaString(typeName)},
 				glang.StringVal{Value: glang.GallinaString(methodName)},
 				glang.GallinaString(methodName),
@@ -805,7 +810,7 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 				ctx.info.TypeOf(e),
 				glang.NewCallExpr(
 					glang.GallinaVerbatim("func_call"),
-					glang.StringVal{Value: glang.GallinaIdent(f.Pkg().Name() + "." + f.Name())},
+					glang.StringVal{Value: ctx.gallinaIdent(f.Pkg().Name() + "." + f.Name())},
 				).Append(
 					typesToExprs(ctx.convertTypeArgsToGlang(nil, typeArgs))...,
 				),
@@ -877,7 +882,7 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 
 				return glang.NewCallExpr(
 					glang.GallinaVerbatim("method_call"),
-					glang.StringVal{Value: glang.GallinaIdent(pkgName)},
+					glang.StringVal{Value: ctx.gallinaIdent(pkgName)},
 					glang.StringVal{Value: glang.GallinaString(typeName + typeNameSuffix)},
 					glang.StringVal{Value: glang.GallinaString(methodName)},
 					ctx.expr(e.X),
@@ -899,7 +904,7 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 
 		return glang.NewCallExpr(
 			glang.GallinaVerbatim("method_call"),
-			glang.StringVal{Value: glang.GallinaIdent(pkgName)},
+			glang.StringVal{Value: ctx.gallinaIdent(pkgName)},
 			glang.StringVal{Value: glang.GallinaString(typeName + "'ptr")},
 			glang.StringVal{Value: glang.GallinaString(methodName)},
 			ctx.exprAddr(e.X),
@@ -1278,7 +1283,7 @@ func (ctx *Ctx) function(s *ast.Ident) glang.Expr {
 		ctx.nope(s, "expected to get a types.Func object for function ident")
 	}
 	fExpr := glang.NewCallExpr(glang.GallinaVerbatim("func_call"),
-		glang.StringVal{Value: glang.GallinaIdent(f.Name())},
+		glang.StringVal{Value: ctx.gallinaIdent(f.Name())},
 	)
 	ctx.dep.Add(f.Name())
 	if typeArgs.Len() == 0 {
@@ -1420,7 +1425,7 @@ func (ctx *Ctx) identExpr(e *ast.Ident, multipleBindings bool) glang.Expr {
 	if constObj, ok := obj.(*types.Const); ok {
 		// is a constant
 		ctx.dep.Add(e.Name)
-		return ctx.handleImplicitConversion(e, constObj.Type(), ctx.typeOf(e), glang.GallinaIdent(e.Name))
+		return ctx.handleImplicitConversion(e, constObj.Type(), ctx.typeOf(e), ctx.gallinaIdent(e.Name))
 	}
 	if _, ok := obj.(*types.Var); ok {
 		ctx.nope(e, "variable references should get translated via exprAddr")
@@ -1574,7 +1579,7 @@ func (ctx *Ctx) funcLit(e *ast.FuncLit) glang.FuncLit {
 
 func (ctx *Ctx) typeAssertExpr(e *ast.TypeAssertExpr, multipleBindings bool) glang.Expr {
 	ty := ctx.typeOf(e.Type)
-	typeIdent := ctx.typeId(e, ty)
+	typeIdent := glang.StringVal{Value: ctx.typeId(e, ty)}
 	if multipleBindings {
 		return glang.NewCallExpr(glang.GallinaVerbatim("interface.checked_type_assert"),
 			ctx.glangType(e.Type, ty),
@@ -1717,7 +1722,7 @@ func (ctx *Ctx) forStmt(s *ast.ForStmt, cont glang.Expr) glang.Expr {
 	if s.Cond != nil {
 		cond = ctx.expr(s.Cond)
 	}
-	var post glang.Expr = glang.Skip
+	var post glang.Expr = glang.Tt
 	if s.Post != nil {
 		post = ctx.stmt(s.Post, nil)
 	}
@@ -1899,7 +1904,7 @@ func (ctx *Ctx) exprAddr(e ast.Expr) glang.Expr {
 		if _, ok := obj.(*types.Var); ok {
 			if obj.Pkg().Scope() == obj.Parent() {
 				return glang.NewCallExpr(glang.GallinaVerbatim("globals.get"),
-					glang.StringVal{Value: glang.GallinaIdent(e.Name)},
+					glang.StringVal{Value: ctx.gallinaIdent(e.Name)},
 				)
 			} else {
 				return glang.IdentExpr(e.Name)
@@ -2531,7 +2536,7 @@ func (ctx *Ctx) typeSwitchStmt(s *ast.TypeSwitchStmt, cont glang.Expr) (e glang.
 						glang.NewCallExpr(glang.GallinaVerbatim("interface.checked_type_assert"),
 							ctx.glangType(c.List[i], ty),
 							glang.IdentExpr("$y"),
-							ctx.typeId(c.List[i], ty),
+							glang.StringVal{Value: ctx.typeId(c.List[i], ty)},
 						),
 					)
 				}
@@ -2561,7 +2566,7 @@ func (ctx *Ctx) typeSwitchStmt(s *ast.TypeSwitchStmt, cont glang.Expr) (e glang.
 					ValExpr: glang.NewCallExpr(glang.GallinaVerbatim("interface.checked_type_assert"),
 						ctx.glangType(c.List[0], ty),
 						glang.IdentExpr("$y"),
-						ctx.typeId(c.List[0], ty),
+						glang.StringVal{Value: ctx.typeId(c.List[0], ty)},
 					),
 					Cont: e,
 				}
@@ -2902,15 +2907,15 @@ func (ctx *Ctx) globalVarDecl(d *ast.GenDecl) []glang.Decl {
 			if name.Name == "_" {
 				continue
 			}
+			decls = append(decls, glang.ConstDecl{
+				Name: name.Name,
+				Val: glang.StringLiteral{
+					Value: ctx.info.Defs[name].Pkg().Path() + "." + ctx.info.Defs[name].Name(),
+				},
+				Type: glang.GallinaVerbatim("go_string"),
+			})
 			switch ctx.filter.GetAction(name.Name) {
 			case declfilter.Translate:
-				decls = append(decls, glang.ConstDecl{
-					Name: name.Name,
-					Val: glang.StringLiteral{
-						Value: ctx.info.Defs[name].Pkg().Path() + "." + ctx.info.Defs[name].Name(),
-					},
-					Type: glang.GallinaVerbatim("go_string"),
-				})
 				ctx.globalVars = append(ctx.globalVars, name)
 			default:
 				if s.Values != nil {
@@ -3006,7 +3011,7 @@ func (ctx *Ctx) initFunctions() []glang.Decl {
 		t := ctx.glangType(varIdent, ctx.info.TypeOf(varIdent))
 		globalVars = append(globalVars,
 			glang.TupleExpr{
-				glang.GallinaIdent(varIdent.Name),
+				ctx.gallinaIdent(varIdent.Name),
 				glang.GallinaType{Ty: t},
 			},
 		)
@@ -3021,7 +3026,7 @@ func (ctx *Ctx) initFunctions() []glang.Decl {
 
 	var functions glang.ListExpr
 	for _, functionName := range ctx.functions {
-		functions = append(functions, glang.TupleExpr{glang.GallinaIdent(functionName), glang.GallinaIdent(functionName + "ⁱᵐᵖˡ")})
+		functions = append(functions, glang.TupleExpr{ctx.gallinaIdent(functionName), ctx.gallinaIdent(functionName + "ⁱᵐᵖˡ")})
 	}
 
 	functionsDecl := glang.ConstDecl{
@@ -3049,7 +3054,7 @@ func (ctx *Ctx) initFunctions() []glang.Decl {
 	var imports glang.ListExpr
 	for _, impName := range ctx.importNamesOrdered {
 		pkg := impName.Imported()
-		imports = append(imports, glang.GallinaIdent(fmt.Sprintf("%s.%s", filepath.Base(pkg.Path()), pkg.Name())))
+		imports = append(imports, ctx.gallinaIdent(fmt.Sprintf("%s.%s", filepath.Base(pkg.Path()), pkg.Name())))
 	}
 	infoRecord := glang.RecordLiteral{
 		Fields: []glang.RecordField{
@@ -3066,7 +3071,7 @@ func (ctx *Ctx) initFunctions() []glang.Decl {
 
 	infoInstanceDecl := glang.InstanceDecl{
 		Type: glang.NewCallExpr(glang.GallinaVerbatim("PkgInfo"),
-			glang.GallinaIdent(ctx.pkgIdent),
+			ctx.gallinaIdent(ctx.pkgIdent),
 		),
 		Global: true,
 		Body:   infoRecord,
@@ -3099,7 +3104,7 @@ InitLoop:
 			varName := init.Lhs[i].Name()
 			if ctx.filter.GetAction(varName) != declfilter.Translate {
 				e = glang.NewDoSeq(
-					glang.NewCallExpr(glang.GallinaIdent(varName+"'init"), glang.Tt),
+					glang.NewCallExpr(ctx.gallinaIdent(varName+"'init"), glang.Tt),
 					e)
 				continue InitLoop
 			}
@@ -3111,7 +3116,7 @@ InitLoop:
 				e = glang.NewDoSeq(
 					glang.StoreStmt{
 						Dst: glang.NewCallExpr(glang.GallinaVerbatim("globals.get"),
-							glang.StringVal{Value: glang.GallinaIdent(init.Lhs[i-1].Name())},
+							glang.StringVal{Value: ctx.gallinaIdent(init.Lhs[i-1].Name())},
 						),
 						X:  glang.IdentExpr(fmt.Sprintf("$r%d", i-1)),
 						Ty: ctx.glangType(init.Lhs[i-1], init.Lhs[i-1].Type()),
@@ -3171,13 +3176,13 @@ InitLoop:
 
 	e = glang.NewDoSeq(
 		glang.NewCallExpr(
-			glang.GallinaVerbatim("package.alloc"), glang.GallinaIdent(ctx.pkgIdent), glang.Tt),
+			glang.GallinaVerbatim("package.alloc"), ctx.gallinaIdent(ctx.pkgIdent), glang.Tt),
 		e)
 
 	for _, importName := range ctx.importNamesOrdered {
 		e = glang.NewDoSeq(
 			glang.NewCallExpr(
-				glang.GallinaIdent(importName.Imported().Name()+"."+"initialize'"),
+				ctx.gallinaIdent(importName.Imported().Name()+"."+"initialize'"),
 				glang.Tt),
 			e)
 	}
@@ -3188,7 +3193,7 @@ InitLoop:
 
 	e = glang.NewCallExpr(glang.GallinaVerbatim("exception_do"), e)
 	e = glang.NewCallExpr(glang.GallinaVerbatim("package.init"),
-		glang.StringVal{Value: glang.GallinaIdent(ctx.pkgIdent)},
+		glang.StringVal{Value: ctx.gallinaIdent(ctx.pkgIdent)},
 		glang.FuncLit{Args: nil, Body: e},
 	)
 

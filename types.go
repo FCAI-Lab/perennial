@@ -66,7 +66,7 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) []glang.Decl {
 			ctx.namedTypes = append(ctx.namedTypes, t)
 			return []glang.Decl{glang.AxiomDecl{
 				DeclName: spec.Name.Name,
-				Type:     glang.GallinaIdent("go_type"),
+				Type:     glang.GallinaVerbatim("go_type"),
 			}}
 		}
 		ctx.unsupported(spec, "axiomatized type should be a named type")
@@ -125,13 +125,13 @@ func (ctx *Ctx) createTypeIdDecl(spec *ast.TypeSpec) glang.Decl {
 		rhsTypeId := ctx.typeId(spec, ctx.typeOf(spec.Type))
 		return glang.ConstDecl{
 			Name: typeIdName,
-			Type: glang.GallinaIdent("go_string"),
+			Type: glang.GallinaVerbatim("go_string"),
 			Val:  rhsTypeId,
 		}
 	} else {
 		return glang.ConstDecl{
 			Name: typeIdName,
-			Type: glang.GallinaIdent("go_string"),
+			Type: glang.GallinaVerbatim("go_string"),
 			Val:  glang.StringLiteral{Value: fmt.Sprintf("%s.%s", ctx.pkgPath, typeName)},
 		}
 	}
@@ -150,7 +150,7 @@ func (ctx *Ctx) typeId(location locatable, t types.Type) glang.Expr {
 	case *types.Basic:
 		switch t.Name() {
 		case "uint64", "uint32", "uint16", "uint8", "int64", "int32", "int16", "int8", "byte", "int", "uint", "bool", "string", "float64", "float32":
-			return glang.GallinaIdent(fmt.Sprintf("%sTⁱᵈ", t.Name()))
+			return glang.GallinaVerbatim(fmt.Sprintf("%sTⁱᵈ", t.Name()))
 		default:
 			ctx.unsupported(location, "typeId for basic type %s", t.Name())
 			return nil
@@ -164,9 +164,9 @@ func (ctx *Ctx) typeId(location locatable, t types.Type) glang.Expr {
 	case *types.Signature:
 		return ctx.signatureTypeId(location, t)
 	case *types.Slice:
-		return glang.NewCallExpr(glang.GallinaIdent("sliceTⁱᵈ"), ctx.typeId(location, t.Elem()))
+		return glang.NewCallExpr(glang.GallinaVerbatim("sliceTⁱᵈ"), ctx.typeId(location, t.Elem()))
 	case *types.Pointer:
-		return glang.NewCallExpr(glang.GallinaIdent("ptrTⁱᵈ"), ctx.typeId(location, t.Elem()))
+		return glang.NewCallExpr(glang.GallinaVerbatim("ptrTⁱᵈ"), ctx.typeId(location, t.Elem()))
 	case *types.Chan:
 		chanTypeId := "chanⁱᵈ"
 		switch t.Dir() {
@@ -175,7 +175,7 @@ func (ctx *Ctx) typeId(location locatable, t types.Type) glang.Expr {
 		case types.RecvOnly:
 			chanTypeId = "recv" + chanTypeId
 		}
-		return glang.NewCallExpr(glang.GallinaIdent(chanTypeId), ctx.typeId(location, t.Elem()))
+		return glang.NewCallExpr(glang.GallinaVerbatim(chanTypeId), ctx.typeId(location, t.Elem()))
 	default:
 		ctx.unsupported(location, "typeId for type %v", t)
 		return nil
@@ -196,7 +196,7 @@ func (ctx *Ctx) structTypeId(location locatable, sig *types.Struct) glang.Expr {
 			ctx.typeId(location, sig.Field(i).Type())})
 	}
 
-	return glang.NewCallExpr(glang.GallinaIdent("structTⁱᵈ"), fields)
+	return glang.NewCallExpr(glang.GallinaVerbatim("structTⁱᵈ"), fields)
 }
 
 func (ctx *Ctx) signatureTypeId(location locatable, sig *types.Signature) glang.Expr {
@@ -210,8 +210,8 @@ func (ctx *Ctx) signatureTypeId(location locatable, sig *types.Signature) glang.
 		resultTypeIds = append(resultTypeIds, ctx.typeId(location, sig.Results().At(i).Type()))
 	}
 
-	variadicFlag := glang.BoolLiteral(sig.Variadic())
-	return glang.NewCallExpr(glang.GallinaIdent("funcTⁱᵈ"), paramTypeIds, resultTypeIds, variadicFlag)
+	variadicFlag := glang.GallinaVerbatim(fmt.Sprintf("%t", sig.Variadic()))
+	return glang.NewCallExpr(glang.GallinaVerbatim("funcTⁱᵈ"), paramTypeIds, resultTypeIds, variadicFlag)
 }
 
 func (ctx *Ctx) typeOf(e ast.Expr) types.Type {

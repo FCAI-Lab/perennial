@@ -114,8 +114,11 @@ type Expr interface {
 }
 
 var GallinaKeywords map[string]bool = map[string]bool{
-	"is": true,
-	"as": true,
+	"is":     true,
+	"as":     true,
+	"mod":    true,
+	"match":  true,
+	"lookup": true,
 }
 
 // GallinaIdent is treated as a possibly qualified Gallina identifier (and thus
@@ -151,8 +154,6 @@ type PackageIdent struct {
 func (e PackageIdent) Coq(needs_paren bool) string {
 	return fmt.Sprintf("%s.%s", ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(e.Package), e.Ident)
 }
-
-var Skip Expr = GallinaVerbatim("Skip")
 
 type ParenExpr struct {
 	Inner Expr
