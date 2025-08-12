@@ -719,6 +719,7 @@ func (ctx *Ctx) selectionMethod(addressable bool, expr glang.Expr,
 	// At this point, (expr : curType), and (curType = ptr<named>) if the
 	// original expression is an address or is addressable, and (curType =
 	// named) otherwise.
+
 	if info, ok := ctx.getInterfaceInfo(curType); ok {
 		if info.throughPointer {
 			expr = glang.DerefExpr{X: expr, Ty: ctx.glangType(l, curType.(*types.Pointer).Elem())}
@@ -727,6 +728,8 @@ func (ctx *Ctx) selectionMethod(addressable bool, expr glang.Expr,
 			glang.StringVal{Value: glang.StringLiteral{Value: info.interfaceType.Method(fnIndex).Name()}}, expr,
 		)
 	}
+
+	fmt.Println(selection.Obj().Name())
 
 	if pointerT, ok := types.Unalias(curType).(*types.Pointer); ok {
 		t, ok := types.Unalias(pointerT.Elem()).(*types.Named)
@@ -860,59 +863,25 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 			)
 		}
 
-		mset := types.NewMethodSet(ctx.typeOf(e.X))
-		for i := range mset.Len() {
-			if mset.At(i).Obj().Name() == e.Sel.Name {
-				// expression represents just (x.f), not `(&x).f`
-				t := ctx.typeOf(e.X)
-				typeNameSuffix := ""
-				if ptrType, ok := t.(*types.Pointer); ok {
-					t = ptrType.Elem()
-					typeNameSuffix = "'ptr"
-				}
+		f := ctx.info.ObjectOf(e.Sel).(*types.Func)
+		receiver := ctx.expr(e.X)
+		receiverType := types.Unalias(ctx.typeOf(e.X))
+		typeIdExpr := ctx.typeId(e.X, receiverType)
+		methodExpr := glang.NewStringVal(e.Sel.Name)
 
-				named, ok := types.Unalias(t).(*types.Named)
-				if !ok {
-					ctx.unsupported(e.X, "calling method where syntactic receiver's type is not a named type")
+		// figure out if this is shorthand for (&x).m().
+		methodReceiverType := types.Unalias(f.Signature().Recv().Type())
+		if p, ok := methodReceiverType.(*types.Pointer); ok {
+			if types.Identical(p.Elem(), receiverType) {
+				if !ctx.info.Types[e.X].Addressable() {
+					ctx.nope(e.X, "x is not addressable but want (&x).m")
 				}
-				pkgName, typeName := ctx.getPkgAndName(named.Obj())
-				ctx.dep.Add(pkgName)
-				ctx.dep.Add(typeName)
-				methodName := e.Sel.Name
-
-				return glang.NewCallExpr(
-					glang.GallinaVerbatim("method_call"),
-					glang.StringVal{Value: ctx.gallinaIdent(pkgName)},
-					glang.StringVal{Value: glang.GallinaString(typeName + typeNameSuffix)},
-					glang.StringVal{Value: glang.GallinaString(methodName)},
-					ctx.expr(e.X),
-				).Append(
-					typesToExprs(ctx.convertTypeArgsToGlang(nil, named.TypeArgs()))...,
-				)
+				receiver = ctx.exprAddr(e.X)
 			}
 		}
 
-		// if reached here, the selectorExpr denotes `(&x).f`
-		named, ok := types.Unalias(ctx.typeOf(e.X)).(*types.Named)
-		if !ok {
-			ctx.unsupported(e.X, "expected receiver's type to be a named type")
-		}
-		pkgName, typeName := ctx.getPkgAndName(named.Obj())
-		ctx.dep.Add(pkgName)
-		ctx.dep.Add(typeName)
-		methodName := e.Sel.Name
-
-		return glang.NewCallExpr(
-			glang.GallinaVerbatim("method_call"),
-			glang.StringVal{Value: ctx.gallinaIdent(pkgName)},
-			glang.StringVal{Value: glang.GallinaString(typeName + "'ptr")},
-			glang.StringVal{Value: glang.GallinaString(methodName)},
-			ctx.exprAddr(e.X),
-		).Append(
-			typesToExprs(ctx.convertTypeArgsToGlang(nil, named.TypeArgs()))...,
-		)
+		return glang.NewCallExpr(glang.GallinaVerbatim("method_call"), typeIdExpr, methodExpr, receiver)
 	}
-
 	panic("unreachable")
 }
 
