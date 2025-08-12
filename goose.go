@@ -729,8 +729,6 @@ func (ctx *Ctx) selectionMethod(addressable bool, expr glang.Expr,
 		)
 	}
 
-	fmt.Println(selection.Obj().Name())
-
 	if pointerT, ok := types.Unalias(curType).(*types.Pointer); ok {
 		t, ok := types.Unalias(pointerT.Elem()).(*types.Named)
 		if !ok {
