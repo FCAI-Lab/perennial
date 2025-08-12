@@ -156,6 +156,19 @@ func (ctx *Ctx) getTypeId(location locatable, t types.Type) glang.Expr {
 		return glang.GallinaIdent(typeIdIdent)
 	case *types.Signature:
 		return ctx.signatureTypeId(location, t)
+	case *types.Slice:
+		return glang.NewCallExpr(glang.GallinaIdent("sliceTⁱᵈ"), ctx.getTypeId(location, t.Elem()))
+	case *types.Pointer:
+		return glang.NewCallExpr(glang.GallinaIdent("ptrTⁱᵈ"), ctx.getTypeId(location, t.Elem()))
+	case *types.Chan:
+		chanTypeId := "chanⁱᵈ"
+		switch t.Dir() {
+		case types.SendOnly:
+			chanTypeId = "send" + chanTypeId
+		case types.RecvOnly:
+			chanTypeId = "recv" + chanTypeId
+		}
+		return glang.NewCallExpr(glang.GallinaIdent(chanTypeId), ctx.getTypeId(location, t.Elem()))
 	default:
 		ctx.unsupported(location, "typeId for type %v", t)
 		return nil
