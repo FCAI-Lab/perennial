@@ -45,7 +45,7 @@ Definition vars' : list (go_string * go_type) := [].
 
 Definition functions' : list (go_string * val) := [].
 
-Definition msets' : list (go_string * (list (go_string * val))) := [("c"%go, []); ("c'ptr"%go, [("Bar"%go, c__Barⁱᵐᵖˡ); ("Foo"%go, c__Fooⁱᵐᵖˡ)])].
+Definition msets' : list (go_string * (list (go_string * val))) := [(cⁱᵈ, []); (ptrTⁱᵈ cⁱᵈ, [("Bar"%go, c__Barⁱᵐᵖˡ); ("Foo"%go, c__Fooⁱᵐᵖˡ)])].
 
 #[global] Instance info' : PkgInfo interfacerecursion.interfacerecursion :=
   {|

@@ -386,7 +386,7 @@ Definition vars' : list (go_string * go_type) := [].
 
 Definition functions' : list (go_string * val) := [(Init, Initⁱᵐᵖˡ); (Begin, Beginⁱᵐᵖˡ)].
 
-Definition msets' : list (go_string * (list (go_string * val))) := [("Log"%go, [("Append"%go, Log__Appendⁱᵐᵖˡ); ("Logger"%go, Log__Loggerⁱᵐᵖˡ); ("Read"%go, Log__Readⁱᵐᵖˡ); ("diskAppend"%go, Log__diskAppendⁱᵐᵖˡ); ("diskAppendWait"%go, Log__diskAppendWaitⁱᵐᵖˡ); ("memAppend"%go, Log__memAppendⁱᵐᵖˡ); ("memWrite"%go, Log__memWriteⁱᵐᵖˡ); ("readBlocks"%go, Log__readBlocksⁱᵐᵖˡ); ("readHdr"%go, Log__readHdrⁱᵐᵖˡ); ("readLogTxnNxt"%go, Log__readLogTxnNxtⁱᵐᵖˡ); ("writeBlocks"%go, Log__writeBlocksⁱᵐᵖˡ); ("writeHdr"%go, Log__writeHdrⁱᵐᵖˡ)]); ("Log'ptr"%go, [("Append"%go, (λ: "$recvAddr",
+Definition msets' : list (go_string * (list (go_string * val))) := [(Logⁱᵈ, [("Append"%go, Log__Appendⁱᵐᵖˡ); ("Logger"%go, Log__Loggerⁱᵐᵖˡ); ("Read"%go, Log__Readⁱᵐᵖˡ); ("diskAppend"%go, Log__diskAppendⁱᵐᵖˡ); ("diskAppendWait"%go, Log__diskAppendWaitⁱᵐᵖˡ); ("memAppend"%go, Log__memAppendⁱᵐᵖˡ); ("memWrite"%go, Log__memWriteⁱᵐᵖˡ); ("readBlocks"%go, Log__readBlocksⁱᵐᵖˡ); ("readHdr"%go, Log__readHdrⁱᵐᵖˡ); ("readLogTxnNxt"%go, Log__readLogTxnNxtⁱᵐᵖˡ); ("writeBlocks"%go, Log__writeBlocksⁱᵐᵖˡ); ("writeHdr"%go, Log__writeHdrⁱᵐᵖˡ)]); (ptrTⁱᵈ Logⁱᵈ, [("Append"%go, (λ: "$recvAddr",
                  method_call #logging2.logging2 #"Log" #"Append" (![#Log] "$recvAddr")
                  )%V); ("Logger"%go, (λ: "$recvAddr",
                  method_call #logging2.logging2 #"Log" #"Logger" (![#Log] "$recvAddr")
@@ -410,7 +410,7 @@ Definition msets' : list (go_string * (list (go_string * val))) := [("Log"%go, [
                  method_call #logging2.logging2 #"Log" #"writeBlocks" (![#Log] "$recvAddr")
                  )%V); ("writeHdr"%go, (λ: "$recvAddr",
                  method_call #logging2.logging2 #"Log" #"writeHdr" (![#Log] "$recvAddr")
-                 )%V)]); ("Txn"%go, [("Commit"%go, Txn__Commitⁱᵐᵖˡ); ("Read"%go, Txn__Readⁱᵐᵖˡ); ("Write"%go, Txn__Writeⁱᵐᵖˡ)]); ("Txn'ptr"%go, [("Commit"%go, (λ: "$recvAddr",
+                 )%V)]); (Txnⁱᵈ, [("Commit"%go, Txn__Commitⁱᵐᵖˡ); ("Read"%go, Txn__Readⁱᵐᵖˡ); ("Write"%go, Txn__Writeⁱᵐᵖˡ)]); (ptrTⁱᵈ Txnⁱᵈ, [("Commit"%go, (λ: "$recvAddr",
                  method_call #logging2.logging2 #"Txn" #"Commit" (![#Txn] "$recvAddr")
                  )%V); ("Read"%go, (λ: "$recvAddr",
                  method_call #logging2.logging2 #"Txn" #"Read" (![#Txn] "$recvAddr")

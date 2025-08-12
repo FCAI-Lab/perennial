@@ -371,7 +371,7 @@ Definition vars' : list (go_string * go_type) := [].
 
 Definition functions' : list (go_string * val) := [(intToBlock, intToBlockⁱᵐᵖˡ); (blockToInt, blockToIntⁱᵐᵖˡ); (New, Newⁱᵐᵖˡ); (getLogEntry, getLogEntryⁱᵐᵖˡ); (applyLog, applyLogⁱᵐᵖˡ); (clearLog, clearLogⁱᵐᵖˡ); (Open, Openⁱᵐᵖˡ)].
 
-Definition msets' : list (go_string * (list (go_string * val))) := [("Log"%go, [("Apply"%go, Log__Applyⁱᵐᵖˡ); ("BeginTxn"%go, Log__BeginTxnⁱᵐᵖˡ); ("Commit"%go, Log__Commitⁱᵐᵖˡ); ("Read"%go, Log__Readⁱᵐᵖˡ); ("Size"%go, Log__Sizeⁱᵐᵖˡ); ("Write"%go, Log__Writeⁱᵐᵖˡ); ("lock"%go, Log__lockⁱᵐᵖˡ); ("unlock"%go, Log__unlockⁱᵐᵖˡ)]); ("Log'ptr"%go, [("Apply"%go, (λ: "$recvAddr",
+Definition msets' : list (go_string * (list (go_string * val))) := [(Logⁱᵈ, [("Apply"%go, Log__Applyⁱᵐᵖˡ); ("BeginTxn"%go, Log__BeginTxnⁱᵐᵖˡ); ("Commit"%go, Log__Commitⁱᵐᵖˡ); ("Read"%go, Log__Readⁱᵐᵖˡ); ("Size"%go, Log__Sizeⁱᵐᵖˡ); ("Write"%go, Log__Writeⁱᵐᵖˡ); ("lock"%go, Log__lockⁱᵐᵖˡ); ("unlock"%go, Log__unlockⁱᵐᵖˡ)]); (ptrTⁱᵈ Logⁱᵈ, [("Apply"%go, (λ: "$recvAddr",
                  method_call #wal.awol #"Log" #"Apply" (![#Log] "$recvAddr")
                  )%V); ("BeginTxn"%go, (λ: "$recvAddr",
                  method_call #wal.awol #"Log" #"BeginTxn" (![#Log] "$recvAddr")

@@ -22,7 +22,7 @@ Definition vars' : list (go_string * go_type) := [].
 
 Definition functions' : list (go_string * val) := [].
 
-Definition msets' : list (go_string * (list (go_string * val))) := [("Foo"%go, []); ("Foo'ptr"%go, [])].
+Definition msets' : list (go_string * (list (go_string * val))) := [(Fooⁱᵈ, []); (ptrTⁱᵈ Fooⁱᵈ, [])].
 
 #[global] Instance info' : PkgInfo comments.comments :=
   {|
