@@ -23,6 +23,8 @@ Definition Log : go_type := structT [
   "length" :: ptrT
 ].
 
+Definition Logⁱᵈ : go_string := "github.com/goose-lang/goose/testdata/examples/wal.Log"%go.
+
 Definition intToBlock : go_string := "github.com/goose-lang/goose/testdata/examples/wal.intToBlock"%go.
 
 (* go: log.go:25:6 *)

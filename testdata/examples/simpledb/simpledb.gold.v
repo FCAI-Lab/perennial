@@ -26,6 +26,8 @@ Definition Table : go_type := structT [
   "File" :: fileT
 ].
 
+Definition Tableⁱᵈ : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.Table"%go.
+
 Definition CreateTable : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.CreateTable"%go.
 
 (* CreateTable creates a new, empty table.
@@ -63,6 +65,8 @@ Definition Entry : go_type := structT [
   "Key" :: uint64T;
   "Value" :: sliceT
 ].
+
+Definition Entryⁱᵈ : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.Entry"%go.
 
 Definition DecodeUInt64 : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.DecodeUInt64"%go.
 
@@ -155,6 +159,8 @@ Definition lazyFileBuf : go_type := structT [
   "offset" :: uint64T;
   "next" :: sliceT
 ].
+
+Definition lazyFileBufⁱᵈ : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.lazyFileBuf"%go.
 
 Definition readTableIndex : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.readTableIndex"%go.
 
@@ -332,6 +338,8 @@ Definition bufFile : go_type := structT [
   "buf" :: ptrT
 ].
 
+Definition bufFileⁱᵈ : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.bufFile"%go.
+
 Definition newBuf : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.newBuf"%go.
 
 (* go: simpledb.go:151:6 *)
@@ -405,6 +413,8 @@ Definition tableWriter : go_type := structT [
   "file" :: bufFile;
   "offset" :: ptrT
 ].
+
+Definition tableWriterⁱᵈ : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.tableWriter"%go.
 
 Definition newTableWriter : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.newTableWriter"%go.
 
@@ -564,6 +574,8 @@ Definition Database : go_type := structT [
   "tableL" :: ptrT;
   "compactionL" :: ptrT
 ].
+
+Definition Databaseⁱᵈ : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.Database"%go.
 
 Definition makeValueBuffer : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.makeValueBuffer"%go.
 

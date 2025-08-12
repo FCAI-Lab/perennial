@@ -16,6 +16,8 @@ Definition Foo : go_type := structT [
   "a" :: boolT
 ].
 
+Definition Fooⁱᵈ : go_string := "github.com/goose-lang/goose/testdata/examples/comments.Foo"%go.
+
 Definition vars' : list (go_string * go_type) := [].
 
 Definition functions' : list (go_string * val) := [].

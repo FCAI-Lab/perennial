@@ -29,6 +29,8 @@ Definition Log : go_type := structT [
   "logTxnNxt" :: ptrT
 ].
 
+Definition Logⁱᵈ : go_string := "github.com/goose-lang/goose/testdata/examples/logging2.Log"%go.
+
 (* go: logging2.go:25:16 *)
 Definition Log__writeHdrⁱᵐᵖˡ : val :=
   λ: "log" "len",
@@ -286,6 +288,8 @@ Definition Txn : go_type := structT [
   "log" :: ptrT;
   "blks" :: mapT uint64T sliceT
 ].
+
+Definition Txnⁱᵈ : go_string := "github.com/goose-lang/goose/testdata/examples/logging2.Txn"%go.
 
 Definition Begin : go_string := "github.com/goose-lang/goose/testdata/examples/logging2.Begin"%go.
 
