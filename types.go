@@ -79,32 +79,34 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) []glang.Decl {
 		}
 		return nil
 	case declfilter.Translate:
-		ctx.dep.SetCurrentName(spec.Name.Name)
-		defer ctx.dep.UnsetCurrentName()
-		if t, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
-			if _, ok := t.Underlying().(*types.Interface); !ok {
-				ctx.namedTypes = append(ctx.namedTypes, t)
-			}
-		}
-		ty := ctx.typeOf(spec.Type)
-		decl := glang.TypeDecl{
-			Name:       spec.Name.Name,
-			Body:       ctx.glangType(spec, ty),
-			TypeParams: ctx.typeParamList(spec.TypeParams),
-		}
-
 		var decls []glang.Decl
-		if ctx.typeSpecIsGooseLang(spec) {
-			decls = append(decls, decl)
-		} else {
-			decls = append(decls, glang.GallinaTypeDecl{
-				Decl: decl,
-			})
-		}
 
-		// Add typeId constant for named types
-		typeIdDecl := ctx.createTypeIdDecl(spec)
-		decls = append(decls, typeIdDecl)
+		func() {
+			ctx.dep.SetCurrentName(spec.Name.Name)
+			defer ctx.dep.UnsetCurrentName()
+
+			if t, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
+				if _, ok := t.Underlying().(*types.Interface); !ok {
+					ctx.namedTypes = append(ctx.namedTypes, t)
+				}
+			}
+			ty := ctx.typeOf(spec.Type)
+			decl := glang.TypeDecl{
+				Name:       spec.Name.Name,
+				Body:       ctx.glangType(spec, ty),
+				TypeParams: ctx.typeParamList(spec.TypeParams),
+			}
+
+			if ctx.typeSpecIsGooseLang(spec) {
+				decls = append(decls, decl)
+			} else {
+				decls = append(decls, glang.GallinaTypeDecl{
+					Decl: decl,
+				})
+			}
+		}()
+
+		decls = append(decls, ctx.createTypeIdDecl(spec))
 
 		return decls
 	default:
@@ -115,27 +117,22 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) []glang.Decl {
 func (ctx *Ctx) createTypeIdDecl(spec *ast.TypeSpec) glang.Decl {
 	typeName := spec.Name.Name
 	typeIdName := typeName + "ⁱᵈ"
+	ctx.dep.SetCurrentName(typeIdName)
+	defer ctx.dep.UnsetCurrentName()
 
-	// Check if this is an alias declaration (type A = B)
+	// If this is an alias declaration, reference the RHS type's typeId
 	if spec.Assign != 0 {
-		// For alias declarations, reference the RHS type's typeId
-		rhsType := ctx.typeOf(spec.Type)
-		rhsTypeIdExpr := ctx.getTypeId(spec, rhsType)
-
+		rhsTypeId := ctx.getTypeId(spec, ctx.typeOf(spec.Type))
 		return glang.ConstDecl{
 			Name: typeIdName,
 			Type: glang.GallinaIdent("go_string"),
-			Val:  rhsTypeIdExpr,
+			Val:  rhsTypeId,
 		}
 	} else {
-		// For regular type declarations, create the typeId string
-		pkgPath := ctx.pkgPath
-		typeIdValue := fmt.Sprintf("%s.%s", pkgPath, typeName)
-
 		return glang.ConstDecl{
 			Name: typeIdName,
 			Type: glang.GallinaIdent("go_string"),
-			Val:  glang.StringLiteral{Value: typeIdValue},
+			Val:  glang.StringLiteral{Value: fmt.Sprintf("%s.%s", ctx.pkgPath, typeName)},
 		}
 	}
 }
@@ -146,7 +143,6 @@ func (ctx *Ctx) getTypeId(location locatable, t types.Type) glang.Expr {
 
 	switch t := t.(type) {
 	case *types.Basic:
-		// Only handle basic types that should have typeIds
 		switch t.Name() {
 		case "uint64", "uint32", "uint16", "uint8", "int64", "int32", "int16", "int8", "byte", "int", "uint", "bool", "string", "float64", "float32":
 			return glang.GallinaIdent(fmt.Sprintf("%sTⁱᵈ", t.Name()))
@@ -155,64 +151,38 @@ func (ctx *Ctx) getTypeId(location locatable, t types.Type) glang.Expr {
 			return nil
 		}
 	case *types.Named:
-		// Named types reference their typeId constant
-		qualifiedName := ctx.qualifiedName(t.Obj())
-		return glang.GallinaIdent(qualifiedName + "ⁱᵈ")
+		typeIdIdent := ctx.qualifiedName(t.Obj()) + "ⁱᵈ"
+		ctx.dep.Add(typeIdIdent)
+		return glang.GallinaIdent(typeIdIdent)
 	case *types.Signature:
-		// Function types call funcTⁱᵈ with parameter types, result types, and variadic flag
-		return ctx.buildFuncTypeId(location, t)
+		return ctx.signatureTypeId(location, t)
 	default:
 		ctx.unsupported(location, "typeId for type %v", t)
 		return nil
 	}
 }
 
-// buildFuncTypeId constructs a funcTⁱᵈ call for a function signature
-func (ctx *Ctx) buildFuncTypeId(location locatable, sig *types.Signature) glang.Expr {
-	// Build parameter type list
-	var paramTypeIds []glang.Expr
-	params := sig.Params()
-	for i := 0; i < params.Len(); i++ {
-		paramType := params.At(i).Type()
-		paramTypeId := ctx.getTypeId(location, paramType)
-		if paramTypeId == nil {
-			return nil // error already reported
-		}
-		paramTypeIds = append(paramTypeIds, paramTypeId)
+func (ctx *Ctx) signatureTypeId(location locatable, sig *types.Signature) glang.Expr {
+	var paramTypeIds glang.ListExpr
+	for i := range sig.Params().Len() {
+		paramTypeIds = append(paramTypeIds, ctx.getTypeId(location, sig.Params().At(i).Type()))
 	}
 
-	// Build result type list
-	var resultTypeIds []glang.Expr
-	results := sig.Results()
-	for i := 0; i < results.Len(); i++ {
-		resultType := results.At(i).Type()
-		resultTypeId := ctx.getTypeId(location, resultType)
-		if resultTypeId == nil {
-			return nil // error already reported
-		}
-		resultTypeIds = append(resultTypeIds, resultTypeId)
+	var resultTypeIds glang.ListExpr
+	for i := range sig.Results().Len() {
+		resultTypeIds = append(resultTypeIds, ctx.getTypeId(location, sig.Results().At(i).Type()))
 	}
 
-	// Create list literals
-	paramList := glang.ListExpr(paramTypeIds)
-	resultList := glang.ListExpr(resultTypeIds)
-
-	// Variadic flag
 	variadicFlag := glang.GallinaIdent("false")
 	if sig.Variadic() {
 		variadicFlag = glang.GallinaIdent("true")
 	}
 
-	// Build the funcTⁱᵈ call
-	return glang.NewCallExpr(glang.GallinaIdent("funcTⁱᵈ"), paramList, resultList, variadicFlag)
+	return glang.NewCallExpr(glang.GallinaIdent("funcTⁱᵈ"), paramTypeIds, resultTypeIds, variadicFlag)
 }
 
 func (ctx *Ctx) typeOf(e ast.Expr) types.Type {
 	return ctx.info.TypeOf(e)
-}
-
-func (ctx *Ctx) glangTypeFromExpr(e ast.Expr) glang.Type {
-	return ctx.glangType(e, ctx.typeOf(e))
 }
 
 func (ctx *Ctx) structType(t *types.Struct) glang.Type {
