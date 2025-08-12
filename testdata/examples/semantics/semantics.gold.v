@@ -175,11 +175,11 @@ Definition testMaxUint64ⁱᵐᵖˡ : val :=
 
 Definition AdderType : go_type := funcT.
 
-Definition AdderTypeⁱᵈ : go_string := funcTⁱᵈ [uint64Tⁱᵈ] [uint64Tⁱᵈ] false.
+Definition AdderTypeⁱᵈ : go_string := funcTⁱᵈ [uint64Tⁱᵈ] [uint64Tⁱᵈ] #false.
 
 Definition MultipleArgsType : go_type := funcT.
 
-Definition MultipleArgsTypeⁱᵈ : go_string := funcTⁱᵈ [uint64Tⁱᵈ; boolTⁱᵈ] [uint64Tⁱᵈ] false.
+Definition MultipleArgsTypeⁱᵈ : go_string := funcTⁱᵈ [uint64Tⁱᵈ; boolTⁱᵈ] [uint64Tⁱᵈ] #false.
 
 Definition adder : go_string := "github.com/goose-lang/goose/testdata/examples/semantics.adder"%go.
 
@@ -1005,7 +1005,7 @@ Definition testBasicInterfaceⁱᵐᵖˡ : val :=
       "Side" ::= "$Side"
     }]) in
     do:  ("s" <-[#SquareStruct] "$r0");;;
-    return: ((let: "$a0" := (interface.make (#semantics.semantics, #"SquareStruct") (![#SquareStruct] "s")) in
+    return: ((let: "$a0" := (interface.make #SquareStructⁱᵈ (![#SquareStruct] "s")) in
      (func_call #measureArea) "$a0") = #(W64 4))).
 
 Definition testAssignInterface : go_string := "github.com/goose-lang/goose/testdata/examples/semantics.testAssignInterface"%go.
@@ -1020,7 +1020,7 @@ Definition testAssignInterfaceⁱᵐᵖˡ : val :=
     }]) in
     do:  ("s" <-[#SquareStruct] "$r0");;;
     let: "area" := (mem.alloc (type.zero_val #uint64T)) in
-    let: "$r0" := (let: "$a0" := (interface.make (#semantics.semantics, #"SquareStruct") (![#SquareStruct] "s")) in
+    let: "$r0" := (let: "$a0" := (interface.make #SquareStructⁱᵈ (![#SquareStruct] "s")) in
     (func_call #measureArea) "$a0") in
     do:  ("area" <-[#uint64T] "$r0");;;
     return: ((![#uint64T] "area") = #(W64 9))).
@@ -1037,11 +1037,11 @@ Definition testMultipleInterfaceⁱᵐᵖˡ : val :=
     }]) in
     do:  ("s" <-[#SquareStruct] "$r0");;;
     let: "square1" := (mem.alloc (type.zero_val #uint64T)) in
-    let: "$r0" := (let: "$a0" := (interface.make (#semantics.semantics, #"SquareStruct") (![#SquareStruct] "s")) in
+    let: "$r0" := (let: "$a0" := (interface.make #SquareStructⁱᵈ (![#SquareStruct] "s")) in
     (func_call #measureArea) "$a0") in
     do:  ("square1" <-[#uint64T] "$r0");;;
     let: "square2" := (mem.alloc (type.zero_val #uint64T)) in
-    let: "$r0" := (let: "$a0" := (interface.make (#semantics.semantics, #"SquareStruct") (![#SquareStruct] "s")) in
+    let: "$r0" := (let: "$a0" := (interface.make #SquareStructⁱᵈ (![#SquareStruct] "s")) in
     (func_call #measureArea) "$a0") in
     do:  ("square2" <-[#uint64T] "$r0");;;
     return: ((![#uint64T] "square1") = (![#uint64T] "square2"))).
@@ -1058,15 +1058,15 @@ Definition testBinaryExprInterfaceⁱᵐᵖˡ : val :=
     }]) in
     do:  ("s" <-[#SquareStruct] "$r0");;;
     let: "square1" := (mem.alloc (type.zero_val #uint64T)) in
-    let: "$r0" := (let: "$a0" := (interface.make (#semantics.semantics, #"SquareStruct") (![#SquareStruct] "s")) in
+    let: "$r0" := (let: "$a0" := (interface.make #SquareStructⁱᵈ (![#SquareStruct] "s")) in
     (func_call #measureArea) "$a0") in
     do:  ("square1" <-[#uint64T] "$r0");;;
     let: "square2" := (mem.alloc (type.zero_val #uint64T)) in
-    let: "$r0" := (let: "$a0" := (interface.make (#semantics.semantics, #"SquareStruct") (![#SquareStruct] "s")) in
+    let: "$r0" := (let: "$a0" := (interface.make #SquareStructⁱᵈ (![#SquareStruct] "s")) in
     (func_call #measureVolume) "$a0") in
     do:  ("square2" <-[#uint64T] "$r0");;;
-    return: (((![#uint64T] "square1") = (let: "$a0" := (interface.make (#semantics.semantics, #"SquareStruct") (![#SquareStruct] "s")) in
-     (func_call #measureArea) "$a0")) && ((![#uint64T] "square2") = (let: "$a0" := (interface.make (#semantics.semantics, #"SquareStruct") (![#SquareStruct] "s")) in
+    return: (((![#uint64T] "square1") = (let: "$a0" := (interface.make #SquareStructⁱᵈ (![#SquareStruct] "s")) in
+     (func_call #measureArea) "$a0")) && ((![#uint64T] "square2") = (let: "$a0" := (interface.make #SquareStructⁱᵈ (![#SquareStruct] "s")) in
      (func_call #measureVolume) "$a0")))).
 
 Definition testIfStmtInterface : go_string := "github.com/goose-lang/goose/testdata/examples/semantics.testIfStmtInterface"%go.
@@ -1080,7 +1080,7 @@ Definition testIfStmtInterfaceⁱᵐᵖˡ : val :=
       "Side" ::= "$Side"
     }]) in
     do:  ("s" <-[#SquareStruct] "$r0");;;
-    (if: (let: "$a0" := (interface.make (#semantics.semantics, #"SquareStruct") (![#SquareStruct] "s")) in
+    (if: (let: "$a0" := (interface.make #SquareStructⁱᵈ (![#SquareStruct] "s")) in
     (func_call #measureArea) "$a0") = #(W64 9)
     then return: (#true)
     else do:  #());;;
@@ -2780,14 +2780,14 @@ Definition testSwitchConversionⁱᵐᵖˡ : val :=
     }])) in
     do:  ("v" <-[#ptrT] "$r0");;;
     let: "x" := (mem.alloc (type.zero_val #switchInterface)) in
-    let: "$r0" := (interface.make (#semantics.semantics, #"switchConcrete'ptr") (![#ptrT] "v")) in
+    let: "$r0" := (interface.make #(ptrTⁱᵈ switchConcreteⁱᵈ) (![#ptrT] "v")) in
     do:  ("x" <-[#switchInterface] "$r0");;;
     let: "$sw" := (![#switchInterface] "x") in
-    (if: "$sw" = (interface.make (#semantics.semantics, #"switchConcrete'ptr") (![#ptrT] "v"))
+    (if: "$sw" = (interface.make #(ptrTⁱᵈ switchConcreteⁱᵈ) (![#ptrT] "v"))
     then do:  #()
     else return: (#false));;;
     let: "$sw" := (![#ptrT] "v") in
-    (if: (interface.make (#semantics.semantics, #"switchConcrete'ptr") "$sw") = (![#switchInterface] "x")
+    (if: (interface.make #(ptrTⁱᵈ switchConcreteⁱᵈ) "$sw") = (![#switchInterface] "x")
     then do:  #()
     else return: (#false));;;
     return: (#true)).
@@ -2881,7 +2881,7 @@ Definition Newⁱᵐᵖˡ : val :=
     do:  ("diskSize" <-[#uint64T] "$r0");;;
     (if: (![#uint64T] "diskSize") ≤ logLength
     then
-      do:  (let: "$a0" := (interface.make (#""%go, #"string"%go) #"disk is too small to host log"%go) in
+      do:  (let: "$a0" := (interface.make #stringTⁱᵈ #"disk is too small to host log"%go) in
       Panic "$a0")
     else do:  #());;;
     let: "cache" := (mem.alloc (type.zero_val (type.mapT #uint64T #sliceT))) in
@@ -2999,7 +2999,7 @@ Definition Log__Writeⁱᵐᵖˡ : val :=
     do:  ("length" <-[#uint64T] "$r0");;;
     (if: (![#uint64T] "length") ≥ MaxTxnWrites
     then
-      do:  (let: "$a0" := (interface.make (#""%go, #"string"%go) #"transaction is at capacity"%go) in
+      do:  (let: "$a0" := (interface.make #stringTⁱᵈ #"transaction is at capacity"%go) in
       Panic "$a0")
     else do:  #());;;
     let: "aBlock" := (mem.alloc (type.zero_val #sliceT)) in
