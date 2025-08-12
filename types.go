@@ -137,8 +137,8 @@ func (ctx *Ctx) createTypeIdDecl(spec *ast.TypeSpec) glang.Decl {
 	}
 }
 
-// typeId returns the typeId expression for any Go type (it will be of type
-// `go_string` in Gallina).
+// typeId returns a "type identifier" expression for any Go type (it will be of
+// type `go_string` in Gallina).
 //
 // To be fully accurate to Go's type-comparison semantics, this should mimic
 // Go's internal (*types.Type).LinkString():
@@ -159,6 +159,8 @@ func (ctx *Ctx) typeId(location locatable, t types.Type) glang.Expr {
 		typeIdIdent := ctx.qualifiedName(t.Obj()) + "ⁱᵈ"
 		ctx.dep.Add(typeIdIdent)
 		return glang.GallinaIdent(typeIdIdent)
+	case *types.Struct:
+		return ctx.structTypeId(location, t)
 	case *types.Signature:
 		return ctx.signatureTypeId(location, t)
 	case *types.Slice:
@@ -180,6 +182,23 @@ func (ctx *Ctx) typeId(location locatable, t types.Type) glang.Expr {
 	}
 }
 
+func (ctx *Ctx) structTypeId(location locatable, sig *types.Struct) glang.Expr {
+	var fields glang.ListExpr
+	for i := range sig.NumFields() {
+		fieldName := sig.Field(i).Name()
+		if sig.Field(i).Embedded() {
+			fieldName = ""
+		}
+		if sig.Tag(i) != "" {
+			ctx.unsupported(location, "typeId for a struct with tags")
+		}
+		fields = append(fields, glang.TupleExpr{glang.NewStringVal(fieldName),
+			ctx.typeId(location, sig.Field(i).Type())})
+	}
+
+	return glang.NewCallExpr(glang.GallinaIdent("structTⁱᵈ"), fields)
+}
+
 func (ctx *Ctx) signatureTypeId(location locatable, sig *types.Signature) glang.Expr {
 	var paramTypeIds glang.ListExpr
 	for i := range sig.Params().Len() {
@@ -191,11 +210,7 @@ func (ctx *Ctx) signatureTypeId(location locatable, sig *types.Signature) glang.
 		resultTypeIds = append(resultTypeIds, ctx.typeId(location, sig.Results().At(i).Type()))
 	}
 
-	variadicFlag := glang.GallinaIdent("false")
-	if sig.Variadic() {
-		variadicFlag = glang.GallinaIdent("true")
-	}
-
+	variadicFlag := glang.BoolLiteral(sig.Variadic())
 	return glang.NewCallExpr(glang.GallinaIdent("funcTⁱᵈ"), paramTypeIds, resultTypeIds, variadicFlag)
 }
 
