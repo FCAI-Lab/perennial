@@ -8,18 +8,18 @@ Section code.
 Context `{ffi_syntax}.
 
 
-Definition A : go_type := interfaceT.
-
 Definition Aⁱᵈ : go_string := "github.com/goose-lang/goose/testdata/examples/interfacerecursion.A"%go.
 
-Definition B : go_type := interfaceT.
+Definition A : go_type := interfaceT.
 
 Definition Bⁱᵈ : go_string := "github.com/goose-lang/goose/testdata/examples/interfacerecursion.B"%go.
 
-Definition c : go_type := structT [
-].
+Definition B : go_type := interfaceT.
 
 Definition cⁱᵈ : go_string := "github.com/goose-lang/goose/testdata/examples/interfacerecursion.c"%go.
+
+Definition c : go_type := structT [
+].
 
 (* go: x.go:14:13 *)
 Definition c__Fooⁱᵐᵖˡ : val :=

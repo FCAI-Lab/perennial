@@ -16,14 +16,14 @@ Definition MaxTxnWrites : expr := #(W64 10).
 
 Definition logLength : expr := #(W64 21).
 
+Definition Logⁱᵈ : go_string := "github.com/goose-lang/goose/testdata/examples/wal.Log"%go.
+
 Definition Log : go_type := structT [
   "d" :: disk.Disk;
   "l" :: ptrT;
   "cache" :: mapT uint64T sliceT;
   "length" :: ptrT
 ].
-
-Definition Logⁱᵈ : go_string := "github.com/goose-lang/goose/testdata/examples/wal.Log"%go.
 
 Definition intToBlock : go_string := "github.com/goose-lang/goose/testdata/examples/wal.intToBlock"%go.
 
@@ -102,14 +102,14 @@ Definition Newⁱᵐᵖˡ : val :=
 Definition Log__lockⁱᵐᵖˡ : val :=
   λ: "l" <>,
     exception_do (let: "l" := (mem.alloc "l") in
-    do:  ((method_call #sync #"Mutex'ptr" #"Lock" (![#ptrT] (struct.field_ref #Log #"l"%go "l"))) #());;;
+    do:  ((method_call #(ptrTⁱᵈ sync.Mutexⁱᵈ) #"Lock"%go (![#ptrT] (struct.field_ref #Log #"l"%go "l"))) #());;;
     return: #()).
 
 (* go: log.go:56:14 *)
 Definition Log__unlockⁱᵐᵖˡ : val :=
   λ: "l" <>,
     exception_do (let: "l" := (mem.alloc "l") in
-    do:  ((method_call #sync #"Mutex'ptr" #"Unlock" (![#ptrT] (struct.field_ref #Log #"l"%go "l"))) #());;;
+    do:  ((method_call #(ptrTⁱᵈ sync.Mutexⁱᵈ) #"Unlock"%go (![#ptrT] (struct.field_ref #Log #"l"%go "l"))) #());;;
     return: #()).
 
 (* BeginTxn allocates space for a new transaction in the log.
@@ -120,16 +120,16 @@ Definition Log__unlockⁱᵐᵖˡ : val :=
 Definition Log__BeginTxnⁱᵐᵖˡ : val :=
   λ: "l" <>,
     exception_do (let: "l" := (mem.alloc "l") in
-    do:  ((method_call #wal.awol #"Log" #"lock" (![#Log] "l")) #());;;
+    do:  ((method_call #Logⁱᵈ #"lock"%go (![#Log] "l")) #());;;
     let: "length" := (mem.alloc (type.zero_val #uint64T)) in
     let: "$r0" := (![#uint64T] (![#ptrT] (struct.field_ref #Log #"length"%go "l"))) in
     do:  ("length" <-[#uint64T] "$r0");;;
     (if: (![#uint64T] "length") = #(W64 0)
     then
-      do:  ((method_call #wal.awol #"Log" #"unlock" (![#Log] "l")) #());;;
+      do:  ((method_call #Logⁱᵈ #"unlock"%go (![#Log] "l")) #());;;
       return: (#true)
     else do:  #());;;
-    do:  ((method_call #wal.awol #"Log" #"unlock" (![#Log] "l")) #());;;
+    do:  ((method_call #Logⁱᵈ #"unlock"%go (![#Log] "l")) #());;;
     return: (#false)).
 
 (* Read from the logical disk.
@@ -141,7 +141,7 @@ Definition Log__Readⁱᵐᵖˡ : val :=
   λ: "l" "a",
     exception_do (let: "l" := (mem.alloc "l") in
     let: "a" := (mem.alloc "a") in
-    do:  ((method_call #wal.awol #"Log" #"lock" (![#Log] "l")) #());;;
+    do:  ((method_call #Logⁱᵈ #"lock"%go (![#Log] "l")) #());;;
     let: "ok" := (mem.alloc (type.zero_val #boolT)) in
     let: "v" := (mem.alloc (type.zero_val #sliceT)) in
     let: ("$ret0", "$ret1") := (map.get (![type.mapT #uint64T #sliceT] (struct.field_ref #Log #"cache"%go "l")) (![#uint64T] "a")) in
@@ -151,10 +151,10 @@ Definition Log__Readⁱᵐᵖˡ : val :=
     do:  ("ok" <-[#boolT] "$r1");;;
     (if: ![#boolT] "ok"
     then
-      do:  ((method_call #wal.awol #"Log" #"unlock" (![#Log] "l")) #());;;
+      do:  ((method_call #Logⁱᵈ #"unlock"%go (![#Log] "l")) #());;;
       return: (![#sliceT] "v")
     else do:  #());;;
-    do:  ((method_call #wal.awol #"Log" #"unlock" (![#Log] "l")) #());;;
+    do:  ((method_call #Logⁱᵈ #"unlock"%go (![#Log] "l")) #());;;
     let: "dv" := (mem.alloc (type.zero_val #sliceT)) in
     let: "$r0" := (let: "$a0" := (logLength + (![#uint64T] "a")) in
     (interface.get #"Read"%go (![#disk.Disk] (struct.field_ref #Log #"d"%go "l"))) "$a0") in
@@ -178,7 +178,7 @@ Definition Log__Writeⁱᵐᵖˡ : val :=
     exception_do (let: "l" := (mem.alloc "l") in
     let: "v" := (mem.alloc "v") in
     let: "a" := (mem.alloc "a") in
-    do:  ((method_call #wal.awol #"Log" #"lock" (![#Log] "l")) #());;;
+    do:  ((method_call #Logⁱᵈ #"lock"%go (![#Log] "l")) #());;;
     let: "length" := (mem.alloc (type.zero_val #uint64T)) in
     let: "$r0" := (![#uint64T] (![#ptrT] (struct.field_ref #Log #"length"%go "l"))) in
     do:  ("length" <-[#uint64T] "$r0");;;
@@ -204,7 +204,7 @@ Definition Log__Writeⁱᵐᵖˡ : val :=
     do:  (map.insert (![type.mapT #uint64T #sliceT] (struct.field_ref #Log #"cache"%go "l")) (![#uint64T] "a") "$r0");;;
     let: "$r0" := ((![#uint64T] "length") + #(W64 1)) in
     do:  ((![#ptrT] (struct.field_ref #Log #"length"%go "l")) <-[#uint64T] "$r0");;;
-    do:  ((method_call #wal.awol #"Log" #"unlock" (![#Log] "l")) #());;;
+    do:  ((method_call #Logⁱᵈ #"unlock"%go (![#Log] "l")) #());;;
     return: #()).
 
 (* Commit the current transaction.
@@ -213,11 +213,11 @@ Definition Log__Writeⁱᵐᵖˡ : val :=
 Definition Log__Commitⁱᵐᵖˡ : val :=
   λ: "l" <>,
     exception_do (let: "l" := (mem.alloc "l") in
-    do:  ((method_call #wal.awol #"Log" #"lock" (![#Log] "l")) #());;;
+    do:  ((method_call #Logⁱᵈ #"lock"%go (![#Log] "l")) #());;;
     let: "length" := (mem.alloc (type.zero_val #uint64T)) in
     let: "$r0" := (![#uint64T] (![#ptrT] (struct.field_ref #Log #"length"%go "l"))) in
     do:  ("length" <-[#uint64T] "$r0");;;
-    do:  ((method_call #wal.awol #"Log" #"unlock" (![#Log] "l")) #());;;
+    do:  ((method_call #Logⁱᵈ #"unlock"%go (![#Log] "l")) #());;;
     let: "header" := (mem.alloc (type.zero_val #sliceT)) in
     let: "$r0" := (let: "$a0" := (![#uint64T] "length") in
     (func_call #intToBlock) "$a0") in
@@ -308,7 +308,7 @@ Definition clearLogⁱᵐᵖˡ : val :=
 Definition Log__Applyⁱᵐᵖˡ : val :=
   λ: "l" <>,
     exception_do (let: "l" := (mem.alloc "l") in
-    do:  ((method_call #wal.awol #"Log" #"lock" (![#Log] "l")) #());;;
+    do:  ((method_call #Logⁱᵈ #"lock"%go (![#Log] "l")) #());;;
     let: "length" := (mem.alloc (type.zero_val #uint64T)) in
     let: "$r0" := (![#uint64T] (![#ptrT] (struct.field_ref #Log #"length"%go "l"))) in
     do:  ("length" <-[#uint64T] "$r0");;;
@@ -319,7 +319,7 @@ Definition Log__Applyⁱᵐᵖˡ : val :=
     (func_call #clearLog) "$a0");;;
     let: "$r0" := #(W64 0) in
     do:  ((![#ptrT] (struct.field_ref #Log #"length"%go "l")) <-[#uint64T] "$r0");;;
-    do:  ((method_call #wal.awol #"Log" #"unlock" (![#Log] "l")) #());;;
+    do:  ((method_call #Logⁱᵈ #"unlock"%go (![#Log] "l")) #());;;
     return: #()).
 
 Definition Open : go_string := "github.com/goose-lang/goose/testdata/examples/wal.Open"%go.
