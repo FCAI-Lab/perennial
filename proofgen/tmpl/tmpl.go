@@ -117,8 +117,9 @@ type Variable struct {
 }
 
 type MethodSet struct {
-	// a named type, with possible 'ptr suffix for method set of a pointer
+	// a named type
 	TypeName string
+	TypeId   string
 	Methods  []string
 }
 

@@ -24,7 +24,7 @@ the promoted methods.  */}}
 {{ range $mset := .NamedTypeMethods -}}
 {{ range $methodName := $mset.Methods -}}
 Global Instance wp_method_call_{{$mset.TypeName}}_{{$methodName}} :
-  WpMethodCall {{$pkg}} "{{$mset.TypeName}}" "{{$methodName}}" _ (is_pkg_defined {{$pkg}}) :=
+  WpMethodCall {{$mset.TypeId}} "{{$methodName}}" _ (is_pkg_defined {{$pkg}}) :=
   ltac:(apply wp_method_call'; reflexivity).
 
 {{ end -}}
