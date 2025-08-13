@@ -119,7 +119,7 @@ Proof.
 
   rewrite -!/(typed_pointsto_def _ _ _) -!typed_pointsto_unseal.
 {{ range $f := .TypeInfo.FieldsExceptLast -}}
-  {{indent 2}}simpl_one_flatten_struct (# ({{$name}}.{{$f.CoqName}} v)) {{$T.GoTypeName}} "{{$f.Name}}"%go.
+  {{indent 2}}simpl_one_flatten_struct (# ({{$name}}.{{$f.CoqName}} v)) ({{$T.GoTypeName}}) "{{$f.Name}}"%go.
 {{ end }}
   solve_field_ref_f.
 Qed.

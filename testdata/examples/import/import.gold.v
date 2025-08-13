@@ -24,9 +24,10 @@ Definition msets' : list (go_string * (list (go_string * val))) := [].
   |}.
 
 Definition initialize' : val :=
-  rec: "initialize'" <> :=
-    globals.package_init import.example (λ: <>,
-      exception_do (do:  atomic.initialize')
+  λ: <>,
+    package.init #import.example (λ: <>,
+      exception_do (do:  (atomic.initialize' #());;;
+      do:  (package.alloc import.example #()))
       ).
 
 End code.

@@ -8,21 +8,25 @@ Section code.
 Context `{ffi_syntax}.
 
 
+Definition A : go_string := "github.com/goose-lang/goose/testdata/examples/mutualrec.A"%go.
+
+Definition B : go_string := "github.com/goose-lang/goose/testdata/examples/mutualrec.B"%go.
+
 (* go: mutualrec.go:3:6 *)
-Definition A : val :=
-  rec: "A" <> :=
-    exception_do (do:  ((func_call #mutualrec.mutualrec #"B"%go) #());;;
+Definition Aⁱᵐᵖˡ : val :=
+  λ: <>,
+    exception_do (do:  ((func_call #B) #());;;
     return: #()).
 
 (* go: mutualrec.go:7:6 *)
-Definition B : val :=
-  rec: "B" <> :=
-    exception_do (do:  ((func_call #mutualrec.mutualrec #"A"%go) #());;;
+Definition Bⁱᵐᵖˡ : val :=
+  λ: <>,
+    exception_do (do:  ((func_call #A) #());;;
     return: #()).
 
 Definition vars' : list (go_string * go_type) := [].
 
-Definition functions' : list (go_string * val) := [("A"%go, A); ("B"%go, B)].
+Definition functions' : list (go_string * val) := [(A, Aⁱᵐᵖˡ); (B, Bⁱᵐᵖˡ)].
 
 Definition msets' : list (go_string * (list (go_string * val))) := [].
 
@@ -35,9 +39,9 @@ Definition msets' : list (go_string * (list (go_string * val))) := [].
   |}.
 
 Definition initialize' : val :=
-  rec: "initialize'" <> :=
-    globals.package_init mutualrec.mutualrec (λ: <>,
-      exception_do (do:  #())
+  λ: <>,
+    package.init #mutualrec.mutualrec (λ: <>,
+      exception_do (do:  (package.alloc mutualrec.mutualrec #()))
       ).
 
 End code.

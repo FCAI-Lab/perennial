@@ -8,29 +8,35 @@ Section code.
 Context `{ffi_syntax}.
 
 
+Definition Aⁱᵈ : go_string := "github.com/goose-lang/goose/testdata/examples/interfacerecursion.A"%go.
+
 Definition A : go_type := interfaceT.
 
+Definition Bⁱᵈ : go_string := "github.com/goose-lang/goose/testdata/examples/interfacerecursion.B"%go.
+
 Definition B : go_type := interfaceT.
+
+Definition cⁱᵈ : go_string := "github.com/goose-lang/goose/testdata/examples/interfacerecursion.c"%go.
 
 Definition c : go_type := structT [
 ].
 
 (* go: x.go:14:13 *)
-Definition c__Foo : val :=
-  rec: "c__Foo" "c" <> :=
+Definition c__Fooⁱᵐᵖˡ : val :=
+  λ: "c" <>,
     exception_do (let: "c" := (mem.alloc "c") in
     let: "y" := (mem.alloc (type.zero_val #B)) in
-    let: "$r0" := (interface.make (#interfacerecursion.interfacerecursion, #"c'ptr") (![#ptrT] "c")) in
+    let: "$r0" := (interface.make #(ptrTⁱᵈ cⁱᵈ) (![#ptrT] "c")) in
     do:  ("y" <-[#B] "$r0");;;
     do:  ((interface.get #"Bar"%go (![#B] "y")) #());;;
     return: #()).
 
 (* go: x.go:19:13 *)
-Definition c__Bar : val :=
-  rec: "c__Bar" "c" <> :=
+Definition c__Barⁱᵐᵖˡ : val :=
+  λ: "c" <>,
     exception_do (let: "c" := (mem.alloc "c") in
     let: "y" := (mem.alloc (type.zero_val #A)) in
-    let: "$r0" := (interface.make (#interfacerecursion.interfacerecursion, #"c'ptr") (![#ptrT] "c")) in
+    let: "$r0" := (interface.make #(ptrTⁱᵈ cⁱᵈ) (![#ptrT] "c")) in
     do:  ("y" <-[#A] "$r0");;;
     do:  ((interface.get #"Foo"%go (![#A] "y")) #());;;
     return: #()).
@@ -39,7 +45,7 @@ Definition vars' : list (go_string * go_type) := [].
 
 Definition functions' : list (go_string * val) := [].
 
-Definition msets' : list (go_string * (list (go_string * val))) := [("c"%go, []); ("c'ptr"%go, [("Bar"%go, c__Bar); ("Foo"%go, c__Foo)])].
+Definition msets' : list (go_string * (list (go_string * val))) := [(cⁱᵈ, []); (ptrTⁱᵈ cⁱᵈ, [("Bar"%go, c__Barⁱᵐᵖˡ); ("Foo"%go, c__Fooⁱᵐᵖˡ)])].
 
 #[global] Instance info' : PkgInfo interfacerecursion.interfacerecursion :=
   {|
@@ -50,9 +56,9 @@ Definition msets' : list (go_string * (list (go_string * val))) := [("c"%go, [])
   |}.
 
 Definition initialize' : val :=
-  rec: "initialize'" <> :=
-    globals.package_init interfacerecursion.interfacerecursion (λ: <>,
-      exception_do (do:  #())
+  λ: <>,
+    package.init #interfacerecursion.interfacerecursion (λ: <>,
+      exception_do (do:  (package.alloc interfacerecursion.interfacerecursion #()))
       ).
 
 End code.

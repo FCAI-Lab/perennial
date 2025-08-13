@@ -12,6 +12,8 @@ Definition ONE : expr := #(W64 1).
 
 Definition TWO : expr := #(W64 2).
 
+Definition Fooⁱᵈ : go_string := "github.com/goose-lang/goose/testdata/examples/comments.Foo"%go.
+
 Definition Foo : go_type := structT [
   "a" :: boolT
 ].
@@ -20,7 +22,7 @@ Definition vars' : list (go_string * go_type) := [].
 
 Definition functions' : list (go_string * val) := [].
 
-Definition msets' : list (go_string * (list (go_string * val))) := [("Foo"%go, []); ("Foo'ptr"%go, [])].
+Definition msets' : list (go_string * (list (go_string * val))) := [(Fooⁱᵈ, []); (ptrTⁱᵈ Fooⁱᵈ, [])].
 
 #[global] Instance info' : PkgInfo comments.comments :=
   {|
@@ -31,9 +33,9 @@ Definition msets' : list (go_string * (list (go_string * val))) := [("Foo"%go, [
   |}.
 
 Definition initialize' : val :=
-  rec: "initialize'" <> :=
-    globals.package_init comments.comments (λ: <>,
-      exception_do (do:  #())
+  λ: <>,
+    package.init #comments.comments (λ: <>,
+      exception_do (do:  (package.alloc comments.comments #()))
       ).
 
 End code.

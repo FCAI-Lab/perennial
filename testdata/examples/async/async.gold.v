@@ -9,28 +9,32 @@ Module async.
 Section code.
 
 
+Definition TakesDisk : go_string := "github.com/goose-lang/goose/testdata/examples/async.TakesDisk"%go.
+
 (* go: async.go:6:6 *)
-Definition TakesDisk : val :=
-  rec: "TakesDisk" "d" :=
+Definition TakesDiskⁱᵐᵖˡ : val :=
+  λ: "d",
     exception_do (let: "d" := (mem.alloc "d") in
     do:  #()).
 
+Definition UseDisk : go_string := "github.com/goose-lang/goose/testdata/examples/async.UseDisk"%go.
+
 (* go: async.go:8:6 *)
-Definition UseDisk : val :=
-  rec: "UseDisk" "d" :=
+Definition UseDiskⁱᵐᵖˡ : val :=
+  λ: "d",
     exception_do (let: "d" := (mem.alloc "d") in
     let: "v" := (mem.alloc (type.zero_val #sliceT)) in
     let: "$r0" := (slice.make2 #byteT #(W64 4096)) in
     do:  ("v" <-[#sliceT] "$r0");;;
     do:  (let: "$a0" := #(W64 0) in
     let: "$a1" := (![#sliceT] "v") in
-    (method_call #disk #"Disk" #"Write" (![#disk.Disk] "d")) "$a0" "$a1");;;
-    do:  ((method_call #disk #"Disk" #"Barrier" (![#disk.Disk] "d")) #());;;
+    (method_call #disk.Diskⁱᵈ #"Write"%go (![#disk.Disk] "d")) "$a0" "$a1");;;
+    do:  ((method_call #disk.Diskⁱᵈ #"Barrier"%go (![#disk.Disk] "d")) #());;;
     return: #()).
 
 Definition vars' : list (go_string * go_type) := [].
 
-Definition functions' : list (go_string * val) := [("TakesDisk"%go, TakesDisk); ("UseDisk"%go, UseDisk)].
+Definition functions' : list (go_string * val) := [(TakesDisk, TakesDiskⁱᵐᵖˡ); (UseDisk, UseDiskⁱᵐᵖˡ)].
 
 Definition msets' : list (go_string * (list (go_string * val))) := [].
 
@@ -43,9 +47,10 @@ Definition msets' : list (go_string * (list (go_string * val))) := [].
   |}.
 
 Definition initialize' : val :=
-  rec: "initialize'" <> :=
-    globals.package_init async.async (λ: <>,
-      exception_do (do:  async_disk.initialize')
+  λ: <>,
+    package.init #async.async (λ: <>,
+      exception_do (do:  (async_disk.initialize' #());;;
+      do:  (package.alloc async.async #()))
       ).
 
 End code.

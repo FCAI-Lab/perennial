@@ -78,29 +78,30 @@ func translateNames(pkg *packages.Package, filter declfilter.DeclFilter) tmpl.Na
 
 	// emit instances for unfolding method_call
 	for _, namedType := range tr.namedTypes {
-		baseTypeName := namedType.Obj().Name()
-		typeName := baseTypeName
+		typeName := namedType.Obj().Name()
+		typeId := pkg.Name + "." + typeName + "ⁱᵈ"
 		mset := tmpl.MethodSet{
 			TypeName: typeName,
+			TypeId:   typeId,
 		}
 		goMset := types.NewMethodSet(namedType)
 		for i := range goMset.Len() {
 			methodName := goMset.At(i).Obj().Name()
-			if tr.filter.GetAction(baseTypeName+"."+methodName) == declfilter.Skip {
+			if tr.filter.GetAction(typeName+"."+methodName) == declfilter.Skip {
 				continue
 			}
 			mset.Methods = append(mset.Methods, methodName)
 		}
 		info.NamedTypeMethods = append(info.NamedTypeMethods, mset)
 
-		typeName = baseTypeName + "'ptr"
 		ptrMset := tmpl.MethodSet{
-			TypeName: typeName,
+			TypeName: typeName + "'ptr",
+			TypeId:   "(ptrTⁱᵈ " + typeId + ")",
 		}
 		goMset = types.NewMethodSet(types.NewPointer(namedType))
 		for i := range goMset.Len() {
 			methodName := goMset.At(i).Obj().Name()
-			if tr.filter.GetAction(baseTypeName+"."+methodName) == declfilter.Skip {
+			if tr.filter.GetAction(typeName+"."+methodName) == declfilter.Skip {
 				continue
 			}
 			ptrMset.Methods = append(ptrMset.Methods, methodName)

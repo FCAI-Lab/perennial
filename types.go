@@ -59,28 +59,34 @@ func TypeIsGooseLang(t types.Type) bool {
 	return false
 }
 
-func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) []glang.Decl {
+func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
+	if ctx.filter.GetAction(spec.Name.Name) == declfilter.Skip {
+		return
+	}
+
+	decls = append(decls, ctx.createTypeIdDecl(spec))
+
 	switch ctx.filter.GetAction(spec.Name.Name) {
 	case declfilter.Axiomatize:
 		if t, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
 			ctx.namedTypes = append(ctx.namedTypes, t)
-			return []glang.Decl{glang.AxiomDecl{
+			decls = append(decls, glang.AxiomDecl{
 				DeclName: spec.Name.Name,
-				Type:     glang.GallinaIdent("go_type"),
-			}}
+				Type:     glang.GallinaVerbatim("go_type"),
+			})
+			return
 		}
 		ctx.unsupported(spec, "axiomatized type should be a named type")
-		return nil
 	case declfilter.Trust:
 		if t, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
 			if _, ok := t.Underlying().(*types.Interface); !ok {
 				ctx.namedTypes = append(ctx.namedTypes, t)
 			}
 		}
-		return nil
 	case declfilter.Translate:
 		ctx.dep.SetCurrentName(spec.Name.Name)
 		defer ctx.dep.UnsetCurrentName()
+
 		if t, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
 			if _, ok := t.Underlying().(*types.Interface); !ok {
 				ctx.namedTypes = append(ctx.namedTypes, t)
@@ -92,24 +98,120 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) []glang.Decl {
 			Body:       ctx.glangType(spec, ty),
 			TypeParams: ctx.typeParamList(spec.TypeParams),
 		}
+
 		if ctx.typeSpecIsGooseLang(spec) {
-			return []glang.Decl{decl}
+			decls = append(decls, decl)
 		} else {
-			return []glang.Decl{glang.GallinaTypeDecl{
+			decls = append(decls, glang.GallinaTypeDecl{
 				Decl: decl,
-			}}
+			})
 		}
+	}
+	return
+}
+
+func (ctx *Ctx) createTypeIdDecl(spec *ast.TypeSpec) glang.Decl {
+	typeName := spec.Name.Name
+	typeIdName := typeName + "ⁱᵈ"
+	ctx.dep.SetCurrentName(typeIdName)
+	defer ctx.dep.UnsetCurrentName()
+
+	// If this is an alias declaration, reference the RHS type's typeId
+	if spec.Assign != 0 {
+		rhsTypeId := ctx.typeId(spec, ctx.typeOf(spec.Type))
+		return glang.ConstDecl{
+			Name: typeIdName,
+			Type: glang.GallinaVerbatim("go_string"),
+			Val:  rhsTypeId,
+		}
+	} else {
+		return glang.ConstDecl{
+			Name: typeIdName,
+			Type: glang.GallinaVerbatim("go_string"),
+			Val:  glang.StringLiteral{Value: fmt.Sprintf("%s.%s", ctx.pkgPath, typeName)},
+		}
+	}
+}
+
+// typeId returns a "type identifier" expression for any Go type (it will be of
+// type `go_string` in Gallina).
+//
+// To be fully accurate to Go's type-comparison semantics, this should mimic
+// Go's internal (*types.Type).LinkString():
+// https://github.com/golang/go/blob/b5d555991ab73e06e09741952a66dd7eeaf2a185/src/cmd/compile/internal/types/fmt.go#L220-L227.
+func (ctx *Ctx) typeId(location locatable, t types.Type) glang.Expr {
+	t = types.Unalias(t)
+
+	switch t := t.(type) {
+	case *types.Basic:
+		switch t.Name() {
+		case "uint64", "uint32", "uint16", "uint8", "int64", "int32", "int16", "int8", "byte", "int", "uint", "bool", "string", "float64", "float32":
+			return glang.GallinaVerbatim(fmt.Sprintf("%sTⁱᵈ", t.Name()))
+		default:
+			ctx.unsupported(location, "typeId for basic type %s", t.Name())
+			return nil
+		}
+	case *types.Named:
+		typeIdIdent := ctx.qualifiedName(t.Obj()) + "ⁱᵈ"
+		ctx.dep.Add(typeIdIdent)
+		return glang.GallinaIdent(typeIdIdent)
+	case *types.Struct:
+		return ctx.structTypeId(location, t)
+	case *types.Signature:
+		return ctx.signatureTypeId(location, t)
+	case *types.Slice:
+		return glang.NewCallExpr(glang.GallinaVerbatim("sliceTⁱᵈ"), ctx.typeId(location, t.Elem()))
+	case *types.Pointer:
+		return glang.NewCallExpr(glang.GallinaVerbatim("ptrTⁱᵈ"), ctx.typeId(location, t.Elem()))
+	case *types.Chan:
+		chanTypeId := "chanTⁱᵈ"
+		switch t.Dir() {
+		case types.SendOnly:
+			chanTypeId = "send" + chanTypeId
+		case types.RecvOnly:
+			chanTypeId = "recv" + chanTypeId
+		}
+		return glang.NewCallExpr(glang.GallinaVerbatim(chanTypeId), ctx.typeId(location, t.Elem()))
 	default:
+		ctx.unsupported(location, "typeId for type %v", t)
 		return nil
 	}
 }
 
-func (ctx *Ctx) typeOf(e ast.Expr) types.Type {
-	return ctx.info.TypeOf(e)
+func (ctx *Ctx) structTypeId(location locatable, sig *types.Struct) glang.Expr {
+	var fields glang.ListExpr
+	for i := range sig.NumFields() {
+		fieldName := sig.Field(i).Name()
+		if sig.Field(i).Embedded() {
+			fieldName = ""
+		}
+		if sig.Tag(i) != "" {
+			ctx.unsupported(location, "typeId for a struct with tags")
+		}
+		fields = append(fields, glang.TupleExpr{glang.NewStringVal(fieldName),
+			ctx.typeId(location, sig.Field(i).Type())})
+	}
+
+	return glang.NewCallExpr(glang.GallinaVerbatim("structTⁱᵈ"), fields)
 }
 
-func (ctx *Ctx) glangTypeFromExpr(e ast.Expr) glang.Type {
-	return ctx.glangType(e, ctx.typeOf(e))
+func (ctx *Ctx) signatureTypeId(location locatable, sig *types.Signature) glang.Expr {
+	var paramTypeIds glang.ListExpr
+	for i := range sig.Params().Len() {
+		paramTypeIds = append(paramTypeIds, ctx.typeId(location, sig.Params().At(i).Type()))
+	}
+
+	var resultTypeIds glang.ListExpr
+	for i := range sig.Results().Len() {
+		resultTypeIds = append(resultTypeIds, ctx.typeId(location, sig.Results().At(i).Type()))
+	}
+
+	variadicFlag := glang.GallinaVerbatim(fmt.Sprintf("%t", sig.Variadic()))
+	return glang.NewCallExpr(glang.GallinaVerbatim("funcTⁱᵈ"), paramTypeIds, resultTypeIds, variadicFlag)
+}
+
+func (ctx *Ctx) typeOf(e ast.Expr) types.Type {
+	return ctx.info.TypeOf(e)
 }
 
 func (ctx *Ctx) structType(t *types.Struct) glang.Type {
@@ -149,6 +251,8 @@ func SimpleType(t types.Type) glang.Type {
 			return glang.TypeIdent(fmt.Sprintf("%sT", t.Name()))
 		case "untyped string":
 			return glang.TypeIdent("stringT")
+		case "Pointer":
+			return glang.PtrType{}
 		}
 		return nil
 	case *types.Pointer:
