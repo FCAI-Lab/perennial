@@ -1026,7 +1026,7 @@ func (ctx *Ctx) binExpr(e *ast.BinaryExpr) (expr glang.Expr) {
 		compType = ctx.typeJoin(e, xT, yT).Underlying()
 	}
 	var op glang.BinOp = -1
-	if t, ok := compType.(*types.Basic); ok {
+	if t, ok := compType.(*types.Basic); ok && t.Kind() != types.UnsafePointer {
 		switch t.Kind() {
 		case types.UntypedInt:
 			op, ok = untypedIntOps[e.Op]
@@ -1991,6 +1991,14 @@ func (ctx *Ctx) handleImplicitConversion(n locatable, from, to types.Type, e gla
 		}
 	}
 
+	if fromBasic, ok := fromUnder.(*types.Basic); ok {
+		if fromBasic.Kind() == types.UnsafePointer {
+			if _, ok := toUnder.(*types.Pointer); ok {
+				return e
+			}
+		}
+	}
+
 	if fromBasic, ok := fromUnder.(*types.Basic); ok && fromBasic.Kind() == types.UntypedNil {
 		if _, ok := toUnder.(*types.Slice); ok {
 			return glang.GallinaVerbatim("#slice.nil")
@@ -2004,6 +2012,8 @@ func (ctx *Ctx) handleImplicitConversion(n locatable, from, to types.Type, e gla
 			return glang.GallinaVerbatim("#null")
 		} else if _, ok := toUnder.(*types.Signature); ok {
 			return glang.GallinaVerbatim("#func.nil")
+		} else if toBasic, ok := toUnder.(*types.Basic); ok && toBasic.Kind() == types.UnsafePointer {
+			return glang.GallinaVerbatim("#null")
 		}
 	}
 	if _, ok := toUnder.(*types.Interface); ok {

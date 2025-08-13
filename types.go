@@ -164,7 +164,7 @@ func (ctx *Ctx) typeId(location locatable, t types.Type) glang.Expr {
 	case *types.Pointer:
 		return glang.NewCallExpr(glang.GallinaVerbatim("ptrTⁱᵈ"), ctx.typeId(location, t.Elem()))
 	case *types.Chan:
-		chanTypeId := "chanⁱᵈ"
+		chanTypeId := "chanTⁱᵈ"
 		switch t.Dir() {
 		case types.SendOnly:
 			chanTypeId = "send" + chanTypeId
@@ -251,6 +251,8 @@ func SimpleType(t types.Type) glang.Type {
 			return glang.TypeIdent(fmt.Sprintf("%sT", t.Name()))
 		case "untyped string":
 			return glang.TypeIdent("stringT")
+		case "Pointer":
+			return glang.PtrType{}
 		}
 		return nil
 	case *types.Pointer:
