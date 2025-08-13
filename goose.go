@@ -875,10 +875,23 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 					ctx.nope(e.X, "x is not addressable but want (&x).m")
 				}
 				receiver = ctx.exprAddr(e.X)
+				typeIdExpr = glang.StringVal{Value: ctx.typeId(e.X, types.NewPointer(receiverType))}
 			}
 		}
 
-		return glang.NewCallExpr(glang.GallinaVerbatim("method_call"), typeIdExpr, methodExpr, receiver)
+		var typeArgs *types.TypeList
+		t := types.Unalias(receiverType)
+		if p, ok := receiverType.(*types.Pointer); ok {
+			t = types.Unalias(p.Elem())
+		}
+		if t, ok := t.(*types.Named); ok {
+			typeArgs = t.TypeArgs()
+		} else {
+			ctx.nope(e.X, "expected a named type or a pointer to a named type for method call receiver")
+		}
+
+		return glang.NewCallExpr(glang.GallinaVerbatim("method_call"), typeIdExpr, methodExpr, receiver).Append(
+			typesToExprs(ctx.convertTypeArgsToGlang(nil, typeArgs))...)
 	}
 	panic("unreachable")
 }
