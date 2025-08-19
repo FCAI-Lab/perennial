@@ -1029,20 +1029,33 @@ func (f File) Write(w io.Writer) {
 	if len(f.Imports) > 0 {
 		fmt.Fprintln(w)
 	}
+
+	// Print typeIds, then section header, then other decls, and then footer.
+
+	var typeIdDecls []Decl
+	var decls []Decl
+	for _, d := range f.Decls {
+		if _, isTypeId := d.(TypeIdDecl); isTypeId {
+			typeIdDecls = append(typeIdDecls, d)
+		} else {
+			decls = append(decls, d)
+		}
+	}
+
+	for _, d := range typeIdDecls {
+		fmt.Fprintln(w, d.CoqDecl())
+	}
+	if len(typeIdDecls) > 0 {
+		fmt.Fprintln(w)
+	}
+
 	fmt.Fprintln(w, f.ImportHeader)
 	fmt.Fprintln(w)
-	decls := make(map[string]bool)
-	for i, d := range f.Decls {
-		decl := d.CoqDecl()
-		// don't translate the same thing twice (which the interface translation
-		// can currently do)
-		if !decls[decl] {
-			fmt.Fprintln(w, decl)
-			decls[decl] = true
 
-			if i != len(f.Decls)-1 {
-				fmt.Fprintln(w)
-			}
+	for i, d := range decls {
+		fmt.Fprintln(w, d.CoqDecl())
+		if i != len(decls)-1 {
+			fmt.Fprintln(w)
 		}
 	}
 	fmt.Fprint(w, f.Footer)
