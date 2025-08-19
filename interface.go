@@ -209,26 +209,8 @@ func translatePackage(pkg *packages.Package, config declfilter.FilterConfig) (gl
 			"could not load package %v:\n%v", pkg.PkgPath,
 			pkgErrors(pkg.Errors))
 	}
-	filter := declfilter.New(config)
-
-	ctx := NewPkgCtx(pkg, filter)
-	coqFile := glang.File{
-		Header:    glang.DefaultHeader,
-		PkgPath:   pkg.PkgPath,
-		GoPackage: pkg.Name,
-	}
-	if config.Bootstrap.Enabled {
-		coqFile.Header = glang.BootstrapHeader + "\n" + strings.Join(config.Bootstrap.Prelude, "\n")
-	}
-	coqFile.ImportHeader, coqFile.Footer = ctx.ffiHeaderFooter(pkg)
-
-	if filter.HasTrusted() {
-		importPath := strings.ReplaceAll(glang.ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(pkg.PkgPath), "/", ".")
-		coqFile.ImportHeader = fmt.Sprintf("Require Export New.trusted_code.%s.\n", importPath) +
-			fmt.Sprintf("Import %s.\n", pkg.Name) +
-			coqFile.ImportHeader
-	}
-
+	ctx := NewPkgCtx(pkg, declfilter.New(config))
+	coqFile := ctx.initCoqFile(pkg, config)
 	imports, decls, errs := ctx.decls(pkg.Syntax)
 	coqFile.Imports = imports
 	coqFile.Decls = decls
@@ -239,21 +221,33 @@ func translatePackage(pkg *packages.Package, config declfilter.FilterConfig) (gl
 	return coqFile, nil
 }
 
-func (ctx *Ctx) ffiHeaderFooter(pkg *packages.Package) (header string, footer string) {
-	ffi := util.GetFfi(pkg)
-	header += fmt.Sprintf("Definition %s : go_string := \"%s\".\n\n", pkg.Name, pkg.PkgPath)
-	if ffi == "" {
-		header += fmt.Sprintf("Module %s.\n", pkg.Name)
-		header += "Section code.\n" +
-			"Context `{ffi_syntax}.\n"
+func (ctx *Ctx) initCoqFile(pkg *packages.Package, config declfilter.FilterConfig) (f glang.File) {
+	f.PkgPath = pkg.PkgPath
+	f.GoPackage = pkg.Name
+	if config.Bootstrap.Enabled {
+		f.Header = glang.BootstrapHeader + "\n" + strings.Join(config.Bootstrap.Prelude, "\n") + "\n"
 	} else {
-		header += fmt.Sprintf("From New Require Import %s_prelude.\n", ffi)
-		header += fmt.Sprintf("Module %s.\n", pkg.Name)
-		header += "Section code.\n"
+		f.Header = glang.DefaultHeader + "\n"
 	}
 
-	footer = "\nEnd code.\n"
-	footer += fmt.Sprintf("End %s.\n", pkg.Name)
+	if ctx.filter.HasTrusted() {
+		importPath := strings.ReplaceAll(glang.ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(pkg.PkgPath), "/", ".")
+		f.Header += fmt.Sprintf("Require Export New.trusted_code.%s.\n", importPath) +
+			fmt.Sprintf("Import %s.\n", pkg.Name)
+	}
+
+	f.Header += fmt.Sprintf("Definition %s : go_string := \"%s\".\n\n", pkg.Name, pkg.PkgPath)
+	ffi := util.GetFfi(pkg)
+	if ffi == "" {
+		f.Header += fmt.Sprintf("Module %s.\n", pkg.Name)
+		f.SectionHeader = "Section code.\n" + "Context `{ffi_syntax}.\n"
+	} else {
+		f.Header += fmt.Sprintf("From New Require Import %s_prelude.\n", ffi)
+		f.Header += fmt.Sprintf("Module %s.\n", pkg.Name)
+		f.SectionHeader = "Section code.\n"
+	}
+
+	f.Footer = "\nEnd code.\n" + fmt.Sprintf("End %s.\n", pkg.Name)
 	return
 }
 
