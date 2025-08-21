@@ -804,15 +804,11 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 		} else if f, ok := ctx.info.ObjectOf(e.Sel).(*types.Func); ok {
 			// If there are type arguments, we must pass them
 			typeArgs := ctx.info.Instances[e.Sel].TypeArgs
-			return ctx.handleImplicitConversion(e,
-				ctx.info.TypeOf(e.Sel),
-				ctx.info.TypeOf(e),
-				glang.NewCallExpr(
-					glang.GallinaVerbatim("func_call"),
-					glang.StringVal{Value: ctx.gallinaIdent(f.Pkg().Name() + "." + f.Name())},
-				).Append(
-					typesToExprs(ctx.convertTypeArgsToGlang(nil, typeArgs))...,
-				),
+			return glang.NewCallExpr(
+				glang.GallinaVerbatim("func_call"),
+				glang.StringVal{Value: ctx.gallinaIdent(f.Pkg().Name() + "." + f.Name())},
+			).Append(
+				typesToExprs(ctx.convertTypeArgsToGlang(nil, typeArgs))...,
 			)
 		} else {
 			return ctx.handleImplicitConversion(e,
@@ -2094,6 +2090,16 @@ func (ctx *Ctx) handleImplicitConversion(n locatable, from, to types.Type, e gla
 	if ok1 && ok2 {
 		if types.Identical(fromChan.Elem(), toChan.Elem()) {
 			return e
+		}
+	}
+
+	if _, ok := toUnder.(*types.Signature); ok {
+		if _, ok := fromUnder.(*types.Signature); ok {
+			if types.AssignableTo(fromUnder, toUnder) {
+				return e
+			} else {
+				ctx.unsupported(n, "function conversion from %s to %s", from, to)
+			}
 		}
 	}
 
