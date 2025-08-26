@@ -108,6 +108,7 @@ func (f TypeField) CoqName() string {
 }
 
 type Import struct {
+	Name string
 	Path string
 }
 

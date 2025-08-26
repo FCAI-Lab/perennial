@@ -32,7 +32,7 @@ func translateImports(pkg *packages.Package, filter declfilter.DeclFilter) (impo
 						if importsSeen[coqImport] {
 							continue
 						}
-						imports = append(imports, tmpl.Import{Path: coqImport})
+						imports = append(imports, tmpl.Import{Name: pkg.TypesInfo.PkgNameOf(spec).Name(), Path: coqImport})
 						importsSeen[coqImport] = true
 					}
 				}
