@@ -804,15 +804,11 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 		} else if f, ok := ctx.info.ObjectOf(e.Sel).(*types.Func); ok {
 			// If there are type arguments, we must pass them
 			typeArgs := ctx.info.Instances[e.Sel].TypeArgs
-			return ctx.handleImplicitConversion(e,
-				ctx.info.TypeOf(e.Sel),
-				ctx.info.TypeOf(e),
-				glang.NewCallExpr(
-					glang.GallinaVerbatim("func_call"),
-					glang.StringVal{Value: ctx.gallinaIdent(f.Pkg().Name() + "." + f.Name())},
-				).Append(
-					typesToExprs(ctx.convertTypeArgsToGlang(nil, typeArgs))...,
-				),
+			return glang.NewCallExpr(
+				glang.GallinaVerbatim("func_call"),
+				glang.StringVal{Value: ctx.gallinaIdent(f.Pkg().Name() + "." + f.Name())},
+			).Append(
+				typesToExprs(ctx.convertTypeArgsToGlang(nil, typeArgs))...,
 			)
 		} else {
 			return ctx.handleImplicitConversion(e,
@@ -895,18 +891,20 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 }
 
 func (ctx *Ctx) compositeLiteral(e *ast.CompositeLit) glang.Expr {
-	if t, ok := ctx.typeOf(e).Underlying().(*types.Slice); ok {
+	eT := underlyingType(ctx.typeOf(e))
+	switch t := eT.(type) {
+	case *types.Slice:
 		return ctx.sliceLiteral(e.Elts, t.Elem())
-	} else if t, ok := ctx.typeOf(e).Underlying().(*types.Array); ok {
+	case *types.Array:
 		return ctx.arrayLiteral(e, t.Elem())
-	} else if t, ok := ctx.typeOf(e).Underlying().(*types.Map); ok {
+	case *types.Map:
 		return ctx.mapLiteral(e, t.Key(), t.Elem())
+	case *types.Struct:
+		return ctx.structLiteral(ctx.typeOf(e), t, e)
+	default:
+		ctx.unsupported(e, "composite literal of type %v (%T)", eT, eT)
+		return nil
 	}
-	if structType, ok := ctx.typeOf(e).Underlying().(*types.Struct); ok {
-		return ctx.structLiteral(ctx.typeOf(e), structType, e)
-	}
-	ctx.unsupported(e, "composite literal of type %v", ctx.typeOf(e))
-	return nil
 }
 
 func isUnkeyedStruct(e *ast.CompositeLit) bool {
@@ -1284,6 +1282,49 @@ func (ctx *Ctx) goBuiltin(e *ast.Ident) bool {
 	return s.Parent() == types.Universe
 }
 
+// if types.Type is an interface that holds a single type, get that type; these
+// typically show up as constraints in generic functions, e.g. `T ~[]int`
+func getInterfaceSingletonType(t types.Type) (types.Type, bool) {
+	if t, ok := t.Underlying().(*types.Interface); ok {
+		if t.NumEmbeddeds() == 1 {
+			t := t.EmbeddedType(0)
+			if t, ok := t.(*types.Union); ok {
+				if t.Len() == 1 {
+					// singleton union (possibly with term.Tilde() being true)
+					term := t.Term(0)
+					// the single type in the union is unionT
+					unionT := term.Type()
+					return unionT, true
+				}
+			}
+		}
+	}
+	return nil, false
+}
+
+// underlyingType returns the underlying type of t, including if t is of an
+// singleton interface.
+func underlyingType(t types.Type) types.Type {
+	if t, ok := getInterfaceSingletonType(t); ok {
+		return t.Underlying()
+	}
+	return t.Underlying()
+}
+
+func getSliceType(t types.Type) (*types.Slice, bool) {
+	if t, ok := underlyingType(t).(*types.Slice); ok {
+		return t, true
+	}
+	return nil, false
+}
+
+func getMapType(t types.Type) (*types.Map, bool) {
+	if t, ok := underlyingType(t).(*types.Map); ok {
+		return t, true
+	}
+	return nil, false
+}
+
 func (ctx *Ctx) builtinIdent(e *ast.Ident) glang.Expr {
 	switch e.Name {
 	case "nil":
@@ -1295,12 +1336,12 @@ func (ctx *Ctx) builtinIdent(e *ast.Ident) glang.Expr {
 	case "append":
 		sig := ctx.typeOf(e).(*types.Signature)
 		t := sig.Params().At(0).Type()
-		if t, ok := t.Underlying().(*types.Slice); ok {
+		if t, ok := getSliceType(t); ok {
 			return glang.NewCallExpr(glang.GallinaVerbatim("slice.append"),
 				glang.GolangTypeExpr(ctx.glangType(e, t.Elem())),
 			)
 		}
-		ctx.unsupported(e, "append to %v with unknown element type", t)
+		ctx.unsupported(e, "append to %v (%T) with unknown element type", t, t.Underlying())
 	case "new":
 		sig := ctx.typeOf(e).(*types.Signature)
 		ctx.todo(e, "new might be better as its own function")
@@ -1310,7 +1351,8 @@ func (ctx *Ctx) builtinIdent(e *ast.Ident) glang.Expr {
 		}
 	case "len":
 		sig := ctx.typeOf(e).(*types.Signature)
-		switch ty := sig.Params().At(0).Type().Underlying().(type) {
+		argT := underlyingType(sig.Params().At(0).Type())
+		switch ty := argT.(type) {
 		case *types.Slice:
 			return glang.GallinaVerbatim("slice.len")
 		case *types.Map:
@@ -1322,11 +1364,12 @@ func (ctx *Ctx) builtinIdent(e *ast.Ident) glang.Expr {
 		case *types.Chan:
 			return glang.GallinaVerbatim("chan.len")
 		default:
-			ctx.unsupported(e, "length of object of type %v", ty)
+			ctx.unsupported(e, "length of object of type %v (%T)", ty, ty)
 		}
 	case "cap":
 		sig := ctx.typeOf(e).(*types.Signature)
-		switch ty := sig.Params().At(0).Type().Underlying().(type) {
+		argT := underlyingType(sig.Params().At(0).Type())
+		switch ty := argT.(type) {
 		case *types.Slice:
 			return glang.GallinaVerbatim("slice.cap")
 		case *types.Chan:
@@ -1336,8 +1379,8 @@ func (ctx *Ctx) builtinIdent(e *ast.Ident) glang.Expr {
 		}
 	case "copy":
 		sig := ctx.typeOf(e).(*types.Signature)
-		switch ty := sig.Params().At(0).Type().Underlying().(type) {
-		case *types.Slice:
+		argT := sig.Params().At(0).Type().Underlying()
+		if ty, ok := getSliceType(argT); ok {
 			fromTy := sig.Params().At(1).Type().Underlying()
 			if types.Identical(ty, fromTy) {
 				return glang.NewCallExpr(
@@ -1345,13 +1388,13 @@ func (ctx *Ctx) builtinIdent(e *ast.Ident) glang.Expr {
 					glang.GolangTypeExpr(ctx.glangType(e, ty.Elem())),
 				)
 			}
-			ctx.unsupported(e, "copy to %v from %v", ty, fromTy)
-		default:
-			ctx.nope(e, "copy of object of type %v", ty)
+			ctx.unsupported(e, "slice copy to %v from %v", ty, fromTy)
 		}
+		// the destination of a copy should always be a slice
+		ctx.nope(e, "copy of object of type %v", argT)
 	case "delete":
 		sig := ctx.typeOf(e).(*types.Signature)
-		if _, ok := sig.Params().At(0).Type().Underlying().(*types.Map); !ok {
+		if _, ok := getMapType(sig.Params().At(0).Type().Underlying()); !ok {
 			ctx.nope(e, "delete on non-map")
 		}
 		return glang.GallinaVerbatim("map.delete")
@@ -1968,8 +2011,8 @@ func (ctx *Ctx) handleImplicitConversion(n locatable, from, to types.Type, e gla
 	}
 	from = types.Unalias(from)
 	to = types.Unalias(to)
-	fromUnder := from.Underlying()
-	toUnder := to.Underlying()
+	fromUnder := underlyingType(from)
+	toUnder := underlyingType(to)
 	if types.Identical(fromUnder, toUnder) {
 		return e
 	}
@@ -2097,6 +2140,16 @@ func (ctx *Ctx) handleImplicitConversion(n locatable, from, to types.Type, e gla
 	if ok1 && ok2 {
 		if types.Identical(fromChan.Elem(), toChan.Elem()) {
 			return e
+		}
+	}
+
+	if _, ok := toUnder.(*types.Signature); ok {
+		if _, ok := fromUnder.(*types.Signature); ok {
+			if types.AssignableTo(fromUnder, toUnder) {
+				return e
+			} else {
+				ctx.unsupported(n, "function conversion from %s to %s", from, to)
+			}
 		}
 	}
 
