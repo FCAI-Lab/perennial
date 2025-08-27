@@ -17,7 +17,7 @@ Global Instance is_pkg_defined_pure_{{$pkg}} : IsPkgDefinedPure {{$pkg}} :=
   {|
     is_pkg_defined_pure_def go_ctx :=
       is_pkg_defined_pure_single {{$pkg}}{{ range $import := $imports }} ∧
-      is_pkg_defined_pure {{$import.Name}}{{ end }};
+      is_pkg_defined_pure {{$import.Path}}.{{$import.Name}}{{ end }};
   |}.
 
 #[local] Transparent is_pkg_defined_single is_pkg_defined_pure_single.
@@ -25,7 +25,7 @@ Global Program Instance is_pkg_defined_{{$pkg}} : IsPkgDefined {{$pkg}} :=
   {|
     is_pkg_defined_def go_ctx :=
       (is_pkg_defined_single {{$pkg}}{{ range $import := $imports }} ∗
-       is_pkg_defined {{$import.Name}}{{ end }})%I
+       is_pkg_defined {{$import.Path}}.{{$import.Name}}{{ end }})%I
   |}.
 Final Obligation. iIntros. iFrame "#%". Qed.
 #[local] Opaque is_pkg_defined_single is_pkg_defined_pure_single.

@@ -3044,7 +3044,8 @@ func (ctx *Ctx) initFunctions() []glang.Decl {
 	var imports glang.ListExpr
 	for _, impName := range ctx.importNamesOrdered {
 		pkg := impName.Imported()
-		imports = append(imports, ctx.gallinaIdent(fmt.Sprintf("%s.%s", filepath.Base(pkg.Path()), pkg.Name())))
+		qualifiedIdent := fmt.Sprintf("%s.%s", strings.ReplaceAll(glang.ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(pkg.Path()), "/", "."), pkg.Name())
+		imports = append(imports, ctx.gallinaIdent(qualifiedIdent))
 	}
 	infoRecord := glang.RecordLiteral{
 		Fields: []glang.RecordField{
