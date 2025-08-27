@@ -938,6 +938,9 @@ func (ctx *Ctx) structLiteral(t types.Type, structType *types.Struct, e *ast.Com
 
 	for i := 0; i < structType.NumFields(); i++ {
 		fieldName := structType.Field(i).Name()
+		if fieldName == "_" {
+			fieldName = "_" + strconv.Itoa(i)
+		}
 		fieldType := structType.Field(i).Type()
 
 		fieldIsZero := true
