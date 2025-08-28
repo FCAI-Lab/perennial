@@ -1124,7 +1124,7 @@ Definition msets' : list (go_string * (list (go_string * val))) := [(Table.id, [
     pkg_vars := vars';
     pkg_functions := functions';
     pkg_msets := msets';
-    pkg_imported_pkgs := [sync.sync; primitive.primitive; filesys.filesys; marshal.marshal];
+    pkg_imported_pkgs := [sync.sync; github_com.goose_lang.primitive.primitive; github_com.goose_lang.primitive.filesys.filesys; github_com.tchajed.marshal.marshal];
   |}.
 
 Definition initialize' : val :=

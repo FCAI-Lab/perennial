@@ -1,5 +1,6 @@
 {{- $ffi := .Ffi -}}
 {{- $pkg := .Name -}}
+{{- $imports := .Imports -}}
 {{ with .Names }}
 Section names.
 
@@ -9,15 +10,33 @@ Context `{!heapGS Σ}.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 {{ end -}}
 Context `{!globalsGS Σ}.
-Context `{!GoContext}.
+Context {go_ctx : GoContext}.
+#[local] Transparent is_pkg_defined is_pkg_defined_pure.
+
+Global Instance is_pkg_defined_pure_{{$pkg}} : IsPkgDefinedPure {{$pkg}} :=
+  {|
+    is_pkg_defined_pure_def go_ctx :=
+      is_pkg_defined_pure_single {{$pkg}}{{ range $import := $imports }} ∧
+      is_pkg_defined_pure {{$import.Path}}.{{$import.Name}}{{ end }};
+  |}.
+
+#[local] Transparent is_pkg_defined_single is_pkg_defined_pure_single.
+Global Program Instance is_pkg_defined_{{$pkg}} : IsPkgDefined {{$pkg}} :=
+  {|
+    is_pkg_defined_def go_ctx :=
+      (is_pkg_defined_single {{$pkg}}{{ range $import := $imports }} ∗
+       is_pkg_defined {{$import.Path}}.{{$import.Name}}{{ end }})%I
+  |}.
+Final Obligation. iIntros. iFrame "#%". Qed.
+#[local] Opaque is_pkg_defined_single is_pkg_defined_pure_single.
 
 {{ range $name := .FunctionNames -}}
 Global Instance wp_func_call_{{$name}} :
   WpFuncCall {{$pkg}}.{{$name}} _ (is_pkg_defined {{$pkg}}) :=
-  ltac:(apply wp_func_call'; reflexivity).
+  ltac:(solve_wp_func_call).
 {{- /* XXX: by using an ltac expression to generate the instance, we can
 leave an evar for the method val, avoiding the need to write out
-the promoted methods.  */}}
+the promoted methods. */}}
 
 {{ end -}}
 
@@ -25,7 +44,7 @@ the promoted methods.  */}}
 {{ range $methodName := $mset.Methods -}}
 Global Instance wp_method_call_{{$mset.TypeName}}_{{$methodName}} :
   WpMethodCall {{$mset.TypeId}} "{{$methodName}}" _ (is_pkg_defined {{$pkg}}) :=
-  ltac:(apply wp_method_call'; reflexivity).
+  ltac:(solve_wp_method_call).
 
 {{ end -}}
 {{ end -}}
