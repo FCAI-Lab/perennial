@@ -439,9 +439,11 @@ func (ctx *Ctx) integerConversion(s ast.Node, x ast.Expr, width int) glang.Expr 
 		case types.Int, types.Int64, types.Int32, types.Int16, types.Int8:
 			return glang.NewCallExpr(glang.GallinaVerbatim(fmt.Sprintf("s_to_w%d", width)),
 				ctx.expr(x))
+		case types.Float32, types.Float64:
+			return glang.NewCallExpr(glang.GallinaVerbatim("make_nondet"), ctx.glangType(s, basicTy), ctx.expr(x))
 		}
 	}
-	ctx.unsupported(s, "casts from unsupported type %v to uint%d", ctx.typeOf(x), width)
+	ctx.unsupported(s, "casts from unsupported type %v to {u}int%d", ctx.typeOf(x), width)
 	return nil
 }
 
@@ -456,21 +458,18 @@ func (ctx *Ctx) conversionExpr(s *ast.CallExpr) glang.Expr {
 	}
 	switch toType := toType.(type) {
 	case *types.Basic:
-		// handle conversions between integer types
-		if fromType, ok := fromType.(*types.Basic); ok {
-			if (fromType.Info()&types.IsInteger) != 0 &&
-				toType.Info()&types.IsInteger == 0 {
-				ctx.unsupported(s, "converting from integer type to non-integer type")
-			}
-			switch toType.Kind() {
-			// XXX: int is treated as a 64 bit word
-			case types.Uint, types.Int, types.Uint64, types.Int64:
-				return ctx.integerConversion(s, s.Args[0], 64)
-			case types.Int32, types.Uint32:
-				return ctx.integerConversion(s, s.Args[0], 32)
-			case types.Int8, types.Uint8:
-				return ctx.integerConversion(s, s.Args[0], 8)
-			}
+		switch toType.Kind() {
+		// XXX: int is treated as a 64 bit word
+		case types.Uint, types.Int, types.Uint64, types.Int64:
+			return ctx.integerConversion(s, s.Args[0], 64)
+		case types.Int32, types.Uint32:
+			return ctx.integerConversion(s, s.Args[0], 32)
+		case types.Int8, types.Uint8:
+			return ctx.integerConversion(s, s.Args[0], 8)
+		case types.Float32:
+			return glang.NewCallExpr(glang.GallinaVerbatim("make_nondet"), glang.GallinaVerbatim("float32T"), ctx.expr(s.Args[0]))
+		case types.Float64:
+			return glang.NewCallExpr(glang.GallinaVerbatim("make_nondet"), glang.GallinaVerbatim("float64T"), ctx.expr(s.Args[0]))
 		}
 
 		// handle `string(b)`, where b : []byte
@@ -1085,6 +1084,12 @@ func (ctx *Ctx) binExpr(e *ast.BinaryExpr) (expr glang.Expr) {
 			if !ok {
 				ctx.unsupported(e, "unsupported binary operation on strings")
 			}
+		case types.Float32:
+			return glang.NewCallExpr(glang.GallinaVerbatim("make_nondet"), glang.GallinaVerbatim("float32T"),
+				glang.TupleExpr{ctx.expr(e.X), ctx.expr(e.Y)})
+		case types.Float64:
+			return glang.NewCallExpr(glang.GallinaVerbatim("make_nondet"), glang.GallinaVerbatim("float64T"),
+				glang.TupleExpr{ctx.expr(e.X), ctx.expr(e.Y)})
 		}
 		if (t.Info() & types.IsInteger) != 0 {
 			switch op {
@@ -2098,12 +2103,6 @@ func (ctx *Ctx) handleImplicitConversion(n locatable, from, to types.Type, e gla
 				return glang.Int32Val{Value: e}
 			case types.Uint8, types.Int8:
 				return glang.Int8Val{Value: e}
-			case types.Float64:
-				// XXX: treat a `float64` as a `w64`
-				return glang.Int64Val{Value: e}
-			case types.Float32:
-				// XXX: treat a `float64` as a `w64`
-				return glang.Int32Val{Value: e}
 			}
 		}
 	}
@@ -2134,6 +2133,15 @@ func (ctx *Ctx) handleImplicitConversion(n locatable, from, to types.Type, e gla
 					return glang.NewCallExpr(glang.GallinaVerbatim("s_to_w8"), e)
 				}
 			}
+		}
+	}
+
+	if toBasic, ok := toUnder.(*types.Basic); ok && (toBasic.Info()&types.IsFloat != 0) {
+		switch toBasic.Kind() {
+		case types.Float32:
+			return glang.NewCallExpr(glang.GallinaVerbatim("make_nondet"), glang.GallinaVerbatim("float32T"), e)
+		case types.Float64:
+			return glang.NewCallExpr(glang.GallinaVerbatim("make_nondet"), glang.GallinaVerbatim("float64T"), e)
 		}
 	}
 
@@ -2885,6 +2893,8 @@ func (ctx *Ctx) constantLiteral(l locatable, v constant.Value) (types.Type, glan
 		default:
 			ctx.nope(l, "untyped int const with unexpected type")
 		}
+	case constant.Float:
+		return types.Typ[types.UntypedFloat], glang.GallinaVerbatim("float_placeholder")
 	}
 	ctx.unsupported(l, "unsupported constant val")
 	return nil, nil

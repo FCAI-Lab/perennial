@@ -69,7 +69,9 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	switch ctx.filter.GetAction(spec.Name.Name) {
 	case declfilter.Axiomatize:
 		if t, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
-			ctx.namedTypes = append(ctx.namedTypes, t)
+			if _, ok := t.Underlying().(*types.Interface); !ok {
+				ctx.namedTypes = append(ctx.namedTypes, t)
+			}
 			decls = append(decls, glang.AxiomDecl{
 				DeclName: spec.Name.Name,
 				Type:     glang.GallinaVerbatim("go_type"),
@@ -160,6 +162,8 @@ func (ctx *Ctx) typeId(location locatable, t types.Type) glang.Expr {
 		return glang.NewCallExpr(glang.GallinaVerbatim("sliceT.id"), ctx.typeId(location, t.Elem()))
 	case *types.Pointer:
 		return glang.NewCallExpr(glang.GallinaVerbatim("ptrT.id"), ctx.typeId(location, t.Elem()))
+	case *types.Map:
+		return glang.NewCallExpr(glang.GallinaVerbatim("mapT.id"), ctx.typeId(location, t.Key()), ctx.typeId(location, t.Elem()))
 	case *types.Chan:
 		chanTypeId := "chanT.id"
 		switch t.Dir() {
