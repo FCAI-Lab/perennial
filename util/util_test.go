@@ -6,6 +6,24 @@ import (
 	"testing"
 )
 
+func TestFileHasContents(t *testing.T) {
+	// Create a temporary directory
+	tempDir := t.TempDir()
+	tempFile := path.Join(tempDir, "testfile.txt")
+
+	contents := []byte("hello world!")
+
+	// Create a file with some contents
+	err := os.WriteFile(tempFile, contents, 0644)
+	if err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	if !fileHasContents(tempFile, contents) {
+		t.Fatalf("fileHasContents failed")
+	}
+}
+
 func TestWriteFileIfChanged(t *testing.T) {
 	// Create a temporary directory
 	tempDir := t.TempDir()

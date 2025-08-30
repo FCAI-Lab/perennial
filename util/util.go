@@ -50,7 +50,7 @@ func fileHasContents(path string, data []byte) bool {
 	var buf [4096]byte
 	for {
 		n, err := f.Read(buf[:])
-		if err != nil {
+		if err != nil && err != io.EOF {
 			return false
 		}
 		// got to end of file and contents are same
