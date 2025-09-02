@@ -106,19 +106,18 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 
 func (ctx *Ctx) typeIdDecl(spec *ast.TypeSpec) []glang.Decl {
 	typeName := spec.Name.Name
-	switch ctx.filter.GetAction(typeName) {
-	case declfilter.Trust:
-		return nil
-	case declfilter.Axiomatize:
-		if spec.Assign != 0 {
+
+	// XXX: only axiomatize/skip if the type is not a named type. Helps avoid axioms in `msets`.
+	if spec.Assign != 0 {
+		switch ctx.filter.GetAction(typeName) {
+		case declfilter.Trust:
+			return nil
+		case declfilter.Axiomatize:
 			return []glang.Decl{glang.TypeIdDeclAxiom{Name: typeName}}
-		} else {
-			// XXX: if it's named, translate it anyways, so that `msets` doesn't end
-			// up with axiomatized strings for keys.
+		case declfilter.Translate:
+		default:
+			ctx.nope(spec.Name, "unexpected filter action")
 		}
-	case declfilter.Translate:
-	default:
-		ctx.nope(spec.Name, "unexpected filter action")
 	}
 
 	ctx.dep.SetCurrentName(typeName + ".id")

@@ -114,6 +114,7 @@ type Expr interface {
 }
 
 var GallinaKeywords map[string]bool = map[string]bool{
+	"Type":   true,
 	"is":     true,
 	"as":     true,
 	"mod":    true,
@@ -868,7 +869,8 @@ type TypeIdDecl struct {
 }
 
 func (d TypeIdDecl) CoqDecl() string {
-	return fmt.Sprintf("Module %s. Definition id : go_string := %s. End %s.", d.Name, d.Val.Coq(false), d.Name)
+	return fmt.Sprintf("Module %[1]s. Definition id : go_string := %[2]s. End %[1]s.",
+		GallinaIdent(d.Name).Coq(false), d.Val.Coq(false))
 }
 
 func (d TypeIdDecl) DefName() (bool, string) {
@@ -880,7 +882,7 @@ type TypeIdDeclAxiom struct {
 }
 
 func (d TypeIdDeclAxiom) CoqDecl() string {
-	return fmt.Sprintf("Module %s. Axiom id : go_string. End %s.", d.Name, d.Name)
+	return fmt.Sprintf("Module %[1]s. Axiom id : go_string. End %[1]s.", GallinaIdent(d.Name).Coq(false))
 }
 
 func (d TypeIdDeclAxiom) DefName() (bool, string) {
@@ -919,7 +921,7 @@ type AxiomDecl struct {
 }
 
 func (d AxiomDecl) CoqDecl() string {
-	return fmt.Sprintf("Axiom %s : %s.", d.DeclName, d.Type.Coq(false))
+	return fmt.Sprintf("Axiom %s : %s.", GallinaIdent(d.DeclName).Coq(false), d.Type.Coq(false))
 }
 
 func (d AxiomDecl) DefName() (bool, string) {
