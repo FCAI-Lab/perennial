@@ -161,6 +161,12 @@ func New(c FilterConfig) DeclFilter {
 	return &df
 }
 
+var AxiomatizeConfig FilterConfig = FilterConfig{
+	ToTranslate: []string{"!*"},
+	Imports:     []string{"*"},
+	Trusted:     nil,
+}
+
 func ParseConfig(raw []byte) (c FilterConfig, err error) {
 	err = toml.Unmarshal(raw, &c)
 	return
