@@ -182,8 +182,8 @@ func (ctx *Ctx) methodSetNamed(t *types.Named) glang.Expr {
 						glang.NewStringVal(methodName),
 						glang.NewCallExpr(
 							glang.GallinaVerbatim("struct.field_get"),
-							glang.GallinaType{Ty: ctx.glangType(t.Obj(), t)},
-							glang.StringLiteral{Value: field.Name()},
+							ctx.glangType(t.Obj(), t),
+							glang.NewStringVal(field.Name()),
 							glang.IdentExpr("$r"),
 						),
 					),
@@ -233,7 +233,7 @@ func (ctx *Ctx) methodSetPointerToNamed(t *types.Named) glang.Expr {
 			var fieldType types.Type = types.NewPointer(field.Type())
 			var fieldExpr glang.Expr = glang.NewCallExpr(
 				glang.GallinaVerbatim("struct.field_ref"),
-				glang.GolangTypeExpr(ctx.glangType(t.Obj(), t)),
+				ctx.glangType(t.Obj(), t),
 				glang.NewStringVal(field.Name()),
 				glang.IdentExpr("$r"),
 			)
@@ -3048,7 +3048,8 @@ func (ctx *Ctx) initFunctions() []glang.Decl {
 	var imports glang.ListExpr
 	for _, impName := range ctx.importNamesOrdered {
 		pkg := impName.Imported()
-		qualifiedIdent := fmt.Sprintf("%s.%s", strings.ReplaceAll(glang.ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(pkg.Path()), "/", "."), pkg.Name())
+		// Qualifying this path with `code` to avoid problems like `fmt.fmt` from conflicting with the type `fmt` declared in the package `fmt`.
+		qualifiedIdent := fmt.Sprintf("code.%s.%s", strings.ReplaceAll(glang.ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(pkg.Path()), "/", "."), pkg.Name())
 		imports = append(imports, ctx.gallinaIdent(qualifiedIdent))
 	}
 	infoRecord := glang.RecordLiteral{
