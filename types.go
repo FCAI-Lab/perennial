@@ -157,9 +157,9 @@ func (ctx *Ctx) typeId(location locatable, t types.Type) glang.Expr {
 			return nil
 		}
 	case *types.Named:
-		typeIdIdent := ctx.qualifiedName(t.Obj()) + ".id"
+		typeIdIdent := glang.GallinaIdent(ctx.qualifiedName(t.Obj())).Coq(false) + ".id"
 		ctx.dep.Add(typeIdIdent)
-		return glang.GallinaIdent(typeIdIdent)
+		return glang.GallinaVerbatim(typeIdIdent)
 	case *types.Struct:
 		return ctx.structTypeId(location, t)
 	case *types.Signature:
