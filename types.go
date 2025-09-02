@@ -37,14 +37,11 @@ func TypeIsGooseLang(t types.Type) bool {
 	// indicates an originally generic, instantiated type
 	switch t := t.(type) {
 	case *types.Named:
-		if t.TypeParams() != nil {
-			return true
-		}
+		return t.TypeParams() != nil
 	case *types.Alias:
-		if t.TypeParams() != nil {
-			return true
-		}
+		return t.TypeParams() != nil
 	}
+	// why is this so?
 	if t, ok := t.Underlying().(*types.Struct); ok {
 		if t.NumFields() == 0 {
 			return false
@@ -60,25 +57,20 @@ func TypeIsGooseLang(t types.Type) bool {
 }
 
 func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
-	if ctx.filter.GetAction(spec.Name.Name) == declfilter.Skip {
-		return
-	}
-
-	decls = append(decls, ctx.typeIdDecl(spec))
+	decls = append(decls, ctx.typeIdDecl(spec)...)
 
 	switch ctx.filter.GetAction(spec.Name.Name) {
 	case declfilter.Axiomatize:
 		if t, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
-			if _, ok := t.Underlying().(*types.Interface); !ok {
+			if _, isInterface := t.Underlying().(*types.Interface); !isInterface {
 				ctx.namedTypes = append(ctx.namedTypes, t)
 			}
-			decls = append(decls, glang.AxiomDecl{
-				DeclName: spec.Name.Name,
-				Type:     glang.GallinaVerbatim("go_type"),
-			})
-			return
 		}
-		ctx.unsupported(spec, "axiomatized type should be a named type")
+		decls = append(decls, glang.AxiomDecl{
+			DeclName: spec.Name.Name,
+			Type:     glang.GallinaVerbatim("go_type"),
+		})
+		return
 	case declfilter.Trust:
 		if t, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
 			if _, ok := t.Underlying().(*types.Interface); !ok {
@@ -112,23 +104,33 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	return
 }
 
-func (ctx *Ctx) typeIdDecl(spec *ast.TypeSpec) glang.Decl {
+func (ctx *Ctx) typeIdDecl(spec *ast.TypeSpec) []glang.Decl {
 	typeName := spec.Name.Name
+	switch ctx.filter.GetAction(typeName) {
+	case declfilter.Trust:
+		return nil
+	case declfilter.Axiomatize:
+		return []glang.Decl{glang.TypeIdDeclAxiom{Name: typeName}}
+	case declfilter.Translate:
+	default:
+		ctx.nope(spec.Name, "unexpected filter action")
+	}
+
 	ctx.dep.SetCurrentName(typeName + ".id")
 	defer ctx.dep.UnsetCurrentName()
 
 	// If this is an alias declaration, reference the RHS type's typeId
 	if spec.Assign != 0 {
 		rhsTypeId := ctx.typeId(spec, ctx.typeOf(spec.Type))
-		return glang.TypeIdDecl{
+		return []glang.Decl{glang.TypeIdDecl{
 			Name: typeName,
 			Val:  rhsTypeId,
-		}
+		}}
 	} else {
-		return glang.TypeIdDecl{
+		return []glang.Decl{glang.TypeIdDecl{
 			Name: typeName,
 			Val:  glang.StringLiteral{Value: fmt.Sprintf("%s.%s", ctx.pkgPath, typeName)},
-		}
+		}}
 	}
 }
 

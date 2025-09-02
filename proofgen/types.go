@@ -205,7 +205,7 @@ func (tr *typesTranslator) Decl(d ast.Decl) {
 					tr.translateType(spec)
 				case declfilter.Axiomatize:
 					tr.axiomatizeType(spec)
-				case declfilter.Skip, declfilter.Trust:
+				case declfilter.Trust:
 					continue
 				}
 			}

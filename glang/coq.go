@@ -875,6 +875,18 @@ func (d TypeIdDecl) DefName() (bool, string) {
 	return true, d.Name + ".id"
 }
 
+type TypeIdDeclAxiom struct {
+	Name string
+}
+
+func (d TypeIdDeclAxiom) CoqDecl() string {
+	return fmt.Sprintf("Module %s. Axiom id : go_string. End %s.", d.Name, d.Name)
+}
+
+func (d TypeIdDeclAxiom) DefName() (bool, string) {
+	return true, d.Name + ".id"
+}
+
 type InstanceDecl struct {
 	Type Expr
 	// If not global, instance will be export
@@ -1039,6 +1051,8 @@ func (f File) Write(w io.Writer) {
 	var decls []Decl
 	for _, d := range f.Decls {
 		if _, isTypeId := d.(TypeIdDecl); isTypeId {
+			typeIdDecls = append(typeIdDecls, d)
+		} else if _, isTypeIdAxiom := d.(TypeIdDeclAxiom); isTypeIdAxiom {
 			typeIdDecls = append(typeIdDecls, d)
 		} else {
 			decls = append(decls, d)

@@ -157,7 +157,7 @@ func (ctx *Ctx) methodSetNamed(t *types.Named) glang.Expr {
 
 	var mset glang.ListExpr
 	add := func(methodName string, x glang.Expr) {
-		mset = append(mset, glang.TupleExpr{glang.NewStringVal(methodName), x})
+		mset = append(mset, glang.TupleExpr{glang.StringLiteral{Value: methodName}, x})
 	}
 
 	for i := range goMset.Len() {
@@ -174,11 +174,11 @@ func (ctx *Ctx) methodSetNamed(t *types.Named) glang.Expr {
 			}
 			field := structType.Field(index[0])
 			add(methodName,
-				glang.FuncLit{
+				glang.ValueScoped{Value: glang.FuncLit{
 					Args: []glang.Binder{{Name: "$r"}},
 					Body: glang.NewCallExpr(
 						glang.GallinaVerbatim("method_call"),
-						ctx.typeId(field, field.Type()),
+						glang.StringVal{Value: ctx.typeId(field, field.Type())},
 						glang.NewStringVal(methodName),
 						glang.NewCallExpr(
 							glang.GallinaVerbatim("struct.field_get"),
@@ -187,7 +187,7 @@ func (ctx *Ctx) methodSetNamed(t *types.Named) glang.Expr {
 							glang.IdentExpr("$r"),
 						),
 					),
-				})
+				}})
 		}
 	}
 	return mset
@@ -197,7 +197,7 @@ func (ctx *Ctx) methodSetPointerToNamed(t *types.Named) glang.Expr {
 	goMset := types.NewMethodSet(types.NewPointer(t))
 	var mset glang.ListExpr
 	add := func(methodName string, x glang.Expr) {
-		mset = append(mset, glang.TupleExpr{glang.NewStringVal(methodName), x})
+		mset = append(mset, glang.TupleExpr{glang.StringLiteral{Value: methodName}, x})
 	}
 
 	for i := range goMset.Len() {
@@ -211,18 +211,18 @@ func (ctx *Ctx) methodSetPointerToNamed(t *types.Named) glang.Expr {
 			if _, recvIsPointer := recvType.(*types.Pointer); recvIsPointer {
 				add(methodName, ctx.gallinaIdent(glang.TypeMethod(t.Obj().Name(), methodName)))
 			} else {
-				add(methodName, glang.FuncLit{
+				add(methodName, glang.ValueScoped{Value: glang.FuncLit{
 					Args: []glang.Binder{{Name: "$r"}},
 					Body: glang.NewCallExpr(
 						glang.GallinaVerbatim("method_call"),
-						ctx.typeId(t.Obj(), t),
+						glang.StringVal{Value: ctx.typeId(t.Obj(), t)},
 						methodKey,
 						glang.DerefExpr{
 							X:  glang.IdentExpr("$r"),
 							Ty: ctx.glangType(t.Obj(), t),
 						},
 					),
-				})
+				}})
 			}
 		} else {
 			structType, ok := t.Underlying().(*types.Struct)
@@ -233,10 +233,30 @@ func (ctx *Ctx) methodSetPointerToNamed(t *types.Named) glang.Expr {
 			var fieldType types.Type = types.NewPointer(field.Type())
 			var fieldExpr glang.Expr = glang.NewCallExpr(
 				glang.GallinaVerbatim("struct.field_ref"),
-				glang.GallinaType{Ty: ctx.glangType(t.Obj(), t)},
-				glang.StringLiteral{Value: field.Name()},
+				glang.GolangTypeExpr(ctx.glangType(t.Obj(), t)),
+				glang.NewStringVal(field.Name()),
 				glang.IdentExpr("$r"),
 			)
+
+			e := glang.GolangTypeExpr(ctx.glangType(t.Obj(), t))
+			fmt.Println("Type is", t)
+			fmt.Println("TypeIsGooseLang: ", TypeIsGooseLang(t))
+			fmt.Printf("%T\n", t)
+			var t2 types.Type = t
+			switch t := t2.(type) {
+			case *types.Named:
+				if t.TypeParams() != nil {
+					fmt.Println("true")
+					fmt.Println(t.TypeParams())
+				}
+			case *types.Alias:
+				if t.TypeParams() != nil {
+					fmt.Println("true")
+				}
+			}
+			fmt.Println(t.TypeParams())
+			fmt.Println(e.Coq(false))
+			fmt.Println()
 
 			// if `x.f` would be a `**T`, dereference it to get `*T`
 			if _, fieldIsPointer := field.Type().(*types.Pointer); fieldIsPointer {
@@ -248,15 +268,15 @@ func (ctx *Ctx) methodSetPointerToNamed(t *types.Named) glang.Expr {
 			}
 
 			add(methodName,
-				glang.FuncLit{
+				glang.ValueScoped{Value: glang.FuncLit{
 					Args: []glang.Binder{{Name: "$r"}},
 					Body: glang.NewCallExpr(
 						glang.GallinaVerbatim("method_call"),
-						ctx.typeId(field, fieldType),
+						glang.StringVal{Value: ctx.typeId(field, fieldType)},
 						glang.NewStringVal(methodName),
 						fieldExpr,
 					),
-				})
+				}})
 		}
 	}
 	return mset
@@ -2681,8 +2701,6 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 		fd.Name = glang.TypeMethod(typeName, d.Name.Name)
 
 		switch ctx.filter.GetAction(funcName) {
-		case declfilter.Skip:
-			return nil
 		case declfilter.Trust:
 			return nil
 		case declfilter.Axiomatize:
@@ -2705,8 +2723,6 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 		})
 		fd.Name = d.Name.Name + "ⁱᵐᵖˡ"
 		switch ctx.filter.GetAction(funcName) {
-		case declfilter.Skip:
-			return
 		case declfilter.Trust:
 			ctx.functions = append(ctx.functions, d.Name.Name)
 			return

@@ -70,9 +70,6 @@ func translateNames(pkg *packages.Package, filter declfilter.DeclFilter) tmpl.Na
 	info.Vars = tr.vars
 
 	for _, funcName := range tr.functions {
-		if tr.filter.GetAction(funcName) == declfilter.Skip {
-			continue
-		}
 		info.FunctionNames = append(info.FunctionNames, funcName)
 	}
 
@@ -87,9 +84,6 @@ func translateNames(pkg *packages.Package, filter declfilter.DeclFilter) tmpl.Na
 		goMset := types.NewMethodSet(namedType)
 		for i := range goMset.Len() {
 			methodName := goMset.At(i).Obj().Name()
-			if tr.filter.GetAction(typeName+"."+methodName) == declfilter.Skip {
-				continue
-			}
 			mset.Methods = append(mset.Methods, methodName)
 		}
 		info.NamedTypeMethods = append(info.NamedTypeMethods, mset)
@@ -101,9 +95,6 @@ func translateNames(pkg *packages.Package, filter declfilter.DeclFilter) tmpl.Na
 		goMset = types.NewMethodSet(types.NewPointer(namedType))
 		for i := range goMset.Len() {
 			methodName := goMset.At(i).Obj().Name()
-			if tr.filter.GetAction(typeName+"."+methodName) == declfilter.Skip {
-				continue
-			}
 			ptrMset.Methods = append(ptrMset.Methods, methodName)
 		}
 		info.NamedTypeMethods = append(info.NamedTypeMethods, ptrMset)
