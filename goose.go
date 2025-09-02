@@ -238,26 +238,6 @@ func (ctx *Ctx) methodSetPointerToNamed(t *types.Named) glang.Expr {
 				glang.IdentExpr("$r"),
 			)
 
-			e := glang.GolangTypeExpr(ctx.glangType(t.Obj(), t))
-			fmt.Println("Type is", t)
-			fmt.Println("TypeIsGooseLang: ", TypeIsGooseLang(t))
-			fmt.Printf("%T\n", t)
-			var t2 types.Type = t
-			switch t := t2.(type) {
-			case *types.Named:
-				if t.TypeParams() != nil {
-					fmt.Println("true")
-					fmt.Println(t.TypeParams())
-				}
-			case *types.Alias:
-				if t.TypeParams() != nil {
-					fmt.Println("true")
-				}
-			}
-			fmt.Println(t.TypeParams())
-			fmt.Println(e.Coq(false))
-			fmt.Println()
-
 			// if `x.f` would be a `**T`, dereference it to get `*T`
 			if _, fieldIsPointer := field.Type().(*types.Pointer); fieldIsPointer {
 				fieldExpr = glang.DerefExpr{

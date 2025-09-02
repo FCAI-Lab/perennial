@@ -110,7 +110,12 @@ func (ctx *Ctx) typeIdDecl(spec *ast.TypeSpec) []glang.Decl {
 	case declfilter.Trust:
 		return nil
 	case declfilter.Axiomatize:
-		return []glang.Decl{glang.TypeIdDeclAxiom{Name: typeName}}
+		if spec.Assign != 0 {
+			return []glang.Decl{glang.TypeIdDeclAxiom{Name: typeName}}
+		} else {
+			// XXX: if it's named, translate it anyways, so that `msets` doesn't end
+			// up with axiomatized strings for keys.
+		}
 	case declfilter.Translate:
 	default:
 		ctx.nope(spec.Name, "unexpected filter action")
