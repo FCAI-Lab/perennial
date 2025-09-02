@@ -386,36 +386,36 @@ Definition vars' : list (go_string * go_type) := [].
 
 Definition functions' : list (go_string * val) := [(Init, Initⁱᵐᵖˡ); (Begin, Beginⁱᵐᵖˡ)].
 
-Definition msets' : list (go_string * (list (go_string * val))) := [(Log.id, [("Append"%go, Log__Appendⁱᵐᵖˡ); ("Logger"%go, Log__Loggerⁱᵐᵖˡ); ("Read"%go, Log__Readⁱᵐᵖˡ); ("diskAppend"%go, Log__diskAppendⁱᵐᵖˡ); ("diskAppendWait"%go, Log__diskAppendWaitⁱᵐᵖˡ); ("memAppend"%go, Log__memAppendⁱᵐᵖˡ); ("memWrite"%go, Log__memWriteⁱᵐᵖˡ); ("readBlocks"%go, Log__readBlocksⁱᵐᵖˡ); ("readHdr"%go, Log__readHdrⁱᵐᵖˡ); ("readLogTxnNxt"%go, Log__readLogTxnNxtⁱᵐᵖˡ); ("writeBlocks"%go, Log__writeBlocksⁱᵐᵖˡ); ("writeHdr"%go, Log__writeHdrⁱᵐᵖˡ)]); (ptrT.id Log.id, [("Append"%go, (λ: "$recvAddr",
-                 method_call #logging2.logging2 #"Log" #"Append" (![#Log] "$recvAddr")
-                 )%V); ("Logger"%go, (λ: "$recvAddr",
-                 method_call #logging2.logging2 #"Log" #"Logger" (![#Log] "$recvAddr")
-                 )%V); ("Read"%go, (λ: "$recvAddr",
-                 method_call #logging2.logging2 #"Log" #"Read" (![#Log] "$recvAddr")
-                 )%V); ("diskAppend"%go, (λ: "$recvAddr",
-                 method_call #logging2.logging2 #"Log" #"diskAppend" (![#Log] "$recvAddr")
-                 )%V); ("diskAppendWait"%go, (λ: "$recvAddr",
-                 method_call #logging2.logging2 #"Log" #"diskAppendWait" (![#Log] "$recvAddr")
-                 )%V); ("memAppend"%go, (λ: "$recvAddr",
-                 method_call #logging2.logging2 #"Log" #"memAppend" (![#Log] "$recvAddr")
-                 )%V); ("memWrite"%go, (λ: "$recvAddr",
-                 method_call #logging2.logging2 #"Log" #"memWrite" (![#Log] "$recvAddr")
-                 )%V); ("readBlocks"%go, (λ: "$recvAddr",
-                 method_call #logging2.logging2 #"Log" #"readBlocks" (![#Log] "$recvAddr")
-                 )%V); ("readHdr"%go, (λ: "$recvAddr",
-                 method_call #logging2.logging2 #"Log" #"readHdr" (![#Log] "$recvAddr")
-                 )%V); ("readLogTxnNxt"%go, (λ: "$recvAddr",
-                 method_call #logging2.logging2 #"Log" #"readLogTxnNxt" (![#Log] "$recvAddr")
-                 )%V); ("writeBlocks"%go, (λ: "$recvAddr",
-                 method_call #logging2.logging2 #"Log" #"writeBlocks" (![#Log] "$recvAddr")
-                 )%V); ("writeHdr"%go, (λ: "$recvAddr",
-                 method_call #logging2.logging2 #"Log" #"writeHdr" (![#Log] "$recvAddr")
-                 )%V)]); (Txn.id, [("Commit"%go, Txn__Commitⁱᵐᵖˡ); ("Read"%go, Txn__Readⁱᵐᵖˡ); ("Write"%go, Txn__Writeⁱᵐᵖˡ)]); (ptrT.id Txn.id, [("Commit"%go, (λ: "$recvAddr",
-                 method_call #logging2.logging2 #"Txn" #"Commit" (![#Txn] "$recvAddr")
-                 )%V); ("Read"%go, (λ: "$recvAddr",
-                 method_call #logging2.logging2 #"Txn" #"Read" (![#Txn] "$recvAddr")
-                 )%V); ("Write"%go, (λ: "$recvAddr",
-                 method_call #logging2.logging2 #"Txn" #"Write" (![#Txn] "$recvAddr")
+Definition msets' : list (go_string * (list (go_string * val))) := [(Log.id, [("Append"%go, Log__Appendⁱᵐᵖˡ); ("Logger"%go, Log__Loggerⁱᵐᵖˡ); ("Read"%go, Log__Readⁱᵐᵖˡ); ("diskAppend"%go, Log__diskAppendⁱᵐᵖˡ); ("diskAppendWait"%go, Log__diskAppendWaitⁱᵐᵖˡ); ("memAppend"%go, Log__memAppendⁱᵐᵖˡ); ("memWrite"%go, Log__memWriteⁱᵐᵖˡ); ("readBlocks"%go, Log__readBlocksⁱᵐᵖˡ); ("readHdr"%go, Log__readHdrⁱᵐᵖˡ); ("readLogTxnNxt"%go, Log__readLogTxnNxtⁱᵐᵖˡ); ("writeBlocks"%go, Log__writeBlocksⁱᵐᵖˡ); ("writeHdr"%go, Log__writeHdrⁱᵐᵖˡ)]); (ptrT.id Log.id, [("Append"%go, (λ: "$r",
+                 method_call #Log.id #"Append"%go (![#Log] "$r")
+                 )%V); ("Logger"%go, (λ: "$r",
+                 method_call #Log.id #"Logger"%go (![#Log] "$r")
+                 )%V); ("Read"%go, (λ: "$r",
+                 method_call #Log.id #"Read"%go (![#Log] "$r")
+                 )%V); ("diskAppend"%go, (λ: "$r",
+                 method_call #Log.id #"diskAppend"%go (![#Log] "$r")
+                 )%V); ("diskAppendWait"%go, (λ: "$r",
+                 method_call #Log.id #"diskAppendWait"%go (![#Log] "$r")
+                 )%V); ("memAppend"%go, (λ: "$r",
+                 method_call #Log.id #"memAppend"%go (![#Log] "$r")
+                 )%V); ("memWrite"%go, (λ: "$r",
+                 method_call #Log.id #"memWrite"%go (![#Log] "$r")
+                 )%V); ("readBlocks"%go, (λ: "$r",
+                 method_call #Log.id #"readBlocks"%go (![#Log] "$r")
+                 )%V); ("readHdr"%go, (λ: "$r",
+                 method_call #Log.id #"readHdr"%go (![#Log] "$r")
+                 )%V); ("readLogTxnNxt"%go, (λ: "$r",
+                 method_call #Log.id #"readLogTxnNxt"%go (![#Log] "$r")
+                 )%V); ("writeBlocks"%go, (λ: "$r",
+                 method_call #Log.id #"writeBlocks"%go (![#Log] "$r")
+                 )%V); ("writeHdr"%go, (λ: "$r",
+                 method_call #Log.id #"writeHdr"%go (![#Log] "$r")
+                 )%V)]); (Txn.id, [("Commit"%go, Txn__Commitⁱᵐᵖˡ); ("Read"%go, Txn__Readⁱᵐᵖˡ); ("Write"%go, Txn__Writeⁱᵐᵖˡ)]); (ptrT.id Txn.id, [("Commit"%go, (λ: "$r",
+                 method_call #Txn.id #"Commit"%go (![#Txn] "$r")
+                 )%V); ("Read"%go, (λ: "$r",
+                 method_call #Txn.id #"Read"%go (![#Txn] "$r")
+                 )%V); ("Write"%go, (λ: "$r",
+                 method_call #Txn.id #"Write"%go (![#Txn] "$r")
                  )%V)])].
 
 #[global] Instance info' : PkgInfo logging2.logging2 :=
@@ -423,7 +423,7 @@ Definition msets' : list (go_string * (list (go_string * val))) := [(Log.id, [("
     pkg_vars := vars';
     pkg_functions := functions';
     pkg_msets := msets';
-    pkg_imported_pkgs := [github_com.goose_lang.primitive.primitive; github_com.goose_lang.primitive.disk.disk; sync.sync];
+    pkg_imported_pkgs := [code.github_com.goose_lang.primitive.primitive; code.github_com.goose_lang.primitive.disk.disk; code.sync.sync];
   |}.
 
 Definition initialize' : val :=

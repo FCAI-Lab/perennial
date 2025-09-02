@@ -372,22 +372,22 @@ Definition vars' : list (go_string * go_type) := [].
 
 Definition functions' : list (go_string * val) := [(intToBlock, intToBlockⁱᵐᵖˡ); (blockToInt, blockToIntⁱᵐᵖˡ); (New, Newⁱᵐᵖˡ); (getLogEntry, getLogEntryⁱᵐᵖˡ); (applyLog, applyLogⁱᵐᵖˡ); (clearLog, clearLogⁱᵐᵖˡ); (Open, Openⁱᵐᵖˡ)].
 
-Definition msets' : list (go_string * (list (go_string * val))) := [(Log.id, [("Apply"%go, Log__Applyⁱᵐᵖˡ); ("BeginTxn"%go, Log__BeginTxnⁱᵐᵖˡ); ("Commit"%go, Log__Commitⁱᵐᵖˡ); ("Read"%go, Log__Readⁱᵐᵖˡ); ("Size"%go, Log__Sizeⁱᵐᵖˡ); ("Write"%go, Log__Writeⁱᵐᵖˡ); ("lock"%go, Log__lockⁱᵐᵖˡ); ("unlock"%go, Log__unlockⁱᵐᵖˡ)]); (ptrT.id Log.id, [("Apply"%go, (λ: "$recvAddr",
-                 method_call #wal.awol #"Log" #"Apply" (![#Log] "$recvAddr")
-                 )%V); ("BeginTxn"%go, (λ: "$recvAddr",
-                 method_call #wal.awol #"Log" #"BeginTxn" (![#Log] "$recvAddr")
-                 )%V); ("Commit"%go, (λ: "$recvAddr",
-                 method_call #wal.awol #"Log" #"Commit" (![#Log] "$recvAddr")
-                 )%V); ("Read"%go, (λ: "$recvAddr",
-                 method_call #wal.awol #"Log" #"Read" (![#Log] "$recvAddr")
-                 )%V); ("Size"%go, (λ: "$recvAddr",
-                 method_call #wal.awol #"Log" #"Size" (![#Log] "$recvAddr")
-                 )%V); ("Write"%go, (λ: "$recvAddr",
-                 method_call #wal.awol #"Log" #"Write" (![#Log] "$recvAddr")
-                 )%V); ("lock"%go, (λ: "$recvAddr",
-                 method_call #wal.awol #"Log" #"lock" (![#Log] "$recvAddr")
-                 )%V); ("unlock"%go, (λ: "$recvAddr",
-                 method_call #wal.awol #"Log" #"unlock" (![#Log] "$recvAddr")
+Definition msets' : list (go_string * (list (go_string * val))) := [(Log.id, [("Apply"%go, Log__Applyⁱᵐᵖˡ); ("BeginTxn"%go, Log__BeginTxnⁱᵐᵖˡ); ("Commit"%go, Log__Commitⁱᵐᵖˡ); ("Read"%go, Log__Readⁱᵐᵖˡ); ("Size"%go, Log__Sizeⁱᵐᵖˡ); ("Write"%go, Log__Writeⁱᵐᵖˡ); ("lock"%go, Log__lockⁱᵐᵖˡ); ("unlock"%go, Log__unlockⁱᵐᵖˡ)]); (ptrT.id Log.id, [("Apply"%go, (λ: "$r",
+                 method_call #Log.id #"Apply"%go (![#Log] "$r")
+                 )%V); ("BeginTxn"%go, (λ: "$r",
+                 method_call #Log.id #"BeginTxn"%go (![#Log] "$r")
+                 )%V); ("Commit"%go, (λ: "$r",
+                 method_call #Log.id #"Commit"%go (![#Log] "$r")
+                 )%V); ("Read"%go, (λ: "$r",
+                 method_call #Log.id #"Read"%go (![#Log] "$r")
+                 )%V); ("Size"%go, (λ: "$r",
+                 method_call #Log.id #"Size"%go (![#Log] "$r")
+                 )%V); ("Write"%go, (λ: "$r",
+                 method_call #Log.id #"Write"%go (![#Log] "$r")
+                 )%V); ("lock"%go, (λ: "$r",
+                 method_call #Log.id #"lock"%go (![#Log] "$r")
+                 )%V); ("unlock"%go, (λ: "$r",
+                 method_call #Log.id #"unlock"%go (![#Log] "$r")
                  )%V)])].
 
 #[global] Instance info' : PkgInfo wal.awol :=
@@ -395,7 +395,7 @@ Definition msets' : list (go_string * (list (go_string * val))) := [(Log.id, [("
     pkg_vars := vars';
     pkg_functions := functions';
     pkg_msets := msets';
-    pkg_imported_pkgs := [sync.sync; github_com.goose_lang.primitive.primitive; github_com.goose_lang.primitive.disk.disk];
+    pkg_imported_pkgs := [code.sync.sync; code.github_com.goose_lang.primitive.primitive; code.github_com.goose_lang.primitive.disk.disk];
   |}.
 
 Definition initialize' : val :=
