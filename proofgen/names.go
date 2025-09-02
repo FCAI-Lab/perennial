@@ -6,6 +6,7 @@ import (
 	"go/types"
 
 	"github.com/goose-lang/goose/declfilter"
+	"github.com/goose-lang/goose/glang"
 	"github.com/goose-lang/goose/proofgen/tmpl"
 	"golang.org/x/tools/go/packages"
 )
@@ -70,7 +71,8 @@ func translateNames(pkg *packages.Package, filter declfilter.DeclFilter) tmpl.Na
 	info.Vars = tr.vars
 
 	for _, funcName := range tr.functions {
-		info.FunctionNames = append(info.FunctionNames, funcName)
+		// Use GalliaIdent to avoid conflict with keywords (e.g. `mod` in `math.mod` is a Rocq keyword)
+		info.FunctionNames = append(info.FunctionNames, glang.GallinaIdent(funcName).Coq(false))
 	}
 
 	// emit instances for unfolding method_call
