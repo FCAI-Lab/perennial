@@ -285,6 +285,7 @@ func TranslatePackages(configDir string, modDir string,
 	externalPackagesList := make([]string, 0)
 	var externalPackagesMu sync.Mutex
 
+	// TODO now
 	for i, pkg := range pkgs {
 		go func() {
 			defer wg.Done()
@@ -296,13 +297,14 @@ func TranslatePackages(configDir string, modDir string,
 			files[i], errs[i] = translatePackage(pkg, config)
 
 			externalPackagesMu.Lock()
-			for _, pkg := range pkg.Imports {
-				if _, isTranslated := translatedPackages[pkg.PkgPath]; isTranslated {
+			for _, importedPkg := range pkg.Imports {
+				if _, isTranslated := translatedPackages[importedPkg.PkgPath]; isTranslated {
 					continue
 				}
-				if _, ok := externalPackages[pkg.PkgPath]; !ok {
-					externalPackages[pkg.PkgPath] = pkg
-					externalPackagesList = append(externalPackagesList, pkg.PkgPath)
+				if _, ok := externalPackages[importedPkg.PkgPath]; !ok {
+					fmt.Printf("Translating %s because of import in %s\n", importedPkg.PkgPath, pkg.PkgPath)
+					externalPackages[importedPkg.PkgPath] = importedPkg
+					externalPackagesList = append(externalPackagesList, importedPkg.PkgPath)
 				}
 			}
 			externalPackagesMu.Unlock()
@@ -313,26 +315,9 @@ func TranslatePackages(configDir string, modDir string,
 	for i := 0; i < len(externalPackagesList); i++ {
 		pkgPath := externalPackagesList[i]
 		pkg := externalPackages[pkgPath]
-		fmt.Println("External package", pkg.PkgPath)
-
-		where := pkg.Fset.Position(pkg.Syntax[0].Package)
-		fmt.Println("External package location: ", where)
-
 		newFiles, newErrs := translatePackage(pkg, declfilter.AxiomatizeConfig)
 		files = append(files, newFiles)
 		errs = append(errs, newErrs)
-
-		externalPackagesMu.Lock()
-		for _, pkg := range pkg.Imports {
-			if _, isTranslated := translatedPackages[pkg.PkgPath]; isTranslated {
-				continue
-			}
-			if _, ok := externalPackages[pkg.PkgPath]; !ok {
-				externalPackages[pkg.PkgPath] = pkg
-				externalPackagesList = append(externalPackagesList, pkg.PkgPath)
-			}
-		}
-		externalPackagesMu.Unlock()
 	}
 
 	return

@@ -263,8 +263,26 @@ func (ctx *Ctx) methodSetPointerToNamed(t *types.Named) glang.Expr {
 }
 
 // returns the mset for `t` followed by the mset for `ptr to t`
-func (ctx *Ctx) methodSet(t *types.Named) (glang.Expr, glang.Expr) {
-	return ctx.methodSetNamed(t), ctx.methodSetPointerToNamed(t)
+func (ctx *Ctx) methodSet(t *types.Named) (decls []glang.Decl, msets []glang.Expr) {
+	msets = append(msets, glang.TupleExpr{ctx.typeId(t.Obj(), t), ctx.methodSetNamed(t)})
+	msets = append(msets, glang.TupleExpr{ctx.typeId(t.Obj(), types.NewPointer(t)), ctx.methodSetPointerToNamed(t)})
+
+	// Generate axiomatized method declarations for all methods (including embedded ones)
+	// Use pointer method set since it contains all methods from the value method set plus pointer receiver methods
+	typeName := t.Obj().Name()
+	pointerMethodSet := types.NewMethodSet(types.NewPointer(t))
+	for i := range pointerMethodSet.Len() {
+		selection := pointerMethodSet.At(i)
+		methodName := selection.Obj().Name()
+		if ctx.filter.GetAction(typeName+"."+methodName) == declfilter.Axiomatize {
+			decls = append(decls, glang.AxiomDecl{
+				DeclName: glang.TypeMethod(typeName, methodName),
+				Type:     glang.GallinaVerbatim("val"),
+			})
+		}
+	}
+
+	return
 }
 
 // TODO: make this the input to handleImplicitConversion?
@@ -2642,9 +2660,22 @@ func funcName(f *types.Func) string {
 // Returns a glang.FuncDecl and maybe also a glang.NameDecl. If the function is an `init` or `_`, this
 // returns None.
 func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
+	// Always emit func id, even if the function is trusted or axiomatized.
+	if d.Recv == nil {
+		funcId := ctx.info.Defs[d.Name].Pkg().Path() + "." + ctx.info.Defs[d.Name].Name()
+		ret = append(ret, glang.ConstDecl{
+			Name: d.Name.Name,
+			Val:  glang.StringLiteral{Value: funcId},
+			Type: glang.GallinaVerbatim("go_string"),
+		})
+	}
+
 	funcName := funcName(ctx.info.ObjectOf(d.Name).(*types.Func))
 	if funcName == "_" {
-		return nil
+		return ret
+	}
+	if ctx.filter.GetAction(funcName) != declfilter.Translate {
+		return ret
 	}
 
 	ctx.usesDefer = false
@@ -2680,27 +2711,15 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 
 		fd.Name = glang.TypeMethod(typeName, d.Name.Name)
 
-		switch ctx.filter.GetAction(funcName) {
-		case declfilter.Trust:
-			return nil
-		case declfilter.Axiomatize:
-			return []glang.Decl{glang.AxiomDecl{DeclName: fd.Name, Type: glang.GallinaVerbatim("val")}}
-		}
-
 		ctx.dep.SetCurrentName(fd.Name)
 		defer ctx.dep.UnsetCurrentName()
+
 		name := "_"
 		if len(receiver.Names) > 0 {
 			name = receiver.Names[0].Name
 		}
 		fd.RecvArg = &glang.Binder{Name: name}
 	} else {
-		funcId := ctx.info.Defs[d.Name].Pkg().Path() + "." + ctx.info.Defs[d.Name].Name()
-		ret = append(ret, glang.ConstDecl{
-			Name: d.Name.Name,
-			Val:  glang.StringLiteral{Value: funcId},
-			Type: glang.GallinaVerbatim("go_string"),
-		})
 		fd.Name = d.Name.Name + "ⁱᵐᵖˡ"
 		switch ctx.filter.GetAction(funcName) {
 		case declfilter.Trust:
@@ -3033,9 +3052,9 @@ func (ctx *Ctx) initFunctions() []glang.Decl {
 
 	var msets glang.ListExpr
 	for _, namedType := range ctx.namedTypes {
-		mset, msetPtr := ctx.methodSet(namedType)
-		msets = append(msets, glang.TupleExpr{ctx.typeId(namedType.Obj(), namedType), mset})
-		msets = append(msets, glang.TupleExpr{ctx.typeId(namedType.Obj(), types.NewPointer(namedType)), msetPtr})
+		newDecls, msetExprs := ctx.methodSet(namedType)
+		decls = append(decls, newDecls...)
+		msets = append(msets, msetExprs...)
 	}
 
 	msetsDecl := glang.ConstDecl{

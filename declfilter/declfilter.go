@@ -163,7 +163,7 @@ func New(c FilterConfig) DeclFilter {
 
 var AxiomatizeConfig FilterConfig = FilterConfig{
 	ToTranslate: []string{"!*"},
-	Imports:     []string{"*"},
+	Imports:     []string{"!*"},
 	Trusted:     nil,
 }
 
