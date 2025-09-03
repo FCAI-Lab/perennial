@@ -152,76 +152,152 @@ func (ctx *Ctx) addSourceFile(d *ast.FuncDecl, comment *string) {
 	*comment += "go: " + f.String()
 }
 
-// returns the mset for `t` followed by the mset for `ptr to t`
-func (ctx *Ctx) methodSet(t *types.Named) (glang.Expr, glang.Expr) {
+func (ctx *Ctx) methodSetNamed(t *types.Named) glang.Expr {
 	typeName := t.Obj().Name()
+	goMset := types.NewMethodSet(t)
 
-	// Don't try to generate msets for interfaces, since Goosed code will never
-	// have to call `interface.make` on it.
-	if _, ok := t.Underlying().(*types.Interface); ok {
-		ctx.nope(t.Obj(), "Should not generate method set for interface type")
+	var mset glang.ListExpr
+
+	add := func(methodName string, x glang.Expr) {
+		mset = append(mset, glang.TupleExpr{glang.StringLiteral{Value: methodName}, x})
 	}
 
-	directMethods := make(map[string]bool)
-	// construct method set for T
-	goMset := types.NewMethodSet(t)
-	var mset glang.ListExpr
 	for i := range goMset.Len() {
 		selection := goMset.At(i)
-		switch ctx.filter.GetAction(typeName + "." + selection.Obj().Name()) {
-		case declfilter.Skip:
+		methodName, index := selection.Obj().Name(), selection.Index()
+		if ctx.filter.GetAction(typeName+"."+methodName) == declfilter.Axiomatize {
+			add(methodName, glang.GallinaIdent(glang.TypeMethod(typeName, methodName)))
 			continue
 		}
 
-		var expr glang.Expr
-		if len(selection.Index()) > 1 {
-			expr = glang.IdentExpr("$recv")
-			expr = ctx.selectionMethod(false, expr, selection, t.Obj())
-			expr = glang.ValueScoped{
-				Value: glang.FuncLit{Args: []glang.Binder{{Name: "$recv"}}, Body: expr},
-			}
+		if len(index) == 0 {
+			ctx.nope(t.Obj(), "expected non-empty index in methodSet translation")
+		} else if len(index) == 1 {
+			add(methodName, ctx.gallinaIdent(glang.TypeMethod(typeName, methodName)))
 		} else {
-			n := glang.TypeMethod(typeName, t.Method(selection.Index()[0]).Name())
-			expr = ctx.gallinaIdent(n)
-			ctx.dep.Add(n)
+			structType, ok := t.Underlying().(*types.Struct)
+			if !ok {
+				ctx.nope(t.Obj(), "type with embedded method should be a struct")
+			}
+			field := structType.Field(index[0])
+			add(methodName,
+				glang.ValueScoped{Value: glang.FuncLit{
+					Args: []glang.Binder{{Name: "$r"}},
+					Body: glang.NewCallExpr(
+						glang.GallinaVerbatim("method_call"),
+						glang.StringVal{Value: ctx.typeId(field, field.Type())},
+						glang.NewStringVal(methodName),
+						glang.NewCallExpr(
+							glang.GallinaVerbatim("struct.field_get"),
+							ctx.glangType(t.Obj(), t),
+							glang.NewStringVal(field.Name()),
+							glang.IdentExpr("$r"),
+						),
+					),
+				}})
 		}
+	}
+	return mset
+}
 
-		name := selection.Obj().Name()
-		directMethods[name] = true
-		mset = append(mset, glang.TupleExpr{glang.StringLiteral{Value: name}, expr})
+func (ctx *Ctx) methodSetPointerToNamed(t *types.Named) glang.Expr {
+	typeName := t.Obj().Name()
+	goMset := types.NewMethodSet(types.NewPointer(t))
+	var mset glang.ListExpr
+	add := func(methodName string, x glang.Expr) {
+		mset = append(mset, glang.TupleExpr{glang.StringLiteral{Value: methodName}, x})
 	}
 
-	// construct method set for *T
-	goMsetPtr := types.NewMethodSet(types.NewPointer(t))
-	var msetPtr glang.ListExpr
-	for i := range goMsetPtr.Len() {
-		selection := goMsetPtr.At(i)
-		switch ctx.filter.GetAction(typeName + "." + selection.Obj().Name()) {
-		case declfilter.Skip:
+	for i := range goMset.Len() {
+		selection := goMset.At(i)
+		methodName, index := selection.Obj().Name(), selection.Index()
+		methodKey := glang.NewStringVal(methodName)
+
+		if ctx.filter.GetAction(typeName+"."+methodName) == declfilter.Axiomatize {
+			add(methodName, glang.GallinaIdent(glang.TypeMethod(typeName, methodName)))
 			continue
 		}
 
-		var expr glang.Expr
-		if len(selection.Index()) == 1 && !directMethods[selection.Obj().Name()] {
-			// FIXME: probably want expr to use `method_call` to allow proof for
-			// the ptr-receiver method to use the spec for the direct method
-			// call.
-			n := glang.TypeMethod(typeName, t.Method(selection.Index()[0]).Name())
-			expr = ctx.gallinaIdent(n)
-			ctx.dep.Add(n)
-		} else {
-			expr = glang.IdentExpr("$recvAddr")
-			expr = ctx.selectionMethod(false, expr, selection, t.Obj())
-			expr = glang.ValueScoped{
-				Value: glang.FuncLit{Args: []glang.Binder{{Name: "$recvAddr"}}, Body: expr},
+		if len(index) == 0 {
+			ctx.nope(t.Obj(), "expected non-empty index in methodSet translation")
+		} else if len(index) == 1 {
+			recvType := t.Method(index[0]).Signature().Recv().Type()
+			if _, recvIsPointer := recvType.(*types.Pointer); recvIsPointer {
+				add(methodName, ctx.gallinaIdent(glang.TypeMethod(typeName, methodName)))
+			} else {
+				add(methodName, glang.ValueScoped{Value: glang.FuncLit{
+					Args: []glang.Binder{{Name: "$r"}},
+					Body: glang.NewCallExpr(
+						glang.GallinaVerbatim("method_call"),
+						glang.StringVal{Value: ctx.typeId(t.Obj(), t)},
+						methodKey,
+						glang.DerefExpr{
+							X:  glang.IdentExpr("$r"),
+							Ty: ctx.glangType(t.Obj(), t),
+						},
+					),
+				}})
 			}
-		}
+		} else {
+			structType, ok := t.Underlying().(*types.Struct)
+			if !ok {
+				ctx.nope(t.Obj(), "type with embedded method should be a struct")
+			}
+			field := structType.Field(index[0])
+			var fieldType types.Type = types.NewPointer(field.Type())
+			var fieldExpr glang.Expr = glang.NewCallExpr(
+				glang.GallinaVerbatim("struct.field_ref"),
+				ctx.glangType(t.Obj(), t),
+				glang.NewStringVal(field.Name()),
+				glang.IdentExpr("$r"),
+			)
 
-		name := goMsetPtr.At(i).Obj().Name()
-		msetPtr = append(msetPtr, glang.TupleExpr{glang.StringLiteral{Value: name}, expr})
+			// if `x.f` would be a `**T`, dereference it to get `*T`
+			if _, fieldIsPointer := field.Type().(*types.Pointer); fieldIsPointer {
+				fieldExpr = glang.DerefExpr{
+					X:  fieldExpr,
+					Ty: ctx.glangType(field, field.Type()),
+				}
+				fieldType = field.Type()
+			}
+
+			add(methodName,
+				glang.ValueScoped{Value: glang.FuncLit{
+					Args: []glang.Binder{{Name: "$r"}},
+					Body: glang.NewCallExpr(
+						glang.GallinaVerbatim("method_call"),
+						glang.StringVal{Value: ctx.typeId(field, fieldType)},
+						glang.NewStringVal(methodName),
+						fieldExpr,
+					),
+				}})
+		}
+	}
+	return mset
+}
+
+// returns the mset for `t` followed by the mset for `ptr to t`
+func (ctx *Ctx) methodSet(t *types.Named) (decls []glang.Decl, msets []glang.Expr) {
+	msets = append(msets, glang.TupleExpr{ctx.typeId(t.Obj(), t), ctx.methodSetNamed(t)})
+	msets = append(msets, glang.TupleExpr{ctx.typeId(t.Obj(), types.NewPointer(t)), ctx.methodSetPointerToNamed(t)})
+
+	// Generate axiomatized method declarations for all methods (including embedded ones)
+	// Use pointer method set since it contains all methods from the value
+	// method set plus pointer receiver methods
+	typeName := t.Obj().Name()
+	pointerMethodSet := types.NewMethodSet(types.NewPointer(t))
+	for i := range pointerMethodSet.Len() {
+		selection := pointerMethodSet.At(i)
+		methodName := selection.Obj().Name()
+		if ctx.filter.GetAction(typeName+"."+methodName) == declfilter.Axiomatize {
+			decls = append(decls, glang.AxiomDecl{
+				DeclName: glang.TypeMethod(typeName, methodName),
+				Type:     glang.GallinaVerbatim("val"),
+			})
+		}
 	}
 
-	return mset, msetPtr
+	return
 }
 
 // TODO: make this the input to handleImplicitConversion?
@@ -689,109 +765,6 @@ func (ctx *Ctx) fieldAddrSelection(n locatable, index []int, curType *types.Type
 			glang.GolangTypeExpr(ctx.structInfoToGlangType(info)), glang.StringVal{Value: glang.StringLiteral{Value: v.Name()}}, *expr)
 		*curType = v.Type()
 	}
-}
-
-// requires `!addressable -> (expr : selection.Recv())`
-// requires `addressable -> (expr : ptr<selection.Recv()>)`
-func (ctx *Ctx) selectionMethod(addressable bool, expr glang.Expr,
-	selection *types.Selection, l locatable) glang.Expr {
-
-	index, curType := selection.Index(), selection.Recv()
-	fnIndex, index := index[len(index)-1], index[:len(index)-1]
-
-	if !addressable {
-		ctx.fieldSelection(l, &index, &curType, &expr)
-	}
-	if addressable || len(index) > 0 {
-		ctx.fieldAddrSelection(l, index, &curType, &expr)
-		// expr : ptrT<curType>
-		if _, ok := types.Unalias(curType).(*types.Pointer); ok {
-			expr = glang.DerefExpr{X: expr, Ty: ctx.glangType(l, curType)}
-		} else {
-			curType = types.NewPointer(curType)
-		}
-	}
-	// now, (expr : curType), and there's no deref unless it's unavoidale.
-
-	// At this point, (expr : curType), and (curType = ptr<named>) if the
-	// original expression is an address or is addressable, and (curType =
-	// named) otherwise.
-
-	if info, ok := ctx.getInterfaceInfo(curType); ok {
-		if info.throughPointer {
-			expr = glang.DerefExpr{X: expr, Ty: ctx.glangType(l, curType.(*types.Pointer).Elem())}
-		}
-		return glang.NewCallExpr(glang.GallinaVerbatim("interface.get"),
-			glang.StringVal{Value: glang.StringLiteral{Value: info.interfaceType.Method(fnIndex).Name()}}, expr,
-		)
-	}
-
-	if pointerT, ok := types.Unalias(curType).(*types.Pointer); ok {
-		t, ok := types.Unalias(pointerT.Elem()).(*types.Named)
-		if !ok {
-			ctx.nope(l, "methods can only be called on a pointer if the base type is a defined type, not %s", pointerT.Elem())
-		}
-
-		funcSig, ok := t.Method(fnIndex).Type().(*types.Signature)
-		if !ok {
-			ctx.nope(l, "func should have signature type, got %s", t.Method(fnIndex).Type())
-		}
-
-		methodName := t.Method(fnIndex).Name()
-		if _, ok := types.Unalias(funcSig.Recv().Type()).(*types.Pointer); ok {
-			pkgName, typeName := ctx.getPkgAndName(t.Obj())
-			ctx.dep.Add(pkgName)
-			ctx.dep.Add(typeName)
-
-			return glang.NewCallExpr(glang.GallinaVerbatim("method_call"),
-				glang.StringVal{Value: ctx.gallinaIdent(pkgName)},
-				glang.StringVal{Value: glang.GallinaString(typeName + "'ptr")},
-				glang.StringVal{Value: glang.GallinaString(methodName)},
-				expr,
-			).Append(
-				typesToExprs(ctx.convertTypeArgsToGlang(nil, t.TypeArgs()))...,
-			)
-		} else {
-			pkgName, typeName := ctx.getPkgAndName(t.Obj())
-			ctx.dep.Add(pkgName)
-			ctx.dep.Add(typeName)
-
-			return glang.NewCallExpr(glang.GallinaVerbatim("method_call"),
-				glang.StringVal{Value: ctx.gallinaIdent(pkgName)},
-				glang.StringVal{Value: glang.GallinaString(typeName)},
-				glang.StringVal{Value: glang.GallinaString(methodName)},
-				glang.DerefExpr{X: expr, Ty: ctx.glangType(l, t)},
-			).Append(
-				typesToExprs(ctx.convertTypeArgsToGlang(nil, t.TypeArgs()))...,
-			)
-		}
-	} else if t, ok := types.Unalias(curType).(*types.Named); ok {
-		methodName := t.Method(fnIndex).Name()
-
-		funcSig, ok := t.Method(fnIndex).Type().(*types.Signature)
-		if !ok {
-			ctx.nope(l, "func should have signature type, got %s", t.Method(fnIndex).Type())
-		}
-
-		if _, ok := types.Unalias(funcSig.Recv().Type()).(*types.Pointer); ok {
-			ctx.nope(l, "receiver of method must be pointer, but selectorExpr has non-addressable base")
-		} else {
-			pkgName, typeName := ctx.getPkgAndName(t.Obj())
-			ctx.dep.Add(pkgName)
-			ctx.dep.Add(typeName)
-			return glang.NewCallExpr(glang.GallinaVerbatim("method_call"),
-				glang.StringVal{Value: ctx.gallinaIdent(pkgName)},
-				glang.StringVal{Value: glang.GallinaString(typeName)},
-				glang.StringVal{Value: glang.GallinaString(methodName)},
-				glang.GallinaString(methodName),
-				glang.Tt, expr,
-			).Append(
-				typesToExprs(ctx.convertTypeArgsToGlang(nil, t.TypeArgs()))...,
-			)
-		}
-	}
-	ctx.nope(l, "methods can only be called on (pointers to) defined types, not %s", curType)
-	return nil
 }
 
 func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
@@ -2704,7 +2677,24 @@ func funcName(f *types.Func) string {
 func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 	funcName := funcName(ctx.info.ObjectOf(d.Name).(*types.Func))
 	if funcName == "_" {
-		return nil
+		return ret
+	}
+
+	// Always emit func id, even if the function is trusted or axiomatized.
+	if d.Recv == nil {
+		funcId := ctx.info.Defs[d.Name].Pkg().Path() + "." + ctx.info.Defs[d.Name].Name()
+		ret = append(ret, glang.ConstDecl{
+			Name: d.Name.Name,
+			Val:  glang.StringLiteral{Value: funcId},
+			Type: glang.GallinaVerbatim("go_string"),
+		})
+		if d.Name.Name != "init" {
+			ctx.functions = append(ctx.functions, d.Name.Name)
+		}
+	}
+
+	if ctx.filter.GetAction(funcName) != declfilter.Translate {
+		return ret
 	}
 
 	ctx.usesDefer = false
@@ -2740,38 +2730,20 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 
 		fd.Name = glang.TypeMethod(typeName, d.Name.Name)
 
-		switch ctx.filter.GetAction(funcName) {
-		case declfilter.Skip:
-			return nil
-		case declfilter.Trust:
-			return nil
-		case declfilter.Axiomatize:
-			return []glang.Decl{glang.AxiomDecl{DeclName: fd.Name, Type: glang.GallinaVerbatim("val")}}
-		}
-
 		ctx.dep.SetCurrentName(fd.Name)
 		defer ctx.dep.UnsetCurrentName()
+
 		name := "_"
 		if len(receiver.Names) > 0 {
 			name = receiver.Names[0].Name
 		}
 		fd.RecvArg = &glang.Binder{Name: name}
 	} else {
-		funcId := ctx.info.Defs[d.Name].Pkg().Path() + "." + ctx.info.Defs[d.Name].Name()
-		ret = append(ret, glang.ConstDecl{
-			Name: d.Name.Name,
-			Val:  glang.StringLiteral{Value: funcId},
-			Type: glang.GallinaVerbatim("go_string"),
-		})
 		fd.Name = d.Name.Name + "ⁱᵐᵖˡ"
 		switch ctx.filter.GetAction(funcName) {
-		case declfilter.Skip:
-			return
 		case declfilter.Trust:
-			ctx.functions = append(ctx.functions, d.Name.Name)
 			return
 		case declfilter.Axiomatize:
-			ctx.functions = append(ctx.functions, d.Name.Name)
 			ret = append(ret, glang.AxiomDecl{DeclName: fd.Name, Type: glang.GallinaVerbatim("val")})
 			return
 		}
@@ -2830,8 +2802,6 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 		f := glang.FuncLit{Args: nil, Body: body}
 		ctx.inits = append(ctx.inits, f)
 		return nil
-	} else if d.Recv == nil {
-		ctx.functions = append(ctx.functions, d.Name.Name)
 	}
 
 	fd.Body = body
@@ -3086,6 +3056,12 @@ func (ctx *Ctx) initFunctions() []glang.Decl {
 	var functions glang.ListExpr
 	for _, functionName := range ctx.functions {
 		functions = append(functions, glang.TupleExpr{ctx.gallinaIdent(functionName), ctx.gallinaIdent(functionName + "ⁱᵐᵖˡ")})
+		if ctx.filter.GetAction(functionName) == declfilter.Axiomatize {
+			decls = append(decls, glang.AxiomDecl{
+				DeclName: functionName + "ⁱᵐᵖˡ",
+				Type:     glang.GallinaVerbatim("val"),
+			})
+		}
 	}
 
 	functionsDecl := glang.ConstDecl{
@@ -3097,9 +3073,9 @@ func (ctx *Ctx) initFunctions() []glang.Decl {
 
 	var msets glang.ListExpr
 	for _, namedType := range ctx.namedTypes {
-		mset, msetPtr := ctx.methodSet(namedType)
-		msets = append(msets, glang.TupleExpr{ctx.typeId(namedType.Obj(), namedType), mset})
-		msets = append(msets, glang.TupleExpr{ctx.typeId(namedType.Obj(), types.NewPointer(namedType)), msetPtr})
+		newDecls, msetExprs := ctx.methodSet(namedType)
+		decls = append(decls, newDecls...)
+		msets = append(msets, msetExprs...)
 	}
 
 	msetsDecl := glang.ConstDecl{
@@ -3112,7 +3088,8 @@ func (ctx *Ctx) initFunctions() []glang.Decl {
 	var imports glang.ListExpr
 	for _, impName := range ctx.importNamesOrdered {
 		pkg := impName.Imported()
-		qualifiedIdent := fmt.Sprintf("%s.%s", strings.ReplaceAll(glang.ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(pkg.Path()), "/", "."), pkg.Name())
+		// Qualifying this path with `code` to avoid problems like `fmt.fmt` from conflicting with the type `fmt` declared in the package `fmt`.
+		qualifiedIdent := fmt.Sprintf("code.%s.%s", strings.ReplaceAll(glang.ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(pkg.Path()), "/", "."), pkg.Name())
 		imports = append(imports, ctx.gallinaIdent(qualifiedIdent))
 	}
 	infoRecord := glang.RecordLiteral{

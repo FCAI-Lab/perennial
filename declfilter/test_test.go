@@ -20,10 +20,9 @@ func TestDeclFilterEmpty(t *testing.T) {
 
 func TestDeclFilterNegativeImport(t *testing.T) {
 	c := FilterConfig{
-		Imports:      []string{"*", "!NotThisOne"},
-		Trusted:      []string{},
-		ToTranslate:  []string{},
-		ToAxiomatize: []string{},
+		Imports:     []string{"*", "!NotThisOne"},
+		Trusted:     []string{},
+		ToTranslate: []string{},
 	}
 
 	df := New(c)

@@ -24,8 +24,6 @@ type FilterConfig struct {
 	ToTranslate []string `toml:"translate"`
 	// Imports to keep. Defaults to "*" (all).
 	Imports []string `toml:"imports"`
-	// Declarations to axiomatize. Defaults to the empty set.
-	ToAxiomatize []string `toml:"axiomatize"`
 	// Declarations that have trusted models, which the translation will
 	// reference. Defaults to the empty set.
 	Trusted []string `toml:"trusted"`
@@ -106,17 +104,15 @@ func newStringSet(s []string) stringSet {
 }
 
 type declFilter struct {
-	imports      stringSet
-	trusted      stringSet
-	toTranslate  stringSet
-	toAxiomatize stringSet
+	imports     stringSet
+	trusted     stringSet
+	toTranslate stringSet
 }
 
 type Action int
 
 const (
-	Skip Action = iota
-	Translate
+	Translate Action = iota
 	Axiomatize
 	Trust
 )
@@ -132,12 +128,10 @@ func (df *declFilter) GetAction(name string) Action {
 	switch {
 	case df.toTranslate.contains(name):
 		return Translate
-	case df.toAxiomatize.contains(name):
-		return Axiomatize
 	case df.trusted.contains(name):
 		return Trust
 	default:
-		return Skip
+		return Axiomatize
 	}
 }
 
@@ -162,10 +156,15 @@ func New(c FilterConfig) DeclFilter {
 
 	var df declFilter
 	df.imports = newStringSet(imports)
-	df.toAxiomatize = newStringSet(c.ToAxiomatize)
 	df.toTranslate = newStringSet(toTranslate)
 	df.trusted = newStringSet(c.Trusted)
 	return &df
+}
+
+var AxiomatizeConfig FilterConfig = FilterConfig{
+	ToTranslate: []string{"!*"},
+	Imports:     []string{"!*"},
+	Trusted:     nil,
 }
 
 func ParseConfig(raw []byte) (c FilterConfig, err error) {

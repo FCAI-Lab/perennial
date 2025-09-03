@@ -259,7 +259,8 @@ func (ctx *Ctx) initCoqFile(pkg *packages.Package, config declfilter.FilterConfi
 // a syntax error.
 func TranslatePackages(configDir string, modDir string,
 	pkgPattern ...string) (files []glang.File, errs []error, patternErr error) {
-	pkgs, patternErr := packages.Load(util.NewPackageConfig(modDir, false), pkgPattern...)
+	pkgs, patternErr := packages.Load(util.NewPackageConfig(modDir, true), pkgPattern...)
+
 	if patternErr != nil {
 		return
 	}
@@ -272,6 +273,8 @@ func TranslatePackages(configDir string, modDir string,
 	errs = make([]error, len(pkgs))
 	var wg sync.WaitGroup
 	wg.Add(len(pkgs))
+
+	// TODO now
 	for i, pkg := range pkgs {
 		go func() {
 			defer wg.Done()
@@ -284,5 +287,6 @@ func TranslatePackages(configDir string, modDir string,
 		}()
 	}
 	wg.Wait()
+
 	return
 }
