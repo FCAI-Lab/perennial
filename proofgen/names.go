@@ -78,7 +78,7 @@ func translateNames(pkg *packages.Package, filter declfilter.DeclFilter) tmpl.Na
 	// emit instances for unfolding method_call
 	for _, namedType := range tr.namedTypes {
 		typeName := namedType.Obj().Name()
-		typeId := pkg.Name + "." + typeName + ".id"
+		typeId := glang.GallinaIdent(pkg.Name).Coq(false) + "." + glang.GallinaIdent(typeName).Coq(false) + ".id"
 		mset := tmpl.MethodSet{
 			TypeName: typeName,
 			TypeId:   typeId,

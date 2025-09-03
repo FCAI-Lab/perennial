@@ -131,7 +131,7 @@ func typeBinders(xs []TypeIdent) string {
 
 func (d TypeDecl) CoqDecl() string {
 	var pp buffer
-	pp.Add("Definition %s : val :=", d.Name)
+	pp.Add("Definition %s : val :=", GallinaIdent(d.Name).Coq(false))
 	pp.Indent(2)
 	pp.Add("λ: %s, %s.", typeBinders(d.TypeParams), d.Body.Coq(false))
 	return pp.Build()
@@ -156,7 +156,7 @@ func (gd GallinaTypeDecl) CoqDecl() string {
 		typeParams += fmt.Sprintf("(%s: go_type) ", t.Coq(false))
 	}
 
-	pp.Add("Definition %s %s: go_type := %s.", d.Name, typeParams, d.Body.Gallina(false))
+	pp.Add("Definition %s %s: go_type := %s.", GallinaIdent(d.Name).Coq(false), typeParams, d.Body.Gallina(false))
 	return pp.Build()
 }
 
@@ -179,11 +179,11 @@ var _ Type = TypeIdent("")
 
 // Coq is the GooseLang type
 func (t TypeIdent) Coq(needs_paren bool) string {
-	return fmt.Sprintf("#%s", string(t))
+	return fmt.Sprintf("#%s", GallinaIdent(t).Coq(false))
 }
 
 func (t TypeIdent) Gallina(needs_paren bool) string {
-	return string(t)
+	return GallinaIdent(t).Coq(false)
 }
 
 type GooseLangTypeIdent string
