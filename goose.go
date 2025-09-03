@@ -2668,6 +2668,9 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 			Val:  glang.StringLiteral{Value: funcId},
 			Type: glang.GallinaVerbatim("go_string"),
 		})
+		if d.Name.Name != "init" {
+			ctx.functions = append(ctx.functions, d.Name.Name)
+		}
 	}
 
 	funcName := funcName(ctx.info.ObjectOf(d.Name).(*types.Func))
@@ -2723,10 +2726,8 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 		fd.Name = d.Name.Name + "ⁱᵐᵖˡ"
 		switch ctx.filter.GetAction(funcName) {
 		case declfilter.Trust:
-			ctx.functions = append(ctx.functions, d.Name.Name)
 			return
 		case declfilter.Axiomatize:
-			ctx.functions = append(ctx.functions, d.Name.Name)
 			ret = append(ret, glang.AxiomDecl{DeclName: fd.Name, Type: glang.GallinaVerbatim("val")})
 			return
 		}
@@ -2785,8 +2786,6 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 		f := glang.FuncLit{Args: nil, Body: body}
 		ctx.inits = append(ctx.inits, f)
 		return nil
-	} else if d.Recv == nil {
-		ctx.functions = append(ctx.functions, d.Name.Name)
 	}
 
 	fd.Body = body
@@ -3041,6 +3040,12 @@ func (ctx *Ctx) initFunctions() []glang.Decl {
 	var functions glang.ListExpr
 	for _, functionName := range ctx.functions {
 		functions = append(functions, glang.TupleExpr{ctx.gallinaIdent(functionName), ctx.gallinaIdent(functionName + "ⁱᵐᵖˡ")})
+		if ctx.filter.GetAction(functionName) == declfilter.Axiomatize {
+			decls = append(decls, glang.AxiomDecl{
+				DeclName: functionName + "ⁱᵐᵖˡ",
+				Type:     glang.GallinaVerbatim("val"),
+			})
+		}
 	}
 
 	functionsDecl := glang.ConstDecl{

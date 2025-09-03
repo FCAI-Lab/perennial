@@ -252,8 +252,7 @@ func (ctx *Ctx) initCoqFile(pkg *packages.Package, config declfilter.FilterConfi
 }
 
 // TranslatePackages loads packages by a list of patterns and translates them
-// all, producing one file per matched package. It translates imported packages
-// by fully axiomatizing them.
+// all, producing one file per matched package.
 //
 // The errs list contains errors corresponding to each package (in parallel with
 // the files list). patternErr is only non-nil if the patterns themselves have
@@ -275,16 +274,6 @@ func TranslatePackages(configDir string, modDir string,
 	var wg sync.WaitGroup
 	wg.Add(len(pkgs))
 
-	type unit = struct{}
-	translatedPackages := make(map[string]unit)
-	for _, pkg := range pkgs {
-		translatedPackages[pkg.PkgPath] = unit{}
-	}
-
-	externalPackages := make(map[string]*packages.Package)
-	externalPackagesList := make([]string, 0)
-	var externalPackagesMu sync.Mutex
-
 	// TODO now
 	for i, pkg := range pkgs {
 		go func() {
@@ -295,30 +284,9 @@ func TranslatePackages(configDir string, modDir string,
 				return
 			}
 			files[i], errs[i] = translatePackage(pkg, config)
-
-			externalPackagesMu.Lock()
-			for _, importedPkg := range pkg.Imports {
-				if _, isTranslated := translatedPackages[importedPkg.PkgPath]; isTranslated {
-					continue
-				}
-				if _, ok := externalPackages[importedPkg.PkgPath]; !ok {
-					fmt.Printf("Translating %s because of import in %s\n", importedPkg.PkgPath, pkg.PkgPath)
-					externalPackages[importedPkg.PkgPath] = importedPkg
-					externalPackagesList = append(externalPackagesList, importedPkg.PkgPath)
-				}
-			}
-			externalPackagesMu.Unlock()
 		}()
 	}
 	wg.Wait()
-
-	for i := 0; i < len(externalPackagesList); i++ {
-		pkgPath := externalPackagesList[i]
-		pkg := externalPackages[pkgPath]
-		newFiles, newErrs := translatePackage(pkg, declfilter.AxiomatizeConfig)
-		files = append(files, newFiles)
-		errs = append(errs, newErrs)
-	}
 
 	return
 }
