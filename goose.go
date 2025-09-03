@@ -153,9 +153,11 @@ func (ctx *Ctx) addSourceFile(d *ast.FuncDecl, comment *string) {
 }
 
 func (ctx *Ctx) methodSetNamed(t *types.Named) glang.Expr {
+	typeName := t.Obj().Name()
 	goMset := types.NewMethodSet(t)
 
 	var mset glang.ListExpr
+
 	add := func(methodName string, x glang.Expr) {
 		mset = append(mset, glang.TupleExpr{glang.StringLiteral{Value: methodName}, x})
 	}
@@ -163,10 +165,15 @@ func (ctx *Ctx) methodSetNamed(t *types.Named) glang.Expr {
 	for i := range goMset.Len() {
 		selection := goMset.At(i)
 		methodName, index := selection.Obj().Name(), selection.Index()
+		if ctx.filter.GetAction(typeName+"."+methodName) == declfilter.Axiomatize {
+			add(methodName, glang.GallinaIdent(glang.TypeMethod(typeName, methodName)))
+			continue
+		}
+
 		if len(index) == 0 {
 			ctx.nope(t.Obj(), "expected non-empty index in methodSet translation")
 		} else if len(index) == 1 {
-			add(methodName, ctx.gallinaIdent(glang.TypeMethod(t.Obj().Name(), methodName)))
+			add(methodName, ctx.gallinaIdent(glang.TypeMethod(typeName, methodName)))
 		} else {
 			structType, ok := t.Underlying().(*types.Struct)
 			if !ok {
@@ -194,6 +201,7 @@ func (ctx *Ctx) methodSetNamed(t *types.Named) glang.Expr {
 }
 
 func (ctx *Ctx) methodSetPointerToNamed(t *types.Named) glang.Expr {
+	typeName := t.Obj().Name()
 	goMset := types.NewMethodSet(types.NewPointer(t))
 	var mset glang.ListExpr
 	add := func(methodName string, x glang.Expr) {
@@ -204,12 +212,18 @@ func (ctx *Ctx) methodSetPointerToNamed(t *types.Named) glang.Expr {
 		selection := goMset.At(i)
 		methodName, index := selection.Obj().Name(), selection.Index()
 		methodKey := glang.NewStringVal(methodName)
+
+		if ctx.filter.GetAction(typeName+"."+methodName) == declfilter.Axiomatize {
+			add(methodName, glang.GallinaIdent(glang.TypeMethod(typeName, methodName)))
+			continue
+		}
+
 		if len(index) == 0 {
 			ctx.nope(t.Obj(), "expected non-empty index in methodSet translation")
 		} else if len(index) == 1 {
 			recvType := t.Method(index[0]).Signature().Recv().Type()
 			if _, recvIsPointer := recvType.(*types.Pointer); recvIsPointer {
-				add(methodName, ctx.gallinaIdent(glang.TypeMethod(t.Obj().Name(), methodName)))
+				add(methodName, ctx.gallinaIdent(glang.TypeMethod(typeName, methodName)))
 			} else {
 				add(methodName, glang.ValueScoped{Value: glang.FuncLit{
 					Args: []glang.Binder{{Name: "$r"}},
@@ -268,7 +282,8 @@ func (ctx *Ctx) methodSet(t *types.Named) (decls []glang.Decl, msets []glang.Exp
 	msets = append(msets, glang.TupleExpr{ctx.typeId(t.Obj(), types.NewPointer(t)), ctx.methodSetPointerToNamed(t)})
 
 	// Generate axiomatized method declarations for all methods (including embedded ones)
-	// Use pointer method set since it contains all methods from the value method set plus pointer receiver methods
+	// Use pointer method set since it contains all methods from the value
+	// method set plus pointer receiver methods
 	typeName := t.Obj().Name()
 	pointerMethodSet := types.NewMethodSet(types.NewPointer(t))
 	for i := range pointerMethodSet.Len() {
@@ -2660,6 +2675,11 @@ func funcName(f *types.Func) string {
 // Returns a glang.FuncDecl and maybe also a glang.NameDecl. If the function is an `init` or `_`, this
 // returns None.
 func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
+	funcName := funcName(ctx.info.ObjectOf(d.Name).(*types.Func))
+	if funcName == "_" {
+		return ret
+	}
+
 	// Always emit func id, even if the function is trusted or axiomatized.
 	if d.Recv == nil {
 		funcId := ctx.info.Defs[d.Name].Pkg().Path() + "." + ctx.info.Defs[d.Name].Name()
@@ -2673,10 +2693,6 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 		}
 	}
 
-	funcName := funcName(ctx.info.ObjectOf(d.Name).(*types.Func))
-	if funcName == "_" {
-		return ret
-	}
 	if ctx.filter.GetAction(funcName) != declfilter.Translate {
 		return ret
 	}

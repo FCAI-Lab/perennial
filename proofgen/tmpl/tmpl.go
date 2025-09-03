@@ -8,6 +8,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/goose-lang/goose/glang"
 	"github.com/pkg/errors"
 )
 
@@ -43,7 +44,7 @@ func (t TypeDecl) GoTypeName() string {
 		}
 	default:
 	}
-	return t.PkgName + "." + t.Name
+	return t.PkgName + "." + glang.GallinaIdent(t.Name).Coq(false)
 }
 
 func (t TypeDecl) GallinaType() string {

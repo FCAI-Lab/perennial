@@ -113,7 +113,7 @@ func convertTypeArgsToGlang(typeList *types.TypeList) (glangTypeArgs []glang.Typ
 func (tr *typesTranslator) newDecl(spec *ast.TypeSpec, info tmpl.TypeInfo) tmpl.TypeDecl {
 	return tmpl.TypeDecl{
 		PkgName:  tr.pkg.Name,
-		Name:     spec.Name.Name,
+		Name:     glang.GallinaIdent(spec.Name.Name).Coq(false),
 		TypeInfo: info,
 	}
 }
