@@ -72,7 +72,8 @@ type Ctx struct {
 
 // NewPkgCtx initializes a context based on a properly loaded package
 func NewPkgCtx(pkg *packages.Package, filter declfilter.DeclFilter) Ctx {
-	ss := strings.Split(pkg.PkgPath, "/")
+	coqPath := glang.ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(pkg.PkgPath)
+	ss := strings.Split(coqPath, "/")
 	pkgIdent := ss[len(ss)-1]
 	return Ctx{
 		info:          pkg.TypesInfo,
