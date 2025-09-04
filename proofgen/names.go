@@ -88,7 +88,7 @@ func translateNames(pkg *packages.Package, filter declfilter.DeclFilter) tmpl.Na
 		goMset := types.NewMethodSet(namedType)
 		for i := range goMset.Len() {
 			methodName := goMset.At(i).Obj().Name()
-			if tr.filter.GetAction(methodName) != declfilter.Axiomatize {
+			if tr.filter.GetAction(typeName+"."+methodName) != declfilter.Axiomatize {
 				mset.Methods = append(mset.Methods, methodName)
 			}
 		}
@@ -101,7 +101,7 @@ func translateNames(pkg *packages.Package, filter declfilter.DeclFilter) tmpl.Na
 		goMset = types.NewMethodSet(types.NewPointer(namedType))
 		for i := range goMset.Len() {
 			methodName := goMset.At(i).Obj().Name()
-			if tr.filter.GetAction(methodName) != declfilter.Axiomatize {
+			if tr.filter.GetAction(typeName+"."+methodName) != declfilter.Axiomatize {
 				ptrMset.Methods = append(ptrMset.Methods, methodName)
 			}
 		}
