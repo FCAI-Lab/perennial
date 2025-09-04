@@ -50,7 +50,9 @@ func (tr *namesTranslator) Decl(d ast.Decl) {
 		}
 	case *ast.FuncDecl:
 		if d.Recv == nil && d.Name.Name != "init" && d.Name.Name != "_" {
-			tr.functions = append(tr.functions, d.Name.Name)
+			if tr.filter.GetAction(d.Name.Name) != declfilter.Axiomatize {
+				tr.functions = append(tr.functions, d.Name.Name)
+			}
 		}
 	case *ast.BadDecl:
 	default:
@@ -86,7 +88,9 @@ func translateNames(pkg *packages.Package, filter declfilter.DeclFilter) tmpl.Na
 		goMset := types.NewMethodSet(namedType)
 		for i := range goMset.Len() {
 			methodName := goMset.At(i).Obj().Name()
-			mset.Methods = append(mset.Methods, methodName)
+			if tr.filter.GetAction(methodName) != declfilter.Axiomatize {
+				mset.Methods = append(mset.Methods, methodName)
+			}
 		}
 		info.NamedTypeMethods = append(info.NamedTypeMethods, mset)
 
@@ -97,7 +101,9 @@ func translateNames(pkg *packages.Package, filter declfilter.DeclFilter) tmpl.Na
 		goMset = types.NewMethodSet(types.NewPointer(namedType))
 		for i := range goMset.Len() {
 			methodName := goMset.At(i).Obj().Name()
-			ptrMset.Methods = append(ptrMset.Methods, methodName)
+			if tr.filter.GetAction(methodName) != declfilter.Axiomatize {
+				ptrMset.Methods = append(ptrMset.Methods, methodName)
+			}
 		}
 		info.NamedTypeMethods = append(info.NamedTypeMethods, ptrMset)
 	}
