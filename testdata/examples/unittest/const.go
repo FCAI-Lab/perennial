@@ -20,6 +20,8 @@ const ModInConst uint64 = 513 + 12%8 // 517
 
 const ModInConstParens uint64 = (513 + 12) % 8 // 5
 
+const SignedIntegerExample int64 = -37
+
 const (
 	First = iota
 	Second

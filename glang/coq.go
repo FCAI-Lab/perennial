@@ -413,7 +413,11 @@ func IntToZ(value int64) ZLiteral {
 }
 
 func (z ZLiteral) Coq(needs_paren bool) string {
-	return z.Value.String()
+	if needs_paren && z.Value.Sign() < 0 {
+		return "(" + z.Value.String() + ")"
+	} else {
+		return z.Value.String()
+	}
 }
 
 type StringLiteral struct {

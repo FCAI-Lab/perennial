@@ -2881,7 +2881,7 @@ func (ctx *Ctx) declType(t types.Type) glang.Expr {
 			return glang.GallinaVerbatim("Z")
 		}
 	}
-	return glang.GallinaVerbatim("expr")
+	return glang.GallinaVerbatim("val")
 }
 
 // constSpec handles one specification in a const block

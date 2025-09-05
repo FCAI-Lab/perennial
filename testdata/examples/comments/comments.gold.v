@@ -11,9 +11,9 @@ Section code.
 Context `{ffi_syntax}.
 
 
-Definition ONE : expr := #(W64 1).
+Definition ONE : val := #(W64 1).
 
-Definition TWO : expr := #(W64 2).
+Definition TWO : val := #(W64 2).
 
 Definition Foo : go_type := structT [
   "a" :: boolT

@@ -15,13 +15,13 @@ Module Txn. Definition id : go_string := "github.com/goose-lang/goose/testdata/e
 Section code.
 
 
-Definition LOGCOMMIT : expr := #(W64 0).
+Definition LOGCOMMIT : val := #(W64 0).
 
-Definition LOGSTART : expr := #(W64 1).
+Definition LOGSTART : val := #(W64 1).
 
-Definition LOGMAXBLK : expr := #(W64 510).
+Definition LOGMAXBLK : val := #(W64 510).
 
-Definition LOGEND : expr := #(W64 511).
+Definition LOGEND : val := #(W64 511).
 
 Definition Log : go_type := structT [
   "logLock" :: ptrT;

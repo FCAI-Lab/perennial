@@ -15,9 +15,9 @@ Section code.
 
 
 (* 10 is completely arbitrary *)
-Definition MaxTxnWrites : expr := #(W64 10).
+Definition MaxTxnWrites : val := #(W64 10).
 
-Definition logLength : expr := #(W64 21).
+Definition logLength : val := #(W64 21).
 
 Definition Log : go_type := structT [
   "d" :: disk.Disk;
