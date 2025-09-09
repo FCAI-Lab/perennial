@@ -46,7 +46,10 @@ Context `{ffi_syntax}.
 Context {{- template "_typeparams.tmpl" $TypeParams -}}.
 {{ end -}}
 
-Global Instance {{$name}}_ty_wf : struct.Wf {{$T.GoTypeName}}.
+#[local] Transparent {{$T.PkgName}}.{{$name}}.
+#[local] Typeclasses Transparent {{$T.PkgName}}.{{$name}}.
+
+Global Instance {{$name}}_wf : struct.Wf {{$T.GoTypeName}}.
 Proof. apply _. Qed.
 
 {{ if $Fields -}}
@@ -61,8 +64,6 @@ Global Instance settable_{{$name}} : Settable {{$T.GallinaType}} :=
 {{- end }} >.
 {{ end -}}
 
-#[local] Transparent {{$T.PkgName}}.{{$name}}.
-#[local] Typeclasses Transparent {{$T.PkgName}}.{{$name}}.
 Global Instance into_val_{{$name}} : IntoVal {{$T.GallinaType}} :=
   {| to_val_def v :=
     struct.val_aux {{$T.GoTypeName}} [
