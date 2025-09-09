@@ -14,7 +14,10 @@ Definition ty {{ if $TypeParams -}}
   {{indent 2}}"{{$f.Name}}" :: {{$f.GoType}}{{.Sep}}
 {{ end -}}
 ]%struct.
+#[global] Typeclasses Opaque ty.
+#[global] Opaque ty.
 {{ end -}}
+
 Record t {{ template "_typeparams.tmpl" $TypeParams -}}
 := mk {
 {{ range $Fields -}}
@@ -23,6 +26,10 @@ Record t {{ template "_typeparams.tmpl" $TypeParams -}}
 }.
 End def.
 End {{$name}}.
+
+{{ if .TypeInfo.IsGooseLang -}}
+#[local] Transparent {{.Name}}.ty.
+{{ end -}}
 
 {{ if $TypeParams -}}
 Arguments {{$name}}.mk {_} {{ range $T_param := $TypeParams -}}
@@ -55,6 +62,7 @@ Global Instance settable_{{$name}} : Settable {{$T.GallinaType}} :=
 {{ end -}}
 
 #[local] Transparent {{$T.PkgName}}.{{$name}}.
+#[local] Typeclasses Transparent {{$T.PkgName}}.{{$name}}.
 Global Instance into_val_{{$name}} : IntoVal {{$T.GallinaType}} :=
   {| to_val_def v :=
     struct.val_aux {{$T.GoTypeName}} [
