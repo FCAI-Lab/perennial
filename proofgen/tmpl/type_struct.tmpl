@@ -54,6 +54,7 @@ Global Instance settable_{{$name}} : Settable {{$T.GallinaType}} :=
 {{- end }} >.
 {{ end -}}
 
+#[local] Transparent {{$T.PkgName}}.{{$name}}.
 Global Instance into_val_{{$name}} : IntoVal {{$T.GallinaType}} :=
   {| to_val_def v :=
     struct.val_aux {{$T.GoTypeName}} [
