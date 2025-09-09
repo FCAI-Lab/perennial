@@ -18,6 +18,8 @@ Definition TWO : val := #(W64 2).
 Definition Foo : go_type := structT [
   "a" :: boolT
 ].
+#[global] Typeclasses Opaque Foo.
+#[global] Opaque Foo.
 
 Definition vars' : list (go_string * go_type) := [].
 

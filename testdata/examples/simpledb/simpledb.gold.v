@@ -33,6 +33,8 @@ Definition Table : go_type := structT [
   "Index" :: mapT uint64T uint64T;
   "File" :: fileT
 ].
+#[global] Typeclasses Opaque Table.
+#[global] Opaque Table.
 
 Definition CreateTable : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.CreateTable"%go.
 
@@ -71,6 +73,8 @@ Definition Entry : go_type := structT [
   "Key" :: uint64T;
   "Value" :: sliceT
 ].
+#[global] Typeclasses Opaque Entry.
+#[global] Opaque Entry.
 
 Definition DecodeUInt64 : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.DecodeUInt64"%go.
 
@@ -163,6 +167,8 @@ Definition lazyFileBuf : go_type := structT [
   "offset" :: uint64T;
   "next" :: sliceT
 ].
+#[global] Typeclasses Opaque lazyFileBuf.
+#[global] Opaque lazyFileBuf.
 
 Definition readTableIndex : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.readTableIndex"%go.
 
@@ -339,6 +345,8 @@ Definition bufFile : go_type := structT [
   "file" :: fileT;
   "buf" :: ptrT
 ].
+#[global] Typeclasses Opaque bufFile.
+#[global] Opaque bufFile.
 
 Definition newBuf : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.newBuf"%go.
 
@@ -413,6 +421,8 @@ Definition tableWriter : go_type := structT [
   "file" :: bufFile;
   "offset" :: ptrT
 ].
+#[global] Typeclasses Opaque tableWriter.
+#[global] Opaque tableWriter.
 
 Definition newTableWriter : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.newTableWriter"%go.
 
@@ -572,6 +582,8 @@ Definition Database : go_type := structT [
   "tableL" :: ptrT;
   "compactionL" :: ptrT
 ].
+#[global] Typeclasses Opaque Database.
+#[global] Opaque Database.
 
 Definition makeValueBuffer : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.makeValueBuffer"%go.
 

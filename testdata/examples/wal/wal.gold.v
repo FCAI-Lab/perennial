@@ -25,6 +25,8 @@ Definition Log : go_type := structT [
   "cache" :: mapT uint64T sliceT;
   "length" :: ptrT
 ].
+#[global] Typeclasses Opaque Log.
+#[global] Opaque Log.
 
 Definition intToBlock : go_string := "github.com/goose-lang/goose/testdata/examples/wal.intToBlock"%go.
 

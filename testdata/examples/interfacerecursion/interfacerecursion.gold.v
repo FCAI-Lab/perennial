@@ -14,11 +14,17 @@ Context `{ffi_syntax}.
 
 
 Definition A : go_type := interfaceT.
+#[global] Typeclasses Opaque A.
+#[global] Opaque A.
 
 Definition B : go_type := interfaceT.
+#[global] Typeclasses Opaque B.
+#[global] Opaque B.
 
 Definition c : go_type := structT [
 ].
+#[global] Typeclasses Opaque c.
+#[global] Opaque c.
 
 (* go: x.go:14:13 *)
 Definition c__Fooⁱᵐᵖˡ : val :=

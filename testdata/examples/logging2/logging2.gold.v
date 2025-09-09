@@ -32,6 +32,8 @@ Definition Log : go_type := structT [
   "memTxnNxt" :: ptrT;
   "logTxnNxt" :: ptrT
 ].
+#[global] Typeclasses Opaque Log.
+#[global] Opaque Log.
 
 (* go: logging2.go:25:16 *)
 Definition Log__writeHdrⁱᵐᵖˡ : val :=
@@ -290,6 +292,8 @@ Definition Txn : go_type := structT [
   "log" :: ptrT;
   "blks" :: mapT uint64T sliceT
 ].
+#[global] Typeclasses Opaque Txn.
+#[global] Opaque Txn.
 
 Definition Begin : go_string := "github.com/goose-lang/goose/testdata/examples/logging2.Begin"%go.
 

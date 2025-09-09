@@ -134,6 +134,11 @@ func (d TypeDecl) CoqDecl() string {
 	pp.Add("Definition %s : val :=", GallinaIdent(d.Name).Coq(false))
 	pp.Indent(2)
 	pp.Add("λ: %s, %s.", typeBinders(d.TypeParams), d.Body.Coq(false))
+	// XXX: Opaque does not imply Typeclasses Opaque.
+	// https://rocq-prover.zulipchat.com/#narrow/stream/237977-Coq-users/topic/Opaque.20does.20not.20imply.20Typeclasses.20Opaque
+	// https://github.com/rocq-prover/rocq/issues/19482
+	pp.Add("#[global] Typeclasses Opaque %s.", GallinaIdent(d.Name).Coq(false))
+	pp.Add("#[global] Opaque %s.", GallinaIdent(d.Name).Coq(false))
 	return pp.Build()
 }
 
@@ -157,6 +162,8 @@ func (gd GallinaTypeDecl) CoqDecl() string {
 	}
 
 	pp.Add("Definition %s %s: go_type := %s.", GallinaIdent(d.Name).Coq(false), typeParams, d.Body.Gallina(false))
+	pp.Add("#[global] Typeclasses Opaque %s.", GallinaIdent(d.Name).Coq(false))
+	pp.Add("#[global] Opaque %s.", GallinaIdent(d.Name).Coq(false))
 	return pp.Build()
 }
 

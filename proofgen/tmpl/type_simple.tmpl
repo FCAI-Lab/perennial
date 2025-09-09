@@ -1,4 +1,12 @@
 Module {{.Name}}.
+{{/* simple types do not need to be kept Opaque; the unfolded type in this
+    case is a valid go_type to search for a Gallina representation for. With
+    structs, the problem is that each new struct has its own record, so if e.g. two
+    structs happen to have the same fields of the same types, there will be two
+    different `Type`s for a single `go_type` which causes typeclass search to
+    sometimes pick the wrong onel. in a proof */}}
+#[global] Transparent {{.PkgName}}.{{.Name}}.
+#[global] Typeclasses Transparent {{.PkgName}}.{{.Name}}.
 Section def.
 Context `{ffi_syntax}.
 Definition t := {{.TypeInfo.Body}}.
