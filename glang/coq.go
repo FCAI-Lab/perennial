@@ -114,6 +114,7 @@ type Expr interface {
 }
 
 var GallinaKeywords map[string]bool = map[string]bool{
+	"Set":    true,
 	"Type":   true,
 	"is":     true,
 	"as":     true,
