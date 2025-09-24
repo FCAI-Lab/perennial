@@ -65,13 +65,33 @@ func (r errorReporter) printGo(n locatable) string {
 	return what.String()
 }
 
+// getCaller returns the stack trace within goose from which an error was reported.
+//
+// In the long run, for an ordinary user this is more information than desired,
+// but for now it's helpful to goose developers. We can eventually hide this
+// information under a flag.
 func getCaller(skip int) string {
-	_, file, line, ok := runtime.Caller(1 + skip)
-	if !ok {
-		return "<no caller>"
+	// (somewhat arbitrary) maximum number of frames of context in the goose
+	// stack frame to show
+	const numFrames = 4
+	stackTrace := ""
+	pc := make([]uintptr, numFrames)
+	n := runtime.Callers(2+skip, pc)
+	pc = pc[:n]
+	frames := runtime.CallersFrames(pc)
+	for i := range pc {
+		frame, more := frames.Next()
+		caller := fmt.Sprintf("%s\n  %s:%d", frame.Function, frame.File, frame.Line)
+		if i == 0 {
+			stackTrace += fmt.Sprintf("  %s\n", caller)
+		} else {
+			stackTrace += fmt.Sprintf("↻ %s\n", caller)
+		}
+		if !more {
+			break
+		}
 	}
-
-	return fmt.Sprintf("%s:%d", file, line)
+	return stackTrace
 }
 
 type gooseError struct{ err *ConversionError }
@@ -107,7 +127,8 @@ func (e *ConversionError) Error() string {
 	lines := []string{
 		fmt.Sprintf("[%s]: %s", e.Category, e.Message),
 		fmt.Sprintf("%s", e.GoCode),
-		fmt.Sprintf("  %s", e.GooseCaller),
+		"  goose call stack:",
+		fmt.Sprintf("%s", e.GooseCaller),
 		fmt.Sprintf("  src: %s", e.Position.String()),
 	}
 	return strings.Join(lines, "\n")
