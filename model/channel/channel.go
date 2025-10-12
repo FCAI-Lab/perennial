@@ -286,261 +286,229 @@ const (
 	SelectRecv SelectDir = 1 // case <-Chan:
 )
 
-// value is used for the value the sender will send and also used to return the received value by
-// reference.
-type SelectCase[T any] struct {
-	channel *Channel[T]
-	dir     SelectDir
-	Value   T
-	Ok      bool
-}
+// Non-blocking select with 1 case (send or receive)
+// For receive: value parameter is ignored
+// Returns (selected, received_value, ok)
+func NonBlockingSelect1[T any](ch *Channel[T], dir SelectDir, value T) (bool, T, bool) {
+	var zero T
 
-func NewSendCase[T any](channel *Channel[T], value T) *SelectCase[T] {
-	return &SelectCase[T]{
-		channel: channel,
-		dir:     SelectSend,
-		Value:   value,
-	}
-}
-
-func NewRecvCase[T any](channel *Channel[T]) *SelectCase[T] {
-	return &SelectCase[T]{
-		channel: channel,
-		dir:     SelectRecv,
+	if dir == SelectSend {
+		selected := ch.TrySend(value, false)
+		return selected, zero, false
+	} else { // SelectRecv
+		selected, recv_val, ok := ch.TryReceive(false)
+		return selected, recv_val, ok
 	}
 }
 
-// Uses the applicable Try<Operation> function on the select case's channel. Default is always
-// selectable so simply returns true.
-func TrySelect[T any](select_case *SelectCase[T], blocking bool) bool {
-	var channel *Channel[T] = select_case.channel
-	if channel == nil {
-		return false
-	}
-	if select_case.dir == SelectSend {
-		return channel.TrySend(select_case.Value, blocking)
-	}
-	if select_case.dir == SelectRecv {
-		var item T
-		var ok bool
-		var selected bool
-		selected, item, ok = channel.TryReceive(blocking)
-		// We can use these values for return by reference and they will be implicitly kept alive
-		// by the garbage collector so we can use value here for both the send and receive
-		// variants. What a miracle it is to not be using C++.
-		select_case.Value = item
-		select_case.Ok = ok
-		return selected
+// Blocking select with 2 cases
+// Returns (caseIndex, received_value1, received_value2, ok)
+func BlockingSelect2[T1, T2 any](
+	ch1 *Channel[T1], dir1 SelectDir, val1 T1,
+	ch2 *Channel[T2], dir2 SelectDir, val2 T2) (uint64, T1, T2, bool) {
 
-	}
-	return false
-}
-
-// Select1 performs a select operation on 1 case. This is used for Send and
-// Receive as well, since these channel operations in Go are equivalent to
-// a single case select statement with no default.
-func Select1[T1 any](
-	case1 *SelectCase[T1],
-	blocking bool) bool {
-	var selected bool
-	for {
-		selected = TrySelect(case1, blocking)
-		if selected || !blocking {
-			break
-		}
-	}
-	return selected
-}
-
-func TrySelectCase2[T1, T2 any](
-	index uint64,
-	case1 *SelectCase[T1],
-	case2 *SelectCase[T2], blocking bool) bool {
-	if index == 0 {
-		return TrySelect(case1, blocking)
-	}
-	if index == 1 {
-		return TrySelect(case2, blocking)
-	}
-	panic("index needs to be 0 or 1")
-}
-
-func Select2[T1, T2 any](
-	case1 *SelectCase[T1],
-	case2 *SelectCase[T2],
-	blocking bool) uint64 {
-
-	i := primitive.RandomUint64() % uint64(2)
-	if TrySelectCase2(i, case1, case2, blocking) {
-		return i
-	}
-
-	// If nothing was selected and we're blocking, try in a loop
-	for {
-		if TrySelect(case1, blocking) {
-			return 0
-		}
-		if TrySelect(case2, blocking) {
-			return 1
-		}
-		if !blocking {
-			return 2
-		}
-	}
-}
-
-func TrySelectCase3[T1, T2, T3 any](
-	index uint64,
-	case1 *SelectCase[T1],
-	case2 *SelectCase[T2],
-	case3 *SelectCase[T3], blocking bool) bool {
-	if index == 0 {
-		return TrySelect(case1, blocking)
-	}
-	if index == 1 {
-		return TrySelect(case2, blocking)
-	}
-	if index == 2 {
-		return TrySelect(case3, blocking)
-	}
-	panic("index needs to be 0, 1 or 2")
-}
-
-func Select3[T1, T2, T3 any](
-	case1 *SelectCase[T1],
-	case2 *SelectCase[T2],
-	case3 *SelectCase[T3],
-	blocking bool) uint64 {
-
-	i := primitive.RandomUint64() % uint64(3)
-	if TrySelectCase3(i, case1, case2, case3, blocking) {
-		return i
-	}
+	var zero1 T1
+	var zero2 T2
 
 	for {
-		if TrySelect(case1, blocking) {
-			return 0
-		}
-		if TrySelect(case2, blocking) {
-			return 1
-		}
-		if TrySelect(case3, blocking) {
-			return 2
-		}
-		if !blocking {
-			return 3
+		// Flip coin each iteration
+		if primitive.RandomUint64()%2 == 0 {
+			// Try case 1
+			if dir1 == SelectSend {
+				if ch1.TrySend(val1, true) {
+					return 0, zero1, zero2, false
+				}
+			} else {
+				selected, recv_val, ok := ch1.TryReceive(true)
+				if selected {
+					return 0, recv_val, zero2, ok
+				}
+			}
+		} else {
+			// Try case 2
+			if dir2 == SelectSend {
+				if ch2.TrySend(val2, true) {
+					return 1, zero1, zero2, false
+				}
+			} else {
+				selected, recv_val, ok := ch2.TryReceive(true)
+				if selected {
+					return 1, zero1, recv_val, ok
+				}
+			}
 		}
 	}
 }
 
-func TrySelectCase4[T1, T2, T3, T4 any](
-	index uint64,
-	case1 *SelectCase[T1],
-	case2 *SelectCase[T2],
-	case3 *SelectCase[T3],
-	case4 *SelectCase[T4], blocking bool) bool {
-	if index == 0 {
-		return TrySelect(case1, blocking)
+// Non-blocking select with 2 cases
+// Returns (caseIndex, received_value1, received_value2, ok)
+// caseIndex = 2 means no selection
+func NonBlockingSelect2[T1, T2 any](
+	ch1 *Channel[T1], dir1 SelectDir, val1 T1,
+	ch2 *Channel[T2], dir2 SelectDir, val2 T2) (uint64, T1, T2, bool) {
+
+	var zero1 T1
+	var zero2 T2
+
+	// Randomize which case to try first
+	if primitive.RandomUint64()%2 == 0 {
+		// Try case 1 first
+		if dir1 == SelectSend {
+			if ch1.TrySend(val1, false) {
+				return 0, zero1, zero2, false
+			}
+		} else {
+			selected, recv_val, ok := ch1.TryReceive(false)
+			if selected {
+				return 0, recv_val, zero2, ok
+			}
+		}
+
+		// Try case 2
+		if dir2 == SelectSend {
+			if ch2.TrySend(val2, false) {
+				return 1, zero1, zero2, false
+			}
+		} else {
+			selected, recv_val, ok := ch2.TryReceive(false)
+			if selected {
+				return 1, zero1, recv_val, ok
+			}
+		}
+	} else {
+		// Try case 2 first
+		if dir2 == SelectSend {
+			if ch2.TrySend(val2, false) {
+				return 1, zero1, zero2, false
+			}
+		} else {
+			selected, recv_val, ok := ch2.TryReceive(false)
+			if selected {
+				return 1, zero1, recv_val, ok
+			}
+		}
+
+		// Try case 1
+		if dir1 == SelectSend {
+			if ch1.TrySend(val1, false) {
+				return 0, zero1, zero2, false
+			}
+		} else {
+			selected, recv_val, ok := ch1.TryReceive(false)
+			if selected {
+				return 0, recv_val, zero2, ok
+			}
+		}
 	}
-	if index == 1 {
-		return TrySelect(case2, blocking)
-	}
-	if index == 2 {
-		return TrySelect(case3, blocking)
-	}
-	if index == 3 {
-		return TrySelect(case4, blocking)
-	}
-	panic("index needs to be 0, 1, 2 or 3")
+
+	// Nothing selected
+	return 2, zero1, zero2, false
 }
 
-func Select4[T1, T2, T3, T4 any](
-	case1 *SelectCase[T1],
-	case2 *SelectCase[T2],
-	case3 *SelectCase[T3],
-	case4 *SelectCase[T4],
-	blocking bool) uint64 {
-
-	i := primitive.RandomUint64() % uint64(4)
-	if TrySelectCase4(i, case1, case2, case3, case4, blocking) {
-		return i
-	}
-
+func BlockingSelect3[T1, T2, T3 any](
+	ch1 *Channel[T1], dir1 SelectDir, val1 T1,
+	ch2 *Channel[T2], dir2 SelectDir, val2 T2,
+	ch3 *Channel[T3], dir3 SelectDir, val3 T3) (uint64, T1, T2, T3, bool) {
+	var zero1 T1
+	var zero2 T2
+	var zero3 T3
 	for {
-		if TrySelect(case1, blocking) {
-			return 0
-		}
-		if TrySelect(case2, blocking) {
-			return 1
-		}
-		if TrySelect(case3, blocking) {
-			return 2
-		}
-		if TrySelect(case4, blocking) {
-			return 3
-		}
-		if !blocking {
-			return 4
+		// Randomly pick one of 3 cases
+		r := primitive.RandomUint64() % 3
+		if r == 0 {
+			// Try case 1
+			if dir1 == SelectSend {
+				if ch1.TrySend(val1, true) {
+					return 0, zero1, zero2, zero3, false
+				}
+			} else {
+				selected, recv_val, ok := ch1.TryReceive(true)
+				if selected {
+					return 0, recv_val, zero2, zero3, ok
+				}
+			}
+		} else if r == 1 {
+			// Try case 2
+			if dir2 == SelectSend {
+				if ch2.TrySend(val2, true) {
+					return 1, zero1, zero2, zero3, false
+				}
+			} else {
+				selected, recv_val, ok := ch2.TryReceive(true)
+				if selected {
+					return 1, zero1, recv_val, zero3, ok
+				}
+			}
+		} else {
+			// Try case 3
+			if dir3 == SelectSend {
+				if ch3.TrySend(val3, true) {
+					return 2, zero1, zero2, zero3, false
+				}
+			} else {
+				selected, recv_val, ok := ch3.TryReceive(true)
+				if selected {
+					return 2, zero1, zero2, recv_val, ok
+				}
+			}
 		}
 	}
 }
 
-func TrySelectCase5[T1, T2, T3, T4, T5 any](
-	index uint64,
-	case1 *SelectCase[T1],
-	case2 *SelectCase[T2],
-	case3 *SelectCase[T3],
-	case4 *SelectCase[T4],
-	case5 *SelectCase[T5], blocking bool) bool {
-	if index == 0 {
-		return TrySelect(case1, blocking)
-	}
-	if index == 1 {
-		return TrySelect(case2, blocking)
-	}
-	if index == 2 {
-		return TrySelect(case3, blocking)
-	}
-	if index == 3 {
-		return TrySelect(case4, blocking)
-	}
-	if index == 4 {
-		return TrySelect(case5, blocking)
-	}
-	panic("index needs to be 0, 1, 2, 3 or 4")
-}
+// Non-blocking select with 3 cases
+// Returns (caseIndex, received_value1, received_value2, received_value3, ok)
+// caseIndex = 3 means no selection
+func NonBlockingSelect3[T1, T2, T3 any](
+	ch1 *Channel[T1], dir1 SelectDir, val1 T1,
+	ch2 *Channel[T2], dir2 SelectDir, val2 T2,
+	ch3 *Channel[T3], dir3 SelectDir, val3 T3) (uint64, T1, T2, T3, bool) {
+	var zero1 T1
+	var zero2 T2
+	var zero3 T3
 
-func Select5[T1, T2, T3, T4, T5 any](
-	case1 *SelectCase[T1],
-	case2 *SelectCase[T2],
-	case3 *SelectCase[T3],
-	case4 *SelectCase[T4],
-	case5 *SelectCase[T5],
-	blocking bool) uint64 {
+	// Start with a random case
+	start := primitive.RandomUint64() % 3
 
-	i := primitive.RandomUint64() % uint64(5)
-	if TrySelectCase5(i, case1, case2, case3, case4, case5, blocking) {
-		return i
+	// Try all 3 cases starting from the random one
+	for i := uint64(0); i < 3; i++ {
+		caseIdx := (start + i) % 3
+
+		if caseIdx == 0 {
+			if dir1 == SelectSend {
+				if ch1.TrySend(val1, false) {
+					return 0, zero1, zero2, zero3, false
+				}
+			} else {
+				selected, recv_val, ok := ch1.TryReceive(false)
+				if selected {
+					return 0, recv_val, zero2, zero3, ok
+				}
+			}
+		} else if caseIdx == 1 {
+			if dir2 == SelectSend {
+				if ch2.TrySend(val2, false) {
+					return 1, zero1, zero2, zero3, false
+				}
+			} else {
+				selected, recv_val, ok := ch2.TryReceive(false)
+				if selected {
+					return 1, zero1, recv_val, zero3, ok
+				}
+			}
+		} else { // caseIdx == 2
+			if dir3 == SelectSend {
+				if ch3.TrySend(val3, false) {
+					return 2, zero1, zero2, zero3, false
+				}
+			} else {
+				selected, recv_val, ok := ch3.TryReceive(false)
+				if selected {
+					return 2, zero1, zero2, recv_val, ok
+				}
+			}
+		}
 	}
 
-	for {
-		if TrySelect(case1, blocking) {
-			return 0
-		}
-		if TrySelect(case2, blocking) {
-			return 1
-		}
-		if TrySelect(case3, blocking) {
-			return 2
-		}
-		if TrySelect(case4, blocking) {
-			return 3
-		}
-		if TrySelect(case5, blocking) {
-			return 4
-		}
-		if !blocking {
-			return 5
-		}
-	}
+	// Nothing selected
+	return 3, zero1, zero2, zero3, false
 }
