@@ -8,12 +8,10 @@ package chan_spec_raw_examples
 
 import (
 	"sync"
-
-	"github.com/goose-lang/goose/model/channel"
 )
 
-func worker(c *channel.Channel[[]int], wg *sync.WaitGroup, x, y int) {
-	for s, ok := c.Receive(); ok; s, ok = c.Receive() {
+func worker(c <-chan []int, wg *sync.WaitGroup, x, y int) {
+	for s, ok := <-c; ok; s, ok = <-c {
 		for i := 0; i != len(s); i++ {
 			if s[i] == x {
 				s[i] = y
@@ -29,7 +27,7 @@ func SearchReplace(s []int, x, y int) {
 	}
 	workers := 8
 	workRange := 1000
-	c := channel.NewChannel[[]int](4)
+	c := make(chan []int, 4)
 	var wg sync.WaitGroup
 	for i := 0; i != workers; i++ {
 		go worker(c, &wg, x, y)
@@ -41,7 +39,7 @@ func SearchReplace(s []int, x, y int) {
 		}
 		section := s[offset:nextOffset]
 		wg.Add(1)
-		c.Send(section)
+		c <- section
 		offset = nextOffset
 	}
 	wg.Wait()
