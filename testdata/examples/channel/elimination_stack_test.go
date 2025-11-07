@@ -60,9 +60,9 @@ func TestConcurrentPushPop(t *testing.T) {
 	wg.Wait()
 
 	// All items should be accounted for (popped + remaining)
-	s.mu.Lock()
-	remaining := len(s.stack)
-	s.mu.Unlock()
+	s.base.mu.Lock()
+	remaining := len(s.base.stack)
+	s.base.mu.Unlock()
 
 	if popped+remaining != ops {
 		panic(fmt.Sprintf("Lost items: pushed=%d, popped=%d, remaining=%d",
@@ -98,9 +98,9 @@ func TestEliminationStack(t *testing.T) {
 	wg.Wait()
 
 	// Just verify no panics occurred and stack is in valid state
-	s.mu.Lock()
-	remaining := len(s.stack)
-	s.mu.Unlock()
+	s.base.mu.Lock()
+	remaining := len(s.base.stack)
+	s.base.mu.Unlock()
 
 	if remaining < 0 || remaining > pairs {
 		panic(fmt.Sprintf("Invalid remaining count: %d", remaining))
@@ -132,9 +132,9 @@ func TestHighContention(t *testing.T) {
 	wg.Wait()
 
 	// Verify stack is in valid state
-	s.mu.Lock()
-	remaining := len(s.stack)
-	s.mu.Unlock()
+	s.base.mu.Lock()
+	remaining := len(s.base.stack)
+	s.base.mu.Unlock()
 
 	if remaining < 0 || remaining > 100 {
 		panic(fmt.Sprintf("Invalid stack state: %d items", remaining))
