@@ -144,3 +144,23 @@ func select_no_double_close() {
 		close(x)
 	}
 }
+
+func exchangePointer() {
+	x := 0
+	y := 0
+
+	ch := make(chan struct{})
+	go func() {
+		x = 1
+		ch <- struct{}{}
+		if y != 2 {
+			panic("bad")
+		}
+	}()
+
+	y = 2
+	<-ch
+	if x != 1 {
+		panic("bad")
+	}
+}
