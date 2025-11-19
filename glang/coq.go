@@ -891,32 +891,6 @@ func (d ConstDecl) DefName() (bool, string) {
 	return true, d.Name
 }
 
-type TypeIdDecl struct {
-	Name string
-	Val  Expr
-}
-
-func (d TypeIdDecl) CoqDecl() string {
-	return fmt.Sprintf("Module %[1]s. Definition id : go_string := %[2]s. End %[1]s.",
-		GallinaIdent(d.Name).Coq(false), d.Val.Coq(false))
-}
-
-func (d TypeIdDecl) DefName() (bool, string) {
-	return true, d.Name + ".id"
-}
-
-type TypeIdDeclAxiom struct {
-	Name string
-}
-
-func (d TypeIdDeclAxiom) CoqDecl() string {
-	return fmt.Sprintf("Module %[1]s. Axiom id : go_string. End %[1]s.", GallinaIdent(d.Name).Coq(false))
-}
-
-func (d TypeIdDeclAxiom) DefName() (bool, string) {
-	return true, d.Name + ".id"
-}
-
 type InstanceDecl struct {
 	Type Expr
 	// If not global, instance will be export
@@ -1075,33 +1049,12 @@ func (f File) Write(w io.Writer) {
 	}
 	fmt.Fprintln(w, f.Header)
 
-	// Print typeIds, then section header, then other decls, and then footer.
-
-	var typeIdDecls []Decl
-	var decls []Decl
-	for _, d := range f.Decls {
-		if _, isTypeId := d.(TypeIdDecl); isTypeId {
-			typeIdDecls = append(typeIdDecls, d)
-		} else if _, isTypeIdAxiom := d.(TypeIdDeclAxiom); isTypeIdAxiom {
-			typeIdDecls = append(typeIdDecls, d)
-		} else {
-			decls = append(decls, d)
-		}
-	}
-
-	for _, d := range typeIdDecls {
-		fmt.Fprintln(w, d.CoqDecl())
-	}
-	if len(typeIdDecls) > 0 {
-		fmt.Fprintln(w)
-	}
-
 	fmt.Fprintln(w, f.SectionHeader)
 	fmt.Fprintln(w)
 
-	for i, d := range decls {
+	for i, d := range f.Decls {
 		fmt.Fprintln(w, d.CoqDecl())
-		if i != len(decls)-1 {
+		if i != len(f.Decls)-1 {
 			fmt.Fprintln(w)
 		}
 	}
