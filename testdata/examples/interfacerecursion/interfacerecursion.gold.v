@@ -13,15 +13,15 @@ Section code.
 Context `{ffi_syntax}.
 
 
-Definition A : go_type := interfaceT.
+Definition A : go.type := interfaceT.
 #[global] Typeclasses Opaque A.
 #[global] Opaque A.
 
-Definition B : go_type := interfaceT.
+Definition B : go.type := interfaceT.
 #[global] Typeclasses Opaque B.
 #[global] Opaque B.
 
-Definition c : go_type := structT [
+Definition c : go.type := structT [
 ].
 #[global] Typeclasses Opaque c.
 #[global] Opaque c.
@@ -46,7 +46,7 @@ Definition c__Barⁱᵐᵖˡ : val :=
     do:  ((interface.get #"Foo"%go (![#A] "y")) #());;;
     return: #()).
 
-Definition vars' : list (go_string * go_type) := [].
+Definition vars' : list (go_string * go.type) := [].
 
 Definition functions' : list (go_string * val) := [].
 

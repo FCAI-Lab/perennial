@@ -29,11 +29,11 @@ Definition UseDiskⁱᵐᵖˡ : val :=
     do:  ("v" <-[#sliceT] "$r0");;;
     do:  (let: "$a0" := #(W64 0) in
     let: "$a1" := (![#sliceT] "v") in
-    (method_call #disk.Disk.id #"Write"%go (![#disk.Disk] "d")) "$a0" "$a1");;;
-    do:  ((method_call #disk.Disk.id #"Barrier"%go (![#disk.Disk] "d")) #());;;
+    (MethodResolve disk.Disk.id Write #() (![#disk.Disk] "d")) "$a0" "$a1");;;
+    do:  ((MethodResolve disk.Disk.id Barrier #() (![#disk.Disk] "d")) #());;;
     return: #()).
 
-Definition vars' : list (go_string * go_type) := [].
+Definition vars' : list (go_string * go.type) := [].
 
 Definition functions' : list (go_string * val) := [(TakesDisk, TakesDiskⁱᵐᵖˡ); (UseDisk, UseDiskⁱᵐᵖˡ)].
 

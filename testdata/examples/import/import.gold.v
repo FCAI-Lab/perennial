@@ -10,7 +10,7 @@ Section code.
 Context `{ffi_syntax}.
 
 
-Definition vars' : list (go_string * go_type) := [].
+Definition vars' : list (go_string * go.type) := [].
 
 Definition functions' : list (go_string * val) := [].
 

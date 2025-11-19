@@ -18,7 +18,7 @@ Definition mapliteralⁱᵐᵖˡ : val :=
      let: "$k0" := #(W64 1) in
      map.literal #uint64T #uint64T [map.kv_entry "$k0" "$v0"]))).
 
-Definition vars' : list (go_string * go_type) := [].
+Definition vars' : list (go_string * go.type) := [].
 
 Definition functions' : list (go_string * val) := [(mapliteral, mapliteralⁱᵐᵖˡ)].
 

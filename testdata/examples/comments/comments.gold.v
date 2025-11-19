@@ -15,13 +15,13 @@ Definition ONE : val := #(W64 1).
 
 Definition TWO : val := #(W64 2).
 
-Definition Foo : go_type := structT [
+Definition Foo : go.type := structT [
   "a" :: boolT
 ].
 #[global] Typeclasses Opaque Foo.
 #[global] Opaque Foo.
 
-Definition vars' : list (go_string * go_type) := [].
+Definition vars' : list (go_string * go.type) := [].
 
 Definition functions' : list (go_string * val) := [].
 

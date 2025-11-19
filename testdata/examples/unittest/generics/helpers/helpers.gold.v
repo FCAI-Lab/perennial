@@ -17,7 +17,7 @@ Definition AnyPointerⁱᵐᵖˡ : val :=
     exception_do (let: "x" := (mem.alloc "x") in
     do:  #()).
 
-Definition vars' : list (go_string * go_type) := [].
+Definition vars' : list (go_string * go.type) := [].
 
 Definition functions' : list (go_string * val) := [(AnyPointer, AnyPointerⁱᵐᵖˡ)].
 

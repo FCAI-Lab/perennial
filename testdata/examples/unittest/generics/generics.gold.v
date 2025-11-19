@@ -98,9 +98,9 @@ Definition useBoxGetⁱᵐᵖˡ : val :=
   λ: <>,
     exception_do (let: "x" := (mem.alloc (type.zero_val (Box #uint64T))) in
     let: "$r0" := (let: "$a0" := #(W64 42) in
-    ((func_call #makeGenericBox) #uint64T) "$a0") in
+    ((FuncResolve makeGenericBox #()) #uint64T) "$a0") in
     do:  ("x" <-[Box #uint64T] "$r0");;;
-    return: ((method_call #Box.id #"Get"%go (![Box #uint64T] "x") #uint64T) #())).
+    return: ((MethodResolve Box.id Get #() (![Box #uint64T] "x") #uint64T) #())).
 
 Definition Container : val :=
   λ: "T", type.structT [
@@ -213,7 +213,7 @@ Definition useMultiParamFuncⁱᵐᵖˡ : val :=
   λ: <>,
     exception_do (do:  (let: "$a0" := #(W64 1) in
     let: "$a1" := #true in
-    ((func_call #multiParamFunc) #uint64T #boolT) "$a0" "$a1");;;
+    ((FuncResolve multiParamFunc #()) #uint64T #boolT) "$a0" "$a1");;;
     return: (#());;;
     return: #()).
 
@@ -224,15 +224,15 @@ Definition useAnyPointerⁱᵐᵖˡ : val :=
   λ: <>,
     exception_do (let: "x" := (mem.alloc (type.zero_val #uint64T)) in
     do:  (let: "$a0" := "x" in
-    (func_call #helpers.AnyPointer #uint64T) "$a0");;;
+    (FuncResolve helpers.AnyPointer #() #uint64T) "$a0");;;
     return: #()).
 
-Definition vars' : list (go_string * go_type) := [].
+Definition vars' : list (go_string * go.type) := [].
 
 Definition functions' : list (go_string * val) := [(UnderlyingSlice, UnderlyingSliceⁱᵐᵖˡ); (Clone, Cloneⁱᵐᵖˡ); (BoxGet, BoxGetⁱᵐᵖˡ); (BoxGet2, BoxGet2ⁱᵐᵖˡ); (makeGenericBox, makeGenericBoxⁱᵐᵖˡ); (makeBox, makeBoxⁱᵐᵖˡ); (useBoxGet, useBoxGetⁱᵐᵖˡ); (useContainer, useContainerⁱᵐᵖˡ); (useMultiParam, useMultiParamⁱᵐᵖˡ); (swapMultiParam, swapMultiParamⁱᵐᵖˡ); (multiParamFunc, multiParamFuncⁱᵐᵖˡ); (useMultiParamFunc, useMultiParamFuncⁱᵐᵖˡ); (useAnyPointer, useAnyPointerⁱᵐᵖˡ)].
 
 Definition msets' : list (go_string * (list (go_string * val))) := [(Box.id, [("Get"%go, Box__Getⁱᵐᵖˡ)]); (ptrT.id Box.id, [("Get"%go, (λ: "$r",
-                 method_call #Box.id #"Get"%go (![Box #()] "$r")
+                 MethodResolve Box.id Get #() (![Box #()] "$r")
                  )%V)]); (Container.id, []); (ptrT.id Container.id, []); (UseContainer.id, []); (ptrT.id UseContainer.id, []); (OnlyIndirect.id, []); (ptrT.id OnlyIndirect.id, []); (MultiParam.id, []); (ptrT.id MultiParam.id, [])].
 
 #[global] Instance info' : PkgInfo generics.generics :=

@@ -19,7 +19,7 @@ Definition fⁱᵐᵖˡ : val :=
     do:  ((globals.get #unittest.GlobalX) <-[#uint64T] "$r0");;;
     return: #()).
 
-Definition vars' : list (go_string * go_type) := [].
+Definition vars' : list (go_string * go.type) := [].
 
 Definition functions' : list (go_string * val) := [(f, fⁱᵐᵖˡ)].
 

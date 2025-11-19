@@ -16,16 +16,16 @@ Definition B : go_string := "github.com/goose-lang/goose/testdata/examples/mutua
 (* go: mutualrec.go:3:6 *)
 Definition Aⁱᵐᵖˡ : val :=
   λ: <>,
-    exception_do (do:  ((func_call #B) #());;;
+    exception_do (do:  ((FuncResolve B #()) #());;;
     return: #()).
 
 (* go: mutualrec.go:7:6 *)
 Definition Bⁱᵐᵖˡ : val :=
   λ: <>,
-    exception_do (do:  ((func_call #A) #());;;
+    exception_do (do:  ((FuncResolve A #()) #());;;
     return: #()).
 
-Definition vars' : list (go_string * go_type) := [].
+Definition vars' : list (go_string * go.type) := [].
 
 Definition functions' : list (go_string * val) := [(A, Aⁱᵐᵖˡ); (B, Bⁱᵐᵖˡ)].
 
