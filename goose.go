@@ -187,9 +187,10 @@ func (ctx *Ctx) methodSetNamed(t *types.Named) glang.Expr {
 				glang.ValueScoped{Value: glang.FuncLit{
 					Args: []glang.Binder{{Name: "$r"}},
 					Body: glang.NewCallExpr(
-						glang.GallinaVerbatim("method_call"),
-						glang.StringVal{Value: ctx.typeId(field, field.Type())},
-						glang.NewStringVal(methodName),
+						glang.GallinaVerbatim("MethodResolve"),
+						ctx.typeId(field, field.Type()),
+						glang.GallinaIdent(methodName),
+						glang.Tt,
 						glang.NewCallExpr(
 							glang.GallinaVerbatim("struct.field_get"),
 							ctx.glangType(t.Obj(), t),
@@ -214,7 +215,6 @@ func (ctx *Ctx) methodSetPointerToNamed(t *types.Named) glang.Expr {
 	for i := range goMset.Len() {
 		selection := goMset.At(i)
 		methodName, index := selection.Obj().Name(), selection.Index()
-		methodKey := glang.NewStringVal(methodName)
 
 		if ctx.filter.GetAction(typeName+"."+methodName) == declfilter.Axiomatize {
 			add(methodName, glang.GallinaIdent(glang.TypeMethod(typeName, methodName)))
@@ -231,9 +231,10 @@ func (ctx *Ctx) methodSetPointerToNamed(t *types.Named) glang.Expr {
 				add(methodName, glang.ValueScoped{Value: glang.FuncLit{
 					Args: []glang.Binder{{Name: "$r"}},
 					Body: glang.NewCallExpr(
-						glang.GallinaVerbatim("method_call"),
-						glang.StringVal{Value: ctx.typeId(t.Obj(), t)},
-						methodKey,
+						glang.GallinaVerbatim("MethodResolve"),
+						ctx.typeId(t.Obj(), t),
+						glang.GallinaIdent(methodName),
+						glang.Tt,
 						glang.DerefExpr{
 							X:  glang.IdentExpr("$r"),
 							Ty: ctx.glangType(t.Obj(), t),
@@ -268,9 +269,10 @@ func (ctx *Ctx) methodSetPointerToNamed(t *types.Named) glang.Expr {
 				glang.ValueScoped{Value: glang.FuncLit{
 					Args: []glang.Binder{{Name: "$r"}},
 					Body: glang.NewCallExpr(
-						glang.GallinaVerbatim("method_call"),
-						glang.StringVal{Value: ctx.typeId(field, fieldType)},
-						glang.NewStringVal(methodName),
+						glang.GallinaVerbatim("MethodResolve"),
+						ctx.typeId(field, fieldType),
+						glang.GallinaIdent(methodName),
+						glang.Tt,
 						fieldExpr,
 					),
 				}})
@@ -786,8 +788,9 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 				).Append(args...)
 			} else {
 				return glang.NewCallExpr(
-					glang.GallinaVerbatim("func_call"),
-					glang.StringVal{Value: ctx.gallinaIdent(f.Pkg().Name() + "." + f.Name())},
+					glang.GallinaVerbatim("FuncResolve"),
+					ctx.gallinaIdent(f.Pkg().Name()+"."+f.Name()),
+					glang.Tt,
 				).Append(args...)
 			}
 		} else {
@@ -838,8 +841,8 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 		f := ctx.info.ObjectOf(e.Sel).(*types.Func)
 		receiver := ctx.expr(e.X)
 		receiverType := types.Unalias(ctx.typeOf(e.X))
-		typeIdExpr := glang.StringVal{Value: ctx.typeId(e.X, receiverType)}
-		methodExpr := glang.NewStringVal(e.Sel.Name)
+		typeIdExpr := ctx.typeId(e.X, receiverType)
+		methodExpr := glang.GallinaIdent(e.Sel.Name)
 
 		// figure out if this is shorthand for (&x).m().
 		methodReceiverType := types.Unalias(f.Signature().Recv().Type())
@@ -849,7 +852,7 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 					ctx.nope(e.X, "x is not addressable but want (&x).m")
 				}
 				receiver = ctx.exprAddr(e.X)
-				typeIdExpr = glang.StringVal{Value: ctx.typeId(e.X, types.NewPointer(receiverType))}
+				typeIdExpr = ctx.typeId(e.X, types.NewPointer(receiverType))
 			}
 		}
 
@@ -875,7 +878,7 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 			}
 			return glang.NewCallExpr(glang.GallinaVerbatim(glang.TypeMethod(structName, e.Sel.Name)), receiver).Append(args...)
 		} else {
-			return glang.NewCallExpr(glang.GallinaVerbatim("method_call"), typeIdExpr, methodExpr, receiver).Append(args...)
+			return glang.NewCallExpr(glang.GallinaVerbatim("MethodResolve"), typeIdExpr, methodExpr, glang.Tt, receiver).Append(args...)
 		}
 	}
 	panic("unreachable")
@@ -1263,7 +1266,7 @@ func (ctx *Ctx) function(s *ast.Ident) glang.Expr {
 	if !ok {
 		ctx.nope(s, "expected to get a types.Func object for function ident")
 	}
-	fExpr := glang.NewCallExpr(glang.GallinaVerbatim("func_call"),
+	fExpr := glang.NewCallExpr(glang.GallinaVerbatim("FuncResolve"),
 		ctx.gallinaIdent(f.Name()), glang.Tt,
 	)
 	ctx.dep.Add(f.Name())
