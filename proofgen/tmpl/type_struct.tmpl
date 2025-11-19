@@ -7,9 +7,9 @@ Section def.
 Context `{ffi_syntax}.
 {{ if .TypeInfo.IsGooseLang }}
 Definition ty {{ if $TypeParams -}}
-({{ range $T_param := $TypeParams }}{{$T_param}} {{ end -}} : go_type){{" "}}
+({{ range $T_param := $TypeParams }}{{$T_param}} {{ end -}} : go.type){{" "}}
 {{- end -}}
-: go_type := structT [
+: go.type := structT [
 {{ range $Fields | iterSepFields ";" -}}{{ $f := .X -}}
   {{indent 2}}"{{$f.Name}}" :: {{$f.GoType}}{{.Sep}}
 {{ end -}}

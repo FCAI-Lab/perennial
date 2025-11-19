@@ -1264,7 +1264,7 @@ func (ctx *Ctx) function(s *ast.Ident) glang.Expr {
 		ctx.nope(s, "expected to get a types.Func object for function ident")
 	}
 	fExpr := glang.NewCallExpr(glang.GallinaVerbatim("func_call"),
-		glang.StringVal{Value: ctx.gallinaIdent(f.Name())},
+		ctx.gallinaIdent(f.Name()), glang.Tt,
 	)
 	ctx.dep.Add(f.Name())
 	if typeArgs.Len() == 0 {
@@ -3195,7 +3195,7 @@ func (ctx *Ctx) initFunctions() []glang.Decl {
 	varsDecl := glang.ConstDecl{
 		Name: "vars'",
 		Val:  globalVars,
-		Type: glang.GallinaVerbatim("list (go_string * go_type)"),
+		Type: glang.GallinaVerbatim("list (go_string * go.type)"),
 	}
 	decls = append(decls, varsDecl)
 

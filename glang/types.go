@@ -147,7 +147,7 @@ func (d TypeDecl) DefName() (bool, string) {
 }
 
 // GallinaTypeDecl represents the same information as a TypeDecl, but translates
-// as a go_type.
+// as a go.type.
 type GallinaTypeDecl struct {
 	Decl TypeDecl
 }
@@ -158,10 +158,10 @@ func (gd GallinaTypeDecl) CoqDecl() string {
 
 	typeParams := ""
 	for _, t := range d.TypeParams {
-		typeParams += fmt.Sprintf("(%s: go_type) ", t.Coq(false))
+		typeParams += fmt.Sprintf("(%s: go.type) ", t.Coq(false))
 	}
 
-	pp.Add("Definition %s %s: go_type := %s.", GallinaIdent(d.Name).Coq(false), typeParams, d.Body.Gallina(false))
+	pp.Add("Definition %s %s: go.type := %s.", GallinaIdent(d.Name).Coq(false), typeParams, d.Body.Gallina(false))
 	pp.Add("#[global] Typeclasses Opaque %s.", GallinaIdent(d.Name).Coq(false))
 	pp.Add("#[global] Opaque %s.", GallinaIdent(d.Name).Coq(false))
 	return pp.Build()
@@ -173,7 +173,7 @@ func (gd GallinaTypeDecl) DefName() (bool, string) {
 
 // Construct a Golang expression for a type.
 //
-// This handles the difference between a Gallina `go_type` (which has to be
+// This handles the difference between a Gallina `go.type` (which has to be
 // converted to an expression with #) and type identifiers (which are already expressions).
 func GolangTypeExpr(t Type) Expr {
 	return t

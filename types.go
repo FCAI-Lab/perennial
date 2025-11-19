@@ -31,7 +31,7 @@ func (ctx *Ctx) typeSpecIsGooseLang(spec *ast.TypeSpec) bool {
 }
 
 // TypeIsGooseLang checks if a type must be translated as GooseLang (due to
-// generics); if false, it is translated to a Gallina go_type instead.
+// generics); if false, it is translated to a Gallina go.type instead.
 func TypeIsGooseLang(t types.Type) bool {
 	// note that t.TypeParams() != nil && t.TypeParams().Len() == 0 is possible: it
 	// indicates an originally generic, instantiated type
@@ -68,7 +68,7 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 		}
 		decls = append(decls, glang.AxiomDecl{
 			DeclName: spec.Name.Name,
-			Type:     glang.GallinaVerbatim("go_type"),
+			Type:     glang.GallinaVerbatim("go.type"),
 		})
 		return
 	case declfilter.Trust:
