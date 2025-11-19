@@ -11,51 +11,6 @@ import (
 )
 
 // this file has the translations for types themselves
-
-func (ctx *Ctx) typeSpecIsGooseLang(spec *ast.TypeSpec) bool {
-	if spec.TypeParams != nil {
-		return true
-	}
-	if t, ok := ctx.typeOf(spec.Type).Underlying().(*types.Struct); ok {
-		if t.NumFields() == 0 {
-			return false
-		}
-		for i := 0; i < t.NumFields(); i++ {
-			fieldType := t.Field(i).Type()
-			if TypeIsGooseLang(fieldType) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-// TypeIsGooseLang checks if a type must be translated as GooseLang (due to
-// generics); if false, it is translated to a Gallina go.type instead.
-func TypeIsGooseLang(t types.Type) bool {
-	// note that t.TypeParams() != nil && t.TypeParams().Len() == 0 is possible: it
-	// indicates an originally generic, instantiated type
-	switch t := t.(type) {
-	case *types.Named:
-		return t.TypeParams() != nil
-	case *types.Alias:
-		return t.TypeParams() != nil
-	}
-	// why is this so?
-	if t, ok := t.Underlying().(*types.Struct); ok {
-		if t.NumFields() == 0 {
-			return false
-		}
-		for i := 0; i < t.NumFields(); i++ {
-			fieldType := t.Field(i).Type()
-			if TypeIsGooseLang(fieldType) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	decls = append(decls, ctx.typeIdDecl(spec)...)
 
@@ -93,13 +48,7 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 			TypeParams: ctx.typeParamList(spec.TypeParams),
 		}
 
-		if ctx.typeSpecIsGooseLang(spec) {
-			decls = append(decls, decl)
-		} else {
-			decls = append(decls, glang.GallinaTypeDecl{
-				Decl: decl,
-			})
-		}
+		decls = append(decls, decl)
 	}
 	return
 }
@@ -221,7 +170,7 @@ func (ctx *Ctx) typeOf(e ast.Expr) types.Type {
 	return ctx.info.TypeOf(e)
 }
 
-func (ctx *Ctx) structType(t *types.Struct) glang.Type {
+func (ctx *Ctx) structType(t *types.Struct) glang.Expr {
 	ty := glang.StructType{}
 	for i := range t.NumFields() {
 		fieldType := t.Field(i).Type()
@@ -241,7 +190,7 @@ func (ctx *Ctx) structType(t *types.Struct) glang.Type {
 // SimpleType translates t if it is a "simple type" (typically a simple
 // identifier, with no structs or generics), returning nil if the type is not
 // supported.
-func SimpleType(t types.Type) glang.Type {
+func SimpleType(t types.Type) glang.Expr {
 	t = types.Unalias(t)
 	if isProphId(t) {
 		return glang.TypeIdent("ProphIdT")
@@ -305,7 +254,7 @@ func SimpleType(t types.Type) glang.Type {
 	return nil
 }
 
-func (ctx *Ctx) glangType(n locatable, t types.Type) glang.Type {
+func (ctx *Ctx) glangType(n locatable, t types.Type) glang.Expr {
 	t = types.Unalias(t)
 	if tr := SimpleType(t); tr != nil {
 		return tr
@@ -314,7 +263,7 @@ func (ctx *Ctx) glangType(n locatable, t types.Type) glang.Type {
 	case *types.Struct:
 		return ctx.structType(t)
 	case *types.TypeParam:
-		return glang.GooseLangTypeIdent(t.Obj().Name())
+		return glang.GallinaIdent(t.Obj().Name())
 	case *types.Basic:
 		// if not handled by SimpleType, unsupported
 		ctx.unsupported(n, "basic type %s", t.Name())
@@ -329,7 +278,7 @@ func (ctx *Ctx) glangType(n locatable, t types.Type) glang.Type {
 		}
 		ctx.dep.Add(ctx.qualifiedName(t.Obj()))
 		if t.TypeArgs().Len() != 0 {
-			return glang.TypeCallExpr{
+			return glang.CallExpr{
 				MethodName: glang.TypeIdent(ctx.qualifiedName(t.Obj())),
 				Args:       ctx.convertTypeArgsToGlang(nil, t.TypeArgs()),
 			}
@@ -395,18 +344,18 @@ func isString(t types.Type) bool {
 	return false
 }
 
-func (ctx *Ctx) convertTypeArgsToGlang(l locatable, typeList *types.TypeList) (glangTypeArgs []glang.Type) {
-	glangTypeArgs = make([]glang.Type, typeList.Len())
+func (ctx *Ctx) convertTypeArgsToGlang(l locatable, typeList *types.TypeList) (glangTypeArgs []glang.Expr) {
+	glangTypeArgs = make([]glang.Expr, typeList.Len())
 	for i := range glangTypeArgs {
 		glangTypeArgs[i] = ctx.glangType(l, typeList.At(i))
 	}
 	return
 }
 
-// glang.Expr is an interface that is a subset of glang.Type, but Go has
+// glang.Expr is an interface that is a subset of glang.Expr, but Go has
 // requires a conversion (perhaps because there are different runtime
 // representations)
-func typesToExprs(ts []glang.Type) []glang.Expr {
+func typesToExprs(ts []glang.Expr) []glang.Expr {
 	var es []glang.Expr
 	for _, t := range ts {
 		es = append(es, t)
@@ -422,13 +371,9 @@ type structTypeInfo struct {
 	typeArgs       *types.TypeList
 }
 
-func (ctx *Ctx) structInfoToGlangType(info structTypeInfo) glang.Type {
+func (ctx *Ctx) structInfoToGlangType(info structTypeInfo) glang.Expr {
 	ctx.dep.Add(info.name)
-	if TypeIsGooseLang(info.namedType) {
-		return glang.TypeCallExpr{MethodName: glang.GallinaIdent(info.name), Args: ctx.convertTypeArgsToGlang(nil, info.typeArgs)}
-	} else {
-		return glang.TypeIdent(info.name)
-	}
+	return glang.TypeIdent(info.name)
 }
 
 func (ctx *Ctx) getStructInfo(t types.Type) (structTypeInfo, bool) {
