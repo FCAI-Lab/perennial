@@ -3129,8 +3129,8 @@ func (ctx *Ctx) imports(d []ast.Spec) []glang.Decl {
 
 		decls = append(decls, glang.ImportDecl{Path: importPath})
 		n := ctx.info.PkgNameOf(s)
-		if _, ok := ctx.importNames[n.Name()]; !ok {
-			ctx.importNames[n.Name()] = n
+		if _, ok := ctx.importNames[n.Imported().Path()]; !ok {
+			ctx.importNames[n.Imported().Path()] = n
 			ctx.importNamesOrdered = append(ctx.importNamesOrdered, n)
 		}
 	}
