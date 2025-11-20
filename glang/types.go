@@ -6,8 +6,6 @@ import (
 	"fmt"
 )
 
-// GallinaTypeDecl represents the same information as a TypeDecl, but translates
-// as a go.type.
 type TypeDecl struct {
 	Name       string
 	Body       Expr
@@ -22,7 +20,7 @@ func (d TypeDecl) CoqDecl() string {
 		typeParams += fmt.Sprintf("(%s : go.type) ", t)
 	}
 
-	pp.Add("Definition %s %s: go.type := %s.", GallinaIdent(d.Name).Coq(false), typeParams, d.Body.Coq(false))
+	pp.Add("Definition %s%s : go.type := %s.", GallinaIdent(d.Name).Coq(false), typeParams, d.Body.Coq(false))
 	return pp.Build()
 }
 

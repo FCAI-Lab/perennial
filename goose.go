@@ -3180,8 +3180,31 @@ func (ctx *Ctx) decl(d ast.Decl) []glang.Decl {
 	return nil
 }
 
-func (ctx *Ctx) initFunctions() []glang.Decl {
+// After using Ctx to translate every decl, this will return the extra decls
+// that should be added to the accumulated set of glang.Decls.
+func (ctx *Ctx) finalExtraDecls() []glang.Decl {
 	var decls = []glang.Decl{}
+
+	for _, namedType := range ctx.namedTypes {
+		var typeParams []string
+		var typeParamsList glang.ListExpr
+		if tps := namedType.TypeParams(); tps != nil {
+			for i := range tps.Len() {
+				typeParams = append(typeParams, tps.At(i).Obj().Name())
+				typeParamsList = append(typeParamsList, glang.GallinaIdent(tps.At(i).Obj().Name()))
+			}
+
+		}
+		decls = append(decls, glang.TypeDecl{
+			Name: namedType.Obj().Name(),
+			Body: glang.NewCallExpr(glang.GallinaIdent("go.Named"),
+				glang.StringLiteral{Value: namedType.Obj().Pkg().Path() + "." + namedType.Obj().Name(),
+				},
+				typeParamsList,
+			),
+			TypeParams: typeParams,
+		})
+	}
 
 	ctx.dep.SetCurrentName("initialize'")
 	defer ctx.dep.UnsetCurrentName()

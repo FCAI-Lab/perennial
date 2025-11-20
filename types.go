@@ -13,40 +13,29 @@ import (
 
 // this file has the translations for types themselves
 func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
+	declName := spec.Name.Name
+	if t, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
+		ctx.namedTypes = append(ctx.namedTypes, t)
+		declName = spec.Name.Name + "ⁱᵐᵖˡ"
+	}
+	ctx.dep.SetCurrentName(declName)
+	defer ctx.dep.UnsetCurrentName()
+
 	switch ctx.filter.GetAction(spec.Name.Name) {
 	case declfilter.Axiomatize:
-		if t, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
-			if _, isInterface := t.Underlying().(*types.Interface); !isInterface {
-				ctx.namedTypes = append(ctx.namedTypes, t)
-			}
-		}
 		decls = append(decls, glang.AxiomDecl{
-			DeclName: spec.Name.Name,
+			DeclName: declName,
 			Type:     glang.GallinaVerbatim("go.type"),
 		})
 		return
 	case declfilter.Trust:
-		if t, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
-			if _, ok := t.Underlying().(*types.Interface); !ok {
-				ctx.namedTypes = append(ctx.namedTypes, t)
-			}
-		}
 	case declfilter.Translate:
-		ctx.dep.SetCurrentName(spec.Name.Name)
-		defer ctx.dep.UnsetCurrentName()
-
-		if t, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
-			if _, ok := t.Underlying().(*types.Interface); !ok {
-				ctx.namedTypes = append(ctx.namedTypes, t)
-			}
-		}
 		ty := ctx.typeOf(spec.Type)
 		decl := glang.TypeDecl{
-			Name:       spec.Name.Name,
+			Name:       declName,
 			Body:       ctx.glangType(spec, ty),
 			TypeParams: ctx.typeParamList(spec.TypeParams),
 		}
-
 		decls = append(decls, decl)
 	}
 	return
@@ -73,12 +62,12 @@ func (ctx *Ctx) structType(t *types.Struct) glang.Expr {
 	return ty
 }
 
-func (ctx *Ctx) basicType(t *types.Basic) glang.Expr {
+func (ctx *Ctx) basicType(n locatable, t *types.Basic) glang.Expr {
 	switch t.Name() {
 	case "untyped string":
 		return glang.GallinaIdent("go.string")
 	case "Pointer":
-		return nil
+		return glang.GallinaIdent("unsafe.Pointer")
 	}
 	return glang.GallinaIdent("go." + t.Name())
 }
@@ -152,7 +141,7 @@ func (ctx *Ctx) glangType(n locatable, t types.Type) glang.Expr {
 	case *types.TypeParam:
 		return glang.GallinaIdent(t.Obj().Name())
 	case *types.Basic:
-		return ctx.basicType(t)
+		return ctx.basicType(n, t)
 	case *types.Pointer:
 		return glang.NewCallExpr(glang.GallinaVerbatim("go.PointerType"), ctx.glangType(n, t.Elem()))
 	case *types.Named:

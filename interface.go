@@ -41,7 +41,7 @@ func (ctx *Ctx) initOrError() (decls []glang.Decl, err error) {
 			}
 		}
 	}()
-	return ctx.initFunctions(), nil
+	return ctx.finalExtraDecls(), nil
 }
 
 func filterImports(decls []glang.Decl) (nonImports []glang.Decl, imports glang.ImportDecls) {
