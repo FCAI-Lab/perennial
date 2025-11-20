@@ -632,14 +632,6 @@ func (e DerefExpr) Coq(needs_paren bool) string {
 	return addParens(needs_paren, expr)
 }
 
-type RefExpr struct {
-	X Expr
-}
-
-func (e RefExpr) Coq(needs_paren bool) string {
-	return NewCallExpr(GallinaVerbatim("mem.alloc"), e.X).Coq(needs_paren)
-}
-
 type StoreStmt struct {
 	Dst Expr
 	Ty  Expr
