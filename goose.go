@@ -819,16 +819,6 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 		// 2*2 cases: receiver type could be (T) or (*T), and e.X type
 		// (including embedded fields) could be (T) or (*T).
 
-		if info, ok := ctx.getInterfaceInfo(ctx.typeOf(e.X)); ok {
-			var expr = ctx.expr(e.X)
-			if info.throughPointer {
-				ctx.nope(e, "cannot call method because receiver is pointer to interface, not interface")
-			}
-			return glang.NewCallExpr(glang.GallinaVerbatim("interface.get"),
-				glang.StringVal{Value: glang.StringLiteral{Value: e.Sel.Name}}, expr,
-			)
-		}
-
 		f := ctx.info.ObjectOf(e.Sel).(*types.Func)
 		receiver := ctx.expr(e.X)
 		receiverType := types.Unalias(ctx.typeOf(e.X))
@@ -3357,15 +3347,21 @@ InitLoop:
 		e = glang.DoExpr{Expr: glang.Tt}
 	}
 
+	for _, varIdent := range ctx.globalVars {
+		e = glang.NewDoSeq(
+			glang.NewCallExpr(
+				glang.GallinaIdent("GoGlobalAlloc"),
+				glang.GallinaIdent(varIdent.Name),
+				ctx.glangType(varIdent, ctx.typeOf(varIdent)),
+			),
+			e)
+	}
+
 	e = glang.NewCallExpr(glang.GallinaVerbatim("exception_do"), e)
 	e = glang.NewCallExpr(glang.GallinaVerbatim("package.init"),
 		ctx.gallinaIdent(ctx.pkgIdent),
 		glang.FuncLit{Args: nil, Body: e},
 	)
-
-	for _, varIdent := range ctx.globalVars {
-		ctx.todo(varIdent, "global variable")
-	}
 
 	initFunc.Body = e
 	decls = append(decls, initFunc)
