@@ -115,18 +115,14 @@ func (ctx *Ctx) gallinaIdent(x string) glang.Expr {
 	return glang.GallinaIdent(x)
 }
 
-func (ctx *Ctx) typeParamList(fs *ast.FieldList) []glang.TypeIdent {
-	var typeParams []glang.TypeIdent
+func (ctx *Ctx) typeParamList(fs *ast.FieldList) []string {
+	var typeParams []string
 	if fs == nil {
 		return nil
 	}
 	for _, f := range fs.List {
 		for _, name := range f.Names {
-			typeParams = append(typeParams, glang.TypeIdent(name.Name))
-		}
-
-		if !isAnyConstraint(f.Type) {
-			ctx.futureWork(fs, "generic non any type")
+			typeParams = append(typeParams, name.Name)
 		}
 
 		if len(f.Names) == 0 { // Unnamed parameter
@@ -188,7 +184,7 @@ func (ctx *Ctx) methodSetNamed(t *types.Named) glang.Expr {
 					Args: []glang.Binder{{Name: "$r"}},
 					Body: glang.NewCallExpr(
 						glang.GallinaVerbatim("MethodResolve"),
-						ctx.typeId(field, field.Type()),
+						ctx.glangType(field, field.Type()),
 						glang.GallinaIdent(methodName),
 						glang.Tt,
 						glang.NewCallExpr(
@@ -232,7 +228,7 @@ func (ctx *Ctx) methodSetPointerToNamed(t *types.Named) glang.Expr {
 					Args: []glang.Binder{{Name: "$r"}},
 					Body: glang.NewCallExpr(
 						glang.GallinaVerbatim("MethodResolve"),
-						ctx.typeId(t.Obj(), t),
+						ctx.glangType(t.Obj(), t),
 						glang.GallinaIdent(methodName),
 						glang.Tt,
 						glang.DerefExpr{
@@ -270,7 +266,7 @@ func (ctx *Ctx) methodSetPointerToNamed(t *types.Named) glang.Expr {
 					Args: []glang.Binder{{Name: "$r"}},
 					Body: glang.NewCallExpr(
 						glang.GallinaVerbatim("MethodResolve"),
-						ctx.typeId(field, fieldType),
+						ctx.glangType(field, fieldType),
 						glang.GallinaIdent(methodName),
 						glang.Tt,
 						fieldExpr,
@@ -283,8 +279,8 @@ func (ctx *Ctx) methodSetPointerToNamed(t *types.Named) glang.Expr {
 
 // returns the mset for `t` followed by the mset for `ptr to t`
 func (ctx *Ctx) methodSet(t *types.Named) (decls []glang.Decl, msets []glang.Expr) {
-	msets = append(msets, glang.TupleExpr{ctx.typeId(t.Obj(), t), ctx.methodSetNamed(t)})
-	msets = append(msets, glang.TupleExpr{ctx.typeId(t.Obj(), types.NewPointer(t)), ctx.methodSetPointerToNamed(t)})
+	msets = append(msets, glang.TupleExpr{ctx.glangType(t.Obj(), t), ctx.methodSetNamed(t)})
+	msets = append(msets, glang.TupleExpr{ctx.glangType(t.Obj(), types.NewPointer(t)), ctx.methodSetPointerToNamed(t)})
 
 	// Generate axiomatized method declarations for all methods (including embedded ones)
 	// Use pointer method set since it contains all methods from the value
@@ -841,7 +837,7 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 		f := ctx.info.ObjectOf(e.Sel).(*types.Func)
 		receiver := ctx.expr(e.X)
 		receiverType := types.Unalias(ctx.typeOf(e.X))
-		typeIdExpr := ctx.typeId(e.X, receiverType)
+		typeExpr := ctx.glangType(e.X, receiverType)
 		methodExpr := glang.GallinaIdent(e.Sel.Name)
 
 		// figure out if this is shorthand for (&x).m().
@@ -852,7 +848,7 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 					ctx.nope(e.X, "x is not addressable but want (&x).m")
 				}
 				receiver = ctx.exprAddr(e.X)
-				typeIdExpr = ctx.typeId(e.X, types.NewPointer(receiverType))
+				typeExpr = ctx.glangType(e.X, types.NewPointer(receiverType))
 			}
 		}
 
@@ -878,7 +874,7 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 			}
 			return glang.NewCallExpr(glang.GallinaVerbatim(glang.TypeMethod(structName, e.Sel.Name)), receiver).Append(args...)
 		} else {
-			return glang.NewCallExpr(glang.GallinaVerbatim("MethodResolve"), typeIdExpr, methodExpr, glang.Tt, receiver).Append(args...)
+			return glang.NewCallExpr(glang.GallinaVerbatim("MethodResolve"), typeExpr, methodExpr, glang.Tt, receiver).Append(args...)
 		}
 	}
 	panic("unreachable")
@@ -1673,15 +1669,14 @@ func (ctx *Ctx) funcLit(e *ast.FuncLit) glang.FuncLit {
 }
 
 func (ctx *Ctx) typeAssertExpr(e *ast.TypeAssertExpr, multipleBindings bool) glang.Expr {
-	ty := ctx.typeOf(e.Type)
-	typeIdent := glang.StringVal{Value: ctx.typeId(e, ty)}
+	ty := ctx.glangType(e, ctx.typeOf(e.Type))
 	if multipleBindings {
-		return glang.NewCallExpr(glang.GallinaVerbatim("interface.checked_type_assert"),
-			ctx.glangType(e.Type, ty),
+		return glang.NewCallExpr(glang.GallinaVerbatim("TypeAssert2"),
+			ty,
 			ctx.expr(e.X),
-			typeIdent)
+		)
 	}
-	return glang.NewCallExpr(glang.GallinaVerbatim("interface.type_assert"), ctx.expr(e.X), typeIdent)
+	return glang.NewCallExpr(glang.GallinaVerbatim("TypeAssert"), ty, ctx.expr(e.X))
 }
 
 func (ctx *Ctx) exprSpecial(e ast.Expr, multipleBindings bool) glang.Expr {
@@ -2151,8 +2146,8 @@ func (ctx *Ctx) handleImplicitConversion(n locatable, from, to types.Type, e gla
 			// independent of the particular interface type.
 			return e
 		}
-		typeIdent := ctx.typeId(n, from)
-		return glang.NewCallExpr(glang.GallinaVerbatim("interface.make"), glang.StringVal{Value: typeIdent}, e)
+		ty := ctx.glangType(n, from)
+		return glang.NewCallExpr(glang.GallinaVerbatim("InterfaceMake"), ty, e)
 	}
 
 	if fromBasic, ok := fromUnder.(*types.Basic); ok && fromBasic.Kind() == types.UntypedBool {
@@ -2676,17 +2671,17 @@ func (ctx *Ctx) typeSwitchStmt(s *ast.TypeSwitchStmt, cont glang.Expr) (e glang.
 			getCond := func(i int) glang.Expr {
 				ty := ctx.typeOf(c.List[i])
 				if b, ok := ty.(*types.Basic); ok && b.Kind() == types.UntypedNil {
-					return glang.NewCallExpr(
-						glang.GallinaVerbatim("interface.eq"),
-						glang.IdentExpr("$y"),
-						glang.GallinaVerbatim("#interface.nil"),
-					)
+					return glang.BinaryExpr{
+						X:  glang.IdentExpr("$y"),
+						Op: glang.OpEquals,
+						Y:  glang.GallinaVerbatim("#interface.nil"),
+					}
 				} else {
 					return glang.NewCallExpr(glang.GallinaVerbatim("Snd"),
-						glang.NewCallExpr(glang.GallinaVerbatim("interface.checked_type_assert"),
+						glang.NewCallExpr(glang.GallinaVerbatim("TypeAssert2"),
 							ctx.glangType(c.List[i], ty),
 							glang.IdentExpr("$y"),
-							glang.StringVal{Value: ctx.typeId(c.List[i], ty)},
+							glang.StringVal{Value: ctx.glangType(c.List[i], ty)},
 						),
 					)
 				}
@@ -2703,20 +2698,20 @@ func (ctx *Ctx) typeSwitchStmt(s *ast.TypeSwitchStmt, cont glang.Expr) (e glang.
 				e = glang.LetExpr{Names: []string{"$x"}, ValExpr: glang.IdentExpr("$y"), Cont: e}
 				e = glang.LetExpr{
 					Names: []string{"$ok"},
-					ValExpr: glang.NewCallExpr(
-						glang.GallinaVerbatim("interface.eq"),
-						glang.IdentExpr("$y"),
-						glang.GallinaVerbatim("#interface.nil"),
-					),
+					ValExpr: glang.BinaryExpr{
+						X:  glang.IdentExpr("$y"),
+						Op: glang.OpEquals,
+						Y:  glang.GallinaVerbatim("#interface.nil"),
+					},
 					Cont: e,
 				}
 			} else {
 				e = glang.LetExpr{
 					Names: []string{"$x", "$ok"},
-					ValExpr: glang.NewCallExpr(glang.GallinaVerbatim("interface.checked_type_assert"),
+					ValExpr: glang.NewCallExpr(glang.GallinaVerbatim("TypeAssert2"),
 						ctx.glangType(c.List[0], ty),
 						glang.IdentExpr("$y"),
-						glang.StringVal{Value: ctx.typeId(c.List[0], ty)},
+						glang.StringVal{Value: ctx.glangType(c.List[0], ty)},
 					),
 					Cont: e,
 				}

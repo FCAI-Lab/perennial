@@ -12,8 +12,6 @@ import (
 
 // this file has the translations for types themselves
 func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
-	decls = append(decls, ctx.typeIdDecl(spec)...)
-
 	switch ctx.filter.GetAction(spec.Name.Name) {
 	case declfilter.Axiomatize:
 		if t, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
@@ -53,40 +51,6 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	return
 }
 
-func (ctx *Ctx) typeIdDecl(spec *ast.TypeSpec) []glang.Decl {
-	typeName := spec.Name.Name
-
-	// XXX: only axiomatize/skip if the type is not a named type. Helps avoid axioms in `msets`.
-	if spec.Assign != 0 {
-		switch ctx.filter.GetAction(typeName) {
-		case declfilter.Trust:
-			return nil
-		case declfilter.Axiomatize:
-			return []glang.Decl{glang.TypeIdDeclAxiom{Name: typeName}}
-		case declfilter.Translate:
-		default:
-			ctx.nope(spec.Name, "unexpected filter action")
-		}
-	}
-
-	ctx.dep.SetCurrentName(typeName + ".id")
-	defer ctx.dep.UnsetCurrentName()
-
-	// If this is an alias declaration, reference the RHS type's typeId
-	if spec.Assign != 0 {
-		rhsTypeId := ctx.typeId(spec, ctx.typeOf(spec.Type))
-		return []glang.Decl{glang.TypeIdDecl{
-			Name: typeName,
-			Val:  rhsTypeId,
-		}}
-	} else {
-		return []glang.Decl{glang.TypeIdDecl{
-			Name: typeName,
-			Val:  glang.StringLiteral{Value: fmt.Sprintf("%s.%s", ctx.pkgPath, typeName)},
-		}}
-	}
-}
-
 func (ctx *Ctx) typeOf(e ast.Expr) types.Type {
 	return ctx.info.TypeOf(e)
 }
@@ -114,7 +78,7 @@ func (ctx *Ctx) structType(t *types.Struct) glang.Expr {
 func SimpleType(t types.Type) glang.Expr {
 	t = types.Unalias(t)
 	if isProphId(t) {
-		return glang.TypeIdent("ProphIdT")
+		return glang.GallinaIdent("ProphIdT")
 	}
 	switch t := t.(type) {
 	case *types.Struct:
@@ -125,9 +89,9 @@ func SimpleType(t types.Type) glang.Expr {
 	case *types.Basic:
 		switch t.Name() {
 		case "uint64", "uint32", "uint16", "uint8", "int64", "int32", "int16", "int8", "byte", "int", "uint", "bool", "string", "float64", "float32":
-			return glang.TypeIdent(fmt.Sprintf("%sT", t.Name()))
+			return glang.GallinaIdent(fmt.Sprintf("%sT", t.Name()))
 		case "untyped string":
-			return glang.TypeIdent("stringT")
+			return glang.GallinaIdent("stringT")
 		case "Pointer":
 			return glang.PtrType{}
 		}
@@ -137,15 +101,15 @@ func SimpleType(t types.Type) glang.Expr {
 	case *types.Named:
 		if t.Obj().Pkg() == nil {
 			if t.Obj().Name() == "error" {
-				return glang.TypeIdent("error")
+				return glang.GallinaIdent("error")
 			}
 			return nil // unexpected
 		}
 		if t.Obj().Pkg().Name() == "filesys" && t.Obj().Name() == "File" {
-			return glang.TypeIdent("fileT")
+			return glang.GallinaIdent("fileT")
 		}
 		if t.Obj().Pkg().Name() == "disk" && t.Obj().Name() == "Disk" {
-			return glang.TypeIdent("disk.Disk")
+			return glang.GallinaIdent("disk.Disk")
 		}
 		return nil // structs, type arguments, reference to a type
 	case *types.Slice:
@@ -200,11 +164,11 @@ func (ctx *Ctx) glangType(n locatable, t types.Type) glang.Expr {
 		ctx.dep.Add(ctx.qualifiedName(t.Obj()))
 		if t.TypeArgs().Len() != 0 {
 			return glang.CallExpr{
-				MethodName: glang.TypeIdent(ctx.qualifiedName(t.Obj())),
+				MethodName: glang.GallinaIdent(ctx.qualifiedName(t.Obj())),
 				Args:       ctx.convertTypeArgsToGlang(nil, t.TypeArgs()),
 			}
 		}
-		return glang.TypeIdent(ctx.qualifiedName(t.Obj()))
+		return glang.GallinaIdent(ctx.qualifiedName(t.Obj()))
 	case *types.Map:
 		return glang.MapType{Key: ctx.glangType(n, t.Key()), Value: ctx.glangType(n, t.Elem())}
 	case *types.Chan:
@@ -294,7 +258,7 @@ type structTypeInfo struct {
 
 func (ctx *Ctx) structInfoToGlangType(info structTypeInfo) glang.Expr {
 	ctx.dep.Add(info.name)
-	return glang.TypeIdent(info.name)
+	return glang.GallinaIdent(info.name)
 }
 
 func (ctx *Ctx) getStructInfo(t types.Type) (structTypeInfo, bool) {

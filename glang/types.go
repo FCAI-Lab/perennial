@@ -28,7 +28,7 @@ func (d StructType) Coq(needs_paren bool) string {
 		if i == len(d.Fields)-1 {
 			sep = ""
 		}
-		pp.Add("(#%s, %s)%s", StringLiteral{fd.Name}.Coq(false), fd.Type.Coq(false), sep)
+		pp.Add("(%s, %s)%s", StringLiteral{fd.Name}.Coq(false), fd.Type.Coq(false), sep)
 	}
 	pp.Indent(-2)
 	pp.AddLine("]")
@@ -40,7 +40,7 @@ func (d StructType) Coq(needs_paren bool) string {
 type TypeDecl struct {
 	Name       string
 	Body       Expr
-	TypeParams []TypeIdent
+	TypeParams []string
 }
 
 func (d TypeDecl) CoqDecl() string {
@@ -48,7 +48,7 @@ func (d TypeDecl) CoqDecl() string {
 
 	typeParams := ""
 	for _, t := range d.TypeParams {
-		typeParams += fmt.Sprintf("(%s: go.type) ", t.Coq(false))
+		typeParams += fmt.Sprintf("(%s : go.type) ", t)
 	}
 
 	pp.Add("Definition %s %s: go.type := %s.", GallinaIdent(d.Name).Coq(false), typeParams, d.Body.Coq(false))
@@ -59,16 +59,6 @@ func (d TypeDecl) CoqDecl() string {
 
 func (d TypeDecl) DefName() (bool, string) {
 	return true, d.Name
-}
-
-// TypeIdent is a Gallina identifier referencing a type.
-type TypeIdent string
-
-var _ Expr = TypeIdent("")
-
-// Coq is the GooseLang type
-func (t TypeIdent) Coq(needs_paren bool) string {
-	return fmt.Sprintf("#%s", GallinaIdent(t).Coq(false))
 }
 
 type MapType struct {
