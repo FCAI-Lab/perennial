@@ -3198,8 +3198,7 @@ func (ctx *Ctx) finalExtraDecls() []glang.Decl {
 		decls = append(decls, glang.TypeDecl{
 			Name: namedType.Obj().Name(),
 			Body: glang.NewCallExpr(glang.GallinaIdent("go.Named"),
-				glang.StringLiteral{Value: namedType.Obj().Pkg().Path() + "." + namedType.Obj().Name(),
-				},
+				glang.StringLiteral{Value: namedType.Obj().Pkg().Path() + "." + namedType.Obj().Name()},
 				typeParamsList,
 			),
 			TypeParams: typeParams,
@@ -3209,24 +3208,6 @@ func (ctx *Ctx) finalExtraDecls() []glang.Decl {
 	ctx.dep.SetCurrentName("initialize'")
 	defer ctx.dep.UnsetCurrentName()
 	initFunc := glang.FuncDecl{Name: "initialize'"}
-
-	var globalVars glang.ListExpr
-	for _, varIdent := range ctx.globalVars {
-		t := ctx.glangType(varIdent, ctx.info.TypeOf(varIdent))
-		globalVars = append(globalVars,
-			glang.TupleExpr{
-				ctx.gallinaIdent(varIdent.Name),
-				t,
-			},
-		)
-	}
-
-	varsDecl := glang.ConstDecl{
-		Name: "vars'",
-		Val:  globalVars,
-		Type: glang.GallinaVerbatim("list (go_string * go.type)"),
-	}
-	decls = append(decls, varsDecl)
 
 	var functions glang.ListExpr
 	for _, functionName := range ctx.functions {
@@ -3246,20 +3227,6 @@ func (ctx *Ctx) finalExtraDecls() []glang.Decl {
 	}
 	decls = append(decls, functionsDecl)
 
-	var msets glang.ListExpr
-	for _, namedType := range ctx.namedTypes {
-		newDecls, msetExprs := ctx.methodSet(namedType)
-		decls = append(decls, newDecls...)
-		msets = append(msets, msetExprs...)
-	}
-
-	msetsDecl := glang.ConstDecl{
-		Name: "msets'",
-		Val:  msets,
-		Type: glang.GallinaVerbatim("list (go_string * (list (go_string * val)))"),
-	}
-	decls = append(decls, msetsDecl)
-
 	var imports glang.ListExpr
 	for _, impName := range ctx.importNamesOrdered {
 		pkg := impName.Imported()
@@ -3269,14 +3236,7 @@ func (ctx *Ctx) finalExtraDecls() []glang.Decl {
 	}
 	infoRecord := glang.RecordLiteral{
 		Fields: []glang.RecordField{
-			{Name: "pkg_vars",
-				Value: glang.GallinaVerbatim("vars'")},
-			{Name: "pkg_functions",
-				Value: glang.GallinaVerbatim("functions'")},
-			{Name: "pkg_msets",
-				Value: glang.GallinaVerbatim("msets'")},
-			{Name: "pkg_imported_pkgs",
-				Value: imports},
+			{Name: "pkg_imported_pkgs", Value: imports},
 		},
 	}
 
@@ -3385,11 +3345,6 @@ InitLoop:
 		}
 	}
 
-	e = glang.NewDoSeq(
-		glang.NewCallExpr(
-			glang.GallinaVerbatim("package.alloc"), ctx.gallinaIdent(ctx.pkgIdent), glang.Tt),
-		e)
-
 	for _, importName := range ctx.importNamesOrdered {
 		e = glang.NewDoSeq(
 			glang.NewCallExpr(
@@ -3404,9 +3359,13 @@ InitLoop:
 
 	e = glang.NewCallExpr(glang.GallinaVerbatim("exception_do"), e)
 	e = glang.NewCallExpr(glang.GallinaVerbatim("package.init"),
-		glang.StringVal{Value: ctx.gallinaIdent(ctx.pkgIdent)},
+		ctx.gallinaIdent(ctx.pkgIdent),
 		glang.FuncLit{Args: nil, Body: e},
 	)
+
+	for _, varIdent := range ctx.globalVars {
+		ctx.todo(varIdent, "global variable")
+	}
 
 	initFunc.Body = e
 	decls = append(decls, initFunc)
