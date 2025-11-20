@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/types"
+	"math/big"
 	"strconv"
 
 	"github.com/goose-lang/goose/declfilter"
@@ -72,94 +73,97 @@ func (ctx *Ctx) structType(t *types.Struct) glang.Expr {
 	return ty
 }
 
-// SimpleType translates t if it is a "simple type" (typically a simple
-// identifier, with no structs or generics), returning nil if the type is not
-// supported.
-func SimpleType(t types.Type) glang.Expr {
-	t = types.Unalias(t)
-	if isProphId(t) {
-		return glang.GallinaIdent("ProphIdT")
+func (ctx *Ctx) basicType(t *types.Basic) glang.Expr {
+	switch t.Name() {
+	case "untyped string":
+		return glang.GallinaIdent("go.string")
+	case "Pointer":
+		return nil
 	}
-	switch t := t.(type) {
-	case *types.Struct:
-		return nil
-	case *types.TypeParam:
-		// might need special handling
-		return nil
-	case *types.Basic:
-		switch t.Name() {
-		case "uint64", "uint32", "uint16", "uint8", "int64", "int32", "int16", "int8", "byte", "int", "uint", "bool", "string", "float64", "float32":
-			return glang.GallinaIdent(fmt.Sprintf("%sT", t.Name()))
-		case "untyped string":
-			return glang.GallinaIdent("stringT")
-		case "Pointer":
-			return glang.PtrType{}
+	return glang.GallinaIdent("go." + t.Name())
+}
+
+func (ctx *Ctx) signature(n locatable, t *types.Signature) glang.Expr {
+	var argTypes glang.ListExpr
+	var variadic glang.Expr
+	var resultTypes glang.ListExpr
+
+	// Ignore Recv; this might be a signature in an interface.
+
+	if t.Params() != nil {
+		for i := range t.Params().Len() {
+			argTypes = append(argTypes, ctx.glangType(n, t.Params().At(i).Type()))
 		}
-		return nil
-	case *types.Pointer:
-		return glang.PtrType{}
-	case *types.Named:
-		if t.Obj().Pkg() == nil {
-			if t.Obj().Name() == "error" {
-				return glang.GallinaIdent("error")
+	}
+	variadic = glang.BoolLiteral(t.Variadic())
+	if t.Results() != nil {
+		for i := range t.Results().Len() {
+			resultTypes = append(resultTypes, ctx.glangType(n, t.Results().At(i).Type()))
+		}
+	}
+	return glang.NewCallExpr(glang.GallinaIdent("go.Signature"),
+		argTypes,
+		variadic,
+		resultTypes,
+	)
+}
+
+func (ctx *Ctx) interfaceType(n locatable, t *types.Interface) glang.Expr {
+	var elems glang.ListExpr
+	for i := range t.NumExplicitMethods() {
+		elems = append(elems,
+			glang.NewCallExpr(glang.GallinaIdent("go.MethodElem"),
+				glang.NewStringVal(t.ExplicitMethod(i).Name()),
+				ctx.signature(n, t.ExplicitMethod(i).Signature())),
+		)
+	}
+	for i := range t.NumEmbeddeds() {
+		em := t.EmbeddedType(i)
+		var terms glang.ListExpr
+		if uem, ok := em.(*types.Union); ok {
+			for j := range uem.Len() {
+				typeTermCons := "go.TypeTerm"
+				if uem.Term(j).Tilde() {
+					typeTermCons = typeTermCons + "Underlying"
+				}
+				terms = append(terms, glang.NewCallExpr(
+					glang.GallinaIdent(typeTermCons),
+					ctx.glangType(n, uem.Term(j).Type())),
+				)
 			}
-			return nil // unexpected
+		} else {
+			terms = append(terms, glang.NewCallExpr(
+				glang.GallinaIdent("go.TypeTerm"),
+				ctx.glangType(n, em)),
+			)
 		}
-		if t.Obj().Pkg().Name() == "filesys" && t.Obj().Name() == "File" {
-			return glang.GallinaIdent("fileT")
-		}
-		if t.Obj().Pkg().Name() == "disk" && t.Obj().Name() == "Disk" {
-			return glang.GallinaIdent("disk.Disk")
-		}
-		return nil // structs, type arguments, reference to a type
-	case *types.Slice:
-		// TODO: Value is not actually used
-		return glang.SliceType{Value: nil}
-	case *types.Map:
-		keyT := SimpleType(t.Key())
-		valueT := SimpleType(t.Elem())
-		if keyT != nil && valueT != nil {
-			return glang.MapType{Key: keyT, Value: valueT}
-		}
-	case *types.Signature:
-		return glang.FuncType{}
-	case *types.Interface:
-		return glang.InterfaceType{}
-	case *types.Chan:
-		elemT := SimpleType(t.Elem())
-		if elemT != nil {
-			return glang.ChanType{Elem: elemT}
-		}
-	case *types.Array:
-		elemT := SimpleType(t.Elem())
-		if elemT != nil {
-			return glang.ArrayType{Len: uint64(t.Len()), Elem: elemT}
-		}
+		elems = append(elems,
+			glang.NewCallExpr(glang.GallinaIdent("go.TypeElem"), terms))
 	}
-	return nil
+
+	return glang.NewCallExpr(glang.GallinaIdent("go.InterfaceType"), elems)
 }
 
 func (ctx *Ctx) glangType(n locatable, t types.Type) glang.Expr {
 	t = types.Unalias(t)
-	if tr := SimpleType(t); tr != nil {
-		return tr
-	}
 	switch t := t.(type) {
 	case *types.Struct:
 		return ctx.structType(t)
 	case *types.TypeParam:
 		return glang.GallinaIdent(t.Obj().Name())
 	case *types.Basic:
-		// if not handled by SimpleType, unsupported
-		ctx.unsupported(n, "basic type %s", t.Name())
+		return ctx.basicType(t)
 	case *types.Pointer:
-		return glang.PtrType{}
+		return glang.NewCallExpr(glang.GallinaVerbatim("go.PointerType"), ctx.glangType(n, t.Elem()))
 	case *types.Named:
 		if t.Obj().Pkg() == nil {
-			ctx.unsupported(n, "unexpected built-in type %v", t.Obj())
-		}
-		if info, ok := ctx.getStructInfo(t); ok {
-			return ctx.structInfoToGlangType(info)
+			switch t.Obj().Name() {
+			case "error":
+				return glang.GallinaIdent("go.error")
+			case "any":
+				return glang.GallinaIdent("go.any")
+			}
+			ctx.nope(n, "unexpected built-in type %v", t.Obj())
 		}
 		ctx.dep.Add(ctx.qualifiedName(t.Obj()))
 		if t.TypeArgs().Len() != 0 {
@@ -167,14 +171,35 @@ func (ctx *Ctx) glangType(n locatable, t types.Type) glang.Expr {
 				MethodName: glang.GallinaIdent(ctx.qualifiedName(t.Obj())),
 				Args:       ctx.convertTypeArgsToGlang(nil, t.TypeArgs()),
 			}
+		} else {
+			return glang.GallinaIdent(ctx.qualifiedName(t.Obj()))
 		}
-		return glang.GallinaIdent(ctx.qualifiedName(t.Obj()))
+
 	case *types.Map:
-		return glang.MapType{Key: ctx.glangType(n, t.Key()), Value: ctx.glangType(n, t.Elem())}
+		return glang.NewCallExpr(glang.GallinaIdent("go.MapType"),
+			ctx.glangType(n, t.Key()), ctx.glangType(n, t.Elem()))
 	case *types.Chan:
-		return glang.ChanType{Elem: ctx.glangType(n, t.Elem())}
+		chanDir := ""
+		switch t.Dir() {
+		case types.SendRecv:
+			chanDir = "go.sendrecv"
+		case types.SendOnly:
+			chanDir = "go.sendonly"
+		case types.RecvOnly:
+			chanDir = "go.recvonly"
+		}
+		return glang.NewCallExpr(glang.GallinaIdent("go.ChannelType"),
+			glang.GallinaIdent(chanDir), ctx.glangType(n, t.Elem()),
+		)
 	case *types.Array:
-		return glang.ArrayType{Len: uint64(t.Len()), Elem: ctx.glangType(n, t.Elem())}
+		return glang.NewCallExpr(glang.GallinaVerbatim("go.ArrayType"),
+			glang.ZLiteral{Value: big.NewInt(t.Len())}, ctx.glangType(n, t.Elem()))
+	case *types.Signature:
+		return glang.NewCallExpr(glang.GallinaIdent("go.FunctionType"), ctx.signature(n, t))
+	case *types.Interface:
+		return ctx.interfaceType(n, t)
+	case *types.Slice:
+		return glang.NewCallExpr(glang.GallinaIdent("go.SliceType"), ctx.glangType(n, t.Elem()))
 	}
 	ctx.unsupported(n, "unknown type %v", t)
 	return nil // unreachable
@@ -199,18 +224,6 @@ func chanElem(t types.Type) types.Type {
 		return t.Elem()
 	}
 	panic(fmt.Errorf("expected channel type, got %v", t))
-}
-
-func isProphId(t types.Type) bool {
-	if t, ok := t.(*types.Pointer); ok {
-		if t, ok := t.Elem().(*types.Named); ok {
-			name := t.Obj()
-			return name.Pkg() != nil &&
-				name.Pkg().Name() == "machine" &&
-				name.Name() == "prophId"
-		}
-	}
-	return false
 }
 
 func isByteSlice(t types.Type) bool {

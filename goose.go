@@ -105,11 +105,6 @@ func (ctx *Ctx) paramList(fs *ast.FieldList) []glang.Binder {
 	return decls
 }
 
-func isAnyConstraint(expr ast.Expr) bool {
-	ident, ok := expr.(*ast.Ident)
-	return ok && ident.Name == "any"
-}
-
 func (ctx *Ctx) gallinaIdent(x string) glang.Expr {
 	ctx.dep.Add(x)
 	return glang.GallinaIdent(x)
@@ -2491,13 +2486,13 @@ func (ctx *Ctx) deferStmt(s *ast.DeferStmt, cont glang.Expr) (expr glang.Expr) {
 
 	expr = glang.LetExpr{
 		Names:   []string{"$oldf"},
-		ValExpr: glang.DerefExpr{X: glang.IdentExpr("$defer"), Ty: glang.FuncType{}},
+		ValExpr: glang.DerefExpr{X: glang.IdentExpr("$defer"), Ty: glang.GallinaIdent("deferType")},
 		Cont:    expr,
 	}
 
 	expr = glang.StoreStmt{
 		Dst: glang.IdentExpr("$defer"),
-		Ty:  glang.FuncType{},
+		Ty:  glang.GallinaIdent("deferType"),
 		X:   expr,
 	}
 
