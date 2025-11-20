@@ -681,8 +681,9 @@ func (ctx *Ctx) selectorExprAddr(e *ast.SelectorExpr) glang.Expr {
 	selection := ctx.info.Selections[e]
 	if selection == nil {
 		if v, ok := ctx.info.ObjectOf(e.Sel).(*types.Var); ok {
-			return glang.NewCallExpr(glang.GallinaVerbatim("globals.get"),
-				glang.StringVal{Value: ctx.gallinaIdent(v.Pkg().Name() + "." + v.Name())},
+			return glang.NewCallExpr(glang.GallinaVerbatim("GlobalVarAddr"),
+				ctx.gallinaIdent(v.Pkg().Name() + "." + v.Name()),
+				glang.Tt,
 			)
 		} else {
 			ctx.unsupported(e, "address of external package selection that is not a variable")
@@ -1989,8 +1990,9 @@ func (ctx *Ctx) exprAddr(e ast.Expr) glang.Expr {
 		obj := ctx.info.ObjectOf(e)
 		if _, ok := obj.(*types.Var); ok {
 			if obj.Pkg().Scope() == obj.Parent() {
-				return glang.NewCallExpr(glang.GallinaVerbatim("globals.get"),
-					glang.StringVal{Value: ctx.gallinaIdent(e.Name)},
+				return glang.NewCallExpr(glang.GallinaVerbatim("GlobalVarAddr"),
+					ctx.gallinaIdent(e.Name),
+					glang.Tt,
 				)
 			} else {
 				return glang.IdentExpr(e.Name)
@@ -3276,7 +3278,7 @@ InitLoop:
 			if init.Lhs[i-1].Name() != "_" {
 				e = glang.NewDoSeq(
 					glang.StoreStmt{
-						Dst: glang.NewCallExpr(glang.GallinaVerbatim("globals.get"),
+						Dst: glang.NewCallExpr(glang.GallinaVerbatim("GloblalVarAddr"),
 							glang.StringVal{Value: ctx.gallinaIdent(init.Lhs[i-1].Name())},
 						),
 						X:  glang.IdentExpr(fmt.Sprintf("$r%d", i-1)),
