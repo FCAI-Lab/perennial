@@ -826,18 +826,6 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 			}
 		}
 
-		var typeArgs *types.TypeList
-		t := types.Unalias(receiverType)
-		if p, ok := receiverType.(*types.Pointer); ok {
-			t = types.Unalias(p.Elem())
-		}
-		if t, ok := t.(*types.Named); ok {
-			typeArgs = t.TypeArgs()
-		} else {
-			ctx.nope(e.X, "expected a named type or a pointer to a named type for method call receiver")
-		}
-
-		args := ctx.convertTypeArgsToGlang(nil, typeArgs)
 		if ctx.directCalls {
 			structName := ""
 			switch v := receiverType.(type) {
@@ -846,9 +834,9 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 			case *types.Pointer:
 				structName = ctx.qualifiedName(types.Unalias(v.Elem()).(*types.Named).Obj())
 			}
-			return glang.NewCallExpr(glang.GallinaVerbatim(glang.TypeMethod(structName, e.Sel.Name)), receiver).Append(args...)
+			return glang.NewCallExpr(glang.GallinaVerbatim(glang.TypeMethod(structName, e.Sel.Name)), receiver)
 		} else {
-			return glang.NewCallExpr(glang.GallinaVerbatim("MethodResolve"), typeExpr, methodExpr, glang.Tt, receiver).Append(args...)
+			return glang.NewCallExpr(glang.GallinaVerbatim("MethodResolve"), typeExpr, methodExpr, glang.Tt, receiver)
 		}
 	}
 	panic("unreachable")
