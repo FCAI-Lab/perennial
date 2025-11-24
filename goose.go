@@ -579,40 +579,20 @@ func (ctx *Ctx) maybeHandleSpecialBuiltin(s *ast.CallExpr) (glang.Expr, bool) {
 	switch f.Name {
 	case "make":
 		sig := ctx.typeOf(s.Fun).(*types.Signature)
-		switch ty := sig.Params().At(0).Type().Underlying().(type) {
-		case *types.Slice:
-			elt := ctx.glangType(s.Fun, ty.Elem())
-			switch sig.Params().Len() {
-			case 2:
-				return glang.NewCallExpr(glang.GallinaVerbatim("slice.make2"), elt,
-					ctx.expr(s.Args[1])), true
-			case 3:
-				return glang.NewCallExpr(glang.GallinaVerbatim("slice.make3"), elt,
-					ctx.expr(s.Args[1]), ctx.expr(s.Args[2])), true
-			default:
-				ctx.nope(s, "Too many or too few arguments in slice construction")
-				return glang.CallExpr{}, true
-			}
-		case *types.Map:
-			return glang.NewCallExpr(glang.GallinaVerbatim("map.make"),
-				ctx.glangType(s.Args[0], ty.Key()),
-				ctx.glangType(s.Args[0], ty.Elem())), true
-		case *types.Chan:
-			switch sig.Params().Len() {
-			case 1:
-				return glang.NewCallExpr(glang.GallinaVerbatim("chan.make"),
-					ctx.glangType(s.Args[0], ty.Elem()),
-					glang.Int64Val{Value: glang.IntToZ(0)}), true
-			case 2:
-				return glang.NewCallExpr(glang.GallinaVerbatim("chan.make"),
-					ctx.glangType(s.Args[0], ty.Elem()),
-					ctx.expr(s.Args[1]),
-				), true
-			default:
-				ctx.nope(s, "make chan expects 1 or 2 arguments")
-			}
+		ty := ctx.glangType(s.Fun, sig.Params().At(0).Type())
+		switch sig.Params().Len() {
+		case 1:
+			return glang.NewCallExpr(glang.GallinaVerbatim("go.make1"), ty,
+				glang.Tt), true
+		case 2:
+			return glang.NewCallExpr(glang.GallinaVerbatim("go.make2"), ty,
+				ctx.expr(s.Args[1])), true
+		case 3:
+			return glang.NewCallExpr(glang.GallinaVerbatim("go.make3"), ty,
+				ctx.expr(s.Args[1]), ctx.expr(s.Args[2])), true
 		default:
-			ctx.unsupported(s, "make should be slice or map, got %v", ty)
+			ctx.nope(s, "Too many or too few arguments to make")
+			return glang.CallExpr{}, true
 		}
 	case "new":
 		sig := ctx.typeOf(s.Fun).(*types.Signature)
