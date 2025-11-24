@@ -361,7 +361,7 @@ func (ctx *Ctx) arrayLiteral(e *ast.CompositeLit, expectedType types.Type) glang
 			} else {
 				for int64(len(arrayElements)) < index {
 					arrayElements = append(arrayElements,
-						glang.NewCallExpr(glang.GallinaVerbatim("GoZeroVal"),
+						glang.NewCallExpr(glang.GallinaVerbatim("go.ZeroVal"),
 							ctx.glangType(e, expectedType), glang.Tt),
 					)
 				}
@@ -933,7 +933,7 @@ func (ctx *Ctx) structLiteral(t types.Type, structType *types.Struct, e *ast.Com
 			}
 		}
 		if fieldIsZero {
-			lit.Elts = append(lit.Elts, glang.NewCallExpr(glang.GallinaVerbatim("GoZeroVal"), ctx.glangType(e, fieldType), glang.Tt))
+			lit.Elts = append(lit.Elts, glang.NewCallExpr(glang.GallinaVerbatim("go.ZeroVal"), ctx.glangType(e, fieldType), glang.Tt))
 		}
 	}
 
@@ -2830,7 +2830,7 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 		for i := range namedType.TypeArgs().Len() {
 			arg := namedType.TypeArgs().At(i)
 			if arg, ok := arg.(*types.TypeParam); ok {
-				fd.TypeArgs = append(fd.TypeArgs, glang.Binder{Name: arg.Obj().Name()})
+				fd.TypeArgs = append(fd.TypeArgs, glang.GallinaIdent(arg.Obj().Name()))
 			} else {
 				// it doesn't seem possible to have the receiver be a specialized
 				// generic type (all args are interpreted as bound parameters)
@@ -2877,7 +2877,7 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 	if d.Type.TypeParams != nil {
 		for _, p := range d.Type.TypeParams.List {
 			for _, name := range p.Names {
-				fd.TypeArgs = append(fd.TypeArgs, glang.Binder{Name: name.Name})
+				fd.TypeArgs = append(fd.TypeArgs, glang.GallinaIdent(name.Name))
 			}
 		}
 	}

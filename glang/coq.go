@@ -369,9 +369,9 @@ func (sl StructLiteral) Coq(needs_paren bool) string {
 	method := "CompositeLiteral"
 	pp.Add("%s %s (", method, sl.Type.Coq(true))
 	pp.Indent(2)
-	pp.Add(`let: "$$vs" := go.struct_element_list_nil #() in `)
+	pp.Add(`let: "$$vs" := go.StructElementListNil #() in `)
 	for _, f := range sl.Elts {
-		pp.Add(`let: "$$vs" := go.element_list_cons "$$vs" %s in`, f.Coq(true))
+		pp.Add(`let: "$$vs" := go.ElementListApp "$$vs" %s in`, f.Coq(true))
 	}
 	pp.Add(`"$$vs"`)
 	pp.Indent(-2)
@@ -801,7 +801,7 @@ type FuncDecl struct {
 	Name string
 	// Method receiver name (nil if not a method)
 	RecvArg  *Binder
-	TypeArgs []Binder
+	TypeArgs []GallinaIdent
 	Args     []Binder
 	Body     Expr
 	Comment  string
@@ -812,9 +812,6 @@ func (d FuncDecl) Signature() string {
 	var args []string
 	if d.RecvArg != nil {
 		args = append(args, d.RecvArg.Coq(false))
-	}
-	for _, a := range d.TypeArgs {
-		args = append(args, a.Coq(false))
 	}
 	for _, a := range d.Args {
 		args = append(args, a.Coq(false))
@@ -835,7 +832,12 @@ func (d FuncDecl) CoqDecl() string {
 	var pp buffer
 	pp.AddComment(d.Comment)
 
-	pp.Add("Definition %s : val :=", GallinaIdent(d.Name).Coq(false))
+	typeParams := ""
+	for _, a := range d.TypeArgs {
+		typeParams = typeParams + " " + a.Coq(false)
+	}
+
+	pp.Add("Definition %s%s : val :=", GallinaIdent(d.Name).Coq(false), typeParams)
 	func() {
 		pp.Indent(2)
 		defer pp.Indent(-2)
