@@ -682,7 +682,7 @@ func (ctx *Ctx) selectorExprAddr(e *ast.SelectorExpr) glang.Expr {
 	if selection == nil {
 		if v, ok := ctx.info.ObjectOf(e.Sel).(*types.Var); ok {
 			return glang.NewCallExpr(glang.GallinaVerbatim("GlobalVarAddr"),
-				ctx.gallinaIdent(v.Pkg().Name() + "." + v.Name()),
+				ctx.gallinaIdent(v.Pkg().Name()+"."+v.Name()),
 				glang.Tt,
 			)
 		} else {
@@ -894,13 +894,13 @@ func isUnkeyedStruct(e *ast.CompositeLit) bool {
 }
 
 func (ctx *Ctx) structLiteral(t types.Type, structType *types.Struct, e *ast.CompositeLit) glang.Expr {
-	lit := glang.StructLiteral{StructType: ctx.glangType(e.Type, t)}
+	lit := glang.StructLiteral{Type: ctx.glangType(e.Type, t)}
 	if isUnkeyedStruct(e) {
 		if len(e.Elts) != structType.NumFields() {
 			ctx.nope(e, "expected as many elements are there are struct fields in unkeyed literal")
 		}
 		for i := range structType.NumFields() {
-			lit.AddField(structType.Field(i).Name(),
+			lit.Elts = append(lit.Elts,
 				ctx.handleImplicitConversion(e.Elts[i],
 					ctx.typeOf(e.Elts[i]),
 					structType.Field(i).Type(),
@@ -927,13 +927,13 @@ func (ctx *Ctx) structLiteral(t types.Type, structType *types.Struct, e *ast.Com
 				}
 				if ident == fieldName {
 					fieldIsZero = false
-					lit.AddField(fieldName, glang.IdentExpr("$"+fieldName))
+					lit.Elts = append(lit.Elts, glang.IdentExpr("$"+fieldName))
 				}
 			default:
 			}
 		}
 		if fieldIsZero {
-			lit.AddField(fieldName, glang.NewCallExpr(glang.GallinaVerbatim("GoZeroVal"), ctx.glangType(e, fieldType), glang.Tt))
+			lit.Elts = append(lit.Elts, glang.NewCallExpr(glang.GallinaVerbatim("GoZeroVal"), ctx.glangType(e, fieldType), glang.Tt))
 		}
 	}
 
@@ -1204,7 +1204,7 @@ func (ctx *Ctx) unaryExpr(e *ast.UnaryExpr, multipleBindings bool) glang.Expr {
 			if ok {
 				// e is &s{...} (a struct literal)
 				sl := ctx.structLiteral(ctx.typeOf(e.X), info.structType, structLit)
-				return glang.NewCallExpr(glang.GallinaVerbatim("GoAllocValue"),
+				return glang.NewCallExpr(glang.GallinaVerbatim("go.AllocValue"),
 					ctx.glangType(structLit.Type, ctx.typeOf(e.X)), sl)
 			}
 		}
@@ -1626,7 +1626,7 @@ func (ctx *Ctx) funcLit(e *ast.FuncLit) glang.FuncLit {
 			fl.Body = glang.LetExpr{
 				Names: []string{arg.Name},
 				ValExpr: glang.NewCallExpr(
-					glang.GallinaVerbatim("GoAllocValue"),
+					glang.GallinaVerbatim("go.AllocValue"),
 					argTypes[i], glang.IdentExpr(arg.Name)),
 				Cont: fl.Body,
 			}
@@ -2640,7 +2640,7 @@ func (ctx *Ctx) typeSwitchStmt(s *ast.TypeSwitchStmt, cont glang.Expr) (e glang.
 				// for that case
 				body = glang.LetExpr{
 					Names: []string{x.Name},
-					ValExpr: glang.NewCallExpr(glang.GallinaVerbatim("GoAllocValue"), ty,
+					ValExpr: glang.NewCallExpr(glang.GallinaVerbatim("go.AllocValue"), ty,
 						glang.IdentExpr("$x")),
 					Cont: body,
 				}
@@ -2854,7 +2854,7 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 				fd.Body = glang.LetExpr{
 					Names: []string{name},
 					ValExpr: glang.NewCallExpr(
-						glang.GallinaVerbatim("GoAllocValue"),
+						glang.GallinaVerbatim("go.AllocValue"),
 						ctx.glangType(receiver, ctx.typeOf(receiver.Type)),
 						glang.IdentExpr(name)),
 					Cont: fd.Body,
@@ -2936,7 +2936,7 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 			fd.Body = glang.LetExpr{
 				Names: []string{arg.Name},
 				ValExpr: glang.NewCallExpr(
-					glang.GallinaVerbatim("GoAllocValue"),
+					glang.GallinaVerbatim("go.AllocValue"),
 					argTypes[i], glang.IdentExpr(arg.Name)),
 				Cont: fd.Body,
 			}

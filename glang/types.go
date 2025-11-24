@@ -56,8 +56,8 @@ func (d StructType) Coq(needs_paren bool) string {
 			fdcons = "go.EmbeddedField"
 		}
 		pp.Add("(%s %s %s)%s", fdcons,
-			StringLiteral{fd.Name}.Coq(false),
-			fd.Type.Coq(false), sep)
+			StringLiteral{fd.Name}.Coq(true),
+			fd.Type.Coq(true), sep)
 	}
 	pp.Indent(-2)
 	pp.AddLine("]")

@@ -358,36 +358,24 @@ func (b GallinaLetExpr) Coq(needs_paren bool) string {
 	return addParens(needs_paren, pp.Build())
 }
 
-type fieldVal struct {
-	Field string
-	Value Expr
-}
-
 // A StructLiteral represents a record literal construction using name fields.
 type StructLiteral struct {
-	StructType Expr
-	Elts       []fieldVal
-}
-
-// AddField appends a new (field, val) pair to a StructLiteral.
-func (sl *StructLiteral) AddField(field string, value Expr) {
-	sl.Elts = append(sl.Elts, fieldVal{field, value})
+	Type Expr
+	Elts []Expr
 }
 
 func (sl StructLiteral) Coq(needs_paren bool) string {
 	var pp buffer
-	method := "struct.make"
-	pp.Add("%s %s [{", method, sl.StructType.Coq(true))
+	method := "CompositeLiteral"
+	pp.Add("%s %s (", method, sl.Type.Coq(true))
 	pp.Indent(2)
-	for i, f := range sl.Elts {
-		terminator := ";"
-		if i == len(sl.Elts)-1 {
-			terminator = ""
-		}
-		pp.Add("%s ::= %s%s", quote(f.Field), f.Value.Coq(false), terminator)
+	pp.Add(`let: "$$vs" := go.struct_element_list_nil #() in `)
+	for _, f := range sl.Elts {
+		pp.Add(`let: "$$vs" := go.element_list_cons "$$vs" %s in`, f.Coq(true))
 	}
+	pp.Add(`"$$vs"`)
 	pp.Indent(-2)
-	pp.Add("}]")
+	pp.Add(")")
 	return addParens(needs_paren, pp.Build())
 }
 
