@@ -833,8 +833,12 @@ func (d FuncDecl) CoqDecl() string {
 	pp.AddComment(d.Comment)
 
 	typeParams := ""
-	for _, a := range d.TypeArgs {
-		typeParams = typeParams + " " + a.Coq(false)
+	if len(d.TypeArgs) > 0 {
+		typeParams = " ("
+		for _, a := range d.TypeArgs {
+			typeParams = typeParams + a.Coq(false) + " "
+		}
+		typeParams = typeParams + ": go.type)"
 	}
 
 	pp.Add("Definition %s%s : val :=", GallinaIdent(d.Name).Coq(false), typeParams)

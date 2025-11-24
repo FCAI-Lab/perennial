@@ -582,13 +582,19 @@ func (ctx *Ctx) maybeHandleSpecialBuiltin(s *ast.CallExpr) (glang.Expr, bool) {
 		ty := ctx.glangType(s.Fun, sig.Params().At(0).Type())
 		switch sig.Params().Len() {
 		case 1:
-			return glang.NewCallExpr(glang.GallinaVerbatim("go.make1"), ty,
+			return glang.NewCallExpr(
+				glang.NewCallExpr(glang.GallinaVerbatim("FuncResolve"),
+					glang.GallinaVerbatim("go.make1"), glang.ListExpr{ty}, glang.Tt),
 				glang.Tt), true
 		case 2:
-			return glang.NewCallExpr(glang.GallinaVerbatim("go.make2"), ty,
+			return glang.NewCallExpr(
+				glang.NewCallExpr(glang.GallinaVerbatim("FuncResolve"),
+					glang.GallinaVerbatim("go.make2"), glang.ListExpr{ty}, glang.Tt),
 				ctx.expr(s.Args[1])), true
 		case 3:
-			return glang.NewCallExpr(glang.GallinaVerbatim("go.make3"), ty,
+			return glang.NewCallExpr(
+				glang.NewCallExpr(glang.GallinaVerbatim("FuncResolve"),
+					glang.GallinaVerbatim("go.make3"), glang.ListExpr{ty}, glang.Tt),
 				ctx.expr(s.Args[1]), ctx.expr(s.Args[2])), true
 		default:
 			ctx.nope(s, "Too many or too few arguments to make")
@@ -751,19 +757,21 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 			ctx.nope(e, "global variable from external package should be handled by exprAddr")
 			// return glang.IdentExpr(fmt.Sprintf("global:%s", e.Sel.Name))
 		} else if f, ok := ctx.info.ObjectOf(e.Sel).(*types.Func); ok {
-			// If there are type arguments, we must pass them
 			typeArgs := ctx.info.Instances[e.Sel].TypeArgs
-			args := typesToExprs(ctx.convertTypeArgsToGlang(nil, typeArgs))
+			args := glang.ListExpr(ctx.convertTypeArgsToGlang(nil, typeArgs))
 			if ctx.directCalls {
 				return glang.NewCallExpr(
 					ctx.gallinaIdent(fmt.Sprintf("%s.%s", f.Pkg().Name(), glang.FuncImpl(f.Name()))),
-				).Append(args...)
+					args,
+					glang.Tt,
+				)
 			} else {
 				return glang.NewCallExpr(
 					glang.GallinaVerbatim("FuncResolve"),
 					ctx.gallinaIdent(f.Pkg().Name()+"."+f.Name()),
+					args,
 					glang.Tt,
-				).Append(args...)
+				)
 			}
 		} else {
 			return ctx.handleImplicitConversion(e,
@@ -829,7 +837,7 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 			ctx.nope(e.X, "expected a named type or a pointer to a named type for method call receiver")
 		}
 
-		args := typesToExprs(ctx.convertTypeArgsToGlang(nil, typeArgs))
+		args := ctx.convertTypeArgsToGlang(nil, typeArgs)
 		if ctx.directCalls {
 			structName := ""
 			switch v := receiverType.(type) {
@@ -1218,26 +1226,19 @@ func (ctx *Ctx) unaryExpr(e *ast.UnaryExpr, multipleBindings bool) glang.Expr {
 }
 
 func (ctx *Ctx) function(s *ast.Ident) glang.Expr {
-	typeArgs := ctx.info.Instances[s].TypeArgs
 	if ctx.info.ObjectOf(s).Pkg().Path() != ctx.pkgPath {
 		ctx.nope(s, "expected function ident to refer to local function")
 	}
-
 	f, ok := ctx.info.ObjectOf(s).(*types.Func)
 	if !ok {
 		ctx.nope(s, "expected to get a types.Func object for function ident")
 	}
-	fExpr := glang.NewCallExpr(glang.GallinaVerbatim("FuncResolve"),
-		ctx.gallinaIdent(f.Name()), glang.Tt,
+	typeArgs := ctx.info.Instances[s].TypeArgs
+	return glang.NewCallExpr(glang.GallinaVerbatim("FuncResolve"),
+		ctx.gallinaIdent(f.Name()),
+		glang.ListExpr(ctx.convertTypeArgsToGlang(s, typeArgs)),
+		glang.Tt,
 	)
-	ctx.dep.Add(f.Name())
-	if typeArgs.Len() == 0 {
-		return fExpr
-	}
-	return glang.CallExpr{
-		MethodName: fExpr,
-		Args:       ctx.convertTypeArgsToGlang(nil, typeArgs),
-	}
 }
 
 func (ctx *Ctx) goBuiltin(e *ast.Ident) bool {
