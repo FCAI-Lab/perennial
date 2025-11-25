@@ -158,7 +158,7 @@ func (ctx *Ctx) glangType(n locatable, t types.Type) glang.Expr {
 		if t.TypeArgs().Len() != 0 {
 			return glang.CallExpr{
 				MethodName: glang.GallinaIdent(ctx.qualifiedName(t.Obj())),
-				Args:       ctx.convertTypeArgsToGlang(nil, t.TypeArgs()),
+				Args:       ctx.convertTypeArgsToGlang(n, t.TypeArgs()),
 			}
 		} else {
 			return glang.GallinaIdent(ctx.qualifiedName(t.Obj()))

@@ -184,7 +184,7 @@ func (ctx *Ctx) methodSetNamed(t *types.Named) glang.Expr {
 						glang.GallinaIdent(methodName),
 						glang.Tt,
 						glang.NewCallExpr(
-							glang.GallinaVerbatim("struct.field_get"),
+							glang.GallinaVerbatim("StructFieldGet"),
 							ctx.glangType(t.Obj(), t),
 							glang.NewStringVal(field.Name()),
 							glang.IdentExpr("$r"),
@@ -242,7 +242,7 @@ func (ctx *Ctx) methodSetPointerToNamed(t *types.Named) glang.Expr {
 			field := structType.Field(index[0])
 			var fieldType types.Type = types.NewPointer(field.Type())
 			var fieldExpr glang.Expr = glang.NewCallExpr(
-				glang.GallinaVerbatim("struct.field_ref"),
+				glang.GallinaVerbatim("StructFieldRef"),
 				ctx.glangType(t.Obj(), t),
 				glang.NewStringVal(field.Name()),
 				glang.IdentExpr("$r"),
@@ -721,7 +721,7 @@ func (ctx *Ctx) fieldSelection(n locatable, index *[]int, curType *types.Type, e
 			return
 		}
 		v := info.structType.Field(i)
-		*expr = glang.NewCallExpr(glang.GallinaVerbatim("struct.field_get"),
+		*expr = glang.NewCallExpr(glang.GallinaVerbatim("StructFieldGet"),
 			ctx.structInfoToGlangType(info), glang.GallinaString(v.Name()), *expr)
 		*curType = v.Type()
 	}
@@ -744,8 +744,8 @@ func (ctx *Ctx) fieldAddrSelection(n locatable, index []int, curType *types.Type
 		}
 		v := info.structType.Field(i)
 
-		*expr = glang.NewCallExpr(glang.GallinaVerbatim("struct.field_ref"),
-			ctx.structInfoToGlangType(info), glang.StringVal{Value: glang.StringLiteral{Value: v.Name()}}, *expr)
+		*expr = glang.NewCallExpr(glang.GallinaVerbatim("StructFieldRef"),
+			ctx.glangType(n, info.namedType), glang.StringLiteral{Value: v.Name()}, *expr)
 		*curType = v.Type()
 	}
 }
@@ -1238,75 +1238,17 @@ func (ctx *Ctx) builtinIdent(e *ast.Ident) glang.Expr {
 		return glang.True
 	case "false":
 		return glang.False
-	case "append":
+	case "append", "len", "cap", "copy", "delete", "close":
 		sig := ctx.typeOf(e).(*types.Signature)
-		t := sig.Params().At(0).Type()
-		if t, ok := getSliceType(t); ok {
-			return glang.NewCallExpr(glang.GallinaVerbatim("slice.append"),
-				ctx.glangType(e, t.Elem()),
-			)
-		}
-		ctx.unsupported(e, "append to %v (%T) with unknown element type", t, t.Underlying())
-	case "new":
-		sig := ctx.typeOf(e).(*types.Signature)
-		ctx.todo(e, "new might be better as its own function")
 		ty := ctx.glangType(e, sig.Params().At(0).Type())
-		return glang.NewCallExpr(glang.GallinaIdent("GoAlloc"), ty, glang.Tt)
-	case "len":
-		sig := ctx.typeOf(e).(*types.Signature)
-		argT := underlyingType(sig.Params().At(0).Type())
-		switch ty := argT.(type) {
-		case *types.Slice:
-			return glang.GallinaVerbatim("slice.len")
-		case *types.Map:
-			return glang.GallinaVerbatim("map.len")
-		case *types.Basic:
-			if ty.Kind() == types.String {
-				return glang.GallinaVerbatim("StringLength")
-			}
-		case *types.Chan:
-			return glang.NewCallExpr(glang.GallinaVerbatim("chan.len"),
-				ctx.glangType(e, ty.Elem()),
-			)
-		default:
-			ctx.unsupported(e, "length of object of type %v (%T)", ty, ty)
-		}
-	case "cap":
-		sig := ctx.typeOf(e).(*types.Signature)
-		argT := underlyingType(sig.Params().At(0).Type())
-		switch ty := argT.(type) {
-		case *types.Slice:
-			return glang.GallinaVerbatim("slice.cap")
-		case *types.Chan:
-			return glang.NewCallExpr(glang.GallinaVerbatim("chan.cap"),
-				ctx.glangType(e, ty.Elem()),
-			)
-		default:
-			ctx.unsupported(e, "capacity of object of type %v", ty)
-		}
-	case "copy":
-		sig := ctx.typeOf(e).(*types.Signature)
-		argT := sig.Params().At(0).Type().Underlying()
-		if ty, ok := getSliceType(argT); ok {
-			fromTy := sig.Params().At(1).Type().Underlying()
-			if types.Identical(ty, fromTy) {
-				return glang.NewCallExpr(
-					glang.GallinaVerbatim("slice.copy"),
-					ctx.glangType(e, ty.Elem()),
-				)
-			}
-			ctx.unsupported(e, "slice copy to %v from %v", ty, fromTy)
-		}
-		// the destination of a copy should always be a slice
-		ctx.nope(e, "copy of object of type %v", argT)
-	case "delete":
-		sig := ctx.typeOf(e).(*types.Signature)
-		if _, ok := getMapType(sig.Params().At(0).Type().Underlying()); !ok {
-			ctx.nope(e, "delete on non-map")
-		}
-		return glang.GallinaVerbatim("map.delete")
+		return glang.NewCallExpr(glang.GallinaVerbatim("FuncResolve"),
+			glang.GallinaVerbatim("go."+e.Name), glang.ListExpr{ty}, glang.Tt)
+	case "new":
+		ctx.nope(e, "new should be handled elsewhere")
 	case "panic":
-		return glang.GallinaVerbatim("Panic")
+		return glang.NewCallExpr(glang.GallinaVerbatim("FuncResolve"),
+			glang.GallinaVerbatim("go."+e.Name), glang.ListExpr{}, glang.Tt)
+
 	case "min", "max":
 		sig := ctx.typeOf(e).(*types.Signature)
 		if sig.Params().Len() == 0 {
@@ -1318,20 +1260,14 @@ func (ctx *Ctx) builtinIdent(e *ast.Ident) glang.Expr {
 		for i := 0; i < sig.Params().Len(); i++ {
 			t = ctx.typeJoin(e, t, sig.Params().At(i).Type())
 		}
-		if types.Identical(t, types.Typ[types.Uint64]) {
-			return glang.NewCallExpr(glang.GallinaVerbatim(fmt.Sprintf("%sUint64", e.Name)),
-				glang.GallinaVerbatim(fmt.Sprintf("%d", sig.Params().Len())))
+		var typeArgs glang.ListExpr
+		ty := ctx.glangType(e, t)
+		for i := 0; i < sig.Params().Len(); i++ {
+			typeArgs = append(typeArgs, ty)
 		}
-		ctx.unsupported(e, "%s with final type %v", e.Name, t)
-	case "close":
-		funcT := ctx.typeOf(e).(*types.Signature)
-		if funcT.Params().Len() != 1 {
-			ctx.nope(e, "close with wrong number of params")
-		}
-		argT := funcT.Params().At(0).Type()
-		return glang.NewCallExpr(glang.GallinaVerbatim("chan.close"),
-			ctx.glangType(e, chanElem(argT)),
-		)
+
+		return glang.NewCallExpr(glang.GallinaVerbatim("FuncResolve"),
+			glang.GallinaVerbatim("go."+e.Name), typeArgs, glang.Tt)
 	case "iota":
 		o := ctx.info.ObjectOf(e)
 		t, v := ctx.constantLiteral(e, o.(*types.Const).Val())
