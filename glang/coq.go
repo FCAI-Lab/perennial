@@ -479,12 +479,15 @@ func (l StringVal) Coq(needs_paren bool) string {
 	return fmt.Sprintf(`#%s`, l.Value.Coq(true))
 }
 
-// BinOp is an enum for a Coq binary operator
-type BinOp int
+type OpId int
+type BinOp struct {
+	OpId
+	Type Expr
+}
 
 // Constants for the supported Coq binary operators
 const (
-	OpPlus BinOp = iota
+	OpPlus OpId = iota
 	OpMinus
 	OpEquals
 	OpNotEquals
@@ -493,29 +496,74 @@ const (
 	OpLessEq
 	OpGreaterEq
 
-	OpEqualsZ
-	OpLessThanZ
-	OpGreaterThanZ
-	OpLessEqZ
-	OpGreaterEqZ
-
-	OpGallinaAppend
-
-	OpAppend
 	OpMul
 	OpQuot
 	OpQuotS
 	OpRem
 	OpRemS
+	OpShl
+	OpShr
+
 	OpAnd
 	OpAndNot
 	OpOr
 	OpXor
 	OpLAnd
 	OpLOr
-	OpShl
-	OpShr
+	OpEqualsZ
+	OpNotEqualsZ
+	OpLessThanZ
+	OpGreaterThanZ
+	OpLessEqZ
+	OpGreaterEqZ
+	OpAppend
+	OpGallinaAppend
 )
+
+var withTypeAnnotation = map[OpId]string{
+	OpPlus:        "+",
+	OpMinus:       "-",
+	OpEquals:      "=",
+	OpNotEquals:   "≠",
+	OpMul:         "*",
+	OpQuot:        "`quot`",
+	OpQuotS:       "`quots`",
+	OpRem:         "`rem`",
+	OpRemS:        "`rems`",
+	OpLessThan:    "<",
+	OpGreaterThan: ">",
+	OpLessEq:      "≤",
+	OpGreaterEq:   "≥",
+	OpShl:         "≪",
+	OpShr:         "≫",
+}
+
+var withoutTypeAnnotation = map[OpId]string{
+	OpEqualsZ:      "=?",
+	OpNotEqualsZ:   "≠?",
+	OpLessThanZ:    "<?",
+	OpGreaterThanZ: ">?",
+	OpLessEqZ:      "<=?",
+	OpGreaterEqZ:   ">=?",
+
+	OpAnd:           "`and`",
+	OpAndNot:        "`and_not`",
+	OpOr:            "`or`",
+	OpXor:           "`xor`",
+	OpLAnd:          "&&",
+	OpLOr:           "||",
+	OpGallinaAppend: "++",
+}
+
+func (o BinOp) renderOp() string {
+	if op, ok := withTypeAnnotation[o.OpId]; ok {
+		return op + "⟨" + o.Type.Coq(false) + "⟩"
+	} else if op, ok := withoutTypeAnnotation[o.OpId]; ok {
+		return op
+	} else {
+		panic(fmt.Sprint("unsupported op: ", o))
+	}
+}
 
 type BinaryExpr struct {
 	X  Expr
@@ -524,45 +572,9 @@ type BinaryExpr struct {
 }
 
 func (be BinaryExpr) Coq(needs_paren bool) string {
-	coqBinOp := map[BinOp]string{
-		OpPlus:          "+",
-		OpMinus:         "-",
-		OpEquals:        "=",
-		OpNotEquals:     "≠",
-		OpGallinaAppend: "++",
-		OpAppend:        "+",
-		OpMul:           "*",
-		OpQuot:          "`quot`",
-		OpQuotS:         "`quots`",
-		OpRem:           "`rem`",
-		OpRemS:          "`rems`",
-		OpLessThan:      "<",
-		OpGreaterThan:   ">",
-		OpLessEq:        "≤",
-		OpGreaterEq:     "≥",
-
-		OpEqualsZ:      "=?",
-		OpLessThanZ:    "<?",
-		OpGreaterThanZ: ">?",
-		OpLessEqZ:      "<=?",
-		OpGreaterEqZ:   ">=?",
-
-		OpAnd:    "`and`",
-		OpAndNot: "`and_not`",
-		OpOr:     "`or`",
-		OpXor:    "`xor`",
-		OpLAnd:   "&&",
-		OpLOr:    "||",
-		OpShl:    "≪",
-		OpShr:    "≫",
-	}
-	if binop, ok := coqBinOp[be.Op]; ok {
-		expr := fmt.Sprintf("%s %s %s",
-			be.X.Coq(true), binop, be.Y.Coq(true))
-		return addParens(needs_paren, expr)
-	}
-
-	panic(fmt.Sprintf("unknown binop %d", be.Op))
+	expr := fmt.Sprintf("%s %s %s",
+		be.X.Coq(true), be.Op.renderOp(), be.Y.Coq(true))
+	return addParens(needs_paren, expr)
 }
 
 type GallinaNotExpr struct {

@@ -1,28 +1,40 @@
 package goose
 
 import (
-	"go/token"
-
 	"github.com/goose-lang/goose/glang"
+	"go/token"
 )
 
-var generalOps = map[token.Token]glang.BinOp{
+var gooseLangOps = map[token.Token]glang.OpId{
 	token.EQL: glang.OpEquals,
 	token.NEQ: glang.OpNotEquals,
+	token.ADD: glang.OpPlus,
+	token.LSS: glang.OpLessThan,
+	token.GTR: glang.OpGreaterThan,
+	token.SUB: glang.OpMinus,
+	token.MUL: glang.OpMul,
+	token.QUO: glang.OpQuot,
+	token.REM: glang.OpRem,
+	token.LEQ: glang.OpLessEq,
+	token.GEQ: glang.OpGreaterEq,
+	token.SHL: glang.OpShl,
+	token.SHR: glang.OpShr,
+
+	token.LAND:    glang.OpLAnd,
+	token.LOR:     glang.OpLOr,
+	token.AND:     glang.OpAnd,
+	token.AND_NOT: glang.OpAndNot,
+	token.OR:      glang.OpOr,
+	token.XOR:     glang.OpXor,
 }
 
-var shiftOps = map[token.Token]struct{}{
-	token.SHL: {},
-	token.SHR: {},
-}
-
-var untypedIntOps = map[token.Token]glang.BinOp{
+var untypedIntOps = map[token.Token]glang.OpId{
 	token.ADD: glang.OpPlus,
 	token.LSS: glang.OpLessThanZ,
 	token.GTR: glang.OpGreaterThanZ,
 	token.SUB: glang.OpMinus,
 	token.EQL: glang.OpEqualsZ,
-	token.NEQ: glang.OpNotEquals,
+	token.NEQ: glang.OpNotEqualsZ,
 	token.MUL: glang.OpMul,
 	token.QUO: glang.OpQuot,
 	token.REM: glang.OpRem,
@@ -30,70 +42,8 @@ var untypedIntOps = map[token.Token]glang.BinOp{
 	token.GEQ: glang.OpGreaterEqZ,
 }
 
-var unsignedIntOps = map[token.Token]glang.BinOp{
-	token.ADD:     glang.OpPlus,
-	token.LSS:     glang.OpLessThan,
-	token.GTR:     glang.OpGreaterThan,
-	token.SUB:     glang.OpMinus,
-	token.EQL:     glang.OpEquals,
-	token.NEQ:     glang.OpNotEquals,
-	token.MUL:     glang.OpMul,
-	token.QUO:     glang.OpQuot,
-	token.REM:     glang.OpRem,
-	token.LEQ:     glang.OpLessEq,
-	token.GEQ:     glang.OpGreaterEq,
-	token.AND:     glang.OpAnd,
-	token.AND_NOT: glang.OpAndNot,
-	token.LAND:    glang.OpLAnd,
-	token.OR:      glang.OpOr,
-	token.LOR:     glang.OpLOr,
-	token.XOR:     glang.OpXor,
-	token.SHL:     glang.OpShl,
-	token.SHR:     glang.OpShr,
-}
-
-var signedIntOps = map[token.Token]glang.BinOp{
-	token.ADD:     glang.OpPlus,
-	token.SUB:     glang.OpMinus,
-	token.EQL:     glang.OpEquals,
-	token.NEQ:     glang.OpNotEquals,
-	token.MUL:     glang.OpMul,
-	token.AND:     glang.OpAnd,
-	token.AND_NOT: glang.OpAndNot,
-	token.OR:      glang.OpOr,
-	token.XOR:     glang.OpXor,
-	token.QUO:     glang.OpQuotS,
-	token.REM:     glang.OpRemS,
-	token.SHL:     glang.OpShl,
-	token.SHR:     glang.OpShr,
-}
-
-var signedIntFns = map[token.Token]glang.Expr{
-	token.LSS: glang.GallinaIdent("int_lt"),
-	token.GTR: glang.GallinaIdent("int_gt"),
-	token.LEQ: glang.GallinaIdent("int_leq"),
-	token.GEQ: glang.GallinaIdent("int_geq"),
-}
-
-var stringOps = map[token.Token]glang.BinOp{
-	token.ADD: glang.OpAppend,
-	token.LSS: glang.OpLessThan,
-	token.GTR: glang.OpGreaterThan,
-	token.LEQ: glang.OpLessEq,
-	token.GEQ: glang.OpGreaterEq,
-	token.EQL: glang.OpEquals,
-	token.NEQ: glang.OpNotEquals,
-}
-
-var untypedStringOps = map[token.Token]glang.BinOp{
+var untypedStringOps = map[token.Token]glang.OpId{
 	token.ADD: glang.OpGallinaAppend,
 	token.EQL: glang.OpEquals,
 	token.NEQ: glang.OpNotEquals,
-}
-
-var boolOps = map[token.Token]glang.BinOp{
-	token.EQL:  glang.OpEquals,
-	token.NEQ:  glang.OpNotEquals,
-	token.LAND: glang.OpLAnd,
-	token.LOR:  glang.OpLOr,
 }

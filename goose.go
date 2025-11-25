@@ -960,12 +960,17 @@ func (ctx *Ctx) typeJoin(n ast.Node, t1, t2 types.Type) types.Type {
 	}
 }
 
+var shiftOps = map[token.Token]struct{}{
+	token.SHL: {},
+	token.SHR: {},
+}
+
 func (ctx *Ctx) binExpr(e *ast.BinaryExpr) (expr glang.Expr) {
 	// XXX: according to the Go spec, comparisons can occur between types that
 	// are "assignable" to one another. This may require a conversion, so we
 	// here convert to the appropriate type here.
 	//
-	// XXX: this also handles converting untyped constants to a typed constant
+	// This also handles converting untyped constants to a typed constant.
 	xT, yT := ctx.typeOf(e.X), ctx.typeOf(e.Y)
 	var compType types.Type
 	if _, ok := shiftOps[e.Op]; ok {
@@ -977,11 +982,12 @@ func (ctx *Ctx) binExpr(e *ast.BinaryExpr) (expr glang.Expr) {
 		compType = ctx.typeJoin(e, xT, yT).Underlying()
 	}
 
-	var op glang.BinOp = -1
-	if t, ok := compType.(*types.Basic); ok && t.Kind() != types.UnsafePointer {
+	op := gooseLangOps[e.Op]
+
+	if t, ok := compType.(*types.Basic); ok {
 		switch t.Kind() {
 		case types.UntypedInt:
-			op, ok = untypedIntOps[e.Op]
+			op, ok := untypedIntOps[e.Op]
 			if !ok {
 				// use const
 				tv := ctx.info.Types[e]
@@ -1002,33 +1008,8 @@ func (ctx *Ctx) binExpr(e *ast.BinaryExpr) (expr glang.Expr) {
 					expr = glang.BoolVal{Value: glang.GallinaNotExpr{X: expr}}
 				}()
 			}
-		case types.Uint, types.Uint64, types.Uint32, types.Uint16, types.Uint8:
-			op, ok = unsignedIntOps[e.Op]
-			if !ok {
-				ctx.unsupported(e, "unsupported binary operation on unsigned integers")
-			}
-		case types.Int, types.Int64, types.Int32, types.Int16, types.Int8:
-			op, ok = signedIntOps[e.Op]
-			if !ok {
-				fn, ok := signedIntFns[e.Op]
-				if !ok {
-					ctx.unsupported(e, "unsupported binary operation on signed integers")
-				}
-				return glang.NewCallExpr(fn, ctx.handleImplicitConversion(e.X, xT, compType, ctx.expr(e.X)),
-					ctx.handleImplicitConversion(e.Y, yT, compType, ctx.expr(e.Y)))
-			}
-		case types.UntypedBool, types.Bool:
-			op, ok = boolOps[e.Op]
-			if !ok {
-				ctx.unsupported(e, "unsupported binary operation on booleans")
-			}
-		case types.String:
-			op, ok = stringOps[e.Op]
-			if !ok {
-				ctx.unsupported(e, "unsupported binary operation on strings")
-			}
 		case types.UntypedString:
-			op, ok = untypedStringOps[e.Op]
+			op, ok := untypedStringOps[e.Op]
 			switch op {
 			case glang.OpGallinaAppend:
 				defer func() {
@@ -1038,53 +1019,22 @@ func (ctx *Ctx) binExpr(e *ast.BinaryExpr) (expr glang.Expr) {
 			if !ok {
 				ctx.unsupported(e, "unsupported binary operation on strings")
 			}
-		case types.Float32:
-			return glang.NewCallExpr(glang.GallinaVerbatim("make_nondet"), glang.GallinaVerbatim("float32T"),
-				glang.TupleExpr{ctx.expr(e.X), ctx.expr(e.Y)})
-		case types.Float64:
-			return glang.NewCallExpr(glang.GallinaVerbatim("make_nondet"), glang.GallinaVerbatim("float64T"),
-				glang.TupleExpr{ctx.expr(e.X), ctx.expr(e.Y)})
-		}
-		if (t.Info() & types.IsInteger) != 0 {
-			switch op {
-			case glang.OpMinus, glang.OpMul, glang.OpRem, glang.OpPlus, glang.OpQuot:
-				defer func() {
-					expr = ctx.handleImplicitConversion(e, compType, ctx.typeOf(e), expr)
-				}()
-			}
-		}
-	} else if _, ok := compType.(*types.Interface); ok {
-		expr = glang.NewCallExpr(
-			glang.GallinaVerbatim("interface.eq"),
-			ctx.handleImplicitConversion(e.X, xT, compType, ctx.expr(e.X)),
-			ctx.handleImplicitConversion(e.Y, yT, compType, ctx.expr(e.Y)),
-		)
-		switch e.Op {
-		case token.NEQ:
-			return glang.NotExpr{X: expr}
-		case token.EQL:
-			return expr
-		default:
-			// can happen due to generic constraints with unions of concrete types
-			ctx.unsupported(e, "unknown binary operation on interface objects")
-		}
-	} else {
-		op, ok = generalOps[e.Op]
-		if !ok {
-			ctx.unsupported(e, "binary operation on general type")
 		}
 	}
-	if op == -1 {
-		ctx.unsupported(e, "unknown op")
-	}
-
 	expr = glang.BinaryExpr{
-		X:  ctx.handleImplicitConversion(e.X, xT, compType, ctx.expr(e.X)),
-		Op: op,
-		Y:  ctx.handleImplicitConversion(e.Y, yT, compType, ctx.expr(e.Y)),
+		X: ctx.handleImplicitConversion(e.X, xT, compType, ctx.expr(e.X)),
+		Op: glang.BinOp{
+			OpId: op,
+			Type: ctx.glangType(e, compType),
+		},
+		Y: ctx.handleImplicitConversion(e.Y, yT, compType, ctx.expr(e.Y)),
 	}
-
 	return expr
+	// case glang.OpMinus, glang.OpMul, glang.OpRem, glang.OpPlus, glang.OpQuot:
+	// defer func() {
+	// expr = ctx.handleImplicitConversion(e, compType, ctx.typeOf(e), expr)
+	// }()
+	// }
 }
 
 func (ctx *Ctx) sliceExpr(e *ast.SliceExpr) glang.Expr {
@@ -1717,15 +1667,23 @@ func (ctx *Ctx) switchStmt(s *ast.SwitchStmt, cont glang.Expr) (e glang.Expr) {
 			t := ctx.typeOf(c.List[i])
 			eqType := ctx.typeJoin(c.List[i], t, tagType)
 			return glang.BinaryExpr{
-				X:  ctx.handleImplicitConversion(c.List[i], tagType, eqType, glang.IdentExpr("$sw")),
-				Op: glang.OpEquals,
-				Y:  ctx.handleImplicitConversion(c.List[i], t, eqType, ctx.expr(c.List[i])),
+				X: ctx.handleImplicitConversion(c.List[i], tagType, eqType, glang.IdentExpr("$sw")),
+				Op: glang.BinOp{
+					OpId: glang.OpEquals,
+					Type: ctx.glangType(c.List[i], eqType),
+				},
+				Y: ctx.handleImplicitConversion(c.List[i], t, eqType, ctx.expr(c.List[i])),
 			}
 		}
 
 		cond := getCond(0)
 		for i := 1; i < len(c.List); i++ {
-			cond = glang.BinaryExpr{Op: glang.OpLOr, X: getCond(i), Y: cond}
+			cond = glang.BinaryExpr{
+				Op: glang.BinOp{
+					OpId: glang.OpLOr,
+					Type: glang.GallinaIdent("go.bool"),
+				},
+				X: getCond(i), Y: cond}
 		}
 
 		e = glang.IfExpr{
@@ -2288,45 +2246,21 @@ func (ctx *Ctx) assignOpStmt(s *ast.AssignStmt, cont glang.Expr) glang.Expr {
 }
 
 func (ctx *Ctx) incDecStmt(stmt *ast.IncDecStmt, cont glang.Expr) glang.Expr {
-	op := glang.OpPlus
+	opId := glang.OpPlus
 	if stmt.Tok == token.DEC {
-		op = glang.OpMinus
+		opId = glang.OpMinus
+	}
+	op := glang.BinOp{
+		OpId: opId,
+		Type: ctx.glangType(stmt.X, ctx.typeOf(stmt.X)),
 	}
 
-	b, ok := ctx.typeOf(stmt.X).Underlying().(*types.Basic)
-	if !ok {
-		ctx.nope(stmt, "Expected underlying type of inc/dec value to be a basic type")
-	}
-
-	switch b.Kind() {
-	case types.Int64, types.Uint64, types.Int, types.Uint:
-		return ctx.assignFromTo(stmt.X, glang.BinaryExpr{
-			X:  ctx.expr(stmt.X),
-			Op: op,
-			Y:  glang.Int64Val{Value: glang.ZLiteral{Value: big.NewInt(1)}},
-		}, cont)
-	case types.Int32, types.Uint32:
-		return ctx.assignFromTo(stmt.X, glang.BinaryExpr{
-			X:  ctx.expr(stmt.X),
-			Op: op,
-			Y:  glang.Int32Val{Value: glang.ZLiteral{Value: big.NewInt(1)}},
-		}, cont)
-	case types.Int16, types.Uint16:
-		return ctx.assignFromTo(stmt.X, glang.BinaryExpr{
-			X:  ctx.expr(stmt.X),
-			Op: op,
-			Y:  glang.Int16Val{Value: glang.ZLiteral{Value: big.NewInt(1)}},
-		}, cont)
-	case types.Int8, types.Uint8:
-		return ctx.assignFromTo(stmt.X, glang.BinaryExpr{
-			X:  ctx.expr(stmt.X),
-			Op: op,
-			Y:  glang.Int8Val{Value: glang.ZLiteral{Value: big.NewInt(1)}},
-		}, cont)
-	default:
-		ctx.unsupported(stmt, "unknown basic type in inc/dec")
-	}
-	panic("unreachable")
+	return ctx.assignFromTo(stmt.X, glang.BinaryExpr{
+		X:  ctx.expr(stmt.X),
+		Op: op,
+		// FIXME: use the right type of 1
+		Y: glang.Int8Val{Value: glang.ZLiteral{Value: big.NewInt(1)}},
+	}, cont)
 }
 
 func (ctx *Ctx) branchStmt(s *ast.BranchStmt, cont glang.Expr) glang.Expr {
@@ -2614,10 +2548,10 @@ func (ctx *Ctx) typeSwitchStmt(s *ast.TypeSwitchStmt, cont glang.Expr) (e glang.
 					Cont: body,
 				}
 			}
-			// The type of X will depend on what the case
 			if len(c.List) > 1 {
 				addAllocation(ctx.glangType(y, ctx.typeOf(y)))
 			} else {
+				// The type of x will depend on the case
 				addAllocation(ctx.glangType(c.List[0], ctx.typeOf(c.List[0])))
 			}
 		}
@@ -2633,9 +2567,12 @@ func (ctx *Ctx) typeSwitchStmt(s *ast.TypeSwitchStmt, cont glang.Expr) (e glang.
 				ty := ctx.typeOf(c.List[i])
 				if b, ok := ty.(*types.Basic); ok && b.Kind() == types.UntypedNil {
 					return glang.BinaryExpr{
-						X:  glang.IdentExpr("$y"),
-						Op: glang.OpEquals,
-						Y:  glang.GallinaVerbatim("#interface.nil"),
+						X: glang.IdentExpr("$y"),
+						Op: glang.BinOp{
+							OpId: glang.OpEquals,
+							Type: ctx.glangType(y, ctx.typeOf(y)),
+						},
+						Y: glang.GallinaVerbatim("#interface.nil"),
 					}
 				} else {
 					return glang.NewCallExpr(glang.GallinaVerbatim("Snd"),
@@ -2649,7 +2586,11 @@ func (ctx *Ctx) typeSwitchStmt(s *ast.TypeSwitchStmt, cont glang.Expr) (e glang.
 			}
 			cond := getCond(0)
 			for i := range c.List[1:] {
-				cond = glang.BinaryExpr{Op: glang.OpLOr, X: getCond(i), Y: cond}
+				cond = glang.BinaryExpr{Op: glang.BinOp{
+					OpId: glang.OpLOr,
+					Type: glang.GallinaIdent("go.bool"),
+				},
+					X: getCond(i), Y: cond}
 			}
 			e = glang.LetExpr{Names: []string{"$ok"}, ValExpr: cond, Cont: e}
 		} else {
@@ -2660,9 +2601,12 @@ func (ctx *Ctx) typeSwitchStmt(s *ast.TypeSwitchStmt, cont glang.Expr) (e glang.
 				e = glang.LetExpr{
 					Names: []string{"$ok"},
 					ValExpr: glang.BinaryExpr{
-						X:  glang.IdentExpr("$y"),
-						Op: glang.OpEquals,
-						Y:  glang.GallinaVerbatim("#interface.nil"),
+						X: glang.IdentExpr("$y"),
+						Op: glang.BinOp{
+							OpId: glang.OpEquals,
+							Type: ctx.glangType(y, ctx.typeOf(y)),
+						},
+						Y: glang.GallinaVerbatim("#interface.nil"),
 					},
 					Cont: e,
 				}
