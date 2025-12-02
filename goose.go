@@ -312,7 +312,8 @@ func (ctx *Ctx) sliceLiteralAux(es []exprWithInfo, expectedType types.Type) glan
 		for i := 0; i < len(es); i++ {
 			sliceLitArgs = append(sliceLitArgs, glang.IdentExpr(fmt.Sprintf("$sl%d", i)))
 		}
-		expr = glang.NewCallExpr(glang.GallinaVerbatim("slice.literal"),
+		expr = glang.NewCallExpr(glang.GallinaVerbatim("CompositeLiteral"),
+			ctx.glangType(es[0].n, expectedType),
 			ctx.glangType(es[0].n, expectedType),
 			glang.ListExpr(sliceLitArgs))
 
