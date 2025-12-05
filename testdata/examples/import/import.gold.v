@@ -10,25 +10,17 @@ Section code.
 Context `{ffi_syntax}.
 
 
-Definition vars' : list (go_string * go.type) := [].
-
 Definition functions' : list (go_string * val) := [].
-
-Definition msets' : list (go_string * (list (go_string * val))) := [].
 
 #[global] Instance info' : PkgInfo import.example :=
   {|
-    pkg_vars := vars';
-    pkg_functions := functions';
-    pkg_msets := msets';
     pkg_imported_pkgs := [code.sync.atomic.atomic];
   |}.
 
 Definition initialize' : val :=
   λ: <>,
-    package.init #import.example (λ: <>,
-      exception_do (do:  (atomic.initialize' #());;;
-      do:  (package.alloc import.example #()))
+    package.init import.example (λ: <>,
+      exception_do (do:  (atomic.initialize' #()))
       ).
 
 End code.

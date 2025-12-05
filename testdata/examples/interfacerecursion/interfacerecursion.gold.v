@@ -5,65 +5,54 @@ Definition interfacerecursion : go_string := "github.com/goose-lang/goose/testda
 
 Module interfacerecursion.
 
-Module A. Definition id : go_string := "github.com/goose-lang/goose/testdata/examples/interfacerecursion.A"%go. End A.
-Module B. Definition id : go_string := "github.com/goose-lang/goose/testdata/examples/interfacerecursion.B"%go. End B.
-Module c. Definition id : go_string := "github.com/goose-lang/goose/testdata/examples/interfacerecursion.c"%go. End c.
-
 Section code.
 Context `{ffi_syntax}.
 
 
-Definition A : go.type := interfaceT.
-#[global] Typeclasses Opaque A.
-#[global] Opaque A.
+Definition Aⁱᵐᵖˡ : go.type := go.InterfaceType [go.MethodElem #"Foo"%go (go.Signature [] #false [])].
 
-Definition B : go.type := interfaceT.
-#[global] Typeclasses Opaque B.
-#[global] Opaque B.
+Definition Bⁱᵐᵖˡ : go.type := go.InterfaceType [go.MethodElem #"Bar"%go (go.Signature [] #false [])].
 
-Definition c : go.type := structT [
+Definition cⁱᵐᵖˡ : go.type := go.StructType [
 ].
-#[global] Typeclasses Opaque c.
-#[global] Opaque c.
+
+Definition B : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/interfacerecursion.B"%go [].
+
+Definition c : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/interfacerecursion.c"%go [].
 
 (* go: x.go:14:13 *)
 Definition c__Fooⁱᵐᵖˡ : val :=
   λ: "c" <>,
-    exception_do (let: "c" := (mem.alloc "c") in
-    let: "y" := (mem.alloc (type.zero_val #B)) in
-    let: "$r0" := (interface.make #(ptrT.id c.id) (![#ptrT] "c")) in
-    do:  ("y" <-[#B] "$r0");;;
-    do:  ((interface.get #"Bar"%go (![#B] "y")) #());;;
+    exception_do (let: "c" := (go.AllocValue (go.PointerType c) "c") in
+    let: "y" := (GoAlloc B #()) in
+    let: "$r0" := (InterfaceMake (go.PointerType c) (![go.PointerType c] "c")) in
+    do:  ("y" <-[B] "$r0");;;
+    do:  ((MethodResolve B Bar #() (![B] "y")) #());;;
     return: #()).
+
+Definition A : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/interfacerecursion.A"%go [].
 
 (* go: x.go:19:13 *)
 Definition c__Barⁱᵐᵖˡ : val :=
   λ: "c" <>,
-    exception_do (let: "c" := (mem.alloc "c") in
-    let: "y" := (mem.alloc (type.zero_val #A)) in
-    let: "$r0" := (interface.make #(ptrT.id c.id) (![#ptrT] "c")) in
-    do:  ("y" <-[#A] "$r0");;;
-    do:  ((interface.get #"Foo"%go (![#A] "y")) #());;;
+    exception_do (let: "c" := (go.AllocValue (go.PointerType c) "c") in
+    let: "y" := (GoAlloc A #()) in
+    let: "$r0" := (InterfaceMake (go.PointerType c) (![go.PointerType c] "c")) in
+    do:  ("y" <-[A] "$r0");;;
+    do:  ((MethodResolve A Foo #() (![A] "y")) #());;;
     return: #()).
-
-Definition vars' : list (go_string * go.type) := [].
 
 Definition functions' : list (go_string * val) := [].
 
-Definition msets' : list (go_string * (list (go_string * val))) := [(c.id, []); (ptrT.id c.id, [("Bar"%go, c__Barⁱᵐᵖˡ); ("Foo"%go, c__Fooⁱᵐᵖˡ)])].
-
 #[global] Instance info' : PkgInfo interfacerecursion.interfacerecursion :=
   {|
-    pkg_vars := vars';
-    pkg_functions := functions';
-    pkg_msets := msets';
     pkg_imported_pkgs := [];
   |}.
 
 Definition initialize' : val :=
   λ: <>,
-    package.init #interfacerecursion.interfacerecursion (λ: <>,
-      exception_do (do:  (package.alloc interfacerecursion.interfacerecursion #()))
+    package.init interfacerecursion.interfacerecursion (λ: <>,
+      exception_do (do:  #())
       ).
 
 End code.

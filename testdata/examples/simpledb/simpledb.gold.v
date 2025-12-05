@@ -9,13 +9,6 @@ Definition simpledb : go_string := "github.com/goose-lang/goose/testdata/example
 
 Module simpledb.
 
-Module Table. Definition id : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.Table"%go. End Table.
-Module Entry. Definition id : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.Entry"%go. End Entry.
-Module lazyFileBuf. Definition id : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.lazyFileBuf"%go. End lazyFileBuf.
-Module bufFile. Definition id : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.bufFile"%go. End bufFile.
-Module tableWriter. Definition id : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.tableWriter"%go. End tableWriter.
-Module Database. Definition id : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.Database"%go. End Database.
-
 Section code.
 Context `{ffi_syntax}.
 
@@ -26,55 +19,55 @@ Definition UseMarshal : go_string := "github.com/goose-lang/goose/testdata/examp
 Definition UseMarshalⁱᵐᵖˡ : val :=
   λ: <>,
     exception_do (do:  (let: "$a0" := #(W64 0) in
-    (FuncResolve marshal.NewEnc #()) "$a0");;;
+    (FuncResolve marshal.NewEnc [] #()) "$a0");;;
     return: #()).
 
-Definition Table : go.type := structT [
-  "Index" :: mapT uint64T uint64T;
-  "File" :: fileT
+Definition Tableⁱᵐᵖˡ : go.type := go.StructType [
+  (go.FieldDecl "Index"%go (go.MapType go.uint64 go.uint64));
+  (go.FieldDecl "File"%go filesys.File)
 ].
-#[global] Typeclasses Opaque Table.
-#[global] Opaque Table.
 
 Definition CreateTable : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.CreateTable"%go.
+
+Definition Table : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/simpledb.Table"%go [].
 
 (* CreateTable creates a new, empty table.
 
    go: simpledb.go:32:6 *)
 Definition CreateTableⁱᵐᵖˡ : val :=
   λ: "p",
-    exception_do (let: "p" := (mem.alloc "p") in
-    let: "index" := (mem.alloc (type.zero_val (type.mapT #uint64T #uint64T))) in
-    let: "$r0" := (map.make #uint64T #uint64T) in
-    do:  ("index" <-[type.mapT #uint64T #uint64T] "$r0");;;
-    let: "f" := (mem.alloc (type.zero_val #fileT)) in
+    exception_do (let: "p" := (go.AllocValue go.string "p") in
+    let: "index" := (GoAlloc (go.MapType go.uint64 go.uint64) #()) in
+    let: "$r0" := ((FuncResolve go.make1 [go.MapType go.uint64 go.uint64] #()) #()) in
+    do:  ("index" <-[go.MapType go.uint64 go.uint64] "$r0");;;
+    let: "f" := (GoAlloc filesys.File #()) in
     let: ("$ret0", "$ret1") := (let: "$a0" := #"db"%go in
-    let: "$a1" := (![#stringT] "p") in
-    (FuncResolve filesys.Create #()) "$a0" "$a1") in
+    let: "$a1" := (![go.string] "p") in
+    (FuncResolve filesys.Create [] #()) "$a0" "$a1") in
     let: "$r0" := "$ret0" in
     let: "$r1" := "$ret1" in
-    do:  ("f" <-[#fileT] "$r0");;;
+    do:  ("f" <-[filesys.File] "$r0");;;
     do:  "$r1";;;
-    do:  (let: "$a0" := (![#fileT] "f") in
-    (FuncResolve filesys.Close #()) "$a0");;;
-    let: "f2" := (mem.alloc (type.zero_val #fileT)) in
+    do:  (let: "$a0" := (![filesys.File] "f") in
+    (FuncResolve filesys.Close [] #()) "$a0");;;
+    let: "f2" := (GoAlloc filesys.File #()) in
     let: "$r0" := (let: "$a0" := #"db"%go in
-    let: "$a1" := (![#stringT] "p") in
-    (FuncResolve filesys.Open #()) "$a0" "$a1") in
-    do:  ("f2" <-[#fileT] "$r0");;;
-    return: (let: "$Index" := (![type.mapT #uint64T #uint64T] "index") in
-     let: "$File" := (![#fileT] "f2") in
-     struct.make #Table [{
-       "Index" ::= "$Index";
-       "File" ::= "$File"
-     }])).
+    let: "$a1" := (![go.string] "p") in
+    (FuncResolve filesys.Open [] #()) "$a0" "$a1") in
+    do:  ("f2" <-[filesys.File] "$r0");;;
+    return: (let: "$Index" := (![go.MapType go.uint64 go.uint64] "index") in
+     let: "$File" := (![filesys.File] "f2") in
+     CompositeLiteral Table (
+       let: "$$vs" := go.StructElementListNil #() in 
+       let: "$$vs" := go.ElementListApp "$$vs" "$Index" in
+       let: "$$vs" := go.ElementListApp "$$vs" "$File" in
+       "$$vs"
+     ))).
 
-Definition Entry : go.type := structT [
-  "Key" :: uint64T;
-  "Value" :: sliceT
+Definition Entryⁱᵐᵖˡ : go.type := go.StructType [
+  (go.FieldDecl "Key"%go go.uint64);
+  (go.FieldDecl "Value"%go (go.SliceType go.byte))
 ].
-#[global] Typeclasses Opaque Entry.
-#[global] Opaque Entry.
 
 Definition DecodeUInt64 : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.DecodeUInt64"%go.
 
@@ -88,151 +81,167 @@ Definition DecodeUInt64 : go_string := "github.com/goose-lang/goose/testdata/exa
    go: simpledb.go:52:6 *)
 Definition DecodeUInt64ⁱᵐᵖˡ : val :=
   λ: "p",
-    exception_do (let: "p" := (mem.alloc "p") in
-    (if: int_lt (let: "$a0" := (![#sliceT] "p") in
-    slice.len "$a0") #(W64 8)
+    exception_do (let: "p" := (go.AllocValue (go.SliceType go.byte) "p") in
+    (if: (let: "$a0" := (![go.SliceType go.byte] "p") in
+    (FuncResolve go.len [go.SliceType go.byte] #()) "$a0") <⟨go.int⟩ #(W64 8)
     then return: (#(W64 0), #(W64 0))
     else do:  #());;;
-    let: "n" := (mem.alloc (type.zero_val #uint64T)) in
-    let: "$r0" := (let: "$a0" := (![#sliceT] "p") in
-    (FuncResolve primitive.UInt64Get #()) "$a0") in
-    do:  ("n" <-[#uint64T] "$r0");;;
-    return: (![#uint64T] "n", #(W64 8))).
+    let: "n" := (GoAlloc go.uint64 #()) in
+    let: "$r0" := (let: "$a0" := (![go.SliceType go.byte] "p") in
+    (FuncResolve primitive.UInt64Get [] #()) "$a0") in
+    do:  ("n" <-[go.uint64] "$r0");;;
+    return: (![go.uint64] "n", #(W64 8))).
 
 Definition DecodeEntry : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.DecodeEntry"%go.
+
+Definition Entry : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/simpledb.Entry"%go [].
 
 (* DecodeEntry is a Decoder(Entry)
 
    go: simpledb.go:61:6 *)
 Definition DecodeEntryⁱᵐᵖˡ : val :=
   λ: "data",
-    exception_do (let: "data" := (mem.alloc "data") in
-    let: "l1" := (mem.alloc (type.zero_val #uint64T)) in
-    let: "key" := (mem.alloc (type.zero_val #uint64T)) in
-    let: ("$ret0", "$ret1") := (let: "$a0" := (![#sliceT] "data") in
-    (FuncResolve DecodeUInt64 #()) "$a0") in
+    exception_do (let: "data" := (go.AllocValue (go.SliceType go.byte) "data") in
+    let: "l1" := (GoAlloc go.uint64 #()) in
+    let: "key" := (GoAlloc go.uint64 #()) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.SliceType go.byte] "data") in
+    (FuncResolve DecodeUInt64 [] #()) "$a0") in
     let: "$r0" := "$ret0" in
     let: "$r1" := "$ret1" in
-    do:  ("key" <-[#uint64T] "$r0");;;
-    do:  ("l1" <-[#uint64T] "$r1");;;
-    (if: (![#uint64T] "l1") = #(W64 0)
+    do:  ("key" <-[go.uint64] "$r0");;;
+    do:  ("l1" <-[go.uint64] "$r1");;;
+    (if: (![go.uint64] "l1") =⟨go.uint64⟩ #(W64 0)
     then
       return: (let: "$Key" := #(W64 0) in
        let: "$Value" := #slice.nil in
-       struct.make #Entry [{
-         "Key" ::= "$Key";
-         "Value" ::= "$Value"
-       }], #(W64 0))
+       CompositeLiteral Entry (
+         let: "$$vs" := go.StructElementListNil #() in 
+         let: "$$vs" := go.ElementListApp "$$vs" "$Key" in
+         let: "$$vs" := go.ElementListApp "$$vs" "$Value" in
+         "$$vs"
+       ), #(W64 0))
     else do:  #());;;
-    let: "l2" := (mem.alloc (type.zero_val #uint64T)) in
-    let: "valueLen" := (mem.alloc (type.zero_val #uint64T)) in
-    let: ("$ret0", "$ret1") := (let: "$a0" := (let: "$s" := (![#sliceT] "data") in
-    slice.slice #byteT "$s" (![#uint64T] "l1") (slice.len "$s")) in
-    (FuncResolve DecodeUInt64 #()) "$a0") in
+    let: "l2" := (GoAlloc go.uint64 #()) in
+    let: "valueLen" := (GoAlloc go.uint64 #()) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (let: "$s" := (![go.SliceType go.byte] "data") in
+    slice.slice go.byte "$s" (![go.uint64] "l1") (slice.len "$s")) in
+    (FuncResolve DecodeUInt64 [] #()) "$a0") in
     let: "$r0" := "$ret0" in
     let: "$r1" := "$ret1" in
-    do:  ("valueLen" <-[#uint64T] "$r0");;;
-    do:  ("l2" <-[#uint64T] "$r1");;;
-    (if: (![#uint64T] "l2") = #(W64 0)
+    do:  ("valueLen" <-[go.uint64] "$r0");;;
+    do:  ("l2" <-[go.uint64] "$r1");;;
+    (if: (![go.uint64] "l2") =⟨go.uint64⟩ #(W64 0)
     then
       return: (let: "$Key" := #(W64 0) in
        let: "$Value" := #slice.nil in
-       struct.make #Entry [{
-         "Key" ::= "$Key";
-         "Value" ::= "$Value"
-       }], #(W64 0))
+       CompositeLiteral Entry (
+         let: "$$vs" := go.StructElementListNil #() in 
+         let: "$$vs" := go.ElementListApp "$$vs" "$Key" in
+         let: "$$vs" := go.ElementListApp "$$vs" "$Value" in
+         "$$vs"
+       ), #(W64 0))
     else do:  #());;;
-    (if: (s_to_w64 (let: "$a0" := (![#sliceT] "data") in
-    slice.len "$a0")) < (((![#uint64T] "l1") + (![#uint64T] "l2")) + (![#uint64T] "valueLen"))
+    (if: (s_to_w64 (let: "$a0" := (![go.SliceType go.byte] "data") in
+    (FuncResolve go.len [go.SliceType go.byte] #()) "$a0")) <⟨go.uint64⟩ (((![go.uint64] "l1") +⟨go.uint64⟩ (![go.uint64] "l2")) +⟨go.uint64⟩ (![go.uint64] "valueLen"))
     then
       return: (let: "$Key" := #(W64 0) in
        let: "$Value" := #slice.nil in
-       struct.make #Entry [{
-         "Key" ::= "$Key";
-         "Value" ::= "$Value"
-       }], #(W64 0))
+       CompositeLiteral Entry (
+         let: "$$vs" := go.StructElementListNil #() in 
+         let: "$$vs" := go.ElementListApp "$$vs" "$Key" in
+         let: "$$vs" := go.ElementListApp "$$vs" "$Value" in
+         "$$vs"
+       ), #(W64 0))
     else do:  #());;;
-    let: "value" := (mem.alloc (type.zero_val #sliceT)) in
-    let: "$r0" := (let: "$s" := (![#sliceT] "data") in
-    slice.slice #byteT "$s" ((![#uint64T] "l1") + (![#uint64T] "l2")) (((![#uint64T] "l1") + (![#uint64T] "l2")) + (![#uint64T] "valueLen"))) in
-    do:  ("value" <-[#sliceT] "$r0");;;
-    return: (let: "$Key" := (![#uint64T] "key") in
-     let: "$Value" := (![#sliceT] "value") in
-     struct.make #Entry [{
-       "Key" ::= "$Key";
-       "Value" ::= "$Value"
-     }], ((![#uint64T] "l1") + (![#uint64T] "l2")) + (![#uint64T] "valueLen"))).
+    let: "value" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: "$r0" := (let: "$s" := (![go.SliceType go.byte] "data") in
+    slice.slice go.byte "$s" ((![go.uint64] "l1") +⟨go.uint64⟩ (![go.uint64] "l2")) (((![go.uint64] "l1") +⟨go.uint64⟩ (![go.uint64] "l2")) +⟨go.uint64⟩ (![go.uint64] "valueLen"))) in
+    do:  ("value" <-[go.SliceType go.byte] "$r0");;;
+    return: (let: "$Key" := (![go.uint64] "key") in
+     let: "$Value" := (![go.SliceType go.byte] "value") in
+     CompositeLiteral Entry (
+       let: "$$vs" := go.StructElementListNil #() in 
+       let: "$$vs" := go.ElementListApp "$$vs" "$Key" in
+       let: "$$vs" := go.ElementListApp "$$vs" "$Value" in
+       "$$vs"
+     ), ((![go.uint64] "l1") +⟨go.uint64⟩ (![go.uint64] "l2")) +⟨go.uint64⟩ (![go.uint64] "valueLen"))).
 
-Definition lazyFileBuf : go.type := structT [
-  "offset" :: uint64T;
-  "next" :: sliceT
+Definition lazyFileBufⁱᵐᵖˡ : go.type := go.StructType [
+  (go.FieldDecl "offset"%go go.uint64);
+  (go.FieldDecl "next"%go (go.SliceType go.byte))
 ].
-#[global] Typeclasses Opaque lazyFileBuf.
-#[global] Opaque lazyFileBuf.
 
 Definition readTableIndex : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.readTableIndex"%go.
+
+Definition lazyFileBuf : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/simpledb.lazyFileBuf"%go [].
 
 (* readTableIndex parses a complete table on disk into a key->offset index
 
    go: simpledb.go:86:6 *)
 Definition readTableIndexⁱᵐᵖˡ : val :=
   λ: "f" "index",
-    exception_do (let: "index" := (mem.alloc "index") in
-    let: "f" := (mem.alloc "f") in
-    (let: "buf" := (mem.alloc (type.zero_val #lazyFileBuf)) in
+    exception_do (let: "index" := (go.AllocValue (go.MapType go.uint64 go.uint64) "index") in
+    let: "f" := (go.AllocValue filesys.File "f") in
+    (let: "buf" := (GoAlloc lazyFileBuf #()) in
     let: "$r0" := (let: "$offset" := #(W64 0) in
     let: "$next" := #slice.nil in
-    struct.make #lazyFileBuf [{
-      "offset" ::= "$offset";
-      "next" ::= "$next"
-    }]) in
-    do:  ("buf" <-[#lazyFileBuf] "$r0");;;
+    CompositeLiteral lazyFileBuf (
+      let: "$$vs" := go.StructElementListNil #() in 
+      let: "$$vs" := go.ElementListApp "$$vs" "$offset" in
+      let: "$$vs" := go.ElementListApp "$$vs" "$next" in
+      "$$vs"
+    )) in
+    do:  ("buf" <-[lazyFileBuf] "$r0");;;
     (for: (λ: <>, #true); (λ: <>, #()) := λ: <>,
-      let: "l" := (mem.alloc (type.zero_val #uint64T)) in
-      let: "e" := (mem.alloc (type.zero_val #Entry)) in
-      let: ("$ret0", "$ret1") := (let: "$a0" := (![#sliceT] (struct.field_ref #lazyFileBuf #"next"%go "buf")) in
-      (FuncResolve DecodeEntry #()) "$a0") in
+      let: "l" := (GoAlloc go.uint64 #()) in
+      let: "e" := (GoAlloc Entry #()) in
+      let: ("$ret0", "$ret1") := (let: "$a0" := (![go.SliceType go.byte] (StructFieldRef lazyFileBuf "next"%go "buf")) in
+      (FuncResolve DecodeEntry [] #()) "$a0") in
       let: "$r0" := "$ret0" in
       let: "$r1" := "$ret1" in
-      do:  ("e" <-[#Entry] "$r0");;;
-      do:  ("l" <-[#uint64T] "$r1");;;
-      (if: (![#uint64T] "l") > #(W64 0)
+      do:  ("e" <-[Entry] "$r0");;;
+      do:  ("l" <-[go.uint64] "$r1");;;
+      (if: (![go.uint64] "l") >⟨go.uint64⟩ #(W64 0)
       then
-        let: "$r0" := (#(W64 8) + (![#uint64T] (struct.field_ref #lazyFileBuf #"offset"%go "buf"))) in
-        do:  (map.insert (![type.mapT #uint64T #uint64T] "index") (![#uint64T] (struct.field_ref #Entry #"Key"%go "e")) "$r0");;;
-        let: "$r0" := (let: "$offset" := ((![#uint64T] (struct.field_ref #lazyFileBuf #"offset"%go "buf")) + (![#uint64T] "l")) in
-        let: "$next" := (let: "$s" := (![#sliceT] (struct.field_ref #lazyFileBuf #"next"%go "buf")) in
-        slice.slice #byteT "$s" (![#uint64T] "l") (slice.len "$s")) in
-        struct.make #lazyFileBuf [{
-          "offset" ::= "$offset";
-          "next" ::= "$next"
-        }]) in
-        do:  ("buf" <-[#lazyFileBuf] "$r0");;;
+        let: "$r0" := (#(W64 8) +⟨go.uint64⟩ (![go.uint64] (StructFieldRef lazyFileBuf "offset"%go "buf"))) in
+        do:  (map.insert (![go.MapType go.uint64 go.uint64] "index") (![go.uint64] (StructFieldRef Entry "Key"%go "e")) "$r0");;;
+        let: "$r0" := (let: "$offset" := ((![go.uint64] (StructFieldRef lazyFileBuf "offset"%go "buf")) +⟨go.uint64⟩ (![go.uint64] "l")) in
+        let: "$next" := (let: "$s" := (![go.SliceType go.byte] (StructFieldRef lazyFileBuf "next"%go "buf")) in
+        slice.slice go.byte "$s" (![go.uint64] "l") (slice.len "$s")) in
+        CompositeLiteral lazyFileBuf (
+          let: "$$vs" := go.StructElementListNil #() in 
+          let: "$$vs" := go.ElementListApp "$$vs" "$offset" in
+          let: "$$vs" := go.ElementListApp "$$vs" "$next" in
+          "$$vs"
+        )) in
+        do:  ("buf" <-[lazyFileBuf] "$r0");;;
         continue: #()
       else
-        let: "p" := (mem.alloc (type.zero_val #sliceT)) in
-        let: "$r0" := (let: "$a0" := (![#fileT] "f") in
-        let: "$a1" := ((![#uint64T] (struct.field_ref #lazyFileBuf #"offset"%go "buf")) + (s_to_w64 (let: "$a0" := (![#sliceT] (struct.field_ref #lazyFileBuf #"next"%go "buf")) in
-        slice.len "$a0"))) in
+        let: "p" := (GoAlloc (go.SliceType go.byte) #()) in
+        let: "$r0" := (let: "$a0" := (![filesys.File] "f") in
+        let: "$a1" := ((![go.uint64] (StructFieldRef lazyFileBuf "offset"%go "buf")) +⟨go.uint64⟩ (s_to_w64 (let: "$a0" := (![go.SliceType go.byte] (StructFieldRef lazyFileBuf "next"%go "buf")) in
+        (FuncResolve go.len [go.SliceType go.byte] #()) "$a0"))) in
         let: "$a2" := #(W64 4096) in
-        (FuncResolve filesys.ReadAt #()) "$a0" "$a1" "$a2") in
-        do:  ("p" <-[#sliceT] "$r0");;;
-        (if: (let: "$a0" := (![#sliceT] "p") in
-        slice.len "$a0") = #(W64 0)
+        (FuncResolve filesys.ReadAt [] #()) "$a0" "$a1" "$a2") in
+        do:  ("p" <-[go.SliceType go.byte] "$r0");;;
+        (if: (let: "$a0" := (![go.SliceType go.byte] "p") in
+        (FuncResolve go.len [go.SliceType go.byte] #()) "$a0") =⟨go.int⟩ #(W64 0)
         then break: #()
         else
-          let: "newBuf" := (mem.alloc (type.zero_val #sliceT)) in
-          let: "$r0" := (let: "$a0" := (![#sliceT] (struct.field_ref #lazyFileBuf #"next"%go "buf")) in
-          let: "$a1" := (![#sliceT] "p") in
-          (slice.append #byteT) "$a0" "$a1") in
-          do:  ("newBuf" <-[#sliceT] "$r0");;;
-          let: "$r0" := (let: "$offset" := (![#uint64T] (struct.field_ref #lazyFileBuf #"offset"%go "buf")) in
-          let: "$next" := (![#sliceT] "newBuf") in
-          struct.make #lazyFileBuf [{
-            "offset" ::= "$offset";
-            "next" ::= "$next"
-          }]) in
-          do:  ("buf" <-[#lazyFileBuf] "$r0");;;
+          let: "newBuf" := (GoAlloc (go.SliceType go.byte) #()) in
+          let: "$r0" := (let: "$a0" := (![go.SliceType go.byte] (StructFieldRef lazyFileBuf "next"%go "buf")) in
+          let: "$a1" := (![go.SliceType go.byte] "p") in
+          (FuncResolve go.append [go.SliceType go.byte] #()) "$a0" "$a1") in
+          do:  ("newBuf" <-[go.SliceType go.byte] "$r0");;;
+          let: "$r0" := (let: "$offset" := (![go.uint64] (StructFieldRef lazyFileBuf "offset"%go "buf")) in
+          let: "$next" := (![go.SliceType go.byte] "newBuf") in
+          CompositeLiteral lazyFileBuf (
+            let: "$$vs" := go.StructElementListNil #() in 
+            let: "$$vs" := go.ElementListApp "$$vs" "$offset" in
+            let: "$$vs" := go.ElementListApp "$$vs" "$next" in
+            "$$vs"
+          )) in
+          do:  ("buf" <-[lazyFileBuf] "$r0");;;
           continue: #()))));;;
     return: #()).
 
@@ -243,24 +252,26 @@ Definition RecoverTable : go_string := "github.com/goose-lang/goose/testdata/exa
    go: simpledb.go:111:6 *)
 Definition RecoverTableⁱᵐᵖˡ : val :=
   λ: "p",
-    exception_do (let: "p" := (mem.alloc "p") in
-    let: "index" := (mem.alloc (type.zero_val (type.mapT #uint64T #uint64T))) in
-    let: "$r0" := (map.make #uint64T #uint64T) in
-    do:  ("index" <-[type.mapT #uint64T #uint64T] "$r0");;;
-    let: "f" := (mem.alloc (type.zero_val #fileT)) in
+    exception_do (let: "p" := (go.AllocValue go.string "p") in
+    let: "index" := (GoAlloc (go.MapType go.uint64 go.uint64) #()) in
+    let: "$r0" := ((FuncResolve go.make1 [go.MapType go.uint64 go.uint64] #()) #()) in
+    do:  ("index" <-[go.MapType go.uint64 go.uint64] "$r0");;;
+    let: "f" := (GoAlloc filesys.File #()) in
     let: "$r0" := (let: "$a0" := #"db"%go in
-    let: "$a1" := (![#stringT] "p") in
-    (FuncResolve filesys.Open #()) "$a0" "$a1") in
-    do:  ("f" <-[#fileT] "$r0");;;
-    do:  (let: "$a0" := (![#fileT] "f") in
-    let: "$a1" := (![type.mapT #uint64T #uint64T] "index") in
-    (FuncResolve readTableIndex #()) "$a0" "$a1");;;
-    return: (let: "$Index" := (![type.mapT #uint64T #uint64T] "index") in
-     let: "$File" := (![#fileT] "f") in
-     struct.make #Table [{
-       "Index" ::= "$Index";
-       "File" ::= "$File"
-     }])).
+    let: "$a1" := (![go.string] "p") in
+    (FuncResolve filesys.Open [] #()) "$a0" "$a1") in
+    do:  ("f" <-[filesys.File] "$r0");;;
+    do:  (let: "$a0" := (![filesys.File] "f") in
+    let: "$a1" := (![go.MapType go.uint64 go.uint64] "index") in
+    (FuncResolve readTableIndex [] #()) "$a0" "$a1");;;
+    return: (let: "$Index" := (![go.MapType go.uint64 go.uint64] "index") in
+     let: "$File" := (![filesys.File] "f") in
+     CompositeLiteral Table (
+       let: "$$vs" := go.StructElementListNil #() in 
+       let: "$$vs" := go.ElementListApp "$$vs" "$Index" in
+       let: "$$vs" := go.ElementListApp "$$vs" "$File" in
+       "$$vs"
+     ))).
 
 Definition CloseTable : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.CloseTable"%go.
 
@@ -269,9 +280,9 @@ Definition CloseTable : go_string := "github.com/goose-lang/goose/testdata/examp
    go: simpledb.go:119:6 *)
 Definition CloseTableⁱᵐᵖˡ : val :=
   λ: "t",
-    exception_do (let: "t" := (mem.alloc "t") in
-    do:  (let: "$a0" := (![#fileT] (struct.field_ref #Table #"File"%go "t")) in
-    (FuncResolve filesys.Close #()) "$a0");;;
+    exception_do (let: "t" := (go.AllocValue Table "t") in
+    do:  (let: "$a0" := (![filesys.File] (StructFieldRef Table "File"%go "t")) in
+    (FuncResolve filesys.Close [] #()) "$a0");;;
     return: #()).
 
 Definition readValue : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.readValue"%go.
@@ -279,109 +290,111 @@ Definition readValue : go_string := "github.com/goose-lang/goose/testdata/exampl
 (* go: simpledb.go:123:6 *)
 Definition readValueⁱᵐᵖˡ : val :=
   λ: "f" "off",
-    exception_do (let: "off" := (mem.alloc "off") in
-    let: "f" := (mem.alloc "f") in
-    let: "startBuf" := (mem.alloc (type.zero_val #sliceT)) in
-    let: "$r0" := (let: "$a0" := (![#fileT] "f") in
-    let: "$a1" := (![#uint64T] "off") in
+    exception_do (let: "off" := (go.AllocValue go.uint64 "off") in
+    let: "f" := (go.AllocValue filesys.File "f") in
+    let: "startBuf" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: "$r0" := (let: "$a0" := (![filesys.File] "f") in
+    let: "$a1" := (![go.uint64] "off") in
     let: "$a2" := #(W64 512) in
-    (FuncResolve filesys.ReadAt #()) "$a0" "$a1" "$a2") in
-    do:  ("startBuf" <-[#sliceT] "$r0");;;
-    let: "totalBytes" := (mem.alloc (type.zero_val #uint64T)) in
-    let: "$r0" := (let: "$a0" := (![#sliceT] "startBuf") in
-    (FuncResolve primitive.UInt64Get #()) "$a0") in
-    do:  ("totalBytes" <-[#uint64T] "$r0");;;
-    let: "buf" := (mem.alloc (type.zero_val #sliceT)) in
-    let: "$r0" := (let: "$s" := (![#sliceT] "startBuf") in
-    slice.slice #byteT "$s" #(W64 8) (slice.len "$s")) in
-    do:  ("buf" <-[#sliceT] "$r0");;;
-    let: "haveBytes" := (mem.alloc (type.zero_val #uint64T)) in
-    let: "$r0" := (s_to_w64 (let: "$a0" := (![#sliceT] "buf") in
-    slice.len "$a0")) in
-    do:  ("haveBytes" <-[#uint64T] "$r0");;;
-    (if: (![#uint64T] "haveBytes") < (![#uint64T] "totalBytes")
+    (FuncResolve filesys.ReadAt [] #()) "$a0" "$a1" "$a2") in
+    do:  ("startBuf" <-[go.SliceType go.byte] "$r0");;;
+    let: "totalBytes" := (GoAlloc go.uint64 #()) in
+    let: "$r0" := (let: "$a0" := (![go.SliceType go.byte] "startBuf") in
+    (FuncResolve primitive.UInt64Get [] #()) "$a0") in
+    do:  ("totalBytes" <-[go.uint64] "$r0");;;
+    let: "buf" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: "$r0" := (let: "$s" := (![go.SliceType go.byte] "startBuf") in
+    slice.slice go.byte "$s" #(W64 8) (slice.len "$s")) in
+    do:  ("buf" <-[go.SliceType go.byte] "$r0");;;
+    let: "haveBytes" := (GoAlloc go.uint64 #()) in
+    let: "$r0" := (s_to_w64 (let: "$a0" := (![go.SliceType go.byte] "buf") in
+    (FuncResolve go.len [go.SliceType go.byte] #()) "$a0")) in
+    do:  ("haveBytes" <-[go.uint64] "$r0");;;
+    (if: (![go.uint64] "haveBytes") <⟨go.uint64⟩ (![go.uint64] "totalBytes")
     then
-      let: "buf2" := (mem.alloc (type.zero_val #sliceT)) in
-      let: "$r0" := (let: "$a0" := (![#fileT] "f") in
-      let: "$a1" := ((![#uint64T] "off") + #(W64 512)) in
-      let: "$a2" := ((![#uint64T] "totalBytes") - (![#uint64T] "haveBytes")) in
-      (FuncResolve filesys.ReadAt #()) "$a0" "$a1" "$a2") in
-      do:  ("buf2" <-[#sliceT] "$r0");;;
-      let: "newBuf" := (mem.alloc (type.zero_val #sliceT)) in
-      let: "$r0" := (let: "$a0" := (![#sliceT] "buf") in
-      let: "$a1" := (![#sliceT] "buf2") in
-      (slice.append #byteT) "$a0" "$a1") in
-      do:  ("newBuf" <-[#sliceT] "$r0");;;
-      return: (![#sliceT] "newBuf")
+      let: "buf2" := (GoAlloc (go.SliceType go.byte) #()) in
+      let: "$r0" := (let: "$a0" := (![filesys.File] "f") in
+      let: "$a1" := ((![go.uint64] "off") +⟨go.uint64⟩ #(W64 512)) in
+      let: "$a2" := ((![go.uint64] "totalBytes") -⟨go.uint64⟩ (![go.uint64] "haveBytes")) in
+      (FuncResolve filesys.ReadAt [] #()) "$a0" "$a1" "$a2") in
+      do:  ("buf2" <-[go.SliceType go.byte] "$r0");;;
+      let: "newBuf" := (GoAlloc (go.SliceType go.byte) #()) in
+      let: "$r0" := (let: "$a0" := (![go.SliceType go.byte] "buf") in
+      let: "$a1" := (![go.SliceType go.byte] "buf2") in
+      (FuncResolve go.append [go.SliceType go.byte] #()) "$a0" "$a1") in
+      do:  ("newBuf" <-[go.SliceType go.byte] "$r0");;;
+      return: (![go.SliceType go.byte] "newBuf")
     else do:  #());;;
-    return: (let: "$s" := (![#sliceT] "buf") in
-     slice.slice #byteT "$s" #(W64 0) (![#uint64T] "totalBytes"))).
+    return: (let: "$s" := (![go.SliceType go.byte] "buf") in
+     slice.slice go.byte "$s" #(W64 0) (![go.uint64] "totalBytes"))).
 
 Definition tableRead : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.tableRead"%go.
 
 (* go: simpledb.go:137:6 *)
 Definition tableReadⁱᵐᵖˡ : val :=
   λ: "t" "k",
-    exception_do (let: "k" := (mem.alloc "k") in
-    let: "t" := (mem.alloc "t") in
-    let: "ok" := (mem.alloc (type.zero_val #boolT)) in
-    let: "off" := (mem.alloc (type.zero_val #uint64T)) in
-    let: ("$ret0", "$ret1") := (map.get (![type.mapT #uint64T #uint64T] (struct.field_ref #Table #"Index"%go "t")) (![#uint64T] "k")) in
+    exception_do (let: "k" := (go.AllocValue go.uint64 "k") in
+    let: "t" := (go.AllocValue Table "t") in
+    let: "ok" := (GoAlloc go.bool #()) in
+    let: "off" := (GoAlloc go.uint64 #()) in
+    let: ("$ret0", "$ret1") := (map.get (![go.MapType go.uint64 go.uint64] (StructFieldRef Table "Index"%go "t")) (![go.uint64] "k")) in
     let: "$r0" := "$ret0" in
     let: "$r1" := "$ret1" in
-    do:  ("off" <-[#uint64T] "$r0");;;
-    do:  ("ok" <-[#boolT] "$r1");;;
-    (if: (~ (![#boolT] "ok"))
+    do:  ("off" <-[go.uint64] "$r0");;;
+    do:  ("ok" <-[go.bool] "$r1");;;
+    (if: (~ (![go.bool] "ok"))
     then return: (#slice.nil, #false)
     else do:  #());;;
-    let: "p" := (mem.alloc (type.zero_val #sliceT)) in
-    let: "$r0" := (let: "$a0" := (![#fileT] (struct.field_ref #Table #"File"%go "t")) in
-    let: "$a1" := (![#uint64T] "off") in
-    (FuncResolve readValue #()) "$a0" "$a1") in
-    do:  ("p" <-[#sliceT] "$r0");;;
-    return: (![#sliceT] "p", #true)).
+    let: "p" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: "$r0" := (let: "$a0" := (![filesys.File] (StructFieldRef Table "File"%go "t")) in
+    let: "$a1" := (![go.uint64] "off") in
+    (FuncResolve readValue [] #()) "$a0" "$a1") in
+    do:  ("p" <-[go.SliceType go.byte] "$r0");;;
+    return: (![go.SliceType go.byte] "p", #true)).
 
-Definition bufFile : go.type := structT [
-  "file" :: fileT;
-  "buf" :: ptrT
+Definition bufFileⁱᵐᵖˡ : go.type := go.StructType [
+  (go.FieldDecl "file"%go filesys.File);
+  (go.FieldDecl "buf"%go (go.PointerType (go.SliceType go.byte)))
 ].
-#[global] Typeclasses Opaque bufFile.
-#[global] Opaque bufFile.
 
 Definition newBuf : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.newBuf"%go.
+
+Definition bufFile : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/simpledb.bufFile"%go [].
 
 (* go: simpledb.go:151:6 *)
 Definition newBufⁱᵐᵖˡ : val :=
   λ: "f",
-    exception_do (let: "f" := (mem.alloc "f") in
-    let: "buf" := (mem.alloc (type.zero_val #ptrT)) in
-    let: "$r0" := (mem.alloc (type.zero_val #sliceT)) in
-    do:  ("buf" <-[#ptrT] "$r0");;;
-    return: (let: "$file" := (![#fileT] "f") in
-     let: "$buf" := (![#ptrT] "buf") in
-     struct.make #bufFile [{
-       "file" ::= "$file";
-       "buf" ::= "$buf"
-     }])).
+    exception_do (let: "f" := (go.AllocValue filesys.File "f") in
+    let: "buf" := (GoAlloc (go.PointerType (go.SliceType go.byte)) #()) in
+    let: "$r0" := (GoAlloc (go.SliceType go.byte) #()) in
+    do:  ("buf" <-[go.PointerType (go.SliceType go.byte)] "$r0");;;
+    return: (let: "$file" := (![filesys.File] "f") in
+     let: "$buf" := (![go.PointerType (go.SliceType go.byte)] "buf") in
+     CompositeLiteral bufFile (
+       let: "$$vs" := go.StructElementListNil #() in 
+       let: "$$vs" := go.ElementListApp "$$vs" "$file" in
+       let: "$$vs" := go.ElementListApp "$$vs" "$buf" in
+       "$$vs"
+     ))).
 
 Definition bufFlush : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.bufFlush"%go.
 
 (* go: simpledb.go:159:6 *)
 Definition bufFlushⁱᵐᵖˡ : val :=
   λ: "f",
-    exception_do (let: "f" := (mem.alloc "f") in
-    let: "buf" := (mem.alloc (type.zero_val #sliceT)) in
-    let: "$r0" := (![#sliceT] (![#ptrT] (struct.field_ref #bufFile #"buf"%go "f"))) in
-    do:  ("buf" <-[#sliceT] "$r0");;;
-    (if: (let: "$a0" := (![#sliceT] "buf") in
-    slice.len "$a0") = #(W64 0)
+    exception_do (let: "f" := (go.AllocValue bufFile "f") in
+    let: "buf" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: "$r0" := (![go.SliceType go.byte] (![go.PointerType (go.SliceType go.byte)] (StructFieldRef bufFile "buf"%go "f"))) in
+    do:  ("buf" <-[go.SliceType go.byte] "$r0");;;
+    (if: (let: "$a0" := (![go.SliceType go.byte] "buf") in
+    (FuncResolve go.len [go.SliceType go.byte] #()) "$a0") =⟨go.int⟩ #(W64 0)
     then return: (#())
     else do:  #());;;
-    do:  (let: "$a0" := (![#fileT] (struct.field_ref #bufFile #"file"%go "f")) in
-    let: "$a1" := (![#sliceT] "buf") in
-    (FuncResolve filesys.Append #()) "$a0" "$a1");;;
+    do:  (let: "$a0" := (![filesys.File] (StructFieldRef bufFile "file"%go "f")) in
+    let: "$a1" := (![go.SliceType go.byte] "buf") in
+    (FuncResolve filesys.Append [] #()) "$a0" "$a1");;;
     let: "$r0" := #slice.nil in
-    do:  ((![#ptrT] (struct.field_ref #bufFile #"buf"%go "f")) <-[#sliceT] "$r0");;;
+    do:  ((![go.PointerType (go.SliceType go.byte)] (StructFieldRef bufFile "buf"%go "f")) <-[go.SliceType go.byte] "$r0");;;
     return: #()).
 
 Definition bufAppend : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.bufAppend"%go.
@@ -389,18 +402,18 @@ Definition bufAppend : go_string := "github.com/goose-lang/goose/testdata/exampl
 (* go: simpledb.go:168:6 *)
 Definition bufAppendⁱᵐᵖˡ : val :=
   λ: "f" "p",
-    exception_do (let: "p" := (mem.alloc "p") in
-    let: "f" := (mem.alloc "f") in
-    let: "buf" := (mem.alloc (type.zero_val #sliceT)) in
-    let: "$r0" := (![#sliceT] (![#ptrT] (struct.field_ref #bufFile #"buf"%go "f"))) in
-    do:  ("buf" <-[#sliceT] "$r0");;;
-    let: "buf2" := (mem.alloc (type.zero_val #sliceT)) in
-    let: "$r0" := (let: "$a0" := (![#sliceT] "buf") in
-    let: "$a1" := (![#sliceT] "p") in
-    (slice.append #byteT) "$a0" "$a1") in
-    do:  ("buf2" <-[#sliceT] "$r0");;;
-    let: "$r0" := (![#sliceT] "buf2") in
-    do:  ((![#ptrT] (struct.field_ref #bufFile #"buf"%go "f")) <-[#sliceT] "$r0");;;
+    exception_do (let: "p" := (go.AllocValue (go.SliceType go.byte) "p") in
+    let: "f" := (go.AllocValue bufFile "f") in
+    let: "buf" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: "$r0" := (![go.SliceType go.byte] (![go.PointerType (go.SliceType go.byte)] (StructFieldRef bufFile "buf"%go "f"))) in
+    do:  ("buf" <-[go.SliceType go.byte] "$r0");;;
+    let: "buf2" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: "$r0" := (let: "$a0" := (![go.SliceType go.byte] "buf") in
+    let: "$a1" := (![go.SliceType go.byte] "p") in
+    (FuncResolve go.append [go.SliceType go.byte] #()) "$a0" "$a1") in
+    do:  ("buf2" <-[go.SliceType go.byte] "$r0");;;
+    let: "$r0" := (![go.SliceType go.byte] "buf2") in
+    do:  ((![go.PointerType (go.SliceType go.byte)] (StructFieldRef bufFile "buf"%go "f")) <-[go.SliceType go.byte] "$r0");;;
     return: #()).
 
 Definition bufClose : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.bufClose"%go.
@@ -408,73 +421,75 @@ Definition bufClose : go_string := "github.com/goose-lang/goose/testdata/example
 (* go: simpledb.go:174:6 *)
 Definition bufCloseⁱᵐᵖˡ : val :=
   λ: "f",
-    exception_do (let: "f" := (mem.alloc "f") in
-    do:  (let: "$a0" := (![#bufFile] "f") in
-    (FuncResolve bufFlush #()) "$a0");;;
-    do:  (let: "$a0" := (![#fileT] (struct.field_ref #bufFile #"file"%go "f")) in
-    (FuncResolve filesys.Close #()) "$a0");;;
+    exception_do (let: "f" := (go.AllocValue bufFile "f") in
+    do:  (let: "$a0" := (![bufFile] "f") in
+    (FuncResolve bufFlush [] #()) "$a0");;;
+    do:  (let: "$a0" := (![filesys.File] (StructFieldRef bufFile "file"%go "f")) in
+    (FuncResolve filesys.Close [] #()) "$a0");;;
     return: #()).
 
-Definition tableWriter : go.type := structT [
-  "index" :: mapT uint64T uint64T;
-  "name" :: stringT;
-  "file" :: bufFile;
-  "offset" :: ptrT
+Definition tableWriterⁱᵐᵖˡ : go.type := go.StructType [
+  (go.FieldDecl "index"%go (go.MapType go.uint64 go.uint64));
+  (go.FieldDecl "name"%go go.string);
+  (go.FieldDecl "file"%go bufFile);
+  (go.FieldDecl "offset"%go (go.PointerType go.uint64))
 ].
-#[global] Typeclasses Opaque tableWriter.
-#[global] Opaque tableWriter.
 
 Definition newTableWriter : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.newTableWriter"%go.
+
+Definition tableWriter : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/simpledb.tableWriter"%go [].
 
 (* go: simpledb.go:186:6 *)
 Definition newTableWriterⁱᵐᵖˡ : val :=
   λ: "p",
-    exception_do (let: "p" := (mem.alloc "p") in
-    let: "index" := (mem.alloc (type.zero_val (type.mapT #uint64T #uint64T))) in
-    let: "$r0" := (map.make #uint64T #uint64T) in
-    do:  ("index" <-[type.mapT #uint64T #uint64T] "$r0");;;
-    let: "f" := (mem.alloc (type.zero_val #fileT)) in
+    exception_do (let: "p" := (go.AllocValue go.string "p") in
+    let: "index" := (GoAlloc (go.MapType go.uint64 go.uint64) #()) in
+    let: "$r0" := ((FuncResolve go.make1 [go.MapType go.uint64 go.uint64] #()) #()) in
+    do:  ("index" <-[go.MapType go.uint64 go.uint64] "$r0");;;
+    let: "f" := (GoAlloc filesys.File #()) in
     let: ("$ret0", "$ret1") := (let: "$a0" := #"db"%go in
-    let: "$a1" := (![#stringT] "p") in
-    (FuncResolve filesys.Create #()) "$a0" "$a1") in
+    let: "$a1" := (![go.string] "p") in
+    (FuncResolve filesys.Create [] #()) "$a0" "$a1") in
     let: "$r0" := "$ret0" in
     let: "$r1" := "$ret1" in
-    do:  ("f" <-[#fileT] "$r0");;;
+    do:  ("f" <-[filesys.File] "$r0");;;
     do:  "$r1";;;
-    let: "buf" := (mem.alloc (type.zero_val #bufFile)) in
-    let: "$r0" := (let: "$a0" := (![#fileT] "f") in
-    (FuncResolve newBuf #()) "$a0") in
-    do:  ("buf" <-[#bufFile] "$r0");;;
-    let: "off" := (mem.alloc (type.zero_val #ptrT)) in
-    let: "$r0" := (mem.alloc (type.zero_val #uint64T)) in
-    do:  ("off" <-[#ptrT] "$r0");;;
-    return: (let: "$index" := (![type.mapT #uint64T #uint64T] "index") in
-     let: "$name" := (![#stringT] "p") in
-     let: "$file" := (![#bufFile] "buf") in
-     let: "$offset" := (![#ptrT] "off") in
-     struct.make #tableWriter [{
-       "index" ::= "$index";
-       "name" ::= "$name";
-       "file" ::= "$file";
-       "offset" ::= "$offset"
-     }])).
+    let: "buf" := (GoAlloc bufFile #()) in
+    let: "$r0" := (let: "$a0" := (![filesys.File] "f") in
+    (FuncResolve newBuf [] #()) "$a0") in
+    do:  ("buf" <-[bufFile] "$r0");;;
+    let: "off" := (GoAlloc (go.PointerType go.uint64) #()) in
+    let: "$r0" := (GoAlloc go.uint64 #()) in
+    do:  ("off" <-[go.PointerType go.uint64] "$r0");;;
+    return: (let: "$index" := (![go.MapType go.uint64 go.uint64] "index") in
+     let: "$name" := (![go.string] "p") in
+     let: "$file" := (![bufFile] "buf") in
+     let: "$offset" := (![go.PointerType go.uint64] "off") in
+     CompositeLiteral tableWriter (
+       let: "$$vs" := go.StructElementListNil #() in 
+       let: "$$vs" := go.ElementListApp "$$vs" "$index" in
+       let: "$$vs" := go.ElementListApp "$$vs" "$name" in
+       let: "$$vs" := go.ElementListApp "$$vs" "$file" in
+       let: "$$vs" := go.ElementListApp "$$vs" "$offset" in
+       "$$vs"
+     ))).
 
 Definition tableWriterAppend : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.tableWriterAppend"%go.
 
 (* go: simpledb.go:199:6 *)
 Definition tableWriterAppendⁱᵐᵖˡ : val :=
   λ: "w" "p",
-    exception_do (let: "p" := (mem.alloc "p") in
-    let: "w" := (mem.alloc "w") in
-    do:  (let: "$a0" := (![#bufFile] (struct.field_ref #tableWriter #"file"%go "w")) in
-    let: "$a1" := (![#sliceT] "p") in
-    (FuncResolve bufAppend #()) "$a0" "$a1");;;
-    let: "off" := (mem.alloc (type.zero_val #uint64T)) in
-    let: "$r0" := (![#uint64T] (![#ptrT] (struct.field_ref #tableWriter #"offset"%go "w"))) in
-    do:  ("off" <-[#uint64T] "$r0");;;
-    let: "$r0" := ((![#uint64T] "off") + (s_to_w64 (let: "$a0" := (![#sliceT] "p") in
-    slice.len "$a0"))) in
-    do:  ((![#ptrT] (struct.field_ref #tableWriter #"offset"%go "w")) <-[#uint64T] "$r0");;;
+    exception_do (let: "p" := (go.AllocValue (go.SliceType go.byte) "p") in
+    let: "w" := (go.AllocValue tableWriter "w") in
+    do:  (let: "$a0" := (![bufFile] (StructFieldRef tableWriter "file"%go "w")) in
+    let: "$a1" := (![go.SliceType go.byte] "p") in
+    (FuncResolve bufAppend [] #()) "$a0" "$a1");;;
+    let: "off" := (GoAlloc go.uint64 #()) in
+    let: "$r0" := (![go.uint64] (![go.PointerType go.uint64] (StructFieldRef tableWriter "offset"%go "w"))) in
+    do:  ("off" <-[go.uint64] "$r0");;;
+    let: "$r0" := ((![go.uint64] "off") +⟨go.uint64⟩ (s_to_w64 (let: "$a0" := (![go.SliceType go.byte] "p") in
+    (FuncResolve go.len [go.SliceType go.byte] #()) "$a0"))) in
+    do:  ((![go.PointerType go.uint64] (StructFieldRef tableWriter "offset"%go "w")) <-[go.uint64] "$r0");;;
     return: #()).
 
 Definition tableWriterClose : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.tableWriterClose"%go.
@@ -482,20 +497,22 @@ Definition tableWriterClose : go_string := "github.com/goose-lang/goose/testdata
 (* go: simpledb.go:205:6 *)
 Definition tableWriterCloseⁱᵐᵖˡ : val :=
   λ: "w",
-    exception_do (let: "w" := (mem.alloc "w") in
-    do:  (let: "$a0" := (![#bufFile] (struct.field_ref #tableWriter #"file"%go "w")) in
-    (FuncResolve bufClose #()) "$a0");;;
-    let: "f" := (mem.alloc (type.zero_val #fileT)) in
+    exception_do (let: "w" := (go.AllocValue tableWriter "w") in
+    do:  (let: "$a0" := (![bufFile] (StructFieldRef tableWriter "file"%go "w")) in
+    (FuncResolve bufClose [] #()) "$a0");;;
+    let: "f" := (GoAlloc filesys.File #()) in
     let: "$r0" := (let: "$a0" := #"db"%go in
-    let: "$a1" := (![#stringT] (struct.field_ref #tableWriter #"name"%go "w")) in
-    (FuncResolve filesys.Open #()) "$a0" "$a1") in
-    do:  ("f" <-[#fileT] "$r0");;;
-    return: (let: "$Index" := (![type.mapT #uint64T #uint64T] (struct.field_ref #tableWriter #"index"%go "w")) in
-     let: "$File" := (![#fileT] "f") in
-     struct.make #Table [{
-       "Index" ::= "$Index";
-       "File" ::= "$File"
-     }])).
+    let: "$a1" := (![go.string] (StructFieldRef tableWriter "name"%go "w")) in
+    (FuncResolve filesys.Open [] #()) "$a0" "$a1") in
+    do:  ("f" <-[filesys.File] "$r0");;;
+    return: (let: "$Index" := (![go.MapType go.uint64 go.uint64] (StructFieldRef tableWriter "index"%go "w")) in
+     let: "$File" := (![filesys.File] "f") in
+     CompositeLiteral Table (
+       let: "$$vs" := go.StructElementListNil #() in 
+       let: "$$vs" := go.ElementListApp "$$vs" "$Index" in
+       let: "$$vs" := go.ElementListApp "$$vs" "$File" in
+       "$$vs"
+     ))).
 
 Definition EncodeUInt64 : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.EncodeUInt64"%go.
 
@@ -504,20 +521,20 @@ Definition EncodeUInt64 : go_string := "github.com/goose-lang/goose/testdata/exa
    go: simpledb.go:215:6 *)
 Definition EncodeUInt64ⁱᵐᵖˡ : val :=
   λ: "x" "p",
-    exception_do (let: "p" := (mem.alloc "p") in
-    let: "x" := (mem.alloc "x") in
-    let: "tmp" := (mem.alloc (type.zero_val #sliceT)) in
-    let: "$r0" := (slice.make2 #byteT #(W64 8)) in
-    do:  ("tmp" <-[#sliceT] "$r0");;;
-    do:  (let: "$a0" := (![#sliceT] "tmp") in
-    let: "$a1" := (![#uint64T] "x") in
-    (FuncResolve primitive.UInt64Put #()) "$a0" "$a1");;;
-    let: "p2" := (mem.alloc (type.zero_val #sliceT)) in
-    let: "$r0" := (let: "$a0" := (![#sliceT] "p") in
-    let: "$a1" := (![#sliceT] "tmp") in
-    (slice.append #byteT) "$a0" "$a1") in
-    do:  ("p2" <-[#sliceT] "$r0");;;
-    return: (![#sliceT] "p2")).
+    exception_do (let: "p" := (go.AllocValue (go.SliceType go.byte) "p") in
+    let: "x" := (go.AllocValue go.uint64 "x") in
+    let: "tmp" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: "$r0" := ((FuncResolve go.make2 [go.SliceType go.byte] #()) #(W64 8)) in
+    do:  ("tmp" <-[go.SliceType go.byte] "$r0");;;
+    do:  (let: "$a0" := (![go.SliceType go.byte] "tmp") in
+    let: "$a1" := (![go.uint64] "x") in
+    (FuncResolve primitive.UInt64Put [] #()) "$a0" "$a1");;;
+    let: "p2" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: "$r0" := (let: "$a0" := (![go.SliceType go.byte] "p") in
+    let: "$a1" := (![go.SliceType go.byte] "tmp") in
+    (FuncResolve go.append [go.SliceType go.byte] #()) "$a0" "$a1") in
+    do:  ("p2" <-[go.SliceType go.byte] "$r0");;;
+    return: (![go.SliceType go.byte] "p2")).
 
 Definition EncodeSlice : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.EncodeSlice"%go.
 
@@ -526,135 +543,137 @@ Definition EncodeSlice : go_string := "github.com/goose-lang/goose/testdata/exam
    go: simpledb.go:223:6 *)
 Definition EncodeSliceⁱᵐᵖˡ : val :=
   λ: "data" "p",
-    exception_do (let: "p" := (mem.alloc "p") in
-    let: "data" := (mem.alloc "data") in
-    let: "p2" := (mem.alloc (type.zero_val #sliceT)) in
-    let: "$r0" := (let: "$a0" := (s_to_w64 (let: "$a0" := (![#sliceT] "data") in
-    slice.len "$a0")) in
-    let: "$a1" := (![#sliceT] "p") in
-    (FuncResolve EncodeUInt64 #()) "$a0" "$a1") in
-    do:  ("p2" <-[#sliceT] "$r0");;;
-    let: "p3" := (mem.alloc (type.zero_val #sliceT)) in
-    let: "$r0" := (let: "$a0" := (![#sliceT] "p2") in
-    let: "$a1" := (![#sliceT] "data") in
-    (slice.append #byteT) "$a0" "$a1") in
-    do:  ("p3" <-[#sliceT] "$r0");;;
-    return: (![#sliceT] "p3")).
+    exception_do (let: "p" := (go.AllocValue (go.SliceType go.byte) "p") in
+    let: "data" := (go.AllocValue (go.SliceType go.byte) "data") in
+    let: "p2" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: "$r0" := (let: "$a0" := (s_to_w64 (let: "$a0" := (![go.SliceType go.byte] "data") in
+    (FuncResolve go.len [go.SliceType go.byte] #()) "$a0")) in
+    let: "$a1" := (![go.SliceType go.byte] "p") in
+    (FuncResolve EncodeUInt64 [] #()) "$a0" "$a1") in
+    do:  ("p2" <-[go.SliceType go.byte] "$r0");;;
+    let: "p3" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: "$r0" := (let: "$a0" := (![go.SliceType go.byte] "p2") in
+    let: "$a1" := (![go.SliceType go.byte] "data") in
+    (FuncResolve go.append [go.SliceType go.byte] #()) "$a0" "$a1") in
+    do:  ("p3" <-[go.SliceType go.byte] "$r0");;;
+    return: (![go.SliceType go.byte] "p3")).
 
 Definition tablePut : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.tablePut"%go.
 
 (* go: simpledb.go:229:6 *)
 Definition tablePutⁱᵐᵖˡ : val :=
   λ: "w" "k" "v",
-    exception_do (let: "v" := (mem.alloc "v") in
-    let: "k" := (mem.alloc "k") in
-    let: "w" := (mem.alloc "w") in
-    let: "tmp" := (mem.alloc (type.zero_val #sliceT)) in
-    let: "$r0" := (slice.make2 #byteT #(W64 0)) in
-    do:  ("tmp" <-[#sliceT] "$r0");;;
-    let: "tmp2" := (mem.alloc (type.zero_val #sliceT)) in
-    let: "$r0" := (let: "$a0" := (![#uint64T] "k") in
-    let: "$a1" := (![#sliceT] "tmp") in
-    (FuncResolve EncodeUInt64 #()) "$a0" "$a1") in
-    do:  ("tmp2" <-[#sliceT] "$r0");;;
-    let: "tmp3" := (mem.alloc (type.zero_val #sliceT)) in
-    let: "$r0" := (let: "$a0" := (![#sliceT] "v") in
-    let: "$a1" := (![#sliceT] "tmp2") in
-    (FuncResolve EncodeSlice #()) "$a0" "$a1") in
-    do:  ("tmp3" <-[#sliceT] "$r0");;;
-    let: "off" := (mem.alloc (type.zero_val #uint64T)) in
-    let: "$r0" := (![#uint64T] (![#ptrT] (struct.field_ref #tableWriter #"offset"%go "w"))) in
-    do:  ("off" <-[#uint64T] "$r0");;;
-    let: "$r0" := ((![#uint64T] "off") + (s_to_w64 (let: "$a0" := (![#sliceT] "tmp2") in
-    slice.len "$a0"))) in
-    do:  (map.insert (![type.mapT #uint64T #uint64T] (struct.field_ref #tableWriter #"index"%go "w")) (![#uint64T] "k") "$r0");;;
-    do:  (let: "$a0" := (![#tableWriter] "w") in
-    let: "$a1" := (![#sliceT] "tmp3") in
-    (FuncResolve tableWriterAppend #()) "$a0" "$a1");;;
+    exception_do (let: "v" := (go.AllocValue (go.SliceType go.byte) "v") in
+    let: "k" := (go.AllocValue go.uint64 "k") in
+    let: "w" := (go.AllocValue tableWriter "w") in
+    let: "tmp" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: "$r0" := ((FuncResolve go.make2 [go.SliceType go.byte] #()) #(W64 0)) in
+    do:  ("tmp" <-[go.SliceType go.byte] "$r0");;;
+    let: "tmp2" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: "$r0" := (let: "$a0" := (![go.uint64] "k") in
+    let: "$a1" := (![go.SliceType go.byte] "tmp") in
+    (FuncResolve EncodeUInt64 [] #()) "$a0" "$a1") in
+    do:  ("tmp2" <-[go.SliceType go.byte] "$r0");;;
+    let: "tmp3" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: "$r0" := (let: "$a0" := (![go.SliceType go.byte] "v") in
+    let: "$a1" := (![go.SliceType go.byte] "tmp2") in
+    (FuncResolve EncodeSlice [] #()) "$a0" "$a1") in
+    do:  ("tmp3" <-[go.SliceType go.byte] "$r0");;;
+    let: "off" := (GoAlloc go.uint64 #()) in
+    let: "$r0" := (![go.uint64] (![go.PointerType go.uint64] (StructFieldRef tableWriter "offset"%go "w"))) in
+    do:  ("off" <-[go.uint64] "$r0");;;
+    let: "$r0" := ((![go.uint64] "off") +⟨go.uint64⟩ (s_to_w64 (let: "$a0" := (![go.SliceType go.byte] "tmp2") in
+    (FuncResolve go.len [go.SliceType go.byte] #()) "$a0"))) in
+    do:  (map.insert (![go.MapType go.uint64 go.uint64] (StructFieldRef tableWriter "index"%go "w")) (![go.uint64] "k") "$r0");;;
+    do:  (let: "$a0" := (![tableWriter] "w") in
+    let: "$a1" := (![go.SliceType go.byte] "tmp3") in
+    (FuncResolve tableWriterAppend [] #()) "$a0" "$a1");;;
     return: #()).
 
-Definition Database : go.type := structT [
-  "wbuffer" :: ptrT;
-  "rbuffer" :: ptrT;
-  "bufferL" :: ptrT;
-  "table" :: ptrT;
-  "tableName" :: ptrT;
-  "tableL" :: ptrT;
-  "compactionL" :: ptrT
+Definition Databaseⁱᵐᵖˡ : go.type := go.StructType [
+  (go.FieldDecl "wbuffer"%go (go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))));
+  (go.FieldDecl "rbuffer"%go (go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))));
+  (go.FieldDecl "bufferL"%go (go.PointerType sync.Mutex));
+  (go.FieldDecl "table"%go (go.PointerType Table));
+  (go.FieldDecl "tableName"%go (go.PointerType go.string));
+  (go.FieldDecl "tableL"%go (go.PointerType sync.Mutex));
+  (go.FieldDecl "compactionL"%go (go.PointerType sync.Mutex))
 ].
-#[global] Typeclasses Opaque Database.
-#[global] Opaque Database.
 
 Definition makeValueBuffer : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.makeValueBuffer"%go.
 
 (* go: simpledb.go:256:6 *)
 Definition makeValueBufferⁱᵐᵖˡ : val :=
   λ: <>,
-    exception_do (let: "buf" := (mem.alloc (type.zero_val (type.mapT #uint64T #sliceT))) in
-    let: "$r0" := (map.make #uint64T #sliceT) in
-    do:  ("buf" <-[type.mapT #uint64T #sliceT] "$r0");;;
-    let: "bufPtr" := (mem.alloc (type.zero_val #ptrT)) in
-    let: "$r0" := (mem.alloc (type.zero_val (type.mapT #uint64T #sliceT))) in
-    do:  ("bufPtr" <-[#ptrT] "$r0");;;
-    let: "$r0" := (![type.mapT #uint64T #sliceT] "buf") in
-    do:  ((![#ptrT] "bufPtr") <-[type.mapT #uint64T #sliceT] "$r0");;;
-    return: (![#ptrT] "bufPtr")).
+    exception_do (let: "buf" := (GoAlloc (go.MapType go.uint64 (go.SliceType go.byte)) #()) in
+    let: "$r0" := ((FuncResolve go.make1 [go.MapType go.uint64 (go.SliceType go.byte)] #()) #()) in
+    do:  ("buf" <-[go.MapType go.uint64 (go.SliceType go.byte)] "$r0");;;
+    let: "bufPtr" := (GoAlloc (go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))) #()) in
+    let: "$r0" := (GoAlloc (go.MapType go.uint64 (go.SliceType go.byte)) #()) in
+    do:  ("bufPtr" <-[go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] "$r0");;;
+    let: "$r0" := (![go.MapType go.uint64 (go.SliceType go.byte)] "buf") in
+    do:  ((![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] "bufPtr") <-[go.MapType go.uint64 (go.SliceType go.byte)] "$r0");;;
+    return: (![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] "bufPtr")).
 
 Definition NewDb : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.NewDb"%go.
+
+Definition Database : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/simpledb.Database"%go [].
 
 (* NewDb initializes a new database on top of an empty filesys.
 
    go: simpledb.go:264:6 *)
 Definition NewDbⁱᵐᵖˡ : val :=
   λ: <>,
-    exception_do (let: "wbuf" := (mem.alloc (type.zero_val #ptrT)) in
-    let: "$r0" := ((FuncResolve makeValueBuffer #()) #()) in
-    do:  ("wbuf" <-[#ptrT] "$r0");;;
-    let: "rbuf" := (mem.alloc (type.zero_val #ptrT)) in
-    let: "$r0" := ((FuncResolve makeValueBuffer #()) #()) in
-    do:  ("rbuf" <-[#ptrT] "$r0");;;
-    let: "bufferL" := (mem.alloc (type.zero_val #ptrT)) in
-    let: "$r0" := (mem.alloc (type.zero_val #sync.Mutex)) in
-    do:  ("bufferL" <-[#ptrT] "$r0");;;
-    let: "tableName" := (mem.alloc (type.zero_val #stringT)) in
+    exception_do (let: "wbuf" := (GoAlloc (go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))) #()) in
+    let: "$r0" := ((FuncResolve makeValueBuffer [] #()) #()) in
+    do:  ("wbuf" <-[go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] "$r0");;;
+    let: "rbuf" := (GoAlloc (go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))) #()) in
+    let: "$r0" := ((FuncResolve makeValueBuffer [] #()) #()) in
+    do:  ("rbuf" <-[go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] "$r0");;;
+    let: "bufferL" := (GoAlloc (go.PointerType sync.Mutex) #()) in
+    let: "$r0" := (GoAlloc sync.Mutex #()) in
+    do:  ("bufferL" <-[go.PointerType sync.Mutex] "$r0");;;
+    let: "tableName" := (GoAlloc go.string #()) in
     let: "$r0" := #"table.0"%go in
-    do:  ("tableName" <-[#stringT] "$r0");;;
-    let: "tableNameRef" := (mem.alloc (type.zero_val #ptrT)) in
-    let: "$r0" := (mem.alloc (type.zero_val #stringT)) in
-    do:  ("tableNameRef" <-[#ptrT] "$r0");;;
-    let: "$r0" := (![#stringT] "tableName") in
-    do:  ((![#ptrT] "tableNameRef") <-[#stringT] "$r0");;;
-    let: "table" := (mem.alloc (type.zero_val #Table)) in
-    let: "$r0" := (let: "$a0" := (![#stringT] "tableName") in
-    (FuncResolve CreateTable #()) "$a0") in
-    do:  ("table" <-[#Table] "$r0");;;
-    let: "tableRef" := (mem.alloc (type.zero_val #ptrT)) in
-    let: "$r0" := (mem.alloc (type.zero_val #Table)) in
-    do:  ("tableRef" <-[#ptrT] "$r0");;;
-    let: "$r0" := (![#Table] "table") in
-    do:  ((![#ptrT] "tableRef") <-[#Table] "$r0");;;
-    let: "tableL" := (mem.alloc (type.zero_val #ptrT)) in
-    let: "$r0" := (mem.alloc (type.zero_val #sync.Mutex)) in
-    do:  ("tableL" <-[#ptrT] "$r0");;;
-    let: "compactionL" := (mem.alloc (type.zero_val #ptrT)) in
-    let: "$r0" := (mem.alloc (type.zero_val #sync.Mutex)) in
-    do:  ("compactionL" <-[#ptrT] "$r0");;;
-    return: (let: "$wbuffer" := (![#ptrT] "wbuf") in
-     let: "$rbuffer" := (![#ptrT] "rbuf") in
-     let: "$bufferL" := (![#ptrT] "bufferL") in
-     let: "$table" := (![#ptrT] "tableRef") in
-     let: "$tableName" := (![#ptrT] "tableNameRef") in
-     let: "$tableL" := (![#ptrT] "tableL") in
-     let: "$compactionL" := (![#ptrT] "compactionL") in
-     struct.make #Database [{
-       "wbuffer" ::= "$wbuffer";
-       "rbuffer" ::= "$rbuffer";
-       "bufferL" ::= "$bufferL";
-       "table" ::= "$table";
-       "tableName" ::= "$tableName";
-       "tableL" ::= "$tableL";
-       "compactionL" ::= "$compactionL"
-     }])).
+    do:  ("tableName" <-[go.string] "$r0");;;
+    let: "tableNameRef" := (GoAlloc (go.PointerType go.string) #()) in
+    let: "$r0" := (GoAlloc go.string #()) in
+    do:  ("tableNameRef" <-[go.PointerType go.string] "$r0");;;
+    let: "$r0" := (![go.string] "tableName") in
+    do:  ((![go.PointerType go.string] "tableNameRef") <-[go.string] "$r0");;;
+    let: "table" := (GoAlloc Table #()) in
+    let: "$r0" := (let: "$a0" := (![go.string] "tableName") in
+    (FuncResolve CreateTable [] #()) "$a0") in
+    do:  ("table" <-[Table] "$r0");;;
+    let: "tableRef" := (GoAlloc (go.PointerType Table) #()) in
+    let: "$r0" := (GoAlloc Table #()) in
+    do:  ("tableRef" <-[go.PointerType Table] "$r0");;;
+    let: "$r0" := (![Table] "table") in
+    do:  ((![go.PointerType Table] "tableRef") <-[Table] "$r0");;;
+    let: "tableL" := (GoAlloc (go.PointerType sync.Mutex) #()) in
+    let: "$r0" := (GoAlloc sync.Mutex #()) in
+    do:  ("tableL" <-[go.PointerType sync.Mutex] "$r0");;;
+    let: "compactionL" := (GoAlloc (go.PointerType sync.Mutex) #()) in
+    let: "$r0" := (GoAlloc sync.Mutex #()) in
+    do:  ("compactionL" <-[go.PointerType sync.Mutex] "$r0");;;
+    return: (let: "$wbuffer" := (![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] "wbuf") in
+     let: "$rbuffer" := (![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] "rbuf") in
+     let: "$bufferL" := (![go.PointerType sync.Mutex] "bufferL") in
+     let: "$table" := (![go.PointerType Table] "tableRef") in
+     let: "$tableName" := (![go.PointerType go.string] "tableNameRef") in
+     let: "$tableL" := (![go.PointerType sync.Mutex] "tableL") in
+     let: "$compactionL" := (![go.PointerType sync.Mutex] "compactionL") in
+     CompositeLiteral Database (
+       let: "$$vs" := go.StructElementListNil #() in 
+       let: "$$vs" := go.ElementListApp "$$vs" "$wbuffer" in
+       let: "$$vs" := go.ElementListApp "$$vs" "$rbuffer" in
+       let: "$$vs" := go.ElementListApp "$$vs" "$bufferL" in
+       let: "$$vs" := go.ElementListApp "$$vs" "$table" in
+       let: "$$vs" := go.ElementListApp "$$vs" "$tableName" in
+       let: "$$vs" := go.ElementListApp "$$vs" "$tableL" in
+       let: "$$vs" := go.ElementListApp "$$vs" "$compactionL" in
+       "$$vs"
+     ))).
 
 Definition Read : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.Read"%go.
 
@@ -668,53 +687,53 @@ Definition Read : go_string := "github.com/goose-lang/goose/testdata/examples/si
    go: simpledb.go:293:6 *)
 Definition Readⁱᵐᵖˡ : val :=
   λ: "db" "k",
-    exception_do (let: "k" := (mem.alloc "k") in
-    let: "db" := (mem.alloc "db") in
-    do:  ((MethodResolve (ptrT.id sync.Mutex.id) Lock #() (![#ptrT] (struct.field_ref #Database #"bufferL"%go "db"))) #());;;
-    let: "buf" := (mem.alloc (type.zero_val (type.mapT #uint64T #sliceT))) in
-    let: "$r0" := (![type.mapT #uint64T #sliceT] (![#ptrT] (struct.field_ref #Database #"wbuffer"%go "db"))) in
-    do:  ("buf" <-[type.mapT #uint64T #sliceT] "$r0");;;
-    let: "ok" := (mem.alloc (type.zero_val #boolT)) in
-    let: "v" := (mem.alloc (type.zero_val #sliceT)) in
-    let: ("$ret0", "$ret1") := (map.get (![type.mapT #uint64T #sliceT] "buf") (![#uint64T] "k")) in
+    exception_do (let: "k" := (go.AllocValue go.uint64 "k") in
+    let: "db" := (go.AllocValue Database "db") in
+    do:  ((MethodResolve (go.PointerType sync.Mutex) Lock #() (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
+    let: "buf" := (GoAlloc (go.MapType go.uint64 (go.SliceType go.byte)) #()) in
+    let: "$r0" := (![go.MapType go.uint64 (go.SliceType go.byte)] (![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] (StructFieldRef Database "wbuffer"%go "db"))) in
+    do:  ("buf" <-[go.MapType go.uint64 (go.SliceType go.byte)] "$r0");;;
+    let: "ok" := (GoAlloc go.bool #()) in
+    let: "v" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: ("$ret0", "$ret1") := (map.get (![go.MapType go.uint64 (go.SliceType go.byte)] "buf") (![go.uint64] "k")) in
     let: "$r0" := "$ret0" in
     let: "$r1" := "$ret1" in
-    do:  ("v" <-[#sliceT] "$r0");;;
-    do:  ("ok" <-[#boolT] "$r1");;;
-    (if: ![#boolT] "ok"
+    do:  ("v" <-[go.SliceType go.byte] "$r0");;;
+    do:  ("ok" <-[go.bool] "$r1");;;
+    (if: ![go.bool] "ok"
     then
-      do:  ((MethodResolve (ptrT.id sync.Mutex.id) Unlock #() (![#ptrT] (struct.field_ref #Database #"bufferL"%go "db"))) #());;;
-      return: (![#sliceT] "v", #true)
+      do:  ((MethodResolve (go.PointerType sync.Mutex) Unlock #() (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
+      return: (![go.SliceType go.byte] "v", #true)
     else do:  #());;;
-    let: "rbuf" := (mem.alloc (type.zero_val (type.mapT #uint64T #sliceT))) in
-    let: "$r0" := (![type.mapT #uint64T #sliceT] (![#ptrT] (struct.field_ref #Database #"rbuffer"%go "db"))) in
-    do:  ("rbuf" <-[type.mapT #uint64T #sliceT] "$r0");;;
-    let: "v2" := (mem.alloc (type.zero_val #sliceT)) in
-    let: ("$ret0", "$ret1") := (map.get (![type.mapT #uint64T #sliceT] "rbuf") (![#uint64T] "k")) in
+    let: "rbuf" := (GoAlloc (go.MapType go.uint64 (go.SliceType go.byte)) #()) in
+    let: "$r0" := (![go.MapType go.uint64 (go.SliceType go.byte)] (![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] (StructFieldRef Database "rbuffer"%go "db"))) in
+    do:  ("rbuf" <-[go.MapType go.uint64 (go.SliceType go.byte)] "$r0");;;
+    let: "v2" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: ("$ret0", "$ret1") := (map.get (![go.MapType go.uint64 (go.SliceType go.byte)] "rbuf") (![go.uint64] "k")) in
     let: "$r0" := "$ret0" in
     let: "$r1" := "$ret1" in
-    do:  ("v2" <-[#sliceT] "$r0");;;
-    do:  ("ok" <-[#boolT] "$r1");;;
-    (if: ![#boolT] "ok"
+    do:  ("v2" <-[go.SliceType go.byte] "$r0");;;
+    do:  ("ok" <-[go.bool] "$r1");;;
+    (if: ![go.bool] "ok"
     then
-      do:  ((MethodResolve (ptrT.id sync.Mutex.id) Unlock #() (![#ptrT] (struct.field_ref #Database #"bufferL"%go "db"))) #());;;
-      return: (![#sliceT] "v2", #true)
+      do:  ((MethodResolve (go.PointerType sync.Mutex) Unlock #() (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
+      return: (![go.SliceType go.byte] "v2", #true)
     else do:  #());;;
-    do:  ((MethodResolve (ptrT.id sync.Mutex.id) Lock #() (![#ptrT] (struct.field_ref #Database #"tableL"%go "db"))) #());;;
-    let: "tbl" := (mem.alloc (type.zero_val #Table)) in
-    let: "$r0" := (![#Table] (![#ptrT] (struct.field_ref #Database #"table"%go "db"))) in
-    do:  ("tbl" <-[#Table] "$r0");;;
-    let: "v3" := (mem.alloc (type.zero_val #sliceT)) in
-    let: ("$ret0", "$ret1") := (let: "$a0" := (![#Table] "tbl") in
-    let: "$a1" := (![#uint64T] "k") in
-    (FuncResolve tableRead #()) "$a0" "$a1") in
+    do:  ((MethodResolve (go.PointerType sync.Mutex) Lock #() (![go.PointerType sync.Mutex] (StructFieldRef Database "tableL"%go "db"))) #());;;
+    let: "tbl" := (GoAlloc Table #()) in
+    let: "$r0" := (![Table] (![go.PointerType Table] (StructFieldRef Database "table"%go "db"))) in
+    do:  ("tbl" <-[Table] "$r0");;;
+    let: "v3" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![Table] "tbl") in
+    let: "$a1" := (![go.uint64] "k") in
+    (FuncResolve tableRead [] #()) "$a0" "$a1") in
     let: "$r0" := "$ret0" in
     let: "$r1" := "$ret1" in
-    do:  ("v3" <-[#sliceT] "$r0");;;
-    do:  ("ok" <-[#boolT] "$r1");;;
-    do:  ((MethodResolve (ptrT.id sync.Mutex.id) Unlock #() (![#ptrT] (struct.field_ref #Database #"tableL"%go "db"))) #());;;
-    do:  ((MethodResolve (ptrT.id sync.Mutex.id) Unlock #() (![#ptrT] (struct.field_ref #Database #"bufferL"%go "db"))) #());;;
-    return: (![#sliceT] "v3", ![#boolT] "ok")).
+    do:  ("v3" <-[go.SliceType go.byte] "$r0");;;
+    do:  ("ok" <-[go.bool] "$r1");;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) Unlock #() (![go.PointerType sync.Mutex] (StructFieldRef Database "tableL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) Unlock #() (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
+    return: (![go.SliceType go.byte] "v3", ![go.bool] "ok")).
 
 Definition Write : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.Write"%go.
 
@@ -728,16 +747,16 @@ Definition Write : go_string := "github.com/goose-lang/goose/testdata/examples/s
    go: simpledb.go:326:6 *)
 Definition Writeⁱᵐᵖˡ : val :=
   λ: "db" "k" "v",
-    exception_do (let: "v" := (mem.alloc "v") in
-    let: "k" := (mem.alloc "k") in
-    let: "db" := (mem.alloc "db") in
-    do:  ((MethodResolve (ptrT.id sync.Mutex.id) Lock #() (![#ptrT] (struct.field_ref #Database #"bufferL"%go "db"))) #());;;
-    let: "buf" := (mem.alloc (type.zero_val (type.mapT #uint64T #sliceT))) in
-    let: "$r0" := (![type.mapT #uint64T #sliceT] (![#ptrT] (struct.field_ref #Database #"wbuffer"%go "db"))) in
-    do:  ("buf" <-[type.mapT #uint64T #sliceT] "$r0");;;
-    let: "$r0" := (![#sliceT] "v") in
-    do:  (map.insert (![type.mapT #uint64T #sliceT] "buf") (![#uint64T] "k") "$r0");;;
-    do:  ((MethodResolve (ptrT.id sync.Mutex.id) Unlock #() (![#ptrT] (struct.field_ref #Database #"bufferL"%go "db"))) #());;;
+    exception_do (let: "v" := (go.AllocValue (go.SliceType go.byte) "v") in
+    let: "k" := (go.AllocValue go.uint64 "k") in
+    let: "db" := (go.AllocValue Database "db") in
+    do:  ((MethodResolve (go.PointerType sync.Mutex) Lock #() (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
+    let: "buf" := (GoAlloc (go.MapType go.uint64 (go.SliceType go.byte)) #()) in
+    let: "$r0" := (![go.MapType go.uint64 (go.SliceType go.byte)] (![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] (StructFieldRef Database "wbuffer"%go "db"))) in
+    do:  ("buf" <-[go.MapType go.uint64 (go.SliceType go.byte)] "$r0");;;
+    let: "$r0" := (![go.SliceType go.byte] "v") in
+    do:  (map.insert (![go.MapType go.uint64 (go.SliceType go.byte)] "buf") (![go.uint64] "k") "$r0");;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) Unlock #() (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
     return: #()).
 
 Definition freshTable : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.freshTable"%go.
@@ -745,32 +764,32 @@ Definition freshTable : go_string := "github.com/goose-lang/goose/testdata/examp
 (* go: simpledb.go:333:6 *)
 Definition freshTableⁱᵐᵖˡ : val :=
   λ: "p",
-    exception_do (let: "p" := (mem.alloc "p") in
-    (if: (![#stringT] "p") = #"table.0"%go
+    exception_do (let: "p" := (go.AllocValue go.string "p") in
+    (if: (![go.string] "p") =⟨go.string⟩ #"table.0"%go
     then return: (#"table.1"%go)
     else do:  #());;;
-    (if: (![#stringT] "p") = #"table.1"%go
+    (if: (![go.string] "p") =⟨go.string⟩ #"table.1"%go
     then return: (#"table.0"%go)
     else do:  #());;;
-    return: (![#stringT] "p")).
+    return: (![go.string] "p")).
 
 Definition tablePutBuffer : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.tablePutBuffer"%go.
 
 (* go: simpledb.go:345:6 *)
 Definition tablePutBufferⁱᵐᵖˡ : val :=
   λ: "w" "buf",
-    exception_do (let: "buf" := (mem.alloc "buf") in
-    let: "w" := (mem.alloc "w") in
-    let: "$range" := (![type.mapT #uint64T #sliceT] "buf") in
-    (let: "v" := (mem.alloc (type.zero_val #sliceT)) in
-    let: "k" := (mem.alloc (type.zero_val #uint64T)) in
+    exception_do (let: "buf" := (go.AllocValue (go.MapType go.uint64 (go.SliceType go.byte)) "buf") in
+    let: "w" := (go.AllocValue tableWriter "w") in
+    let: "$range" := (![go.MapType go.uint64 (go.SliceType go.byte)] "buf") in
+    (let: "v" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: "k" := (GoAlloc go.uint64 #()) in
     map.for_range "$range" (λ: "$key" "value",
-      do:  ("v" <-[#sliceT] "$value");;;
-      do:  ("k" <-[#uint64T] "$key");;;
-      do:  (let: "$a0" := (![#tableWriter] "w") in
-      let: "$a1" := (![#uint64T] "k") in
-      let: "$a2" := (![#sliceT] "v") in
-      (FuncResolve tablePut #()) "$a0" "$a1" "$a2")));;;
+      do:  ("v" <-[go.SliceType go.byte] "$value");;;
+      do:  ("k" <-[go.uint64] "$key");;;
+      do:  (let: "$a0" := (![tableWriter] "w") in
+      let: "$a1" := (![go.uint64] "k") in
+      let: "$a2" := (![go.SliceType go.byte] "v") in
+      (FuncResolve tablePut [] #()) "$a0" "$a1" "$a2")));;;
     return: #()).
 
 Definition tablePutOldTable : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.tablePutOldTable"%go.
@@ -781,74 +800,80 @@ Definition tablePutOldTable : go_string := "github.com/goose-lang/goose/testdata
    go: simpledb.go:353:6 *)
 Definition tablePutOldTableⁱᵐᵖˡ : val :=
   λ: "w" "t" "b",
-    exception_do (let: "b" := (mem.alloc "b") in
-    let: "t" := (mem.alloc "t") in
-    let: "w" := (mem.alloc "w") in
-    (let: "buf" := (mem.alloc (type.zero_val #lazyFileBuf)) in
+    exception_do (let: "b" := (go.AllocValue (go.MapType go.uint64 (go.SliceType go.byte)) "b") in
+    let: "t" := (go.AllocValue Table "t") in
+    let: "w" := (go.AllocValue tableWriter "w") in
+    (let: "buf" := (GoAlloc lazyFileBuf #()) in
     let: "$r0" := (let: "$offset" := #(W64 0) in
     let: "$next" := #slice.nil in
-    struct.make #lazyFileBuf [{
-      "offset" ::= "$offset";
-      "next" ::= "$next"
-    }]) in
-    do:  ("buf" <-[#lazyFileBuf] "$r0");;;
+    CompositeLiteral lazyFileBuf (
+      let: "$$vs" := go.StructElementListNil #() in 
+      let: "$$vs" := go.ElementListApp "$$vs" "$offset" in
+      let: "$$vs" := go.ElementListApp "$$vs" "$next" in
+      "$$vs"
+    )) in
+    do:  ("buf" <-[lazyFileBuf] "$r0");;;
     (for: (λ: <>, #true); (λ: <>, #()) := λ: <>,
-      let: "l" := (mem.alloc (type.zero_val #uint64T)) in
-      let: "e" := (mem.alloc (type.zero_val #Entry)) in
-      let: ("$ret0", "$ret1") := (let: "$a0" := (![#sliceT] (struct.field_ref #lazyFileBuf #"next"%go "buf")) in
-      (FuncResolve DecodeEntry #()) "$a0") in
+      let: "l" := (GoAlloc go.uint64 #()) in
+      let: "e" := (GoAlloc Entry #()) in
+      let: ("$ret0", "$ret1") := (let: "$a0" := (![go.SliceType go.byte] (StructFieldRef lazyFileBuf "next"%go "buf")) in
+      (FuncResolve DecodeEntry [] #()) "$a0") in
       let: "$r0" := "$ret0" in
       let: "$r1" := "$ret1" in
-      do:  ("e" <-[#Entry] "$r0");;;
-      do:  ("l" <-[#uint64T] "$r1");;;
-      (if: (![#uint64T] "l") > #(W64 0)
+      do:  ("e" <-[Entry] "$r0");;;
+      do:  ("l" <-[go.uint64] "$r1");;;
+      (if: (![go.uint64] "l") >⟨go.uint64⟩ #(W64 0)
       then
-        let: "ok" := (mem.alloc (type.zero_val #boolT)) in
-        let: ("$ret0", "$ret1") := (map.get (![type.mapT #uint64T #sliceT] "b") (![#uint64T] (struct.field_ref #Entry #"Key"%go "e"))) in
+        let: "ok" := (GoAlloc go.bool #()) in
+        let: ("$ret0", "$ret1") := (map.get (![go.MapType go.uint64 (go.SliceType go.byte)] "b") (![go.uint64] (StructFieldRef Entry "Key"%go "e"))) in
         let: "$r0" := "$ret0" in
         let: "$r1" := "$ret1" in
         do:  "$r0";;;
-        do:  ("ok" <-[#boolT] "$r1");;;
-        (if: (~ (![#boolT] "ok"))
+        do:  ("ok" <-[go.bool] "$r1");;;
+        (if: (~ (![go.bool] "ok"))
         then
-          do:  (let: "$a0" := (![#tableWriter] "w") in
-          let: "$a1" := (![#uint64T] (struct.field_ref #Entry #"Key"%go "e")) in
-          let: "$a2" := (![#sliceT] (struct.field_ref #Entry #"Value"%go "e")) in
-          (FuncResolve tablePut #()) "$a0" "$a1" "$a2")
+          do:  (let: "$a0" := (![tableWriter] "w") in
+          let: "$a1" := (![go.uint64] (StructFieldRef Entry "Key"%go "e")) in
+          let: "$a2" := (![go.SliceType go.byte] (StructFieldRef Entry "Value"%go "e")) in
+          (FuncResolve tablePut [] #()) "$a0" "$a1" "$a2")
         else do:  #());;;
-        let: "$r0" := (let: "$offset" := ((![#uint64T] (struct.field_ref #lazyFileBuf #"offset"%go "buf")) + (![#uint64T] "l")) in
-        let: "$next" := (let: "$s" := (![#sliceT] (struct.field_ref #lazyFileBuf #"next"%go "buf")) in
-        slice.slice #byteT "$s" (![#uint64T] "l") (slice.len "$s")) in
-        struct.make #lazyFileBuf [{
-          "offset" ::= "$offset";
-          "next" ::= "$next"
-        }]) in
-        do:  ("buf" <-[#lazyFileBuf] "$r0");;;
+        let: "$r0" := (let: "$offset" := ((![go.uint64] (StructFieldRef lazyFileBuf "offset"%go "buf")) +⟨go.uint64⟩ (![go.uint64] "l")) in
+        let: "$next" := (let: "$s" := (![go.SliceType go.byte] (StructFieldRef lazyFileBuf "next"%go "buf")) in
+        slice.slice go.byte "$s" (![go.uint64] "l") (slice.len "$s")) in
+        CompositeLiteral lazyFileBuf (
+          let: "$$vs" := go.StructElementListNil #() in 
+          let: "$$vs" := go.ElementListApp "$$vs" "$offset" in
+          let: "$$vs" := go.ElementListApp "$$vs" "$next" in
+          "$$vs"
+        )) in
+        do:  ("buf" <-[lazyFileBuf] "$r0");;;
         continue: #()
       else
-        let: "p" := (mem.alloc (type.zero_val #sliceT)) in
-        let: "$r0" := (let: "$a0" := (![#fileT] (struct.field_ref #Table #"File"%go "t")) in
-        let: "$a1" := ((![#uint64T] (struct.field_ref #lazyFileBuf #"offset"%go "buf")) + (s_to_w64 (let: "$a0" := (![#sliceT] (struct.field_ref #lazyFileBuf #"next"%go "buf")) in
-        slice.len "$a0"))) in
+        let: "p" := (GoAlloc (go.SliceType go.byte) #()) in
+        let: "$r0" := (let: "$a0" := (![filesys.File] (StructFieldRef Table "File"%go "t")) in
+        let: "$a1" := ((![go.uint64] (StructFieldRef lazyFileBuf "offset"%go "buf")) +⟨go.uint64⟩ (s_to_w64 (let: "$a0" := (![go.SliceType go.byte] (StructFieldRef lazyFileBuf "next"%go "buf")) in
+        (FuncResolve go.len [go.SliceType go.byte] #()) "$a0"))) in
         let: "$a2" := #(W64 4096) in
-        (FuncResolve filesys.ReadAt #()) "$a0" "$a1" "$a2") in
-        do:  ("p" <-[#sliceT] "$r0");;;
-        (if: (let: "$a0" := (![#sliceT] "p") in
-        slice.len "$a0") = #(W64 0)
+        (FuncResolve filesys.ReadAt [] #()) "$a0" "$a1" "$a2") in
+        do:  ("p" <-[go.SliceType go.byte] "$r0");;;
+        (if: (let: "$a0" := (![go.SliceType go.byte] "p") in
+        (FuncResolve go.len [go.SliceType go.byte] #()) "$a0") =⟨go.int⟩ #(W64 0)
         then break: #()
         else
-          let: "newBuf" := (mem.alloc (type.zero_val #sliceT)) in
-          let: "$r0" := (let: "$a0" := (![#sliceT] (struct.field_ref #lazyFileBuf #"next"%go "buf")) in
-          let: "$a1" := (![#sliceT] "p") in
-          (slice.append #byteT) "$a0" "$a1") in
-          do:  ("newBuf" <-[#sliceT] "$r0");;;
-          let: "$r0" := (let: "$offset" := (![#uint64T] (struct.field_ref #lazyFileBuf #"offset"%go "buf")) in
-          let: "$next" := (![#sliceT] "newBuf") in
-          struct.make #lazyFileBuf [{
-            "offset" ::= "$offset";
-            "next" ::= "$next"
-          }]) in
-          do:  ("buf" <-[#lazyFileBuf] "$r0");;;
+          let: "newBuf" := (GoAlloc (go.SliceType go.byte) #()) in
+          let: "$r0" := (let: "$a0" := (![go.SliceType go.byte] (StructFieldRef lazyFileBuf "next"%go "buf")) in
+          let: "$a1" := (![go.SliceType go.byte] "p") in
+          (FuncResolve go.append [go.SliceType go.byte] #()) "$a0" "$a1") in
+          do:  ("newBuf" <-[go.SliceType go.byte] "$r0");;;
+          let: "$r0" := (let: "$offset" := (![go.uint64] (StructFieldRef lazyFileBuf "offset"%go "buf")) in
+          let: "$next" := (![go.SliceType go.byte] "newBuf") in
+          CompositeLiteral lazyFileBuf (
+            let: "$$vs" := go.StructElementListNil #() in 
+            let: "$$vs" := go.ElementListApp "$$vs" "$offset" in
+            let: "$$vs" := go.ElementListApp "$$vs" "$next" in
+            "$$vs"
+          )) in
+          do:  ("buf" <-[lazyFileBuf] "$r0");;;
           continue: #()))));;;
     return: #()).
 
@@ -864,34 +889,34 @@ Definition constructNewTable : go_string := "github.com/goose-lang/goose/testdat
    go: simpledb.go:388:6 *)
 Definition constructNewTableⁱᵐᵖˡ : val :=
   λ: "db" "wbuf",
-    exception_do (let: "wbuf" := (mem.alloc "wbuf") in
-    let: "db" := (mem.alloc "db") in
-    let: "oldName" := (mem.alloc (type.zero_val #stringT)) in
-    let: "$r0" := (![#stringT] (![#ptrT] (struct.field_ref #Database #"tableName"%go "db"))) in
-    do:  ("oldName" <-[#stringT] "$r0");;;
-    let: "name" := (mem.alloc (type.zero_val #stringT)) in
-    let: "$r0" := (let: "$a0" := (![#stringT] "oldName") in
-    (FuncResolve freshTable #()) "$a0") in
-    do:  ("name" <-[#stringT] "$r0");;;
-    let: "w" := (mem.alloc (type.zero_val #tableWriter)) in
-    let: "$r0" := (let: "$a0" := (![#stringT] "name") in
-    (FuncResolve newTableWriter #()) "$a0") in
-    do:  ("w" <-[#tableWriter] "$r0");;;
-    let: "oldTable" := (mem.alloc (type.zero_val #Table)) in
-    let: "$r0" := (![#Table] (![#ptrT] (struct.field_ref #Database #"table"%go "db"))) in
-    do:  ("oldTable" <-[#Table] "$r0");;;
-    do:  (let: "$a0" := (![#tableWriter] "w") in
-    let: "$a1" := (![#Table] "oldTable") in
-    let: "$a2" := (![type.mapT #uint64T #sliceT] "wbuf") in
-    (FuncResolve tablePutOldTable #()) "$a0" "$a1" "$a2");;;
-    do:  (let: "$a0" := (![#tableWriter] "w") in
-    let: "$a1" := (![type.mapT #uint64T #sliceT] "wbuf") in
-    (FuncResolve tablePutBuffer #()) "$a0" "$a1");;;
-    let: "newTable" := (mem.alloc (type.zero_val #Table)) in
-    let: "$r0" := (let: "$a0" := (![#tableWriter] "w") in
-    (FuncResolve tableWriterClose #()) "$a0") in
-    do:  ("newTable" <-[#Table] "$r0");;;
-    return: (![#Table] "oldTable", ![#Table] "newTable")).
+    exception_do (let: "wbuf" := (go.AllocValue (go.MapType go.uint64 (go.SliceType go.byte)) "wbuf") in
+    let: "db" := (go.AllocValue Database "db") in
+    let: "oldName" := (GoAlloc go.string #()) in
+    let: "$r0" := (![go.string] (![go.PointerType go.string] (StructFieldRef Database "tableName"%go "db"))) in
+    do:  ("oldName" <-[go.string] "$r0");;;
+    let: "name" := (GoAlloc go.string #()) in
+    let: "$r0" := (let: "$a0" := (![go.string] "oldName") in
+    (FuncResolve freshTable [] #()) "$a0") in
+    do:  ("name" <-[go.string] "$r0");;;
+    let: "w" := (GoAlloc tableWriter #()) in
+    let: "$r0" := (let: "$a0" := (![go.string] "name") in
+    (FuncResolve newTableWriter [] #()) "$a0") in
+    do:  ("w" <-[tableWriter] "$r0");;;
+    let: "oldTable" := (GoAlloc Table #()) in
+    let: "$r0" := (![Table] (![go.PointerType Table] (StructFieldRef Database "table"%go "db"))) in
+    do:  ("oldTable" <-[Table] "$r0");;;
+    do:  (let: "$a0" := (![tableWriter] "w") in
+    let: "$a1" := (![Table] "oldTable") in
+    let: "$a2" := (![go.MapType go.uint64 (go.SliceType go.byte)] "wbuf") in
+    (FuncResolve tablePutOldTable [] #()) "$a0" "$a1" "$a2");;;
+    do:  (let: "$a0" := (![tableWriter] "w") in
+    let: "$a1" := (![go.MapType go.uint64 (go.SliceType go.byte)] "wbuf") in
+    (FuncResolve tablePutBuffer [] #()) "$a0" "$a1");;;
+    let: "newTable" := (GoAlloc Table #()) in
+    let: "$r0" := (let: "$a0" := (![tableWriter] "w") in
+    (FuncResolve tableWriterClose [] #()) "$a0") in
+    do:  ("newTable" <-[Table] "$r0");;;
+    return: (![Table] "oldTable", ![Table] "newTable")).
 
 Definition Compact : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.Compact"%go.
 
@@ -903,55 +928,55 @@ Definition Compact : go_string := "github.com/goose-lang/goose/testdata/examples
    go: simpledb.go:405:6 *)
 Definition Compactⁱᵐᵖˡ : val :=
   λ: "db",
-    exception_do (let: "db" := (mem.alloc "db") in
-    do:  ((MethodResolve (ptrT.id sync.Mutex.id) Lock #() (![#ptrT] (struct.field_ref #Database #"compactionL"%go "db"))) #());;;
-    do:  ((MethodResolve (ptrT.id sync.Mutex.id) Lock #() (![#ptrT] (struct.field_ref #Database #"bufferL"%go "db"))) #());;;
-    let: "buf" := (mem.alloc (type.zero_val (type.mapT #uint64T #sliceT))) in
-    let: "$r0" := (![type.mapT #uint64T #sliceT] (![#ptrT] (struct.field_ref #Database #"wbuffer"%go "db"))) in
-    do:  ("buf" <-[type.mapT #uint64T #sliceT] "$r0");;;
-    let: "emptyWbuffer" := (mem.alloc (type.zero_val (type.mapT #uint64T #sliceT))) in
-    let: "$r0" := (map.make #uint64T #sliceT) in
-    do:  ("emptyWbuffer" <-[type.mapT #uint64T #sliceT] "$r0");;;
-    let: "$r0" := (![type.mapT #uint64T #sliceT] "emptyWbuffer") in
-    do:  ((![#ptrT] (struct.field_ref #Database #"wbuffer"%go "db")) <-[type.mapT #uint64T #sliceT] "$r0");;;
-    let: "$r0" := (![type.mapT #uint64T #sliceT] "buf") in
-    do:  ((![#ptrT] (struct.field_ref #Database #"rbuffer"%go "db")) <-[type.mapT #uint64T #sliceT] "$r0");;;
-    do:  ((MethodResolve (ptrT.id sync.Mutex.id) Unlock #() (![#ptrT] (struct.field_ref #Database #"bufferL"%go "db"))) #());;;
-    do:  ((MethodResolve (ptrT.id sync.Mutex.id) Lock #() (![#ptrT] (struct.field_ref #Database #"tableL"%go "db"))) #());;;
-    let: "oldTableName" := (mem.alloc (type.zero_val #stringT)) in
-    let: "$r0" := (![#stringT] (![#ptrT] (struct.field_ref #Database #"tableName"%go "db"))) in
-    do:  ("oldTableName" <-[#stringT] "$r0");;;
-    let: "t" := (mem.alloc (type.zero_val #Table)) in
-    let: "oldTable" := (mem.alloc (type.zero_val #Table)) in
-    let: ("$ret0", "$ret1") := (let: "$a0" := (![#Database] "db") in
-    let: "$a1" := (![type.mapT #uint64T #sliceT] "buf") in
-    (FuncResolve constructNewTable #()) "$a0" "$a1") in
+    exception_do (let: "db" := (go.AllocValue Database "db") in
+    do:  ((MethodResolve (go.PointerType sync.Mutex) Lock #() (![go.PointerType sync.Mutex] (StructFieldRef Database "compactionL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) Lock #() (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
+    let: "buf" := (GoAlloc (go.MapType go.uint64 (go.SliceType go.byte)) #()) in
+    let: "$r0" := (![go.MapType go.uint64 (go.SliceType go.byte)] (![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] (StructFieldRef Database "wbuffer"%go "db"))) in
+    do:  ("buf" <-[go.MapType go.uint64 (go.SliceType go.byte)] "$r0");;;
+    let: "emptyWbuffer" := (GoAlloc (go.MapType go.uint64 (go.SliceType go.byte)) #()) in
+    let: "$r0" := ((FuncResolve go.make1 [go.MapType go.uint64 (go.SliceType go.byte)] #()) #()) in
+    do:  ("emptyWbuffer" <-[go.MapType go.uint64 (go.SliceType go.byte)] "$r0");;;
+    let: "$r0" := (![go.MapType go.uint64 (go.SliceType go.byte)] "emptyWbuffer") in
+    do:  ((![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] (StructFieldRef Database "wbuffer"%go "db")) <-[go.MapType go.uint64 (go.SliceType go.byte)] "$r0");;;
+    let: "$r0" := (![go.MapType go.uint64 (go.SliceType go.byte)] "buf") in
+    do:  ((![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] (StructFieldRef Database "rbuffer"%go "db")) <-[go.MapType go.uint64 (go.SliceType go.byte)] "$r0");;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) Unlock #() (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) Lock #() (![go.PointerType sync.Mutex] (StructFieldRef Database "tableL"%go "db"))) #());;;
+    let: "oldTableName" := (GoAlloc go.string #()) in
+    let: "$r0" := (![go.string] (![go.PointerType go.string] (StructFieldRef Database "tableName"%go "db"))) in
+    do:  ("oldTableName" <-[go.string] "$r0");;;
+    let: "t" := (GoAlloc Table #()) in
+    let: "oldTable" := (GoAlloc Table #()) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![Database] "db") in
+    let: "$a1" := (![go.MapType go.uint64 (go.SliceType go.byte)] "buf") in
+    (FuncResolve constructNewTable [] #()) "$a0" "$a1") in
     let: "$r0" := "$ret0" in
     let: "$r1" := "$ret1" in
-    do:  ("oldTable" <-[#Table] "$r0");;;
-    do:  ("t" <-[#Table] "$r1");;;
-    let: "newTable" := (mem.alloc (type.zero_val #stringT)) in
-    let: "$r0" := (let: "$a0" := (![#stringT] "oldTableName") in
-    (FuncResolve freshTable #()) "$a0") in
-    do:  ("newTable" <-[#stringT] "$r0");;;
-    let: "$r0" := (![#Table] "t") in
-    do:  ((![#ptrT] (struct.field_ref #Database #"table"%go "db")) <-[#Table] "$r0");;;
-    let: "$r0" := (![#stringT] "newTable") in
-    do:  ((![#ptrT] (struct.field_ref #Database #"tableName"%go "db")) <-[#stringT] "$r0");;;
-    let: "manifestData" := (mem.alloc (type.zero_val #sliceT)) in
-    let: "$r0" := (string.to_bytes (![#stringT] "newTable")) in
-    do:  ("manifestData" <-[#sliceT] "$r0");;;
+    do:  ("oldTable" <-[Table] "$r0");;;
+    do:  ("t" <-[Table] "$r1");;;
+    let: "newTable" := (GoAlloc go.string #()) in
+    let: "$r0" := (let: "$a0" := (![go.string] "oldTableName") in
+    (FuncResolve freshTable [] #()) "$a0") in
+    do:  ("newTable" <-[go.string] "$r0");;;
+    let: "$r0" := (![Table] "t") in
+    do:  ((![go.PointerType Table] (StructFieldRef Database "table"%go "db")) <-[Table] "$r0");;;
+    let: "$r0" := (![go.string] "newTable") in
+    do:  ((![go.PointerType go.string] (StructFieldRef Database "tableName"%go "db")) <-[go.string] "$r0");;;
+    let: "manifestData" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: "$r0" := (string.to_bytes (![go.string] "newTable")) in
+    do:  ("manifestData" <-[go.SliceType go.byte] "$r0");;;
     do:  (let: "$a0" := #"db"%go in
     let: "$a1" := #"manifest"%go in
-    let: "$a2" := (![#sliceT] "manifestData") in
-    (FuncResolve filesys.AtomicCreate #()) "$a0" "$a1" "$a2");;;
-    do:  (let: "$a0" := (![#Table] "oldTable") in
-    (FuncResolve CloseTable #()) "$a0");;;
+    let: "$a2" := (![go.SliceType go.byte] "manifestData") in
+    (FuncResolve filesys.AtomicCreate [] #()) "$a0" "$a1" "$a2");;;
+    do:  (let: "$a0" := (![Table] "oldTable") in
+    (FuncResolve CloseTable [] #()) "$a0");;;
     do:  (let: "$a0" := #"db"%go in
-    let: "$a1" := (![#stringT] "oldTableName") in
-    (FuncResolve filesys.Delete #()) "$a0" "$a1");;;
-    do:  ((MethodResolve (ptrT.id sync.Mutex.id) Unlock #() (![#ptrT] (struct.field_ref #Database #"tableL"%go "db"))) #());;;
-    do:  ((MethodResolve (ptrT.id sync.Mutex.id) Unlock #() (![#ptrT] (struct.field_ref #Database #"compactionL"%go "db"))) #());;;
+    let: "$a1" := (![go.string] "oldTableName") in
+    (FuncResolve filesys.Delete [] #()) "$a0" "$a1");;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) Unlock #() (![go.PointerType sync.Mutex] (StructFieldRef Database "tableL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) Unlock #() (![go.PointerType sync.Mutex] (StructFieldRef Database "compactionL"%go "db"))) #());;;
     return: #()).
 
 Definition recoverManifest : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.recoverManifest"%go.
@@ -959,23 +984,23 @@ Definition recoverManifest : go_string := "github.com/goose-lang/goose/testdata/
 (* go: simpledb.go:450:6 *)
 Definition recoverManifestⁱᵐᵖˡ : val :=
   λ: <>,
-    exception_do (let: "f" := (mem.alloc (type.zero_val #fileT)) in
+    exception_do (let: "f" := (GoAlloc filesys.File #()) in
     let: "$r0" := (let: "$a0" := #"db"%go in
     let: "$a1" := #"manifest"%go in
-    (FuncResolve filesys.Open #()) "$a0" "$a1") in
-    do:  ("f" <-[#fileT] "$r0");;;
-    let: "manifestData" := (mem.alloc (type.zero_val #sliceT)) in
-    let: "$r0" := (let: "$a0" := (![#fileT] "f") in
+    (FuncResolve filesys.Open [] #()) "$a0" "$a1") in
+    do:  ("f" <-[filesys.File] "$r0");;;
+    let: "manifestData" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: "$r0" := (let: "$a0" := (![filesys.File] "f") in
     let: "$a1" := #(W64 0) in
     let: "$a2" := #(W64 4096) in
-    (FuncResolve filesys.ReadAt #()) "$a0" "$a1" "$a2") in
-    do:  ("manifestData" <-[#sliceT] "$r0");;;
-    let: "tableName" := (mem.alloc (type.zero_val #stringT)) in
-    let: "$r0" := (string.from_bytes (![#sliceT] "manifestData")) in
-    do:  ("tableName" <-[#stringT] "$r0");;;
-    do:  (let: "$a0" := (![#fileT] "f") in
-    (FuncResolve filesys.Close #()) "$a0");;;
-    return: (![#stringT] "tableName")).
+    (FuncResolve filesys.ReadAt [] #()) "$a0" "$a1" "$a2") in
+    do:  ("manifestData" <-[go.SliceType go.byte] "$r0");;;
+    let: "tableName" := (GoAlloc go.string #()) in
+    let: "$r0" := (string.from_bytes (![go.SliceType go.byte] "manifestData")) in
+    do:  ("tableName" <-[go.string] "$r0");;;
+    do:  (let: "$a0" := (![filesys.File] "f") in
+    (FuncResolve filesys.Close [] #()) "$a0");;;
+    return: (![go.string] "tableName")).
 
 Definition deleteOtherFile : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.deleteOtherFile"%go.
 
@@ -984,17 +1009,17 @@ Definition deleteOtherFile : go_string := "github.com/goose-lang/goose/testdata/
    go: simpledb.go:464:6 *)
 Definition deleteOtherFileⁱᵐᵖˡ : val :=
   λ: "name" "tableName",
-    exception_do (let: "tableName" := (mem.alloc "tableName") in
-    let: "name" := (mem.alloc "name") in
-    (if: (![#stringT] "name") = (![#stringT] "tableName")
+    exception_do (let: "tableName" := (go.AllocValue go.string "tableName") in
+    let: "name" := (go.AllocValue go.string "name") in
+    (if: (![go.string] "name") =⟨go.string⟩ (![go.string] "tableName")
     then return: (#())
     else do:  #());;;
-    (if: (![#stringT] "name") = #"manifest"%go
+    (if: (![go.string] "name") =⟨go.string⟩ #"manifest"%go
     then return: (#())
     else do:  #());;;
     do:  (let: "$a0" := #"db"%go in
-    let: "$a1" := (![#stringT] "name") in
-    (FuncResolve filesys.Delete #()) "$a0" "$a1");;;
+    let: "$a1" := (![go.string] "name") in
+    (FuncResolve filesys.Delete [] #()) "$a0" "$a1");;;
     return: #()).
 
 Definition deleteOtherFiles : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.deleteOtherFiles"%go.
@@ -1002,30 +1027,30 @@ Definition deleteOtherFiles : go_string := "github.com/goose-lang/goose/testdata
 (* go: simpledb.go:474:6 *)
 Definition deleteOtherFilesⁱᵐᵖˡ : val :=
   λ: "tableName",
-    exception_do (let: "tableName" := (mem.alloc "tableName") in
-    let: "files" := (mem.alloc (type.zero_val #sliceT)) in
+    exception_do (let: "tableName" := (go.AllocValue go.string "tableName") in
+    let: "files" := (GoAlloc (go.SliceType go.string) #()) in
     let: "$r0" := (let: "$a0" := #"db"%go in
-    (FuncResolve filesys.List #()) "$a0") in
-    do:  ("files" <-[#sliceT] "$r0");;;
-    let: "nfiles" := (mem.alloc (type.zero_val #uint64T)) in
-    let: "$r0" := (s_to_w64 (let: "$a0" := (![#sliceT] "files") in
-    slice.len "$a0")) in
-    do:  ("nfiles" <-[#uint64T] "$r0");;;
-    (let: "i" := (mem.alloc (type.zero_val #uint64T)) in
+    (FuncResolve filesys.List [] #()) "$a0") in
+    do:  ("files" <-[go.SliceType go.string] "$r0");;;
+    let: "nfiles" := (GoAlloc go.uint64 #()) in
+    let: "$r0" := (s_to_w64 (let: "$a0" := (![go.SliceType go.string] "files") in
+    (FuncResolve go.len [go.SliceType go.string] #()) "$a0")) in
+    do:  ("nfiles" <-[go.uint64] "$r0");;;
+    (let: "i" := (GoAlloc go.uint64 #()) in
     let: "$r0" := #(W64 0) in
-    do:  ("i" <-[#uint64T] "$r0");;;
+    do:  ("i" <-[go.uint64] "$r0");;;
     (for: (λ: <>, #true); (λ: <>, #()) := λ: <>,
-      (if: (![#uint64T] "i") = (![#uint64T] "nfiles")
+      (if: (![go.uint64] "i") =⟨go.uint64⟩ (![go.uint64] "nfiles")
       then break: #()
       else do:  #());;;
-      let: "name" := (mem.alloc (type.zero_val #stringT)) in
-      let: "$r0" := (![#stringT] (slice.elem_ref #stringT (![#sliceT] "files") (![#uint64T] "i"))) in
-      do:  ("name" <-[#stringT] "$r0");;;
-      do:  (let: "$a0" := (![#stringT] "name") in
-      let: "$a1" := (![#stringT] "tableName") in
-      (FuncResolve deleteOtherFile #()) "$a0" "$a1");;;
-      let: "$r0" := ((![#uint64T] "i") + #(W64 1)) in
-      do:  ("i" <-[#uint64T] "$r0");;;
+      let: "name" := (GoAlloc go.string #()) in
+      let: "$r0" := (![go.string] (slice.elem_ref go.string (![go.SliceType go.string] "files") (![go.uint64] "i"))) in
+      do:  ("name" <-[go.string] "$r0");;;
+      do:  (let: "$a0" := (![go.string] "name") in
+      let: "$a1" := (![go.string] "tableName") in
+      (FuncResolve deleteOtherFile [] #()) "$a0" "$a1");;;
+      let: "$r0" := ((![go.uint64] "i") +⟨go.uint64⟩ #(W64 1)) in
+      do:  ("i" <-[go.uint64] "$r0");;;
       continue: #()));;;
     return: #()).
 
@@ -1036,56 +1061,58 @@ Definition Recover : go_string := "github.com/goose-lang/goose/testdata/examples
    go: simpledb.go:489:6 *)
 Definition Recoverⁱᵐᵖˡ : val :=
   λ: <>,
-    exception_do (let: "tableName" := (mem.alloc (type.zero_val #stringT)) in
-    let: "$r0" := ((FuncResolve recoverManifest #()) #()) in
-    do:  ("tableName" <-[#stringT] "$r0");;;
-    let: "table" := (mem.alloc (type.zero_val #Table)) in
-    let: "$r0" := (let: "$a0" := (![#stringT] "tableName") in
-    (FuncResolve RecoverTable #()) "$a0") in
-    do:  ("table" <-[#Table] "$r0");;;
-    let: "tableRef" := (mem.alloc (type.zero_val #ptrT)) in
-    let: "$r0" := (mem.alloc (type.zero_val #Table)) in
-    do:  ("tableRef" <-[#ptrT] "$r0");;;
-    let: "$r0" := (![#Table] "table") in
-    do:  ((![#ptrT] "tableRef") <-[#Table] "$r0");;;
-    let: "tableNameRef" := (mem.alloc (type.zero_val #ptrT)) in
-    let: "$r0" := (mem.alloc (type.zero_val #stringT)) in
-    do:  ("tableNameRef" <-[#ptrT] "$r0");;;
-    let: "$r0" := (![#stringT] "tableName") in
-    do:  ((![#ptrT] "tableNameRef") <-[#stringT] "$r0");;;
-    do:  (let: "$a0" := (![#stringT] "tableName") in
-    (FuncResolve deleteOtherFiles #()) "$a0");;;
-    let: "wbuffer" := (mem.alloc (type.zero_val #ptrT)) in
-    let: "$r0" := ((FuncResolve makeValueBuffer #()) #()) in
-    do:  ("wbuffer" <-[#ptrT] "$r0");;;
-    let: "rbuffer" := (mem.alloc (type.zero_val #ptrT)) in
-    let: "$r0" := ((FuncResolve makeValueBuffer #()) #()) in
-    do:  ("rbuffer" <-[#ptrT] "$r0");;;
-    let: "bufferL" := (mem.alloc (type.zero_val #ptrT)) in
-    let: "$r0" := (mem.alloc (type.zero_val #sync.Mutex)) in
-    do:  ("bufferL" <-[#ptrT] "$r0");;;
-    let: "tableL" := (mem.alloc (type.zero_val #ptrT)) in
-    let: "$r0" := (mem.alloc (type.zero_val #sync.Mutex)) in
-    do:  ("tableL" <-[#ptrT] "$r0");;;
-    let: "compactionL" := (mem.alloc (type.zero_val #ptrT)) in
-    let: "$r0" := (mem.alloc (type.zero_val #sync.Mutex)) in
-    do:  ("compactionL" <-[#ptrT] "$r0");;;
-    return: (let: "$wbuffer" := (![#ptrT] "wbuffer") in
-     let: "$rbuffer" := (![#ptrT] "rbuffer") in
-     let: "$bufferL" := (![#ptrT] "bufferL") in
-     let: "$table" := (![#ptrT] "tableRef") in
-     let: "$tableName" := (![#ptrT] "tableNameRef") in
-     let: "$tableL" := (![#ptrT] "tableL") in
-     let: "$compactionL" := (![#ptrT] "compactionL") in
-     struct.make #Database [{
-       "wbuffer" ::= "$wbuffer";
-       "rbuffer" ::= "$rbuffer";
-       "bufferL" ::= "$bufferL";
-       "table" ::= "$table";
-       "tableName" ::= "$tableName";
-       "tableL" ::= "$tableL";
-       "compactionL" ::= "$compactionL"
-     }])).
+    exception_do (let: "tableName" := (GoAlloc go.string #()) in
+    let: "$r0" := ((FuncResolve recoverManifest [] #()) #()) in
+    do:  ("tableName" <-[go.string] "$r0");;;
+    let: "table" := (GoAlloc Table #()) in
+    let: "$r0" := (let: "$a0" := (![go.string] "tableName") in
+    (FuncResolve RecoverTable [] #()) "$a0") in
+    do:  ("table" <-[Table] "$r0");;;
+    let: "tableRef" := (GoAlloc (go.PointerType Table) #()) in
+    let: "$r0" := (GoAlloc Table #()) in
+    do:  ("tableRef" <-[go.PointerType Table] "$r0");;;
+    let: "$r0" := (![Table] "table") in
+    do:  ((![go.PointerType Table] "tableRef") <-[Table] "$r0");;;
+    let: "tableNameRef" := (GoAlloc (go.PointerType go.string) #()) in
+    let: "$r0" := (GoAlloc go.string #()) in
+    do:  ("tableNameRef" <-[go.PointerType go.string] "$r0");;;
+    let: "$r0" := (![go.string] "tableName") in
+    do:  ((![go.PointerType go.string] "tableNameRef") <-[go.string] "$r0");;;
+    do:  (let: "$a0" := (![go.string] "tableName") in
+    (FuncResolve deleteOtherFiles [] #()) "$a0");;;
+    let: "wbuffer" := (GoAlloc (go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))) #()) in
+    let: "$r0" := ((FuncResolve makeValueBuffer [] #()) #()) in
+    do:  ("wbuffer" <-[go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] "$r0");;;
+    let: "rbuffer" := (GoAlloc (go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))) #()) in
+    let: "$r0" := ((FuncResolve makeValueBuffer [] #()) #()) in
+    do:  ("rbuffer" <-[go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] "$r0");;;
+    let: "bufferL" := (GoAlloc (go.PointerType sync.Mutex) #()) in
+    let: "$r0" := (GoAlloc sync.Mutex #()) in
+    do:  ("bufferL" <-[go.PointerType sync.Mutex] "$r0");;;
+    let: "tableL" := (GoAlloc (go.PointerType sync.Mutex) #()) in
+    let: "$r0" := (GoAlloc sync.Mutex #()) in
+    do:  ("tableL" <-[go.PointerType sync.Mutex] "$r0");;;
+    let: "compactionL" := (GoAlloc (go.PointerType sync.Mutex) #()) in
+    let: "$r0" := (GoAlloc sync.Mutex #()) in
+    do:  ("compactionL" <-[go.PointerType sync.Mutex] "$r0");;;
+    return: (let: "$wbuffer" := (![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] "wbuffer") in
+     let: "$rbuffer" := (![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] "rbuffer") in
+     let: "$bufferL" := (![go.PointerType sync.Mutex] "bufferL") in
+     let: "$table" := (![go.PointerType Table] "tableRef") in
+     let: "$tableName" := (![go.PointerType go.string] "tableNameRef") in
+     let: "$tableL" := (![go.PointerType sync.Mutex] "tableL") in
+     let: "$compactionL" := (![go.PointerType sync.Mutex] "compactionL") in
+     CompositeLiteral Database (
+       let: "$$vs" := go.StructElementListNil #() in 
+       let: "$$vs" := go.ElementListApp "$$vs" "$wbuffer" in
+       let: "$$vs" := go.ElementListApp "$$vs" "$rbuffer" in
+       let: "$$vs" := go.ElementListApp "$$vs" "$bufferL" in
+       let: "$$vs" := go.ElementListApp "$$vs" "$table" in
+       let: "$$vs" := go.ElementListApp "$$vs" "$tableName" in
+       let: "$$vs" := go.ElementListApp "$$vs" "$tableL" in
+       let: "$$vs" := go.ElementListApp "$$vs" "$compactionL" in
+       "$$vs"
+     ))).
 
 Definition Shutdown : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.Shutdown"%go.
 
@@ -1097,16 +1124,16 @@ Definition Shutdown : go_string := "github.com/goose-lang/goose/testdata/example
    go: simpledb.go:520:6 *)
 Definition Shutdownⁱᵐᵖˡ : val :=
   λ: "db",
-    exception_do (let: "db" := (mem.alloc "db") in
-    do:  ((MethodResolve (ptrT.id sync.Mutex.id) Lock #() (![#ptrT] (struct.field_ref #Database #"bufferL"%go "db"))) #());;;
-    do:  ((MethodResolve (ptrT.id sync.Mutex.id) Lock #() (![#ptrT] (struct.field_ref #Database #"compactionL"%go "db"))) #());;;
-    let: "t" := (mem.alloc (type.zero_val #Table)) in
-    let: "$r0" := (![#Table] (![#ptrT] (struct.field_ref #Database #"table"%go "db"))) in
-    do:  ("t" <-[#Table] "$r0");;;
-    do:  (let: "$a0" := (![#Table] "t") in
-    (FuncResolve CloseTable #()) "$a0");;;
-    do:  ((MethodResolve (ptrT.id sync.Mutex.id) Unlock #() (![#ptrT] (struct.field_ref #Database #"compactionL"%go "db"))) #());;;
-    do:  ((MethodResolve (ptrT.id sync.Mutex.id) Unlock #() (![#ptrT] (struct.field_ref #Database #"bufferL"%go "db"))) #());;;
+    exception_do (let: "db" := (go.AllocValue Database "db") in
+    do:  ((MethodResolve (go.PointerType sync.Mutex) Lock #() (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) Lock #() (![go.PointerType sync.Mutex] (StructFieldRef Database "compactionL"%go "db"))) #());;;
+    let: "t" := (GoAlloc Table #()) in
+    let: "$r0" := (![Table] (![go.PointerType Table] (StructFieldRef Database "table"%go "db"))) in
+    do:  ("t" <-[Table] "$r0");;;
+    do:  (let: "$a0" := (![Table] "t") in
+    (FuncResolve CloseTable [] #()) "$a0");;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) Unlock #() (![go.PointerType sync.Mutex] (StructFieldRef Database "compactionL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) Unlock #() (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
     return: #()).
 
 Definition Close : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.Close"%go.
@@ -1118,35 +1145,27 @@ Definition Close : go_string := "github.com/goose-lang/goose/testdata/examples/s
    go: simpledb.go:534:6 *)
 Definition Closeⁱᵐᵖˡ : val :=
   λ: "db",
-    exception_do (let: "db" := (mem.alloc "db") in
-    do:  (let: "$a0" := (![#Database] "db") in
-    (FuncResolve Compact #()) "$a0");;;
-    do:  (let: "$a0" := (![#Database] "db") in
-    (FuncResolve Shutdown #()) "$a0");;;
+    exception_do (let: "db" := (go.AllocValue Database "db") in
+    do:  (let: "$a0" := (![Database] "db") in
+    (FuncResolve Compact [] #()) "$a0");;;
+    do:  (let: "$a0" := (![Database] "db") in
+    (FuncResolve Shutdown [] #()) "$a0");;;
     return: #()).
-
-Definition vars' : list (go_string * go.type) := [].
 
 Definition functions' : list (go_string * val) := [(UseMarshal, UseMarshalⁱᵐᵖˡ); (CreateTable, CreateTableⁱᵐᵖˡ); (DecodeUInt64, DecodeUInt64ⁱᵐᵖˡ); (DecodeEntry, DecodeEntryⁱᵐᵖˡ); (readTableIndex, readTableIndexⁱᵐᵖˡ); (RecoverTable, RecoverTableⁱᵐᵖˡ); (CloseTable, CloseTableⁱᵐᵖˡ); (readValue, readValueⁱᵐᵖˡ); (tableRead, tableReadⁱᵐᵖˡ); (newBuf, newBufⁱᵐᵖˡ); (bufFlush, bufFlushⁱᵐᵖˡ); (bufAppend, bufAppendⁱᵐᵖˡ); (bufClose, bufCloseⁱᵐᵖˡ); (newTableWriter, newTableWriterⁱᵐᵖˡ); (tableWriterAppend, tableWriterAppendⁱᵐᵖˡ); (tableWriterClose, tableWriterCloseⁱᵐᵖˡ); (EncodeUInt64, EncodeUInt64ⁱᵐᵖˡ); (EncodeSlice, EncodeSliceⁱᵐᵖˡ); (tablePut, tablePutⁱᵐᵖˡ); (makeValueBuffer, makeValueBufferⁱᵐᵖˡ); (NewDb, NewDbⁱᵐᵖˡ); (Read, Readⁱᵐᵖˡ); (Write, Writeⁱᵐᵖˡ); (freshTable, freshTableⁱᵐᵖˡ); (tablePutBuffer, tablePutBufferⁱᵐᵖˡ); (tablePutOldTable, tablePutOldTableⁱᵐᵖˡ); (constructNewTable, constructNewTableⁱᵐᵖˡ); (Compact, Compactⁱᵐᵖˡ); (recoverManifest, recoverManifestⁱᵐᵖˡ); (deleteOtherFile, deleteOtherFileⁱᵐᵖˡ); (deleteOtherFiles, deleteOtherFilesⁱᵐᵖˡ); (Recover, Recoverⁱᵐᵖˡ); (Shutdown, Shutdownⁱᵐᵖˡ); (Close, Closeⁱᵐᵖˡ)].
 
-Definition msets' : list (go_string * (list (go_string * val))) := [(Table.id, []); (ptrT.id Table.id, []); (Entry.id, []); (ptrT.id Entry.id, []); (lazyFileBuf.id, []); (ptrT.id lazyFileBuf.id, []); (bufFile.id, []); (ptrT.id bufFile.id, []); (tableWriter.id, []); (ptrT.id tableWriter.id, []); (Database.id, []); (ptrT.id Database.id, [])].
-
 #[global] Instance info' : PkgInfo simpledb.simpledb :=
   {|
-    pkg_vars := vars';
-    pkg_functions := functions';
-    pkg_msets := msets';
     pkg_imported_pkgs := [code.sync.sync; code.github_com.goose_lang.primitive.primitive; code.github_com.goose_lang.primitive.filesys.filesys; code.github_com.tchajed.marshal.marshal];
   |}.
 
 Definition initialize' : val :=
   λ: <>,
-    package.init #simpledb.simpledb (λ: <>,
+    package.init simpledb.simpledb (λ: <>,
       exception_do (do:  (marshal.initialize' #());;;
       do:  (filesys.initialize' #());;;
       do:  (primitive.initialize' #());;;
-      do:  (sync.initialize' #());;;
-      do:  (package.alloc simpledb.simpledb #()))
+      do:  (sync.initialize' #()))
       ).
 
 End code.

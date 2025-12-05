@@ -16,33 +16,26 @@ Definition B : go_string := "github.com/goose-lang/goose/testdata/examples/mutua
 (* go: mutualrec.go:3:6 *)
 Definition Aⁱᵐᵖˡ : val :=
   λ: <>,
-    exception_do (do:  ((FuncResolve B #()) #());;;
+    exception_do (do:  ((FuncResolve B [] #()) #());;;
     return: #()).
 
 (* go: mutualrec.go:7:6 *)
 Definition Bⁱᵐᵖˡ : val :=
   λ: <>,
-    exception_do (do:  ((FuncResolve A #()) #());;;
+    exception_do (do:  ((FuncResolve A [] #()) #());;;
     return: #()).
-
-Definition vars' : list (go_string * go.type) := [].
 
 Definition functions' : list (go_string * val) := [(A, Aⁱᵐᵖˡ); (B, Bⁱᵐᵖˡ)].
 
-Definition msets' : list (go_string * (list (go_string * val))) := [].
-
 #[global] Instance info' : PkgInfo mutualrec.mutualrec :=
   {|
-    pkg_vars := vars';
-    pkg_functions := functions';
-    pkg_msets := msets';
     pkg_imported_pkgs := [];
   |}.
 
 Definition initialize' : val :=
   λ: <>,
-    package.init #mutualrec.mutualrec (λ: <>,
-      exception_do (do:  (package.alloc mutualrec.mutualrec #()))
+    package.init mutualrec.mutualrec (λ: <>,
+      exception_do (do:  #())
       ).
 
 End code.

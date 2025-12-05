@@ -15,7 +15,7 @@ Definition TakesDisk : go_string := "github.com/goose-lang/goose/testdata/exampl
 (* go: async.go:6:6 *)
 Definition TakesDiskⁱᵐᵖˡ : val :=
   λ: "d",
-    exception_do (let: "d" := (mem.alloc "d") in
+    exception_do (let: "d" := (go.AllocValue disk.Disk "d") in
     do:  #()).
 
 Definition UseDisk : go_string := "github.com/goose-lang/goose/testdata/examples/async.UseDisk"%go.
@@ -23,35 +23,27 @@ Definition UseDisk : go_string := "github.com/goose-lang/goose/testdata/examples
 (* go: async.go:8:6 *)
 Definition UseDiskⁱᵐᵖˡ : val :=
   λ: "d",
-    exception_do (let: "d" := (mem.alloc "d") in
-    let: "v" := (mem.alloc (type.zero_val #sliceT)) in
-    let: "$r0" := (slice.make2 #byteT #(W64 4096)) in
-    do:  ("v" <-[#sliceT] "$r0");;;
+    exception_do (let: "d" := (go.AllocValue disk.Disk "d") in
+    let: "v" := (GoAlloc (go.SliceType go.byte) #()) in
+    let: "$r0" := ((FuncResolve go.make2 [go.SliceType go.byte] #()) #(W64 4096)) in
+    do:  ("v" <-[go.SliceType go.byte] "$r0");;;
     do:  (let: "$a0" := #(W64 0) in
-    let: "$a1" := (![#sliceT] "v") in
-    (MethodResolve disk.Disk.id Write #() (![#disk.Disk] "d")) "$a0" "$a1");;;
-    do:  ((MethodResolve disk.Disk.id Barrier #() (![#disk.Disk] "d")) #());;;
+    let: "$a1" := (![go.SliceType go.byte] "v") in
+    (MethodResolve disk.Disk Write #() (![disk.Disk] "d")) "$a0" "$a1");;;
+    do:  ((MethodResolve disk.Disk Barrier #() (![disk.Disk] "d")) #());;;
     return: #()).
-
-Definition vars' : list (go_string * go.type) := [].
 
 Definition functions' : list (go_string * val) := [(TakesDisk, TakesDiskⁱᵐᵖˡ); (UseDisk, UseDiskⁱᵐᵖˡ)].
 
-Definition msets' : list (go_string * (list (go_string * val))) := [].
-
 #[global] Instance info' : PkgInfo async.async :=
   {|
-    pkg_vars := vars';
-    pkg_functions := functions';
-    pkg_msets := msets';
     pkg_imported_pkgs := [code.github_com.goose_lang.primitive.async_disk.async_disk];
   |}.
 
 Definition initialize' : val :=
   λ: <>,
-    package.init #async.async (λ: <>,
-      exception_do (do:  (async_disk.initialize' #());;;
-      do:  (package.alloc async.async #()))
+    package.init async.async (λ: <>,
+      exception_do (do:  (async_disk.initialize' #()))
       ).
 
 End code.

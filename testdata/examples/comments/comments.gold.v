@@ -5,8 +5,6 @@ Definition comments : go_string := "github.com/goose-lang/goose/testdata/example
 
 Module comments.
 
-Module Foo. Definition id : go_string := "github.com/goose-lang/goose/testdata/examples/comments.Foo"%go. End Foo.
-
 Section code.
 Context `{ffi_syntax}.
 
@@ -15,30 +13,23 @@ Definition ONE : val := #(W64 1).
 
 Definition TWO : val := #(W64 2).
 
-Definition Foo : go.type := structT [
-  "a" :: boolT
+Definition Fooⁱᵐᵖˡ : go.type := go.StructType [
+  (go.FieldDecl "a"%go go.bool)
 ].
-#[global] Typeclasses Opaque Foo.
-#[global] Opaque Foo.
 
-Definition vars' : list (go_string * go.type) := [].
+Definition Foo : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/comments.Foo"%go [].
 
 Definition functions' : list (go_string * val) := [].
 
-Definition msets' : list (go_string * (list (go_string * val))) := [(Foo.id, []); (ptrT.id Foo.id, [])].
-
 #[global] Instance info' : PkgInfo comments.comments :=
   {|
-    pkg_vars := vars';
-    pkg_functions := functions';
-    pkg_msets := msets';
     pkg_imported_pkgs := [];
   |}.
 
 Definition initialize' : val :=
   λ: <>,
-    package.init #comments.comments (λ: <>,
-      exception_do (do:  (package.alloc comments.comments #()))
+    package.init comments.comments (λ: <>,
+      exception_do (do:  #())
       ).
 
 End code.

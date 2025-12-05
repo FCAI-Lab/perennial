@@ -16,26 +16,19 @@ Definition mapliteralⁱᵐᵖˡ : val :=
   λ: <>,
     exception_do (return: ((let: "$v0" := #(W64 2) in
      let: "$k0" := #(W64 1) in
-     map.literal #uint64T #uint64T [map.kv_entry "$k0" "$v0"]))).
-
-Definition vars' : list (go_string * go.type) := [].
+     map.literal go.uint64 go.uint64 [map.kv_entry "$k0" "$v0"]))).
 
 Definition functions' : list (go_string * val) := [(mapliteral, mapliteralⁱᵐᵖˡ)].
 
-Definition msets' : list (go_string * (list (go_string * val))) := [].
-
 #[global] Instance info' : PkgInfo mapliteral.example :=
   {|
-    pkg_vars := vars';
-    pkg_functions := functions';
-    pkg_msets := msets';
     pkg_imported_pkgs := [];
   |}.
 
 Definition initialize' : val :=
   λ: <>,
-    package.init #mapliteral.example (λ: <>,
-      exception_do (do:  (package.alloc mapliteral.example #()))
+    package.init mapliteral.example (λ: <>,
+      exception_do (do:  #())
       ).
 
 End code.
