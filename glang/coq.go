@@ -500,9 +500,7 @@ const (
 
 	OpMul
 	OpQuot
-	OpQuotS
 	OpRem
-	OpRemS
 	OpShl
 	OpShr
 
@@ -512,14 +510,6 @@ const (
 	OpXor
 	OpLAnd
 	OpLOr
-	OpEqualsZ
-	OpNotEqualsZ
-	OpLessThanZ
-	OpGreaterThanZ
-	OpLessEqZ
-	OpGreaterEqZ
-	OpAppend
-	OpGallinaAppend
 )
 
 var withTypeAnnotation = map[OpId]string{
@@ -536,23 +526,15 @@ var withTypeAnnotation = map[OpId]string{
 	OpGreaterEq:   "≥",
 	OpShl:         "≪",
 	OpShr:         "≫",
+	OpAnd:         "&",
+	OpAndNot:      "&^",
+	OpOr:          "|",
+	OpXor:         "^",
 }
 
 var withoutTypeAnnotation = map[OpId]string{
-	OpEqualsZ:      "=?",
-	OpNotEqualsZ:   "≠?",
-	OpLessThanZ:    "<?",
-	OpGreaterThanZ: ">?",
-	OpLessEqZ:      "<=?",
-	OpGreaterEqZ:   ">=?",
-
-	OpAnd:           "`and`",
-	OpAndNot:        "`and_not`",
-	OpOr:            "`or`",
-	OpXor:           "`xor`",
-	OpLAnd:          "&&",
-	OpLOr:           "||",
-	OpGallinaAppend: "++",
+	OpLAnd: "&&",
+	OpLOr:  "||",
 }
 
 func (o BinOp) renderOp() string {
