@@ -329,105 +329,6 @@ func (ctx *Ctx) sliceLiteralAux(es []exprWithInfo, expectedType types.Type) glan
 	return expr
 }
 
-func (ctx *Ctx) sliceLiteral(es []ast.Expr, expectedType types.Type) glang.Expr {
-	var exprs []exprWithInfo
-	for i := range len(es) {
-		exprs = append(exprs, exprWithInfo{e: ctx.expr(es[i]), t: ctx.typeOf(es[i]), n: es[i]})
-	}
-	return ctx.sliceLiteralAux(exprs, expectedType)
-}
-
-func (ctx *Ctx) arrayLiteral(e *ast.CompositeLit, expectedType types.Type) glang.Expr {
-	var arrayElements []glang.Expr
-
-	var index int64 = 0
-	for i := 0; i < len(e.Elts); i++ {
-		if kve, ok := e.Elts[i].(*ast.KeyValueExpr); ok {
-			elt := ctx.handleImplicitConversion(kve.Value, ctx.typeOf(kve.Value), expectedType, ctx.expr(kve.Value))
-			tv := ctx.info.Types[kve.Key]
-			if !tv.IsValue() {
-				ctx.nope(kve.Key, "expected const as key in array literal")
-
-			}
-			switch v := constant.Val(tv.Value).(type) {
-			case *big.Int:
-				ctx.unsupported(kve.Key, "array literal key is probably too big")
-			case int64:
-				index = v
-			default:
-				ctx.nope(kve.Key, "array literal key with unexpected type")
-			}
-			if index < int64(len(arrayElements)) {
-				arrayElements[index] = elt
-			} else {
-				for int64(len(arrayElements)) < index {
-					arrayElements = append(arrayElements,
-						glang.NewCallExpr(glang.GallinaVerbatim("go.ZeroVal"),
-							ctx.glangType(e, expectedType), glang.Tt),
-					)
-				}
-				arrayElements = append(arrayElements, elt)
-			}
-		} else {
-			elt := ctx.handleImplicitConversion(e.Elts[i], ctx.typeOf(e.Elts[i]), expectedType, ctx.expr(e.Elts[i]))
-			if index < int64(len(arrayElements)) {
-				arrayElements[index] = elt
-			} else {
-				arrayElements = append(arrayElements, elt)
-			}
-		}
-		index += 1
-	}
-
-	var arrayLitArgs []glang.Expr
-	for i := 0; i < len(arrayElements); i++ {
-		arrayLitArgs = append(arrayLitArgs, glang.IdentExpr(fmt.Sprintf("$ar%d", i)))
-	}
-	var expr glang.Expr = glang.NewCallExpr(glang.GallinaVerbatim("array.literal"),
-		glang.ListExpr(arrayLitArgs))
-
-	for i := len(arrayElements); i > 0; i-- {
-		expr = glang.LetExpr{
-			Names:   []string{fmt.Sprintf("$ar%d", i-1)},
-			ValExpr: arrayElements[i-1],
-			Cont:    expr,
-		}
-	}
-	expr = glang.ParenExpr{Inner: expr}
-	return expr
-}
-
-func (ctx *Ctx) mapLiteral(e *ast.CompositeLit, keyType, valueType types.Type) glang.Expr {
-	var mapLitArgs []glang.Expr
-	for i := 0; i < len(e.Elts); i++ {
-		mapLitArgs = append(mapLitArgs,
-			glang.NewCallExpr(glang.GallinaIdent("map.kv_entry"),
-				glang.IdentExpr(fmt.Sprintf("$k%d", i)),
-				glang.IdentExpr(fmt.Sprintf("$v%d", i))))
-	}
-	var expr glang.Expr = glang.NewCallExpr(glang.GallinaVerbatim("map.literal"),
-		ctx.glangType(e.Type, keyType),
-		ctx.glangType(e.Type, valueType),
-		glang.ListExpr(mapLitArgs))
-
-	for i := len(e.Elts); i > 0; i-- {
-		kv := e.Elts[i-1].(*ast.KeyValueExpr)
-		key := ctx.expr(kv.Key)
-		value := ctx.expr(kv.Value)
-		expr = glang.LetExpr{
-			Names:   []string{fmt.Sprintf("$k%d", i-1)},
-			ValExpr: ctx.handleImplicitConversion(kv.Key, ctx.typeOf(kv.Key), keyType, key),
-			Cont:    expr,
-		}
-		expr = glang.LetExpr{
-			Names:   []string{fmt.Sprintf("$v%d", i-1)},
-			ValExpr: ctx.handleImplicitConversion(kv.Value, ctx.typeOf(kv.Value), valueType, value),
-			Cont:    expr,
-		}
-	}
-	return glang.ParenExpr{Inner: expr}
-}
-
 // Deals with the arguments, but does not actually invoke the function. That
 // should be done in the continuation. The continuation can assume the arguments
 // are bound to "a0", "$a1", ....
@@ -844,101 +745,45 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 }
 
 func (ctx *Ctx) compositeLiteral(e *ast.CompositeLit) glang.Expr {
-	eT := underlyingType(ctx.typeOf(e))
-	switch t := eT.(type) {
-	case *types.Slice:
-		return ctx.sliceLiteral(e.Elts, t.Elem())
-	case *types.Array:
-		return ctx.arrayLiteral(e, t.Elem())
-	case *types.Map:
-		return ctx.mapLiteral(e, t.Key(), t.Elem())
-	case *types.Struct:
-		return ctx.structLiteral(ctx.typeOf(e), t, e)
-	default:
-		ctx.unsupported(e, "composite literal of type %v (%T)", eT, eT)
-		return nil
-	}
-}
-
-func isUnkeyedStruct(e *ast.CompositeLit) bool {
+	var elements glang.ListExpr
 	for _, el := range e.Elts {
-		if _, ok := el.(*ast.KeyValueExpr); ok {
-		} else {
-			return true
-		}
-	}
-	return false
-}
+		var k glang.Expr = glang.GallinaIdent("None")
+		var v glang.Expr = glang.GallinaIdent("BUG")
 
-func (ctx *Ctx) structLiteral(t types.Type, structType *types.Struct, e *ast.CompositeLit) glang.Expr {
-	lit := glang.StructLiteral{Type: ctx.glangType(e.Type, t)}
-	if isUnkeyedStruct(e) {
-		if len(e.Elts) != structType.NumFields() {
-			ctx.nope(e, "expected as many elements are there are struct fields in unkeyed literal")
-		}
-		for i := range structType.NumFields() {
-			lit.Elts = append(lit.Elts,
-				ctx.handleImplicitConversion(e.Elts[i],
-					ctx.typeOf(e.Elts[i]),
-					structType.Field(i).Type(),
-					ctx.expr(e.Elts[i]),
-				))
-		}
-		return lit
-	}
-
-	for i := 0; i < structType.NumFields(); i++ {
-		fieldName := structType.Field(i).Name()
-		if fieldName == "_" {
-			fieldName = "_" + strconv.Itoa(i)
-		}
-		fieldType := structType.Field(i).Type()
-
-		fieldIsZero := true
-		for _, el := range e.Elts {
-			switch el := el.(type) {
-			case *ast.KeyValueExpr:
-				ident, ok := getIdent(el.Key)
-				if !ok {
-					ctx.noExample(el.Key, "struct field keyed by non-identifier %+v", el.Key)
+		switch el := el.(type) {
+		case *ast.KeyValueExpr:
+			done := false
+			if elKey, ok := el.Key.(*ast.Ident); ok {
+				if vr, ok := ctx.info.Uses[elKey].(*types.Var); ok && vr.Kind() == types.FieldVar {
+					k = glang.NewCallExpr(glang.GallinaIdent("KeyField"),
+						glang.StringLiteral{Value: elKey.Name})
+					done = true
+				} else {
+					fmt.Println(ctx.info.Uses[elKey])
 				}
-				if ident == fieldName {
-					fieldIsZero = false
-					lit.Elts = append(lit.Elts, glang.IdentExpr("$"+fieldName))
-				}
-			default:
 			}
-		}
-		if fieldIsZero {
-			lit.Elts = append(lit.Elts, glang.NewCallExpr(glang.GallinaVerbatim("go.ZeroVal"), ctx.glangType(e, fieldType), glang.Tt))
-		}
-	}
-
-	getFieldType := func(fieldName string) types.Type {
-		for i := range structType.NumFields() {
-			if structType.Field(i).Name() == fieldName {
-				return structType.Field(i).Type()
+			if !done {
+				k = glang.NewCallExpr(glang.GallinaIdent("KeyExpression"),
+					ctx.expr(el.Key))
 			}
+			k = glang.NewCallExpr(glang.GallinaIdent("Some"), k)
+			v = ctx.expr(el.Value)
+		case *ast.CompositeLit:
+			v = ctx.expr(el)
+		default:
+			v = glang.NewCallExpr(glang.GallinaIdent("ElementExpression"), ctx.expr(el))
 		}
-		ctx.nope(e, "field is not a part of the struct")
-		return types.NewTuple()
-	}
+		v.Coq(true)
+		k.Coq(true)
 
-	var expr glang.Expr = lit
-	for i := range e.Elts {
-		el := e.Elts[len(e.Elts)-1-i].(*ast.KeyValueExpr)
-		fieldName, _ := getIdent(el.Key)
-		expr = glang.LetExpr{
-			Names: []string{"$" + fieldName},
-			// convert from the original value type
-			ValExpr: ctx.handleImplicitConversion(el.Value,
-				ctx.typeOf(el.Value),
-				getFieldType(fieldName),
-				ctx.expr(el.Value)),
-			Cont: expr,
-		}
+		elements = append(elements, glang.NewCallExpr(glang.GallinaIdent("KeyedElement"), k, v))
 	}
-	return expr
+	if e.Type != nil {
+		return glang.NewCallExpr(glang.GallinaIdent("CompositeLiteral"),
+			ctx.glangType(e.Type, ctx.typeOf(e.Type)), elements)
+	} else {
+		return glang.NewCallExpr(glang.GallinaIdent("ElementLiteralValue"), elements)
+	}
 }
 
 func (ctx *Ctx) basicLiteral(e *ast.BasicLit) glang.Expr {
@@ -1126,14 +971,11 @@ func (ctx *Ctx) unaryExpr(e *ast.UnaryExpr, multipleBindings bool) glang.Expr {
 					ctx.expr(x.X), ctx.expr(x.Index))
 			}
 		}
-		if info, ok := ctx.getStructInfo(ctx.typeOf(e.X)); ok {
-			structLit, ok := e.X.(*ast.CompositeLit)
-			if ok {
-				// e is &s{...} (a struct literal)
-				sl := ctx.structLiteral(ctx.typeOf(e.X), info.structType, structLit)
-				return glang.NewCallExpr(glang.GallinaVerbatim("go.AllocValue"),
-					ctx.glangType(structLit.Type, ctx.typeOf(e.X)), sl)
-			}
+		if cl, ok := e.X.(*ast.CompositeLit); ok {
+			// e is &T{...} (a composite literal)
+			sl := ctx.compositeLiteral(cl)
+			return glang.NewCallExpr(glang.GallinaVerbatim("go.AllocValue"),
+				ctx.glangType(cl.Type, ctx.typeOf(e.X)), sl)
 		}
 		// e is something else
 		return ctx.exprAddr(e.X)
