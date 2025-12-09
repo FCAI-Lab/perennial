@@ -241,7 +241,7 @@ func (ctx *Ctx) initCoqFile(pkg *packages.Package, config declfilter.FilterConfi
 	ffi := util.GetFfi(pkg)
 	if ffi == "" {
 		f.Header += fmt.Sprintf("Module %s.\n", pkg.Name)
-		f.SectionHeader = "Section code.\n" + "Context `{ffi_syntax}.\n"
+		f.SectionHeader = "Section code.\n" + "Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.\n"
 	} else {
 		f.Header += fmt.Sprintf("From New Require Import %s_prelude.\n", ffi)
 		f.Header += fmt.Sprintf("Module %s.\n", pkg.Name)
