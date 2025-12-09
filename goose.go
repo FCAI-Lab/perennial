@@ -937,9 +937,9 @@ func (ctx *Ctx) unaryExpr(e *ast.UnaryExpr, multipleBindings bool) glang.Expr {
 		if x, ok := e.X.(*ast.IndexExpr); ok {
 			// e is &a[b] where x is a.b
 			if xTy, ok := ctx.typeOf(x.X).(*types.Slice); ok {
-				return glang.NewCallExpr(glang.GallinaVerbatim("slice.elem_ref"),
+				return glang.NewCallExpr(glang.GallinaVerbatim("IndexRef"),
 					ctx.glangType(e, xTy.Elem()),
-					ctx.expr(x.X), ctx.expr(x.Index))
+					glang.TupleExpr{ctx.expr(x.X), ctx.expr(x.Index)})
 			}
 		}
 		if cl, ok := e.X.(*ast.CompositeLit); ok {
@@ -1681,10 +1681,9 @@ func (ctx *Ctx) exprAddr(e ast.Expr) glang.Expr {
 		targetTy := ctx.typeOf(e.X)
 		switch targetTy := targetTy.Underlying().(type) {
 		case *types.Slice:
-			return glang.NewCallExpr(glang.GallinaVerbatim("slice.elem_ref"),
+			return glang.NewCallExpr(glang.GallinaVerbatim("IndexRef"),
 				ctx.glangType(e, targetTy.Elem()),
-				ctx.expr(e.X),
-				ctx.expr(e.Index))
+				glang.TupleExpr{ctx.expr(e.X), ctx.expr(e.Index)})
 		case *types.Map:
 			ctx.nope(e, "map index expressions are not addressable")
 		case *types.Array:
