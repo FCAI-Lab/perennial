@@ -773,8 +773,6 @@ func (ctx *Ctx) compositeLiteral(e *ast.CompositeLit) glang.Expr {
 		default:
 			v = glang.NewCallExpr(glang.GallinaIdent("ElementExpression"), ctx.expr(el))
 		}
-		v.Coq(true)
-		k.Coq(true)
 
 		elements = append(elements, glang.NewCallExpr(glang.GallinaIdent("KeyedElement"), k, v))
 	}
@@ -832,39 +830,13 @@ func (ctx *Ctx) binExpr(e *ast.BinaryExpr) (expr glang.Expr) {
 
 	if t, ok := compType.(*types.Basic); ok {
 		switch t.Kind() {
-		case types.UntypedInt:
-			op, ok := untypedIntOps[e.Op]
-			if !ok {
-				// use const
-				tv := ctx.info.Types[e]
-				if tv.Value == nil {
-					ctx.nope(e, "untyped integer expression without constant value")
-				}
-				t, v := ctx.constantLiteral(e, tv.Value)
-				return ctx.handleImplicitConversion(e, t, tv.Type, v)
+		case types.UntypedInt, types.UntypedString:
+			tv := ctx.info.Types[e]
+			if tv.Value == nil {
+				ctx.nope(e, "%s expression without constant value", t)
 			}
-			switch op {
-			case glang.OpEqualsZ, glang.OpLessThanZ, glang.OpLessEqZ, glang.OpGreaterThanZ, glang.OpGreaterEqZ:
-				defer func() {
-					expr = glang.BoolVal{Value: expr}
-				}()
-			case glang.OpNotEquals:
-				op = glang.OpEqualsZ
-				defer func() {
-					expr = glang.BoolVal{Value: glang.GallinaNotExpr{X: expr}}
-				}()
-			}
-		case types.UntypedString:
-			op, ok := untypedStringOps[e.Op]
-			switch op {
-			case glang.OpGallinaAppend:
-				defer func() {
-					expr = ctx.handleImplicitConversion(e, compType, ctx.typeOf(e), expr)
-				}()
-			}
-			if !ok {
-				ctx.unsupported(e, "unsupported binary operation on strings")
-			}
+			t, v := ctx.constantLiteral(e, tv.Value)
+			return ctx.handleImplicitConversion(e, t, tv.Type, v)
 		}
 	}
 	expr = glang.BinaryExpr{
@@ -875,12 +847,11 @@ func (ctx *Ctx) binExpr(e *ast.BinaryExpr) (expr glang.Expr) {
 		},
 		Y: ctx.handleImplicitConversion(e.Y, yT, compType, ctx.expr(e.Y)),
 	}
-	return expr
-	// case glang.OpMinus, glang.OpMul, glang.OpRem, glang.OpPlus, glang.OpQuot:
-	// defer func() {
+
+	// FIXME: might need to do a conversion here. Handle e.g. interface
+	// conversion of (x < 10) as well as conversion of (x + 10).
 	// expr = ctx.handleImplicitConversion(e, compType, ctx.typeOf(e), expr)
-	// }()
-	// }
+	return expr
 }
 
 func (ctx *Ctx) sliceExpr(e *ast.SliceExpr) glang.Expr {

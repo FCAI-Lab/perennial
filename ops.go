@@ -27,23 +27,3 @@ var gooseLangOps = map[token.Token]glang.OpId{
 	token.OR:      glang.OpOr,
 	token.XOR:     glang.OpXor,
 }
-
-var untypedIntOps = map[token.Token]glang.OpId{
-	token.ADD: glang.OpPlus,
-	token.LSS: glang.OpLessThanZ,
-	token.GTR: glang.OpGreaterThanZ,
-	token.SUB: glang.OpMinus,
-	token.EQL: glang.OpEqualsZ,
-	token.NEQ: glang.OpNotEqualsZ,
-	token.MUL: glang.OpMul,
-	token.QUO: glang.OpQuot,
-	token.REM: glang.OpRem,
-	token.LEQ: glang.OpLessEqZ,
-	token.GEQ: glang.OpGreaterEqZ,
-}
-
-var untypedStringOps = map[token.Token]glang.OpId{
-	token.ADD: glang.OpGallinaAppend,
-	token.EQL: glang.OpEquals,
-	token.NEQ: glang.OpNotEquals,
-}
