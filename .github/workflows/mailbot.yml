@@ -9,7 +9,7 @@ jobs:
       port: 587
       from: mit.pdos.mailbot@gmail.com
       to: chajed@wisc.edu,jt4767@nyu.edu,nickolai@csail.mit.edu,kaashoek@mit.edu,sanjit.bhat@gmail.com,upamanyu@mit.edu
-      mailbot_repo: github.com/upamanyus/github-mailbot
+      mailbot_repo: upamanyus/github-mailbot
       mailbot_ref: fix-go-caller
     secrets:
       password: ${{ secrets.MAILBOT_PASSWORD }}
