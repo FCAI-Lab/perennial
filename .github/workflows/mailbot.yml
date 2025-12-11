@@ -3,13 +3,11 @@ on: push
 
 jobs:
   mailbot:
-    uses: upamanyus/github-mailbot/.github/workflows/mailbot.yml@fix-go-caller
+    uses: sanjit-bhat/github-mailbot/.github/workflows/mailbot.yml@main
     with:
       host: smtp.gmail.com
       port: 587
       from: mit.pdos.mailbot@gmail.com
       to: chajed@wisc.edu,jt4767@nyu.edu,nickolai@csail.mit.edu,kaashoek@mit.edu,sanjit.bhat@gmail.com,upamanyu@mit.edu
-      mailbot_repo: upamanyus/github-mailbot
-      mailbot_ref: fix-go-caller
     secrets:
       password: ${{ secrets.MAILBOT_PASSWORD }}
