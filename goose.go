@@ -310,11 +310,20 @@ func (ctx *Ctx) sliceLiteralAux(es []exprWithInfo, expectedType types.Type) glan
 	if len(es) > 0 {
 		var sliceLitArgs []glang.Expr
 		for i := 0; i < len(es); i++ {
-			sliceLitArgs = append(sliceLitArgs, glang.IdentExpr(fmt.Sprintf("$sl%d", i)))
+			sliceLitArgs = append(sliceLitArgs,
+				glang.NewCallExpr(
+					glang.GallinaIdent("KeyedElement"),
+					glang.GallinaIdent("None"),
+					glang.NewCallExpr(
+						glang.GallinaIdent("ElementExpression"),
+						glang.IdentExpr(fmt.Sprintf("$sl%d", i))),
+				),
+			)
 		}
 		expr = glang.NewCallExpr(glang.GallinaVerbatim("CompositeLiteral"),
 			ctx.glangType(es[0].n, expectedType),
-			glang.ListExpr(sliceLitArgs))
+			glang.NewCallExpr(glang.GallinaIdent("LiteralValue"),  glang.ListExpr(sliceLitArgs)),
+		)
 
 		for i := len(es); i > 0; i-- {
 			expr = glang.LetExpr{
