@@ -314,7 +314,6 @@ func (ctx *Ctx) sliceLiteralAux(es []exprWithInfo, expectedType types.Type) glan
 		}
 		expr = glang.NewCallExpr(glang.GallinaVerbatim("CompositeLiteral"),
 			ctx.glangType(es[0].n, expectedType),
-			ctx.glangType(es[0].n, expectedType),
 			glang.ListExpr(sliceLitArgs))
 
 		for i := len(es); i > 0; i-- {
@@ -746,6 +745,16 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 
 func (ctx *Ctx) compositeLiteral(e *ast.CompositeLit) glang.Expr {
 	var elements glang.ListExpr
+
+	handleValue := func(e ast.Expr) glang.Expr {
+		switch e := e.(type) {
+		case *ast.CompositeLit:
+			return ctx.expr(e)
+		default:
+			return glang.NewCallExpr(glang.GallinaIdent("ElementExpression"), ctx.expr(e))
+		}
+	}
+
 	for _, el := range e.Elts {
 		var k glang.Expr = glang.GallinaIdent("None")
 		var v glang.Expr = glang.GallinaIdent("BUG")
@@ -767,18 +776,17 @@ func (ctx *Ctx) compositeLiteral(e *ast.CompositeLit) glang.Expr {
 					ctx.expr(el.Key))
 			}
 			k = glang.NewCallExpr(glang.GallinaIdent("Some"), k)
-			v = ctx.expr(el.Value)
-		case *ast.CompositeLit:
-			v = ctx.expr(el)
+			v = handleValue(el.Value)
 		default:
-			v = glang.NewCallExpr(glang.GallinaIdent("ElementExpression"), ctx.expr(el))
+			v = handleValue(el)
 		}
 
 		elements = append(elements, glang.NewCallExpr(glang.GallinaIdent("KeyedElement"), k, v))
 	}
 	if e.Type != nil {
 		return glang.NewCallExpr(glang.GallinaIdent("CompositeLiteral"),
-			ctx.glangType(e.Type, ctx.typeOf(e.Type)), elements)
+			ctx.glangType(e.Type, ctx.typeOf(e.Type)),
+			glang.NewCallExpr(glang.GallinaIdent("LiteralValue"), elements))
 	} else {
 		return glang.NewCallExpr(glang.GallinaIdent("ElementLiteralValue"), elements)
 	}
