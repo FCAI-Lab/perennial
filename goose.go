@@ -68,8 +68,7 @@ type Ctx struct {
 
 	inits []glang.Expr
 
-	filter      declfilter.DeclFilter
-	directCalls bool
+	filter declfilter.DeclFilter
 }
 
 // NewPkgCtx initializes a context based on a properly loaded package
@@ -322,7 +321,7 @@ func (ctx *Ctx) sliceLiteralAux(es []exprWithInfo, expectedType types.Type) glan
 		}
 		expr = glang.NewCallExpr(glang.GallinaVerbatim("CompositeLiteral"),
 			ctx.glangType(es[0].n, expectedType),
-			glang.NewCallExpr(glang.GallinaIdent("LiteralValue"),  glang.ListExpr(sliceLitArgs)),
+			glang.NewCallExpr(glang.GallinaIdent("LiteralValue"), glang.ListExpr(sliceLitArgs)),
 		)
 
 		for i := len(es); i > 0; i-- {
@@ -666,23 +665,15 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 		if _, ok := ctx.info.ObjectOf(e.Sel).(*types.Var); ok {
 			ctx.nope(e, "global variable from external package should be handled by exprAddr")
 		} else if f, ok := ctx.info.ObjectOf(e.Sel).(*types.Func); ok {
+			// package-qualified function
 			typeArgs := ctx.info.Instances[e.Sel].TypeArgs
 			args := glang.ListExpr(ctx.convertTypeArgsToGlang(nil, typeArgs))
-			if ctx.directCalls {
-				baseFunc := ctx.gallinaIdent(fmt.Sprintf("%s.%s", f.Pkg().Name(), glang.FuncImpl(f.Name())))
-				if len(args) > 0 {
-					return glang.NewCallExpr(baseFunc, args...)
-				} else {
-					return baseFunc
-				}
-			} else {
-				return glang.NewCallExpr(
-					glang.GallinaVerbatim("FuncResolve"),
-					ctx.gallinaIdent(f.Pkg().Name()+"."+f.Name()),
-					args,
-					glang.Tt,
-				)
-			}
+			return glang.NewCallExpr(
+				glang.GallinaVerbatim("FuncResolve"),
+				ctx.gallinaIdent(f.Pkg().Name()+"."+f.Name()),
+				args,
+				glang.Tt,
+			)
 		} else {
 			return ctx.handleImplicitConversion(e,
 				ctx.info.TypeOf(e.Sel),
@@ -722,7 +713,7 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 		receiver := ctx.expr(e.X)
 		receiverType := types.Unalias(ctx.typeOf(e.X))
 		typeExpr := ctx.glangType(e.X, receiverType)
-		methodExpr := glang.GallinaIdent(e.Sel.Name)
+		methodExpr := glang.StringLiteral{Value: e.Sel.Name}
 
 		// figure out if this is shorthand for (&x).m().
 		methodReceiverType := types.Unalias(f.Signature().Recv().Type())
@@ -736,18 +727,7 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 			}
 		}
 
-		if ctx.directCalls {
-			structName := ""
-			switch v := receiverType.(type) {
-			case *types.Named:
-				structName = ctx.qualifiedName(v.Obj())
-			case *types.Pointer:
-				structName = ctx.qualifiedName(types.Unalias(v.Elem()).(*types.Named).Obj())
-			}
-			return glang.NewCallExpr(glang.GallinaVerbatim(glang.TypeMethod(structName, e.Sel.Name)), receiver)
-		} else {
-			return glang.NewCallExpr(glang.GallinaVerbatim("MethodResolve"), typeExpr, methodExpr, glang.Tt, receiver)
-		}
+		return glang.NewCallExpr(glang.GallinaVerbatim("MethodResolve"), typeExpr, methodExpr, glang.Tt, receiver)
 	}
 	panic("unreachable")
 }
