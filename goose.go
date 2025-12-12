@@ -852,60 +852,35 @@ func (ctx *Ctx) binExpr(e *ast.BinaryExpr) (expr glang.Expr) {
 }
 
 func (ctx *Ctx) sliceExpr(e *ast.SliceExpr) glang.Expr {
-	if t, ok := ctx.typeOf(e.X).Underlying().(*types.Slice); ok {
-		var lowExpr glang.Expr = glang.Int64Val{Value: glang.IntToZ(0)}
-		var highExpr glang.Expr = glang.NewCallExpr(glang.GallinaVerbatim("slice.len"), glang.IdentExpr("$s"))
-		x := ctx.expr(e.X)
+	ty := ctx.glangType(e, ctx.typeOf(e.X))
+	var lowExpr glang.Expr = glang.Int64Val{Value: glang.IntToZ(0)}
+	var highExpr glang.Expr = glang.NewCallExpr(
+		glang.GallinaVerbatim("FuncResolve"),
+		glang.GallinaVerbatim("go.len"), glang.ListExpr{ty}, glang.Tt, ctx.expr(e.X))
+	x := ctx.expr(e.X)
 
-		if e.Low != nil {
-			lowExpr = ctx.expr(e.Low)
-		}
-		if e.High != nil {
-			highExpr = ctx.expr(e.High)
-		}
-		if e.Max != nil {
-			highExpr = ctx.expr(e.High)
-			return glang.LetExpr{
-				Names:   []string{"$s"},
-				ValExpr: x,
-				Cont: glang.NewCallExpr(glang.GallinaVerbatim("slice.full_slice"),
-					ctx.glangType(e, t.Elem()),
-					glang.IdentExpr("$s"), lowExpr, highExpr, ctx.expr(e.Max)),
-			}
-		} else {
-			return glang.LetExpr{
-				Names:   []string{"$s"},
-				ValExpr: x,
-				Cont: glang.NewCallExpr(glang.GallinaVerbatim("slice.slice"),
-					ctx.glangType(e, t.Elem()),
-					glang.IdentExpr("$s"), lowExpr, highExpr),
-			}
-		}
-	} else if at, ok := ctx.typeOf(e.X).Underlying().(*types.Array); ok {
-		var lowExpr glang.Expr = glang.Int64Val{Value: glang.IntToZ(0)}
-		var highExpr glang.Expr = glang.NewCallExpr(glang.GallinaVerbatim("array.len"),
-			ctx.glangType(e.X, at.Elem()))
-		if e.Low != nil {
-			lowExpr = ctx.expr(e.Low)
-		}
-		if e.High != nil {
-			highExpr = ctx.expr(e.High)
-		}
-		if e.Max != nil {
-			ctx.unsupported(e, "full slice of array")
-		} else {
-			return glang.LetExpr{
-				Names:   []string{"$a"},
-				ValExpr: ctx.exprAddr(e.X),
-				Cont: glang.NewCallExpr(glang.GallinaVerbatim("array.slice"),
-					ctx.glangType(e, at.Elem()),
-					glang.IdentExpr("$a"), lowExpr, highExpr),
-			}
+	if e.Low != nil {
+		lowExpr = ctx.expr(e.Low)
+	}
+	if e.High != nil {
+		highExpr = ctx.expr(e.High)
+	}
+	if e.Max != nil {
+		highExpr = ctx.expr(e.High)
+		return glang.LetExpr{
+			Names:   []string{"$s"},
+			ValExpr: x,
+			Cont: glang.NewCallExpr(glang.GallinaVerbatim("FullSlice"), ty,
+				glang.TupleExpr{glang.IdentExpr("$s"), lowExpr, highExpr, ctx.expr(e.Max)}),
 		}
 	} else {
-		ctx.unsupported(e, "taking a slice of an object with type %s", ctx.typeOf(e.X))
+		return glang.LetExpr{
+			Names:   []string{"$s"},
+			ValExpr: x,
+			Cont: glang.NewCallExpr(glang.GallinaVerbatim("Slice"), ty,
+				glang.TupleExpr{glang.IdentExpr("$s"), lowExpr, highExpr}),
+		}
 	}
-	return nil
 }
 
 func (ctx *Ctx) nilExpr(e *ast.Ident) glang.Expr {
@@ -1304,7 +1279,7 @@ func (ctx *Ctx) funcLit(e *ast.FuncLit) glang.FuncLit {
 			for _, name := range r.Names {
 				fl.Body = glang.LetExpr{
 					Names:   []string{name.Name},
-					ValExpr: glang.NewCallExpr(glang.GallinaIdent("GoAlloc"), t, glang.Tt),
+					ValExpr: glang.NewCallExpr(glang.GallinaVerbatim("GoAlloc"), t, glang.Tt),
 					Cont:    fl.Body,
 				}
 			}
@@ -1428,7 +1403,7 @@ func (ctx *Ctx) switchStmt(s *ast.SwitchStmt, cont glang.Expr) (e glang.Expr) {
 			cond = glang.BinaryExpr{
 				Op: glang.BinOp{
 					OpId: glang.OpLOr,
-					Type: glang.GallinaIdent("go.bool"),
+					Type: glang.GallinaVerbatim("go.bool"),
 				},
 				X: getCond(i), Y: cond}
 		}
@@ -1535,7 +1510,7 @@ func (ctx *Ctx) rangeStmt(s *ast.RangeStmt) glang.Expr {
 				t := ctx.glangType(s.Key, ctx.typeOf(s.Key))
 				e = glang.LetExpr{
 					Names:   []string{key.Name},
-					ValExpr: glang.NewCallExpr(glang.GallinaIdent("GoAlloc"), t, glang.Tt),
+					ValExpr: glang.NewCallExpr(glang.GallinaVerbatim("GoAlloc"), t, glang.Tt),
 					Cont:    e,
 				}
 			}
@@ -1550,7 +1525,7 @@ func (ctx *Ctx) rangeStmt(s *ast.RangeStmt) glang.Expr {
 				t := ctx.glangType(s.Value, ctx.typeOf(s.Value))
 				e = glang.LetExpr{
 					Names:   []string{value.Name},
-					ValExpr: glang.NewCallExpr(glang.GallinaIdent("GoAlloc"), t, glang.Tt),
+					ValExpr: glang.NewCallExpr(glang.GallinaVerbatim("GoAlloc"), t, glang.Tt),
 					Cont:    e,
 				}
 			}
@@ -1601,7 +1576,7 @@ func (ctx *Ctx) defineStmt(s *ast.AssignStmt, cont glang.Expr) glang.Expr {
 				t := ctx.glangType(ident, ctx.info.TypeOf(ident))
 				e = glang.LetExpr{
 					Names:   []string{ident.Name},
-					ValExpr: glang.NewCallExpr(glang.GallinaIdent("GoAlloc"), t, glang.Tt),
+					ValExpr: glang.NewCallExpr(glang.GallinaVerbatim("GoAlloc"), t, glang.Tt),
 					Cont:    e,
 				}
 			}
@@ -2127,13 +2102,13 @@ func (ctx *Ctx) deferStmt(s *ast.DeferStmt, cont glang.Expr) (expr glang.Expr) {
 
 	expr = glang.LetExpr{
 		Names:   []string{"$oldf"},
-		ValExpr: glang.DerefExpr{X: glang.IdentExpr("$defer"), Ty: glang.GallinaIdent("deferType")},
+		ValExpr: glang.DerefExpr{X: glang.IdentExpr("$defer"), Ty: glang.GallinaVerbatim("deferType")},
 		Cont:    expr,
 	}
 
 	expr = glang.StoreStmt{
 		Dst: glang.IdentExpr("$defer"),
-		Ty:  glang.GallinaIdent("deferType"),
+		Ty:  glang.GallinaVerbatim("deferType"),
 		X:   expr,
 	}
 
@@ -2336,7 +2311,7 @@ func (ctx *Ctx) typeSwitchStmt(s *ast.TypeSwitchStmt, cont glang.Expr) (e glang.
 			for i := range c.List[1:] {
 				cond = glang.BinaryExpr{Op: glang.BinOp{
 					OpId: glang.OpLOr,
-					Type: glang.GallinaIdent("go.bool"),
+					Type: glang.GallinaVerbatim("go.bool"),
 				},
 					X: getCond(i), Y: cond}
 			}
@@ -2610,7 +2585,7 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 			for _, name := range r.Names {
 				fd.Body = glang.LetExpr{
 					Names:   []string{name.Name},
-					ValExpr: glang.NewCallExpr(glang.GallinaIdent("GoAlloc"), t, glang.Tt),
+					ValExpr: glang.NewCallExpr(glang.GallinaVerbatim("GoAlloc"), t, glang.Tt),
 					Cont:    fd.Body,
 				}
 			}
@@ -2850,7 +2825,7 @@ func (ctx *Ctx) finalExtraDecls() []glang.Decl {
 		}
 		decls = append(decls, glang.TypeDecl{
 			Name: namedType.Obj().Name(),
-			Body: glang.NewCallExpr(glang.GallinaIdent("go.Named"),
+			Body: glang.NewCallExpr(glang.GallinaVerbatim("go.Named"),
 				glang.StringLiteral{Value: namedType.Obj().Pkg().Path() + "." + namedType.Obj().Name()},
 				typeParamsList,
 			),
@@ -3013,7 +2988,7 @@ InitLoop:
 	for _, varIdent := range ctx.globalVars {
 		e = glang.NewDoSeq(
 			glang.NewCallExpr(
-				glang.GallinaIdent("GoGlobalAlloc"),
+				glang.GallinaVerbatim("GoGlobalAlloc"),
 				glang.GallinaIdent(varIdent.Name),
 				ctx.glangType(varIdent, ctx.typeOf(varIdent)),
 			),
