@@ -1021,9 +1021,9 @@ func (ctx *Ctx) builtinIdent(e *ast.Ident) glang.Expr {
 	case "nil":
 		return ctx.nilExpr(e)
 	case "true":
-		return glang.True
+		return glang.GooseBoolLiteral(true)
 	case "false":
-		return glang.False
+		return glang.GooseBoolLiteral(false)
 	case "append", "len", "cap", "copy", "delete", "close", "clear":
 		sig := ctx.typeOf(e).(*types.Signature)
 		ty := ctx.glangType(e, sig.Params().At(0).Type())
@@ -1361,7 +1361,7 @@ func (ctx *Ctx) blockStmt(s *ast.BlockStmt, cont glang.Expr) glang.Expr {
 }
 
 func (ctx *Ctx) switchStmt(s *ast.SwitchStmt, cont glang.Expr) (e glang.Expr) {
-	var tagExpr glang.Expr = glang.True
+	var tagExpr glang.Expr = glang.GooseBoolLiteral(true)
 
 	var tagType types.Type = types.Typ[types.Bool]
 
@@ -1443,7 +1443,7 @@ func (ctx *Ctx) ifStmt(s *ast.IfStmt, cont glang.Expr) glang.Expr {
 }
 
 func (ctx *Ctx) forStmt(s *ast.ForStmt, cont glang.Expr) glang.Expr {
-	var cond glang.Expr = glang.True
+	var cond glang.Expr = glang.GooseBoolLiteral(true)
 	if s.Cond != nil {
 		cond = ctx.expr(s.Cond)
 	}
@@ -1794,7 +1794,7 @@ func (ctx *Ctx) handleImplicitConversion(n locatable, from, to types.Type, e gla
 
 	if fromBasic, ok := fromUnder.(*types.Basic); ok && fromBasic.Kind() == types.UntypedString {
 		if toBasic, ok := toUnder.(*types.Basic); ok && toBasic.Kind() == types.String {
-			return glang.StringVal{Value: e}
+			return glang.ToVal{Value: e}
 		}
 	}
 
@@ -2302,7 +2302,7 @@ func (ctx *Ctx) typeSwitchStmt(s *ast.TypeSwitchStmt, cont glang.Expr) (e glang.
 						glang.NewCallExpr(glang.GallinaVerbatim("TypeAssert2"),
 							ctx.glangType(c.List[i], ty),
 							glang.IdentExpr("$y"),
-							glang.StringVal{Value: ctx.glangType(c.List[i], ty)},
+							glang.ToVal{Value: ctx.glangType(c.List[i], ty)},
 						),
 					)
 				}
@@ -2339,7 +2339,7 @@ func (ctx *Ctx) typeSwitchStmt(s *ast.TypeSwitchStmt, cont glang.Expr) (e glang.
 					ValExpr: glang.NewCallExpr(glang.GallinaVerbatim("TypeAssert2"),
 						ctx.glangType(c.List[0], ty),
 						glang.IdentExpr("$y"),
-						glang.StringVal{Value: ctx.glangType(c.List[0], ty)},
+						glang.ToVal{Value: ctx.glangType(c.List[0], ty)},
 					),
 					Cont: e,
 				}
@@ -2605,7 +2605,7 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 func (ctx *Ctx) constantLiteral(l locatable, v constant.Value) (types.Type, glang.Expr) {
 	switch v.Kind() {
 	case constant.Bool:
-		return types.Typ[types.UntypedBool], glang.BoolLiteral(constant.Val(v).(bool))
+		return types.Typ[types.UntypedBool], glang.GooseBoolLiteral(constant.Val(v).(bool))
 	case constant.String:
 		return types.Typ[types.UntypedString], glang.StringLiteral{Value: constant.Val(v).(string)}
 	case constant.Int:
@@ -2837,24 +2837,6 @@ func (ctx *Ctx) finalExtraDecls() []glang.Decl {
 	defer ctx.dep.UnsetCurrentName()
 	initFunc := glang.FuncDecl{Name: "initialize'"}
 
-	var functions glang.ListExpr
-	for _, functionName := range ctx.functions {
-		functions = append(functions, glang.TupleExpr{ctx.gallinaIdent(functionName), ctx.gallinaIdent(functionName + "ⁱᵐᵖˡ")})
-		if ctx.filter.GetAction(functionName) == declfilter.Axiomatize {
-			decls = append(decls, glang.AxiomDecl{
-				DeclName: functionName + "ⁱᵐᵖˡ",
-				Type:     glang.GallinaVerbatim("val"),
-			})
-		}
-	}
-
-	functionsDecl := glang.ConstDecl{
-		Name: "functions'",
-		Val:  functions,
-		Type: glang.GallinaVerbatim("list (go_string * val)"),
-	}
-	decls = append(decls, functionsDecl)
-
 	var imports glang.ListExpr
 	for _, impName := range ctx.importNamesOrdered {
 		pkg := impName.Imported()
@@ -2915,7 +2897,7 @@ InitLoop:
 				e = glang.NewDoSeq(
 					glang.StoreStmt{
 						Dst: glang.NewCallExpr(glang.GallinaVerbatim("GloblalVarAddr"),
-							glang.StringVal{Value: ctx.gallinaIdent(init.Lhs[i-1].Name())},
+							glang.ToVal{Value: ctx.gallinaIdent(init.Lhs[i-1].Name())},
 						),
 						X:  glang.IdentExpr(fmt.Sprintf("$r%d", i-1)),
 						Ty: ctx.glangType(init.Lhs[i-1], init.Lhs[i-1].Type()),

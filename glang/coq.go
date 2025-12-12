@@ -104,14 +104,6 @@ func FuncImpl(name string) string {
 	return name + "ⁱᵐᵖˡ"
 }
 
-type ToValExpr struct {
-	Expr Expr
-}
-
-func (e ToValExpr) Coq(needs_paren bool) string {
-	return fmt.Sprintf("#%s", e.Expr.Coq(true))
-}
-
 type Expr interface {
 	// Coq converts the expression to a Coq string, wrapping with parens if needs_paren is true
 	Coq(needs_paren bool) string
@@ -381,9 +373,9 @@ func (sl StructLiteral) Coq(needs_paren bool) string {
 	return addParens(needs_paren, pp.Build())
 }
 
-type BoolLiteral bool
+type GooseBoolLiteral bool
 
-func (b BoolLiteral) Coq(needs_paren bool) string {
+func (b GooseBoolLiteral) Coq(needs_paren bool) string {
 	if b {
 		return "#true"
 	} else {
@@ -391,17 +383,14 @@ func (b BoolLiteral) Coq(needs_paren bool) string {
 	}
 }
 
-var (
-	False BoolLiteral = BoolLiteral(false)
-	True  BoolLiteral = BoolLiteral(true)
-)
+type BoolLiteral bool
 
-type BoolVal struct {
-	Value Expr
-}
-
-func (b BoolVal) Coq(needs_paren bool) string {
-	return fmt.Sprintf("#%s", b.Value.Coq(true))
+func (b BoolLiteral) Coq(needs_paren bool) string {
+	if b {
+		return "true"
+	} else {
+		return "false"
+	}
 }
 
 // GooseLang unit value
@@ -437,6 +426,10 @@ func (s StringLiteral) Coq(needs_paren bool) string {
 	return fmt.Sprintf(`"%s"`, strings.Replace(s.Value, `"`, `""`, -1)) + "%go"
 }
 
+func NewStringVal(s string) Expr {
+	return ToVal{Value: StringLiteral{Value: s}}
+}
+
 type Int64Val struct {
 	Value Expr
 }
@@ -469,15 +462,11 @@ func (l Int8Val) Coq(needs_paren bool) string {
 	return fmt.Sprintf("#(W8 %s)", l.Value.Coq(true))
 }
 
-type StringVal struct {
+type ToVal struct {
 	Value Expr
 }
 
-func NewStringVal(s string) StringVal {
-	return StringVal{Value: StringLiteral{Value: s}}
-}
-
-func (l StringVal) Coq(needs_paren bool) string {
+func (l ToVal) Coq(needs_paren bool) string {
 	return fmt.Sprintf(`#%s`, l.Value.Coq(true))
 }
 
