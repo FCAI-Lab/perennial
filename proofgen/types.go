@@ -8,7 +8,6 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/goose-lang/goose"
 	"github.com/goose-lang/goose/declfilter"
 	"github.com/goose-lang/goose/deptracker"
 	"github.com/goose-lang/goose/glang"
@@ -63,51 +62,6 @@ func (tr *typesTranslator) toCoqTypeWithDeps(t types.Type) string {
 		return t.Obj().Name() + "'"
 	}
 	panic(fmt.Sprintf("Unknown type %v (of type %T)", t, t))
-}
-
-// toGlangType converts a Go type to a GooseLang type
-func toGlangType(t types.Type) glang.Expr {
-	if tr := goose.SimpleType(t); tr != nil {
-		return tr
-	}
-	switch t := types.Unalias(t).(type) {
-	case *types.TypeParam:
-		// type parameters for proofgen are bound Gallina variables
-		return glang.GallinaIdent(t.Obj().Name())
-	case *types.Map:
-		keyT := toGlangType(t.Key())
-		valueT := toGlangType(t.Elem())
-		return glang.MapType{
-			Key:   keyT,
-			Value: valueT,
-		}
-	case *types.Chan:
-		elemT := toGlangType(t.Elem())
-		return glang.ChanType{
-			Elem: elemT,
-		}
-	case *types.Named:
-		pkg := t.Obj().Pkg().Name()
-		name := t.Obj().Name()
-		// NOTE: names are always qualified with the package name since it works and
-		// is simpler to implement
-		if t.TypeArgs().Len() != 0 {
-			return glang.CallExpr{
-				MethodName: glang.GallinaIdent(fmt.Sprintf("%s.%s.ty", pkg, name)),
-				Args:       convertTypeArgsToGlang(t.TypeArgs()),
-			}
-		}
-		return glang.GallinaIdent(fmt.Sprintf("%s.%s", pkg, name))
-	}
-	panic(fmt.Sprintf("toGolangType: unimplemented proofgen support for type %v (of type %T)", t, t))
-}
-
-func convertTypeArgsToGlang(typeList *types.TypeList) (glangTypeArgs []glang.Expr) {
-	glangTypeArgs = make([]glang.Expr, typeList.Len())
-	for i := range glangTypeArgs {
-		glangTypeArgs[i] = toGlangType(typeList.At(i))
-	}
-	return
 }
 
 func (tr *typesTranslator) newDecl(spec *ast.TypeSpec, info tmpl.TypeInfo) tmpl.TypeDecl {
