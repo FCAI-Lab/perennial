@@ -36,6 +36,6 @@ func main() {
 	for _, pkg := range pkgs {
 		pf := proofsetup.New(pkg)
 		fmt.Printf("%s:\n", blue(pf.ProofPath))
-		fmt.Printf(pf.SkeletonFile())
+		fmt.Print(pf.SkeletonFile())
 	}
 }
