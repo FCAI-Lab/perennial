@@ -860,6 +860,48 @@ func (d ConstDecl) DefName() (bool, string) {
 	return true, d.Name
 }
 
+type ClassField struct {
+	FieldName  string
+	FieldArgs  []string
+	Type       Expr
+	IsInstance bool
+}
+
+func (c ClassField) Coq() string {
+	s, sep := c.FieldName, ":"
+	if c.IsInstance {
+		s, sep = "#[global] " + c.FieldName, "::"
+	}
+	for _, a := range c.FieldArgs {
+		s = s + " " + a
+	}
+	return s + " " + sep + " " + c.Type.Coq(false) + ";"
+}
+
+type PropClassDecl struct {
+	// Can be empty (instance gets an automatic name in Coq)
+	Name   string
+	Fields []ClassField
+}
+
+func (d PropClassDecl) CoqDecl() string {
+	var pp buffer
+	pp.Add("Class %s `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=",
+		d.Name)
+	pp.Add("{")
+	pp.Indent(2)
+	for _, field := range d.Fields {
+		pp.Add("%s", field.Coq())
+	}
+	pp.Indent(-2)
+	pp.Add("}.")
+	return pp.Build()
+}
+
+func (d PropClassDecl) DefName() (bool, string) {
+	return true, d.Name
+}
+
 type InstanceDecl struct {
 	Type Expr
 	// If not global, instance will be export

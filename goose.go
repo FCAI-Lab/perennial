@@ -60,7 +60,7 @@ type Ctx struct {
 	dep *deptracker.Deps
 
 	globalVars []*ast.Ident
-	functions  []string
+	functions  []*ast.FuncDecl
 	namedTypes []*types.Named
 
 	importNames        map[string]*types.PkgName
@@ -2435,7 +2435,7 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 			Type: glang.GallinaVerbatim("go_string"),
 		})
 		if d.Name.Name != "init" {
-			ctx.functions = append(ctx.functions, d.Name.Name)
+			ctx.functions = append(ctx.functions, d)
 		}
 	}
 
@@ -2808,6 +2808,48 @@ func (ctx *Ctx) decl(d ast.Decl) []glang.Decl {
 	return nil
 }
 
+func (ctx *Ctx) packagePropClass() []glang.Decl {
+	var decls = []glang.Decl{}
+
+	// top-level decl
+	var fields []glang.ClassField
+
+	for _, f := range ctx.functions {
+		if ctx.filter.GetAction(f.Name.Name) == declfilter.Axiomatize {
+			continue
+		}
+
+		var typeArgBinders []string
+		var typeArgs glang.ListExpr
+		if f.Type.TypeParams != nil {
+			for _, p := range f.Type.TypeParams.List {
+				for _, name := range p.Names {
+					typeArgs = append(typeArgs, glang.GallinaIdent(name.Name))
+					typeArgBinders = append(typeArgBinders, name.Name)
+				}
+			}
+		}
+		// FIXME: instantiate the implementation too
+		fields = append(fields, glang.ClassField{
+			FieldName: fmt.Sprintf("%s_unfold", f.Name.Name),
+			FieldArgs: typeArgBinders,
+			Type: glang.NewCallExpr(glang.GallinaVerbatim("FuncUnfold"),
+				ctx.gallinaIdent(f.Name.Name), typeArgs,
+				ctx.gallinaIdent(glang.FuncImpl(f.Name.Name)),
+			),
+			IsInstance: true,
+		})
+	}
+
+	topDecl := glang.PropClassDecl{
+		Name:   "Assumptions",
+		Fields: fields,
+	}
+	decls = append(decls, topDecl)
+
+	return decls
+}
+
 // After using Ctx to translate every decl, this will return the extra decls
 // that should be added to the accumulated set of glang.Decls.
 func (ctx *Ctx) finalExtraDecls() []glang.Decl {
@@ -2833,10 +2875,7 @@ func (ctx *Ctx) finalExtraDecls() []glang.Decl {
 		})
 	}
 
-	ctx.dep.SetCurrentName("initialize'")
-	defer ctx.dep.UnsetCurrentName()
-	initFunc := glang.FuncDecl{Name: "initialize'"}
-
+	ctx.dep.SetCurrentName("info'")
 	var imports glang.ListExpr
 	for _, impName := range ctx.importNamesOrdered {
 		pkg := impName.Imported()
@@ -2849,7 +2888,6 @@ func (ctx *Ctx) finalExtraDecls() []glang.Decl {
 			{Name: "pkg_imported_pkgs", Value: imports},
 		},
 	}
-
 	infoInstanceDecl := glang.InstanceDecl{
 		Type: glang.NewCallExpr(glang.GallinaVerbatim("PkgInfo"),
 			ctx.gallinaIdent(ctx.pkgIdent),
@@ -2859,6 +2897,11 @@ func (ctx *Ctx) finalExtraDecls() []glang.Decl {
 		Name:   "info'", // no name required
 	}
 	decls = append(decls, infoInstanceDecl)
+	ctx.dep.UnsetCurrentName()
+
+	ctx.dep.SetCurrentName("initialize'")
+	defer ctx.dep.UnsetCurrentName()
+	initFunc := glang.FuncDecl{Name: "initialize'"}
 
 	var e glang.Expr
 
@@ -2875,7 +2918,7 @@ func (ctx *Ctx) finalExtraDecls() []glang.Decl {
 		})
 	}
 
-	// initialize all local vars
+	// initialize all global vars
 InitLoop:
 	for i := range ctx.info.InitOrder {
 		init := ctx.info.InitOrder[len(ctx.info.InitOrder)-i-1]
@@ -2986,5 +3029,6 @@ InitLoop:
 	initFunc.Body = e
 	decls = append(decls, initFunc)
 
+	decls = append(decls, ctx.packagePropClass()...)
 	return decls
 }

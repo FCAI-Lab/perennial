@@ -24,7 +24,7 @@ func Package(w io.Writer, pkg *packages.Package, ffi string, filter declfilter.D
 	pf.Types = translateTypes(pkg, filter)
 	pf.Names = translateNames(pkg, filter)
 
-	if err := pf.Write(w); err != nil {
-		panic(err)
-	}
+	// if err := pf.Write(w); err != nil {
+	// 	panic(err)
+	// }
 }
