@@ -2820,7 +2820,7 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 		}
 
 		var typeArgBinders []string
-		var typeArgs glang.ListExpr
+		var typeArgs []glang.Expr
 		if f.Type.TypeParams != nil {
 			for _, p := range f.Type.TypeParams.List {
 				for _, name := range p.Names {
@@ -2829,13 +2829,16 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 				}
 			}
 		}
-		// FIXME: instantiate the implementation too
+		impl := ctx.gallinaIdent(glang.FuncImpl(f.Name.Name))
+		if len(typeArgs) > 0 {
+			impl = glang.NewCallExpr(impl, typeArgs...)
+		}
 		fields = append(fields, glang.ClassField{
 			FieldName: fmt.Sprintf("%s_unfold", f.Name.Name),
 			FieldArgs: typeArgBinders,
 			Type: glang.NewCallExpr(glang.GallinaVerbatim("FuncUnfold"),
-				ctx.gallinaIdent(f.Name.Name), typeArgs,
-				ctx.gallinaIdent(glang.FuncImpl(f.Name.Name)),
+				ctx.gallinaIdent(f.Name.Name), glang.ListExpr(typeArgs),
+				impl,
 			),
 			IsInstance: true,
 		})

@@ -870,7 +870,7 @@ type ClassField struct {
 func (c ClassField) Coq() string {
 	s, sep := c.FieldName, ":"
 	if c.IsInstance {
-		s, sep = "#[global] " + c.FieldName, "::"
+		s, sep = "#[global] "+c.FieldName, "::"
 	}
 	for _, a := range c.FieldArgs {
 		s = s + " " + a
