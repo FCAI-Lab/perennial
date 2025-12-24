@@ -2808,6 +2808,79 @@ func (ctx *Ctx) decl(d ast.Decl) []glang.Decl {
 	return nil
 }
 
+func (ctx *Ctx) namedTypePropClass(t *types.Named) (field glang.ClassField, decls []glang.Decl) {
+
+	typeName := t.Obj().Name()
+	ty := ctx.glangType(t.Obj(), t)
+	goMset := types.NewMethodSet(t)
+
+	var typeParams []string
+	var typeArgs []glang.Expr
+	if tps := t.TypeParams(); tps != nil {
+		for i := range tps.Len() {
+			typeParams = append(typeParams, tps.At(i).Obj().Name())
+			typeArgs = append(typeArgs, glang.GallinaIdent(tps.At(i).Obj().Name()))
+		}
+	}
+
+	decl := glang.PropClassDecl{
+		Name: t.Obj().Name() + "_Assumptions",
+		Params: typeParams,
+	}
+
+	field = glang.ClassField{
+		Name: "TODO set higher level",
+		Params: typeParams,
+		Type: glang.NewCallExpr(glang.GallinaIdent(t.Obj().Name() + "_Assumptions"), typeArgs...),
+		IsInstance: true,
+	}
+
+	// for every method in `t`
+	for i := range goMset.Len() {
+		selection := goMset.At(i)
+		methodName, index := selection.Obj().Name(), selection.Index()
+		if ctx.filter.GetAction(typeName+"."+methodName) == declfilter.Translate {
+			var impl glang.Expr
+			if len(index) == 0 {
+				ctx.nope(t.Obj(), "expected non-empty index in methodSet translation")
+			} else if len(index) == 1 {
+				impl = ctx.gallinaIdent(glang.TypeMethod(typeName, methodName))
+			} else {
+				structType, ok := t.Underlying().(*types.Struct)
+				if !ok {
+					ctx.nope(t.Obj(), "type with embedded method should be a struct")
+				}
+				field := structType.Field(index[0])
+				impl = glang.ValueScoped{Value: glang.FuncLit{
+					Args: []glang.Binder{{Name: "$r"}},
+					Body: glang.NewCallExpr(
+						glang.GallinaVerbatim("MethodResolve"),
+						ctx.glangType(field, field.Type()),
+						glang.GallinaIdent(methodName),
+						glang.Tt,
+						glang.NewCallExpr(
+							glang.GallinaVerbatim("StructFieldGet"),
+							ctx.glangType(t.Obj(), t),
+							glang.NewStringVal(field.Name()),
+							glang.IdentExpr("$r"),
+						),
+					),
+				}}
+			}
+			decl.Fields = append(decl.Fields,
+				glang.ClassField{Name: "blah",
+					Type: glang.NewCallExpr(
+						glang.GallinaVerbatim("MethodUnfold"),
+						ty, impl,
+					),
+				})
+		}
+	}
+
+	// for every method in `*t`
+	return t.Obj().Name() + "_Assumptions", decls
+}
+
 func (ctx *Ctx) packagePropClass() []glang.Decl {
 	var decls = []glang.Decl{}
 
@@ -2834,8 +2907,8 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 			impl = glang.NewCallExpr(impl, typeArgs...)
 		}
 		fields = append(fields, glang.ClassField{
-			FieldName: fmt.Sprintf("%s_unfold", f.Name.Name),
-			FieldArgs: typeArgBinders,
+			Name: fmt.Sprintf("%s_unfold", f.Name.Name),
+			Params: typeArgBinders,
 			Type: glang.NewCallExpr(glang.GallinaVerbatim("FuncUnfold"),
 				ctx.gallinaIdent(f.Name.Name), glang.ListExpr(typeArgs),
 				impl,
@@ -2866,7 +2939,6 @@ func (ctx *Ctx) finalExtraDecls() []glang.Decl {
 				typeParams = append(typeParams, tps.At(i).Obj().Name())
 				typeParamsList = append(typeParamsList, glang.GallinaIdent(tps.At(i).Obj().Name()))
 			}
-
 		}
 		decls = append(decls, glang.TypeDecl{
 			Name: namedType.Obj().Name(),

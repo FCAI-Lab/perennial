@@ -861,18 +861,18 @@ func (d ConstDecl) DefName() (bool, string) {
 }
 
 type ClassField struct {
-	FieldName  string
-	FieldArgs  []string
+	Name  string
+	Params  []string
 	Type       Expr
 	IsInstance bool
 }
 
 func (c ClassField) Coq() string {
-	s, sep := c.FieldName, ":"
+	s, sep := c.Name, ":"
 	if c.IsInstance {
-		s, sep = "#[global] "+c.FieldName, "::"
+		s, sep = "#[global] "+c.Name, "::"
 	}
-	for _, a := range c.FieldArgs {
+	for _, a := range c.Params {
 		s = s + " " + a
 	}
 	return s + " " + sep + " " + c.Type.Coq(false) + ";"
@@ -881,6 +881,7 @@ func (c ClassField) Coq() string {
 type PropClassDecl struct {
 	// Can be empty (instance gets an automatic name in Coq)
 	Name   string
+	Params []string
 	Fields []ClassField
 }
 
