@@ -25,7 +25,7 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	case declfilter.Axiomatize:
 		decls = append(decls, glang.AxiomDecl{
 			DeclName: declName,
-			Type:     glang.GallinaVerbatim("go.type"),
+			Type:     glang.VerbatimExpr("go.type"),
 		})
 		return
 	case declfilter.Trust:
@@ -143,7 +143,7 @@ func (ctx *Ctx) glangType(n locatable, t types.Type) glang.Expr {
 	case *types.Basic:
 		return ctx.basicType(n, t)
 	case *types.Pointer:
-		return glang.NewCallExpr(glang.GallinaVerbatim("go.PointerType"), ctx.glangType(n, t.Elem()))
+		return glang.NewCallExpr(glang.VerbatimExpr("go.PointerType"), ctx.glangType(n, t.Elem()))
 	case *types.Named:
 		if t.Obj().Pkg() == nil {
 			switch t.Obj().Name() {
@@ -181,7 +181,7 @@ func (ctx *Ctx) glangType(n locatable, t types.Type) glang.Expr {
 			glang.GallinaIdent(chanDir), ctx.glangType(n, t.Elem()),
 		)
 	case *types.Array:
-		return glang.NewCallExpr(glang.GallinaVerbatim("go.ArrayType"),
+		return glang.NewCallExpr(glang.VerbatimExpr("go.ArrayType"),
 			glang.ZLiteral{Value: big.NewInt(t.Len())}, ctx.glangType(n, t.Elem()))
 	case *types.Signature:
 		return glang.NewCallExpr(glang.GallinaIdent("go.FunctionType"), ctx.signature(n, t))

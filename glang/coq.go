@@ -138,10 +138,10 @@ func (e GallinaIdent) Coq(needs_paren bool) string {
 	return string(e)
 }
 
-// GallinaVerbatim is translated literally to Coq.
-type GallinaVerbatim string
+// VerbatimExpr is translated literally to Coq.
+type VerbatimExpr string
 
-func (e GallinaVerbatim) Coq(needs_paren bool) string {
+func (e VerbatimExpr) Coq(needs_paren bool) string {
 	return string(e)
 }
 
@@ -860,47 +860,18 @@ func (d ConstDecl) DefName() (bool, string) {
 	return true, d.Name
 }
 
-type ClassField struct {
-	Name  string
-	Params  []string
-	Type       Expr
-	IsInstance bool
+// VerbatimDecl is translated literally as a Coq declaration.
+type VerbatimDecl struct {
+	Content string
+	Name    string
 }
 
-func (c ClassField) Coq() string {
-	s, sep := c.Name, ":"
-	if c.IsInstance {
-		s, sep = "#[global] "+c.Name, "::"
-	}
-	for _, a := range c.Params {
-		s = s + " " + a
-	}
-	return s + " " + sep + " " + c.Type.Coq(false) + ";"
+func (e VerbatimDecl) CoqDecl() string {
+	return e.Content
 }
 
-type PropClassDecl struct {
-	// Can be empty (instance gets an automatic name in Coq)
-	Name   string
-	Params []string
-	Fields []ClassField
-}
-
-func (d PropClassDecl) CoqDecl() string {
-	var pp buffer
-	pp.Add("Class %s `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=",
-		d.Name)
-	pp.Add("{")
-	pp.Indent(2)
-	for _, field := range d.Fields {
-		pp.Add("%s", field.Coq())
-	}
-	pp.Indent(-2)
-	pp.Add("}.")
-	return pp.Build()
-}
-
-func (d PropClassDecl) DefName() (bool, string) {
-	return true, d.Name
+func (e VerbatimDecl) DefName() (bool, string) {
+	return true, e.Content
 }
 
 type InstanceDecl struct {
