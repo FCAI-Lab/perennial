@@ -2673,7 +2673,7 @@ func (ctx *Ctx) namedTypePropClass(t *types.Named) []glang.Decl {
 	ptrTy := "(go.PointerType " + ty + ")"
 
 	w := new(strings.Builder)
-	fmt.Fprintln(w, "Class "+typeName+"'Assumptions "+
+	fmt.Fprintln(w, "Class "+typeName+"_Assumptions "+
 		"`{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=")
 	fmt.Fprintln(w, "{")
 
@@ -2752,7 +2752,7 @@ func (ctx *Ctx) namedTypePropClass(t *types.Named) []glang.Decl {
 		fmt.Fprintln(w, "  #[global] "+typeName+"'ptr_"+methodName+"_unfold"+typeParams+
 			" :: MethodUnfold "+ptrTy+` "`+methodName+`" `+impl+";")
 	}
-	fmt.Fprintln(w, "}.")
+	fmt.Fprint(w, "}.")
 
 	decl := glang.VerbatimDecl{
 		Name:    t.Obj().Name() + "_Assumptions",
@@ -2769,6 +2769,11 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 	w := new(strings.Builder)
 	fmt.Fprintln(w, "Class Assumptions `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=")
 	fmt.Fprintln(w, "{")
+
+	for _, t := range ctx.namedTypes {
+		decls = append(decls, ctx.namedTypePropClass(t)...)
+		fmt.Fprintln(w, "  #[global] "+t.Obj().Name()+"_instance :: "+t.Obj().Name()+"_Assumptions;")
+	}
 
 	for _, f := range ctx.functions {
 		if ctx.filter.GetAction(f.Name.Name) == declfilter.Axiomatize {
@@ -2800,10 +2805,6 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 		Content: w.String(),
 	}
 	decls = append(decls, topDecl)
-
-	for _, t := range ctx.namedTypes {
-		decls = append(decls, ctx.namedTypePropClass(t)...)
-	}
 
 	return decls
 }
