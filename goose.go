@@ -362,7 +362,8 @@ func (ctx *Ctx) maybeHandleSpecialBuiltin(s *ast.CallExpr) (glang.Expr, bool) {
 	case "new":
 		sig := ctx.typeOf(s.Fun).(*types.Signature)
 		ty := ctx.glangType(s.Args[0], sig.Params().At(0).Type())
-		return glang.NewCallExpr(glang.GallinaIdent("GoAlloc"), ty, glang.Tt), true
+		return glang.NewCallExpr(glang.GallinaIdent("GoAlloc"), ty,
+			glang.NewCallExpr(glang.VerbatimExpr("GoZeroVal"), ty, glang.Tt)), true
 	case "len", "cap":
 		if _, ok := ctx.typeOf(s.Fun).(*types.Signature); ok {
 			return nil, false
@@ -767,7 +768,7 @@ func (ctx *Ctx) unaryExpr(e *ast.UnaryExpr, multipleBindings bool) glang.Expr {
 		if cl, ok := e.X.(*ast.CompositeLit); ok {
 			// e is &T{...} (a composite literal)
 			sl := ctx.compositeLiteral(cl)
-			return glang.NewCallExpr(glang.VerbatimExpr("go.AllocValue"),
+			return glang.NewCallExpr(glang.VerbatimExpr("GoAlloc"),
 				ctx.glangType(cl.Type, ctx.typeOf(e.X)), sl)
 		}
 		// e is something else
@@ -1117,7 +1118,7 @@ func (ctx *Ctx) funcLit(e *ast.FuncLit) glang.FuncLit {
 			fl.Body = glang.LetExpr{
 				Names: []string{arg.Name},
 				ValExpr: glang.NewCallExpr(
-					glang.VerbatimExpr("go.AllocValue"),
+					glang.VerbatimExpr("GoAlloc"),
 					argTypes[i], glang.IdentExpr(arg.Name)),
 				Cont: fl.Body,
 			}
@@ -1128,9 +1129,10 @@ func (ctx *Ctx) funcLit(e *ast.FuncLit) glang.FuncLit {
 			t := ctx.glangType(r.Type, ctx.typeOf(r.Type))
 			for _, name := range r.Names {
 				fl.Body = glang.LetExpr{
-					Names:   []string{name.Name},
-					ValExpr: glang.NewCallExpr(glang.VerbatimExpr("GoAlloc"), t, glang.Tt),
-					Cont:    fl.Body,
+					Names: []string{name.Name},
+					ValExpr: glang.NewCallExpr(glang.VerbatimExpr("GoAlloc"), t,
+						glang.NewCallExpr(glang.VerbatimExpr("GoZeroVal"), t, glang.Tt)),
+					Cont: fl.Body,
 				}
 			}
 		}
@@ -1359,9 +1361,10 @@ func (ctx *Ctx) rangeStmt(s *ast.RangeStmt) glang.Expr {
 			if key.Name != "_" {
 				t := ctx.glangType(s.Key, ctx.typeOf(s.Key))
 				e = glang.LetExpr{
-					Names:   []string{key.Name},
-					ValExpr: glang.NewCallExpr(glang.VerbatimExpr("GoAlloc"), t, glang.Tt),
-					Cont:    e,
+					Names: []string{key.Name},
+					ValExpr: glang.NewCallExpr(glang.VerbatimExpr("GoAlloc"), t,
+						glang.NewCallExpr(glang.VerbatimExpr("GoZeroVal"), t, glang.Tt)),
+					Cont: e,
 				}
 			}
 		}
@@ -1374,9 +1377,10 @@ func (ctx *Ctx) rangeStmt(s *ast.RangeStmt) glang.Expr {
 			if value.Name != "_" {
 				t := ctx.glangType(s.Value, ctx.typeOf(s.Value))
 				e = glang.LetExpr{
-					Names:   []string{value.Name},
-					ValExpr: glang.NewCallExpr(glang.VerbatimExpr("GoAlloc"), t, glang.Tt),
-					Cont:    e,
+					Names: []string{value.Name},
+					ValExpr: glang.NewCallExpr(glang.VerbatimExpr("GoAlloc"), t,
+						glang.NewCallExpr(glang.VerbatimExpr("GoZeroVal"), t, glang.Tt)),
+					Cont: e,
 				}
 			}
 		}
@@ -1425,9 +1429,10 @@ func (ctx *Ctx) defineStmt(s *ast.AssignStmt, cont glang.Expr) glang.Expr {
 				}
 				t := ctx.glangType(ident, ctx.info.TypeOf(ident))
 				e = glang.LetExpr{
-					Names:   []string{ident.Name},
-					ValExpr: glang.NewCallExpr(glang.VerbatimExpr("GoAlloc"), t, glang.Tt),
-					Cont:    e,
+					Names: []string{ident.Name},
+					ValExpr: glang.NewCallExpr(glang.VerbatimExpr("GoAlloc"), t,
+						glang.NewCallExpr(glang.VerbatimExpr("GoZeroVal"), t, glang.Tt)),
+					Cont: e,
 				}
 			}
 		} else {
@@ -2116,7 +2121,7 @@ func (ctx *Ctx) typeSwitchStmt(s *ast.TypeSwitchStmt, cont glang.Expr) (e glang.
 				// for that case
 				body = glang.LetExpr{
 					Names: []string{x.Name},
-					ValExpr: glang.NewCallExpr(glang.VerbatimExpr("go.AllocValue"), ty,
+					ValExpr: glang.NewCallExpr(glang.VerbatimExpr("GoAlloc"), ty,
 						glang.IdentExpr("$x")),
 					Cont: body,
 				}
@@ -2340,7 +2345,7 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 				fd.Body = glang.LetExpr{
 					Names: []string{name},
 					ValExpr: glang.NewCallExpr(
-						glang.VerbatimExpr("go.AllocValue"),
+						glang.VerbatimExpr("GoAlloc"),
 						ctx.glangType(receiver, ctx.typeOf(receiver.Type)),
 						glang.IdentExpr(name)),
 					Cont: fd.Body,
@@ -2422,7 +2427,7 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 			fd.Body = glang.LetExpr{
 				Names: []string{arg.Name},
 				ValExpr: glang.NewCallExpr(
-					glang.VerbatimExpr("go.AllocValue"),
+					glang.VerbatimExpr("GoAlloc"),
 					argTypes[i], glang.IdentExpr(arg.Name)),
 				Cont: fd.Body,
 			}
@@ -2434,9 +2439,10 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 			t := ctx.glangType(r.Type, ctx.typeOf(r.Type))
 			for _, name := range r.Names {
 				fd.Body = glang.LetExpr{
-					Names:   []string{name.Name},
-					ValExpr: glang.NewCallExpr(glang.VerbatimExpr("GoAlloc"), t, glang.Tt),
-					Cont:    fd.Body,
+					Names: []string{name.Name},
+					ValExpr: glang.NewCallExpr(glang.VerbatimExpr("GoAlloc"), t,
+						glang.NewCallExpr(glang.VerbatimExpr("GoZeroVal"), t, glang.Tt)),
+					Cont: fd.Body,
 				}
 			}
 		}
