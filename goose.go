@@ -759,11 +759,9 @@ func (ctx *Ctx) unaryExpr(e *ast.UnaryExpr, multipleBindings bool) glang.Expr {
 	if e.Op == token.AND {
 		if x, ok := e.X.(*ast.IndexExpr); ok {
 			// e is &a[b] where x is a.b
-			if xTy, ok := ctx.typeOf(x.X).(*types.Slice); ok {
-				return glang.NewCallExpr(glang.VerbatimExpr("IndexRef"),
-					ctx.glangType(e, xTy.Elem()),
-					glang.TupleExpr{ctx.expr(x.X), ctx.expr(x.Index)})
-			}
+			return glang.NewCallExpr(glang.VerbatimExpr("IndexRef"),
+				ctx.glangType(e, ctx.typeOf(x)),
+				glang.TupleExpr{ctx.expr(x.X), ctx.expr(x.Index)})
 		}
 		if cl, ok := e.X.(*ast.CompositeLit); ok {
 			// e is &T{...} (a composite literal)
@@ -1506,20 +1504,9 @@ func (ctx *Ctx) exprAddr(e ast.Expr) glang.Expr {
 		}
 	case *ast.IndexExpr:
 		targetTy := ctx.typeOf(e.X)
-		switch targetTy := targetTy.Underlying().(type) {
-		case *types.Slice:
-			return glang.NewCallExpr(glang.VerbatimExpr("IndexRef"),
-				ctx.glangType(e, targetTy.Elem()),
-				glang.TupleExpr{ctx.expr(e.X), ctx.expr(e.Index)})
-		case *types.Map:
-			ctx.nope(e, "map index expressions are not addressable")
-		case *types.Array:
-			return glang.NewCallExpr(glang.VerbatimExpr("array.elem_ref"),
-				ctx.glangType(e, targetTy.Elem()),
-				ctx.expr(e.X), ctx.expr(e.Index))
-		default:
-			ctx.unsupported(e, "index addr to unexpected target of type %v", targetTy)
-		}
+		return glang.NewCallExpr(glang.VerbatimExpr("IndexRef"),
+			ctx.glangType(e, targetTy),
+			glang.TupleExpr{ctx.expr(e.X), ctx.expr(e.Index)})
 	case *ast.StarExpr:
 		return ctx.expr(e.X)
 	case *ast.SelectorExpr:
