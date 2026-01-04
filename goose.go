@@ -26,6 +26,7 @@ import (
 	"github.com/goose-lang/goose/declfilter"
 	"github.com/goose-lang/goose/deptracker"
 	"github.com/goose-lang/goose/glang"
+	"github.com/goose-lang/goose/util"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -45,6 +46,8 @@ type Ctx struct {
 	// this results in `func_call #globals_test.main ...`).
 	pkgIdent string
 	errorReporter
+
+	declImplicitParams string
 
 	// XXX: this is so we can determine the expected return type when handling a
 	// `returnStmt` so the appropriate conversion is inserted
@@ -76,14 +79,19 @@ func NewPkgCtx(pkg *packages.Package, filter declfilter.DeclFilter) Ctx {
 	coqPath := glang.ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(pkg.PkgPath)
 	ss := strings.Split(coqPath, "/")
 	pkgIdent := ss[len(ss)-1]
+	declImplicitParams := "{go_gctx : GoGlobalsContext}"
+	if util.GetFfi(pkg) == "" {
+		declImplicitParams = "{ext : ffi_syntax} " + declImplicitParams
+	}
 	return Ctx{
-		info:          pkg.TypesInfo,
-		pkgPath:       pkg.PkgPath,
-		pkgIdent:      pkgIdent + "." + pkg.Name,
-		errorReporter: newErrorReporter(pkg.Fset),
-		dep:           deptracker.New(),
-		importNames:   make(map[string]*types.PkgName),
-		filter:        filter,
+		info:               pkg.TypesInfo,
+		pkgPath:            pkg.PkgPath,
+		declImplicitParams: declImplicitParams,
+		pkgIdent:           pkgIdent + "." + pkg.Name,
+		errorReporter:      newErrorReporter(pkg.Fset),
+		dep:                deptracker.New(),
+		importNames:        make(map[string]*types.PkgName),
+		filter:             filter,
 	}
 }
 
@@ -1839,7 +1847,7 @@ func (ctx *Ctx) incDecStmt(stmt *ast.IncDecStmt, cont glang.Expr) glang.Expr {
 	return ctx.assignFromTo(stmt.X, glang.BinaryExpr{
 		X:  ctx.expr(stmt.X),
 		Op: op,
-		Y: y,
+		Y:  y,
 	}, cont)
 }
 
@@ -2666,7 +2674,7 @@ func (ctx *Ctx) decl(d ast.Decl) []glang.Decl {
 	return nil
 }
 
-func (ctx *Ctx) namedTypePropClass(t *types.Named) []glang.Decl {
+func (ctx *Ctx) namedTypeDecl(t *types.Named) []glang.Decl {
 	typeName := t.Obj().Name()
 
 	typeParams := ""
@@ -2682,7 +2690,7 @@ func (ctx *Ctx) namedTypePropClass(t *types.Named) []glang.Decl {
 
 	w := new(strings.Builder)
 	fmt.Fprintln(w, "Class "+typeName+"_Assumptions "+
-		"`{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=")
+		"{ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=")
 	fmt.Fprintln(w, "{")
 
 	// for every method in `t`
@@ -2775,11 +2783,11 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 
 	// top-level decl
 	w := new(strings.Builder)
-	fmt.Fprintln(w, "Class Assumptions `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=")
+	fmt.Fprintln(w, "Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=")
 	fmt.Fprintln(w, "{")
 
 	for _, t := range ctx.namedTypes {
-		decls = append(decls, ctx.namedTypePropClass(t)...)
+		decls = append(decls, ctx.namedTypeDecl(t)...)
 		fmt.Fprintln(w, "  #[global] "+t.Obj().Name()+"_instance :: "+t.Obj().Name()+"_Assumptions;")
 	}
 
@@ -2822,45 +2830,20 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 func (ctx *Ctx) finalExtraDecls() []glang.Decl {
 	var decls = []glang.Decl{}
 
-	for _, namedType := range ctx.namedTypes {
-		var typeParams []string
-		var typeParamsList glang.ListExpr
-		if tps := namedType.TypeParams(); tps != nil {
-			for i := range tps.Len() {
-				typeParams = append(typeParams, tps.At(i).Obj().Name())
-				typeParamsList = append(typeParamsList, glang.GallinaIdent(tps.At(i).Obj().Name()))
-			}
-		}
-		decls = append(decls, glang.TypeDecl{
-			Name: namedType.Obj().Name(),
-			Body: glang.NewCallExpr(glang.VerbatimExpr("go.Named"),
-				glang.StringLiteral{Value: namedType.Obj().Pkg().Path() + "." + namedType.Obj().Name()},
-				typeParamsList,
-			),
-			TypeParams: typeParams,
-		})
-	}
-
 	ctx.dep.SetCurrentName("info'")
-	var imports glang.ListExpr
+
+	infoContents := fmt.Sprintf("#[global] Instance info' : PkgInfo %s := \n", ctx.pkgIdent) +
+		"{|\n  pkg_imported_pkgs := ["
+	sep := ""
 	for _, impName := range ctx.importNamesOrdered {
 		pkg := impName.Imported()
-		// Qualifying this path with `code` to avoid problems like `fmt.fmt` from conflicting with the type `fmt` declared in the package `fmt`.
-		qualifiedIdent := fmt.Sprintf("code.%s.%s", strings.ReplaceAll(glang.ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(pkg.Path()), "/", "."), pkg.Name())
-		imports = append(imports, ctx.gallinaIdent(qualifiedIdent))
+		infoContents += sep + fmt.Sprintf("code.%s.%s", strings.ReplaceAll(glang.ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(pkg.Path()), "/", "."), pkg.Name())
+		sep = "; "
 	}
-	infoRecord := glang.RecordLiteral{
-		Fields: []glang.RecordField{
-			{Name: "pkg_imported_pkgs", Value: imports},
-		},
-	}
-	infoInstanceDecl := glang.InstanceDecl{
-		Type: glang.NewCallExpr(glang.VerbatimExpr("PkgInfo"),
-			ctx.gallinaIdent(ctx.pkgIdent),
-		),
-		Global: true,
-		Body:   infoRecord,
-		Name:   "info'", // no name required
+	infoContents += "]\n|}."
+	infoInstanceDecl := glang.VerbatimDecl{
+		Name:    "info'",
+		Content: infoContents,
 	}
 	decls = append(decls, infoInstanceDecl)
 	ctx.dep.UnsetCurrentName()

@@ -18,16 +18,15 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 		ctx.namedTypes = append(ctx.namedTypes, t)
 		declName = spec.Name.Name + "ⁱᵐᵖˡ"
 	}
+
 	ctx.dep.SetCurrentName(declName)
 	defer ctx.dep.UnsetCurrentName()
-
 	switch ctx.filter.GetAction(spec.Name.Name) {
 	case declfilter.Axiomatize:
 		decls = append(decls, glang.AxiomDecl{
 			DeclName: declName,
 			Type:     glang.VerbatimExpr("go.type"),
 		})
-		return
 	case declfilter.Trust:
 	case declfilter.Translate:
 		ty := ctx.typeOf(spec.Type)
@@ -38,6 +37,26 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 		}
 		decls = append(decls, decl)
 	}
+
+	if namedType, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
+		var typeParams []string
+		var typeParamsList glang.ListExpr
+		if tps := namedType.TypeParams(); tps != nil {
+			for i := range tps.Len() {
+				typeParams = append(typeParams, tps.At(i).Obj().Name())
+				typeParamsList = append(typeParamsList, glang.GallinaIdent(tps.At(i).Obj().Name()))
+			}
+		}
+		decls = append(decls, glang.TypeDecl{
+			Name: namedType.Obj().Name(),
+			Body: glang.NewCallExpr(glang.VerbatimExpr("go.Named"),
+				glang.StringLiteral{Value: namedType.Obj().Pkg().Path() + "." + namedType.Obj().Name()},
+				typeParamsList,
+			),
+			TypeParams: typeParams,
+		})
+	}
+
 	return
 }
 

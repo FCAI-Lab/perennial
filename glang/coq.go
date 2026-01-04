@@ -807,6 +807,8 @@ func (d FuncDecl) Signature() string {
 	return strings.Join(args, " ")
 }
 
+const declImplicitParams = "{ext : ffi_syntax} {go_gctx : GoGlobalContext}"
+
 // CoqDecl implements the Decl interface
 //
 // For FuncDecl this emits the Coq vernacular Definition that defines the whole
@@ -824,7 +826,8 @@ func (d FuncDecl) CoqDecl() string {
 		typeParams = typeParams + ": go.type)"
 	}
 
-	pp.Add("Definition %s%s : val :=", GallinaIdent(d.Name).Coq(false), typeParams)
+	pp.Add("Definition %s %s%s : val :=",
+		GallinaIdent(d.Name).Coq(false), declImplicitParams, typeParams)
 	func() {
 		pp.Indent(2)
 		defer pp.Indent(-2)
@@ -850,8 +853,8 @@ type ConstDecl struct {
 func (d ConstDecl) CoqDecl() string {
 	var pp buffer
 	pp.AddComment(d.Comment)
-	indent := pp.Block("Definition ", "%s : %s := %s.",
-		GallinaIdent(d.Name).Coq(false), d.Type.Coq(false), d.Val.Coq(false))
+	indent := pp.Block("Definition ", "%s %s : %s := %s.",
+		GallinaIdent(d.Name).Coq(false), declImplicitParams, d.Type.Coq(false), d.Val.Coq(false))
 	pp.Indent(-indent)
 	return pp.Build()
 }
@@ -874,39 +877,14 @@ func (e VerbatimDecl) DefName() (bool, string) {
 	return true, e.Content
 }
 
-type InstanceDecl struct {
-	Type Expr
-	// If not global, instance will be export
-	Global bool
-	Body   Expr
-	// Can be empty (instance gets an automatic name in Coq)
-	Name string
-}
-
-func (d InstanceDecl) CoqDecl() string {
-	var pp buffer
-	qualifier := "#[export]"
-	if d.Global {
-		qualifier = "#[global]"
-	}
-	pp.Add("%s Instance %s : %s :=",
-		qualifier, d.Name, d.Type.Coq(false))
-	pp.Indent(2)
-	pp.Add("%s.", d.Body.Coq(false))
-	return pp.Build()
-}
-
-func (d InstanceDecl) DefName() (bool, string) {
-	return true, d.Name
-}
-
 type AxiomDecl struct {
 	DeclName string
 	Type     Expr
 }
 
 func (d AxiomDecl) CoqDecl() string {
-	return fmt.Sprintf("Axiom %s : %s.", GallinaIdent(d.DeclName).Coq(false), d.Type.Coq(false))
+	return fmt.Sprintf("Axiom %s : ∀ %s, %s.",
+		GallinaIdent(d.DeclName).Coq(false), declImplicitParams, d.Type.Coq(false))
 }
 
 func (d AxiomDecl) DefName() (bool, string) {
@@ -990,36 +968,14 @@ type RecordField struct {
 	Value Expr
 }
 
-// RecordLiteral represents a Gallina record literal
-type RecordLiteral struct {
-	Fields []RecordField
-}
-
-func (r RecordField) Coq(needs_paren bool) string {
-	return fmt.Sprintf("%s := %s", r.Name, r.Value.Coq(needs_paren))
-}
-
-func (r RecordLiteral) Coq(needs_paren bool) string {
-	var pp buffer
-	pp.AddLine("{|")
-	pp.Indent(2)
-	for _, field := range r.Fields {
-		pp.Add("%s;", field.Coq(false))
-	}
-	pp.Indent(-2)
-	pp.AddLine("|}")
-	return addParens(needs_paren, pp.Build())
-}
-
 // File represents a complete Coq file (a sequence of declarations).
 type File struct {
-	Header        string
-	SectionHeader string
-	Footer        string
-	PkgPath       string
-	GoPackage     string
-	Imports       ImportDecls
-	Decls         []Decl
+	Header    string
+	Footer    string
+	PkgPath   string
+	GoPackage string
+	Imports   ImportDecls
+	Decls     []Decl
 }
 
 // Write outputs the Coq source for a File.
@@ -1031,8 +987,6 @@ func (f File) Write(w io.Writer) {
 		fmt.Fprintln(w)
 	}
 	fmt.Fprintln(w, f.Header)
-
-	fmt.Fprintln(w, f.SectionHeader)
 	fmt.Fprintln(w)
 
 	for i, d := range f.Decls {

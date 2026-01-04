@@ -236,18 +236,15 @@ func (ctx *Ctx) initCoqFile(pkg *packages.Package, config declfilter.FilterConfi
 			fmt.Sprintf("Import %s.\n", pkg.Name)
 	}
 
-	f.Header += fmt.Sprintf("Definition %s : go_string := \"%s\".\n\n", pkg.Name, pkg.PkgPath)
 	ffi := util.GetFfi(pkg)
-	if ffi == "" {
-		f.Header += fmt.Sprintf("Module %s.\n", pkg.Name)
-		f.SectionHeader = "Section code.\n" + "Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.\n"
-	} else {
+	if ffi != "" {
 		f.Header += fmt.Sprintf("From New Require Import %s_prelude.\n", ffi)
-		f.Header += fmt.Sprintf("Module %s.\n", pkg.Name)
-		f.SectionHeader = "Section code.\n"
 	}
 
-	f.Footer = "\nEnd code.\n" + fmt.Sprintf("End %s.\n", pkg.Name)
+	f.Header += fmt.Sprintf("Definition %s : go_string := \"%s\".\n\n", pkg.Name, pkg.PkgPath)
+	f.Header += fmt.Sprintf("Module %s.", pkg.Name)
+
+	f.Footer = fmt.Sprintf("End %s.\n", pkg.Name)
 	return
 }
 
