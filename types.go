@@ -69,7 +69,7 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	w := new(strings.Builder)
 	fmt.Fprintf(w, "Module %s.\n", spec.Name.Name)
-	typeParams :=  ""
+	typeParams := ""
 	if tps := ctx.typeOf(spec.Name).(*types.Named).TypeParams(); tps != nil {
 		typeParams += "("
 		for i := range tps.Len() {
@@ -125,6 +125,29 @@ func (ctx *Ctx) namedTypePropClassDecl(t *types.Named) []glang.Decl {
 	fmt.Fprintln(w, "Class "+typeName+"_Assumptions "+
 		"{ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=")
 	fmt.Fprintln(w, "{")
+
+	// zero val instance
+	fmt.Fprintf(w, "  #[global] %s_zero_val ", typeName)
+	if t.TypeParams() != nil {
+		for i := range t.TypeParams().Len() {
+			fmt.Fprintf(w, "%s %[1]s' `{!ZeroVal %[1]s'} `{!go.ZeroValEq %[1]s %[1]s'}", t.TypeParams().At(i).Obj().Name())
+		}
+	}
+	fmt.Fprintf(w, " :: go.GoZeroValEq ")
+	if t.TypeParams() != nil {
+		fmt.Fprintf(w, "(%s", typeName)
+		for i := range t.TypeParams().Len() {
+			fmt.Fprintf(w, " %s", t.TypeParams().At(i).Obj().Name())
+		}
+		fmt.Fprintf(w, ") (%s.t", typeName)
+
+		for i := range t.TypeParams().Len() {
+			fmt.Fprintf(w, " %s'", t.TypeParams().At(i).Obj().Name())
+		}
+		fmt.Fprintf(w, ");\n")
+	} else {
+		fmt.Fprintf(w, "%s %s.t;\n", typeName, typeName)
+	}
 
 	// for every method in `t`
 	goMset := types.NewMethodSet(t)
