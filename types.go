@@ -9,6 +9,7 @@ import (
 
 	"github.com/goose-lang/goose/declfilter"
 	"github.com/goose-lang/goose/glang"
+	"github.com/goose-lang/goose/util"
 )
 
 // this file has the translations for types themselves
@@ -36,28 +37,73 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 			TypeParams: ctx.typeParamList(spec.TypeParams),
 		}
 		decls = append(decls, decl)
-	}
+		if namedType, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
+			// Add a go.type declaration
+			var typeParams []string
+			var typeParamsList glang.ListExpr
+			if tps := namedType.TypeParams(); tps != nil {
+				for i := range tps.Len() {
+					typeParams = append(typeParams, tps.At(i).Obj().Name())
+					typeParamsList = append(typeParamsList, glang.GallinaIdent(tps.At(i).Obj().Name()))
+				}
+			}
+			decls = append(decls, glang.TypeDecl{
+				Name: namedType.Obj().Name(),
+				Body: glang.NewCallExpr(glang.VerbatimExpr("go.Named"),
+					glang.StringLiteral{Value: namedType.Obj().Pkg().Path() + "." + namedType.Obj().Name()},
+					typeParamsList,
+				),
+				TypeParams: typeParams,
+			})
 
-	if namedType, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
-		var typeParams []string
-		var typeParamsList glang.ListExpr
-		if tps := namedType.TypeParams(); tps != nil {
-			for i := range tps.Len() {
-				typeParams = append(typeParams, tps.At(i).Obj().Name())
-				typeParamsList = append(typeParamsList, glang.GallinaIdent(tps.At(i).Obj().Name()))
+			// Add all the declarations associated with a new struct type
+			e := spec.Type
+			for {
+				if eparen, ok := e.(*ast.ParenExpr); ok {
+					e = eparen.X
+				} else {
+					break
+				}
+			}
+			if _, ok := e.(*ast.StructType); ok {
+				decls = append(decls, ctx.namedStructDecl(namedType)...)
 			}
 		}
-		decls = append(decls, glang.TypeDecl{
-			Name: namedType.Obj().Name(),
-			Body: glang.NewCallExpr(glang.VerbatimExpr("go.Named"),
-				glang.StringLiteral{Value: namedType.Obj().Pkg().Path() + "." + namedType.Obj().Name()},
-				typeParamsList,
-			),
-			TypeParams: typeParams,
-		})
 	}
 
 	return
+}
+
+func (ctx *Ctx) namedStructDecl(namedType *types.Named) (decls []glang.Decl) {
+	typeName := namedType.Obj().Name()
+	recordContent := "Module " + typeName + ".\nRecord t "
+
+	if tps := namedType.TypeParams(); tps != nil {
+		recordContent += "("
+		for i := range tps.Len() {
+			recordContent += tps.At(i).Obj().Name() + " "
+		}
+		recordContent += ": Type) "
+	}
+	recordContent += ":=\n{\n"
+	st := namedType.Underlying().(*types.Struct)
+	for i := range st.NumFields() {
+		f := st.Field(i)
+		err, ft := util.ToCoqType(f.Type())
+		if err != nil {
+			ctx.unsupported(namedType.Obj(), "%s", err.Error())
+		}
+		recordContent += "  " + f.Name() + " : " + ft + ";\n"
+	}
+	recordContent += "}.\nEnd " + typeName + "."
+
+	// recordContent
+	recordDecl := glang.VerbatimDecl{
+		Name:    typeName + ".t",
+		Content: recordContent,
+	}
+	decls = append(decls, recordDecl)
+	return decls
 }
 
 func (ctx *Ctx) typeOf(e ast.Expr) types.Type {

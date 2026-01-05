@@ -7,7 +7,7 @@ import (
 	"go/types"
 	"strings"
 
-	"github.com/goose-lang/goose/proofgen"
+	"github.com/goose-lang/goose/util"
 	"github.com/pkg/errors"
 	"golang.org/x/tools/go/packages"
 )
@@ -44,7 +44,10 @@ func getReceiverType(t types.Type) receiverType {
 }
 
 func argGallinaBinder(pkg *packages.Package, x *ast.Ident) string {
-	ty := proofgen.ToCoqType(pkg.TypesInfo.TypeOf(x), pkg)
+	err, ty := util.ToCoqType(pkg.TypesInfo.TypeOf(x))
+	if err != nil {
+		panic(err)
+	}
 	return fmt.Sprintf("(%s: %s)", x.Name, ty)
 }
 

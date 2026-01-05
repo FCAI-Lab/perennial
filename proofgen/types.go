@@ -12,6 +12,7 @@ import (
 	"github.com/goose-lang/goose/deptracker"
 	"github.com/goose-lang/goose/glang"
 	"github.com/goose-lang/goose/proofgen/tmpl"
+	"github.com/goose-lang/goose/util"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -33,7 +34,7 @@ func (tr typesTranslator) ReadablePos(p token.Pos) string {
 func (tr *typesTranslator) toCoqTypeWithDeps(t types.Type) string {
 	switch t := types.Unalias(t).(type) {
 	case *types.Basic:
-		return basicTypeToCoq(t)
+		return util.BasicTypeToCoq(t)
 	case *types.Slice:
 		return "slice.t"
 	case *types.Array:
@@ -47,7 +48,7 @@ func (tr *typesTranslator) toCoqTypeWithDeps(t types.Type) string {
 	case *types.Map, *types.Chan:
 		return "loc"
 	case *types.Named:
-		n := namedTypeToCoq(t, tr.pkg)
+		n := util.NamedTypeToCoq(t, tr.pkg)
 		tr.deps.Add(n)
 		return n
 	case *types.Struct:
