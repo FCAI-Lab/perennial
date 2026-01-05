@@ -69,18 +69,20 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	w := new(strings.Builder)
 	fmt.Fprintf(w, "Module %s.\n", spec.Name.Name)
+	fmt.Fprintf(w, "Section def.\nContext {ext : ffi_syntax} {go_gctx : GoGlobalContext}.\n")
 	typeParams := ""
-	if tps := ctx.typeOf(spec.Name).(*types.Named).TypeParams(); tps != nil {
-		typeParams += "("
+	namedType := ctx.typeOf(spec.Name).(*types.Named)
+	if tps := namedType.TypeParams(); tps != nil {
+		fmt.Fprintf(w, "Context {")
 		for i := range tps.Len() {
-			typeParams += tps.At(i).Obj().Name() + " "
+			fmt.Fprintf(w, "%s ", tps.At(i).Obj().Name())
 		}
-		typeParams += ": Type) "
+		fmt.Fprint(w, ": Type}.\n")
 	}
 
 	switch t := ctx.typeOf(spec.Type).(type) {
 	case *types.Struct:
-		fmt.Fprintf(w, "Record t %s:=\n{\n", typeParams)
+		fmt.Fprintf(w, "Record t :=\nmk {\n")
 		for i := range t.NumFields() {
 			f := t.Field(i)
 			err, ft := util.ToCoqType(f.Type())
@@ -89,14 +91,34 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 			}
 			fmt.Fprintf(w, "  %s : %s;\n", f.Name(), ft)
 		}
-		fmt.Fprintf(w, "}.\nEnd %s.", spec.Name.Name)
+		fmt.Fprintf(w, "}.\n")
+		fmt.Fprintf(w, "#[global] Instance zero_val")
+
+		if tps := namedType.TypeParams(); tps != nil {
+			for i := range tps.Len() {
+				fmt.Fprintf(w, "`{!ZeroVal %s} ", tps.At(i).Obj().Name())
+			}
+		}
+		fmt.Fprintf(w, " : ZeroVal t := {| zero_val := mk")
+		for range t.NumFields() {
+			fmt.Fprint(w, " (zero_val _)");
+		}
+		fmt.Fprint(w, "|}.")
+		fmt.Fprintf(w, "\nEnd def.\n")
+
+		fmt.Fprint(w, "#[global] Arguments mk : clear implicits.\n")
+		fmt.Fprint(w, "#[global] Arguments t : clear implicits.\n")
+
+		fmt.Fprintf(w, "\nEnd %s.", spec.Name.Name)
 	default:
 		fmt.Fprintf(w, "Definition t %s : Type := ", typeParams)
 		err, rocqType := util.ToCoqType(t)
 		if err != nil {
 			ctx.unsupported(spec, "%s", err.Error())
 		}
-		fmt.Fprintf(w, "%s.\nEnd %s.", rocqType, spec.Name.Name)
+		fmt.Fprintf(w, "%s.", rocqType)
+		fmt.Fprint(w, "\nEnd def.")
+		fmt.Fprintf(w, "\nEnd %s.", spec.Name.Name)
 	}
 
 	recordDecl := glang.VerbatimDecl{
@@ -130,7 +152,7 @@ func (ctx *Ctx) namedTypePropClassDecl(t *types.Named) []glang.Decl {
 	fmt.Fprintf(w, "  #[global] %s_zero_val ", typeName)
 	if t.TypeParams() != nil {
 		for i := range t.TypeParams().Len() {
-			fmt.Fprintf(w, "%s %[1]s' `{!ZeroVal %[1]s'} `{!go.ZeroValEq %[1]s %[1]s'}", t.TypeParams().At(i).Obj().Name())
+			fmt.Fprintf(w, "%s %[1]s' `{!ZeroVal %[1]s'} `{!go.GoZeroValEq %[1]s %[1]s'}", t.TypeParams().At(i).Obj().Name())
 		}
 	}
 	fmt.Fprintf(w, " :: go.GoZeroValEq ")
