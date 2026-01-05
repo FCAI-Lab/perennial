@@ -6,6 +6,7 @@ import (
 	"go/types"
 	"math/big"
 	"strconv"
+	"strings"
 
 	"github.com/goose-lang/goose/declfilter"
 	"github.com/goose-lang/goose/glang"
@@ -57,53 +58,157 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 			})
 
 			// Add all the declarations associated with a new struct type
-			e := spec.Type
-			for {
-				if eparen, ok := e.(*ast.ParenExpr); ok {
-					e = eparen.X
-				} else {
-					break
-				}
-			}
-			if _, ok := e.(*ast.StructType); ok {
-				decls = append(decls, ctx.namedStructDecl(namedType)...)
-			}
+			decls = append(decls, ctx.namedRocqTypeDecl(spec)...)
+			decls = append(decls, ctx.namedTypePropClassDecl(namedType)...)
 		}
 	}
 
 	return
 }
 
-func (ctx *Ctx) namedStructDecl(namedType *types.Named) (decls []glang.Decl) {
-	typeName := namedType.Obj().Name()
-	recordContent := "Module " + typeName + ".\nRecord t "
-
-	if tps := namedType.TypeParams(); tps != nil {
-		recordContent += "("
+func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
+	w := new(strings.Builder)
+	fmt.Fprintf(w, "Module %s.\n", spec.Name.Name)
+	typeParams :=  ""
+	if tps := ctx.typeOf(spec.Name).(*types.Named).TypeParams(); tps != nil {
+		typeParams += "("
 		for i := range tps.Len() {
-			recordContent += tps.At(i).Obj().Name() + " "
+			typeParams += tps.At(i).Obj().Name() + " "
 		}
-		recordContent += ": Type) "
+		typeParams += ": Type) "
 	}
-	recordContent += ":=\n{\n"
-	st := namedType.Underlying().(*types.Struct)
-	for i := range st.NumFields() {
-		f := st.Field(i)
-		err, ft := util.ToCoqType(f.Type())
-		if err != nil {
-			ctx.unsupported(namedType.Obj(), "%s", err.Error())
-		}
-		recordContent += "  " + f.Name() + " : " + ft + ";\n"
-	}
-	recordContent += "}.\nEnd " + typeName + "."
 
-	// recordContent
+	switch t := ctx.typeOf(spec.Type).(type) {
+	case *types.Struct:
+		fmt.Fprintf(w, "Record t %s:=\n{\n", typeParams)
+		for i := range t.NumFields() {
+			f := t.Field(i)
+			err, ft := util.ToCoqType(f.Type())
+			if err != nil {
+				ctx.unsupported(spec, "%s", err.Error())
+			}
+			fmt.Fprintf(w, "  %s : %s;\n", f.Name(), ft)
+		}
+		fmt.Fprintf(w, "}.\nEnd %s.", spec.Name.Name)
+	default:
+		fmt.Fprintf(w, "Definition t %s : Type := ", typeParams)
+		err, rocqType := util.ToCoqType(t)
+		if err != nil {
+			ctx.unsupported(spec, "%s", err.Error())
+		}
+		fmt.Fprintf(w, "%s.\nEnd %s.", rocqType, spec.Name.Name)
+	}
+
 	recordDecl := glang.VerbatimDecl{
-		Name:    typeName + ".t",
-		Content: recordContent,
+		Name:    spec.Name.Name + ".t",
+		Content: w.String(),
 	}
 	decls = append(decls, recordDecl)
 	return decls
+}
+
+func (ctx *Ctx) namedTypePropClassDecl(t *types.Named) []glang.Decl {
+	typeName := t.Obj().Name()
+
+	typeParams := ""
+	if t.TypeParams() != nil {
+		for i := range t.TypeParams().Len() {
+			name := t.TypeParams().At(i).Obj().Name()
+			typeParams += " " + name
+		}
+	}
+
+	ty := "(" + typeName + typeParams + ")"
+	ptrTy := "(go.PointerType " + ty + ")"
+
+	w := new(strings.Builder)
+	fmt.Fprintln(w, "Class "+typeName+"_Assumptions "+
+		"{ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=")
+	fmt.Fprintln(w, "{")
+
+	// for every method in `t`
+	goMset := types.NewMethodSet(t)
+	for i := range goMset.Len() {
+		selection := goMset.At(i)
+		methodName, index := selection.Obj().Name(), selection.Index()
+		if ctx.filter.GetAction(typeName+"."+methodName) == declfilter.Axiomatize {
+			continue
+		}
+		var impl string
+		if len(index) == 0 {
+			ctx.nope(t.Obj(), "expected non-empty index in methodSet translation")
+		} else if len(index) == 1 {
+			ctx.dep.Add(glang.TypeMethod(typeName, methodName))
+			impl = "(" + glang.TypeMethod(typeName, methodName) + typeParams + ")"
+		} else {
+			structType, ok := t.Underlying().(*types.Struct)
+			if !ok {
+				ctx.nope(t.Obj(), "type with embedded method should be a struct")
+			}
+			field := structType.Field(index[0])
+			impl = `(λ: "$r", MethodResolve ` + ctx.glangType(field, field.Type()).Coq(true) + " " +
+				methodName + " #() (StructFieldGet " + ty + ` "` + field.Name() + `" "$r" ))%V`
+		}
+		fmt.Fprintln(w, "  #[global] "+typeName+"'ptr_"+methodName+"_unfold"+typeParams+
+			" :: MethodUnfold "+ty+` "`+methodName+`" `+impl+";")
+	}
+
+	goPtrMset := types.NewMethodSet(types.NewPointer(t))
+	for i := range goPtrMset.Len() {
+		selection := goPtrMset.At(i)
+		methodName, index := selection.Obj().Name(), selection.Index()
+		if ctx.filter.GetAction(typeName+"."+methodName) == declfilter.Axiomatize {
+			continue
+		}
+		var impl string
+		if len(index) == 0 {
+			ctx.nope(t.Obj(), "expected non-empty index in methodSet translation")
+		} else if len(index) == 1 {
+			ctx.dep.Add(glang.TypeMethod(typeName, methodName))
+			recvType := t.Method(index[0]).Signature().Recv().Type()
+			if _, recvIsPointer := recvType.(*types.Pointer); recvIsPointer {
+				ctx.dep.Add(glang.TypeMethod(typeName, methodName))
+				impl = "(" + glang.TypeMethod(typeName, methodName) + typeParams + ")"
+			} else {
+				impl = `(λ: "$r", MethodResolve ` + ty + " " +
+					methodName + " #() (![" + ty + `] "$r")`
+			}
+		} else {
+			structType, ok := t.Underlying().(*types.Struct)
+			if !ok {
+				ctx.nope(t.Obj(), "type with embedded method should be a struct")
+			}
+			field := structType.Field(index[0])
+			var fieldType types.Type = types.NewPointer(field.Type())
+			var fieldExpr glang.Expr = glang.NewCallExpr(
+				glang.VerbatimExpr("StructFieldRef"),
+				ctx.glangType(t.Obj(), t),
+				glang.NewStringVal(field.Name()),
+				glang.IdentExpr("$r"),
+			)
+
+			// if `&(x.f)` would be a `**T`, dereference it to get `*T`
+			if _, fieldIsPointer := field.Type().(*types.Pointer); fieldIsPointer {
+				fieldExpr = glang.DerefExpr{
+					X:  fieldExpr,
+					Ty: ctx.glangType(field, field.Type()),
+				}
+				fieldType = field.Type()
+			}
+			impl = `(λ: "$r", MethodResolve ` + ctx.glangType(field, fieldType).Coq(true) + " " +
+				methodName + " #() " + fieldExpr.Coq(true) + ")"
+		}
+		fmt.Fprintln(w, "  #[global] "+typeName+"'ptr_"+methodName+"_unfold"+typeParams+
+			" :: MethodUnfold "+ptrTy+` "`+methodName+`" `+impl+";")
+	}
+	fmt.Fprint(w, "}.")
+
+	decl := glang.VerbatimDecl{
+		Name:    t.Obj().Name() + "_Assumptions",
+		Content: w.String(),
+	}
+
+	return []glang.Decl{decl}
 }
 
 func (ctx *Ctx) typeOf(e ast.Expr) types.Type {

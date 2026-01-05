@@ -2674,110 +2674,6 @@ func (ctx *Ctx) decl(d ast.Decl) []glang.Decl {
 	return nil
 }
 
-func (ctx *Ctx) namedTypeDecl(t *types.Named) []glang.Decl {
-	typeName := t.Obj().Name()
-
-	typeParams := ""
-	if t.TypeParams() != nil {
-		for i := range t.TypeParams().Len() {
-			name := t.TypeParams().At(i).Obj().Name()
-			typeParams += " " + name
-		}
-	}
-
-	ty := "(" + typeName + typeParams + ")"
-	ptrTy := "(go.PointerType " + ty + ")"
-
-	w := new(strings.Builder)
-	fmt.Fprintln(w, "Class "+typeName+"_Assumptions "+
-		"{ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=")
-	fmt.Fprintln(w, "{")
-
-	// for every method in `t`
-	goMset := types.NewMethodSet(t)
-	for i := range goMset.Len() {
-		selection := goMset.At(i)
-		methodName, index := selection.Obj().Name(), selection.Index()
-		if ctx.filter.GetAction(typeName+"."+methodName) == declfilter.Axiomatize {
-			continue
-		}
-		var impl string
-		if len(index) == 0 {
-			ctx.nope(t.Obj(), "expected non-empty index in methodSet translation")
-		} else if len(index) == 1 {
-			ctx.dep.Add(glang.TypeMethod(typeName, methodName))
-			impl = "(" + glang.TypeMethod(typeName, methodName) + typeParams + ")"
-		} else {
-			structType, ok := t.Underlying().(*types.Struct)
-			if !ok {
-				ctx.nope(t.Obj(), "type with embedded method should be a struct")
-			}
-			field := structType.Field(index[0])
-			impl = `(λ: "$r", MethodResolve ` + ctx.glangType(field, field.Type()).Coq(true) + " " +
-				methodName + " #() (StructFieldGet " + ty + ` "` + field.Name() + `" "$r" ))%V`
-		}
-		fmt.Fprintln(w, "  #[global] "+typeName+"'ptr_"+methodName+"_unfold"+typeParams+
-			" :: MethodUnfold "+ty+` "`+methodName+`" `+impl+";")
-	}
-
-	goPtrMset := types.NewMethodSet(types.NewPointer(t))
-	for i := range goPtrMset.Len() {
-		selection := goPtrMset.At(i)
-		methodName, index := selection.Obj().Name(), selection.Index()
-		if ctx.filter.GetAction(typeName+"."+methodName) == declfilter.Axiomatize {
-			continue
-		}
-		var impl string
-		if len(index) == 0 {
-			ctx.nope(t.Obj(), "expected non-empty index in methodSet translation")
-		} else if len(index) == 1 {
-			ctx.dep.Add(glang.TypeMethod(typeName, methodName))
-			recvType := t.Method(index[0]).Signature().Recv().Type()
-			if _, recvIsPointer := recvType.(*types.Pointer); recvIsPointer {
-				ctx.dep.Add(glang.TypeMethod(typeName, methodName))
-				impl = "(" + glang.TypeMethod(typeName, methodName) + typeParams + ")"
-			} else {
-				impl = `(λ: "$r", MethodResolve ` + ty + " " +
-					methodName + " #() (![" + ty + `] "$r")`
-			}
-		} else {
-			structType, ok := t.Underlying().(*types.Struct)
-			if !ok {
-				ctx.nope(t.Obj(), "type with embedded method should be a struct")
-			}
-			field := structType.Field(index[0])
-			var fieldType types.Type = types.NewPointer(field.Type())
-			var fieldExpr glang.Expr = glang.NewCallExpr(
-				glang.VerbatimExpr("StructFieldRef"),
-				ctx.glangType(t.Obj(), t),
-				glang.NewStringVal(field.Name()),
-				glang.IdentExpr("$r"),
-			)
-
-			// if `&(x.f)` would be a `**T`, dereference it to get `*T`
-			if _, fieldIsPointer := field.Type().(*types.Pointer); fieldIsPointer {
-				fieldExpr = glang.DerefExpr{
-					X:  fieldExpr,
-					Ty: ctx.glangType(field, field.Type()),
-				}
-				fieldType = field.Type()
-			}
-			impl = `(λ: "$r", MethodResolve ` + ctx.glangType(field, fieldType).Coq(true) + " " +
-				methodName + " #() " + fieldExpr.Coq(true) + ")"
-		}
-		fmt.Fprintln(w, "  #[global] "+typeName+"'ptr_"+methodName+"_unfold"+typeParams+
-			" :: MethodUnfold "+ptrTy+` "`+methodName+`" `+impl+";")
-	}
-	fmt.Fprint(w, "}.")
-
-	decl := glang.VerbatimDecl{
-		Name:    t.Obj().Name() + "_Assumptions",
-		Content: w.String(),
-	}
-
-	return []glang.Decl{decl}
-}
-
 func (ctx *Ctx) packagePropClass() []glang.Decl {
 	var decls = []glang.Decl{}
 
@@ -2787,7 +2683,6 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 	fmt.Fprintln(w, "{")
 
 	for _, t := range ctx.namedTypes {
-		decls = append(decls, ctx.namedTypeDecl(t)...)
 		fmt.Fprintln(w, "  #[global] "+t.Obj().Name()+"_instance :: "+t.Obj().Name()+"_Assumptions;")
 	}
 
