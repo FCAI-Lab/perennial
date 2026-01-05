@@ -16,8 +16,7 @@ import (
 // this file has the translations for types themselves
 func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	declName := spec.Name.Name
-	if t, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
-		ctx.namedTypes = append(ctx.namedTypes, t)
+	if _, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
 		declName = spec.Name.Name + "ⁱᵐᵖˡ"
 	}
 
@@ -29,7 +28,12 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 			DeclName: declName,
 			Type:     glang.VerbatimExpr("go.type"),
 		})
+		return
 	case declfilter.Trust:
+		if namedType, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
+			ctx.namedTypes = append(ctx.namedTypes, namedType)
+			decls = append(decls, ctx.namedTypePropClassDecl(namedType)...)
+		}
 	case declfilter.Translate:
 		ty := ctx.typeOf(spec.Type)
 		decl := glang.TypeDecl{
@@ -39,6 +43,7 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 		}
 		decls = append(decls, decl)
 		if namedType, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
+			ctx.namedTypes = append(ctx.namedTypes, namedType)
 			// Add a go.type declaration
 			var typeParams []string
 			var typeParamsList glang.ListExpr
@@ -101,7 +106,7 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 		}
 		fmt.Fprintf(w, " : ZeroVal t := {| zero_val := mk")
 		for range t.NumFields() {
-			fmt.Fprint(w, " (zero_val _)");
+			fmt.Fprint(w, " (zero_val _)")
 		}
 		fmt.Fprint(w, "|}.")
 		fmt.Fprintf(w, "\nEnd def.\n")
