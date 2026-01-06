@@ -159,10 +159,10 @@ func (ctx *Ctx) namedTypePropClassDecl(t *types.Named) []glang.Decl {
 	fmt.Fprintf(w, "  #[global] %s_zero_val ", typeName)
 	if t.TypeParams() != nil {
 		for i := range t.TypeParams().Len() {
-			fmt.Fprintf(w, "%s %[1]s' `{!ZeroVal %[1]s'} `{!go.GoZeroValEq %[1]s %[1]s'}", t.TypeParams().At(i).Obj().Name())
+			fmt.Fprintf(w, "%s %[1]s' `{!ZeroVal %[1]s'} `{!go.TypeRepr %[1]s %[1]s'}", t.TypeParams().At(i).Obj().Name())
 		}
 	}
-	fmt.Fprintf(w, " :: go.GoZeroValEq ")
+	fmt.Fprintf(w, " :: go.TypeRepr ")
 	if t.TypeParams() != nil {
 		fmt.Fprintf(w, "(%s", typeName)
 		for i := range t.TypeParams().Len() {
