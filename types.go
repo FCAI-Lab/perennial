@@ -176,6 +176,9 @@ func (ctx *Ctx) namedTypePropClassDecl(t *types.Named) []glang.Decl {
 		fmt.Fprintf(w, "%s %s.t;\n", typeName, typeName)
 	}
 
+	// underlying instance
+	fmt.Fprintf(w, "  #[global] %[1]s_underlying %[2]s :: go.Underlying (%[1]s %[2]s) (%[1]sⁱᵐᵖˡ %[2]s);\n", typeName, typeParams)
+
 	// for every method in `t`
 	goMset := types.NewMethodSet(t)
 	for i := range goMset.Len() {
