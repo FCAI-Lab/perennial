@@ -111,16 +111,6 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 		}
 		fmt.Fprint(w, "|}.")
 
-		// RecordSet instance
-		fmt.Fprintf(w, "\n#[global] Instance settable : Settable t :=\n")
-		fmt.Fprintf(w, "  settable! mk <")
-		sep := ""
-		for i := range t.NumFields() {
-			fmt.Fprintf(w, "%s%s", sep, t.Field(i).Name())
-			sep = "; "
-		}
-		fmt.Fprintf(w, ">.")
-
 		fmt.Fprintf(w, "\nEnd def.\n")
 
 		fmt.Fprint(w, "\n#[global] Arguments mk : clear implicits.")
