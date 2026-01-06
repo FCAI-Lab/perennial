@@ -97,8 +97,9 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 			fmt.Fprintf(w, "  %s : %s;\n", f.Name(), ft)
 		}
 		fmt.Fprintf(w, "}.\n")
-		fmt.Fprintf(w, "#[global] Instance zero_val")
 
+		// ZeroVal instance
+		fmt.Fprintf(w, "#[global] Instance zero_val")
 		if tps := namedType.TypeParams(); tps != nil {
 			for i := range tps.Len() {
 				fmt.Fprintf(w, "`{!ZeroVal %s} ", tps.At(i).Obj().Name())
@@ -109,10 +110,21 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 			fmt.Fprint(w, " (zero_val _)")
 		}
 		fmt.Fprint(w, "|}.")
+
+		// RecordSet instance
+		fmt.Fprintf(w, "\n#[global] Instance settable : Settable t :=\n")
+		fmt.Fprintf(w, "  settable! mk <")
+		sep := ""
+		for i := range t.NumFields() {
+			fmt.Fprintf(w, "%s%s", sep, t.Field(i).Name())
+			sep = "; "
+		}
+		fmt.Fprintf(w, ">.")
+
 		fmt.Fprintf(w, "\nEnd def.\n")
 
-		fmt.Fprint(w, "#[global] Arguments mk : clear implicits.\n")
-		fmt.Fprint(w, "#[global] Arguments t : clear implicits.\n")
+		fmt.Fprint(w, "\n#[global] Arguments mk : clear implicits.")
+		fmt.Fprint(w, "\n#[global] Arguments t : clear implicits.")
 
 		fmt.Fprintf(w, "\nEnd %s.", spec.Name.Name)
 	default:
@@ -177,7 +189,12 @@ func (ctx *Ctx) namedTypePropClassDecl(t *types.Named) []glang.Decl {
 	}
 
 	// underlying instance
-	fmt.Fprintf(w, "  #[global] %[1]s_underlying %[2]s :: go.Underlying (%[1]s %[2]s) (%[1]sⁱᵐᵖˡ %[2]s);\n", typeName, typeParams)
+	fmt.Fprintf(w, "  #[global] %[1]s_underlying%[2]s :: go.Underlying (%[1]s%[2]s) (%[1]sⁱᵐᵖˡ%[2]s);\n", typeName, typeParams)
+
+	// FIXME:
+	// // StructFieldSet and StructFieldGet instances
+	// if t, ok := t.Underlying().(*types.Struct); ok {
+	// }
 
 	// for every method in `t`
 	goMset := types.NewMethodSet(t)
