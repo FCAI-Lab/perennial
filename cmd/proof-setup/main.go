@@ -3,8 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+	"path"
 
 	"github.com/fatih/color"
+	"github.com/goose-lang/goose/glang"
 	"github.com/goose-lang/goose/proofsetup"
 	"github.com/goose-lang/goose/util"
 	"golang.org/x/tools/go/packages"
@@ -21,10 +24,17 @@ func main() {
 	flag.StringVar(&modDir, "dir", ".",
 		"directory containing necessary go.mod")
 
+	var outRootDir string
+	flag.StringVar(&outRootDir, "out", ".",
+		"output directory")
+
+	var verbose bool
+	flag.BoolVar(&verbose, "verbose", false, "verbosity level")
+
 	flag.Parse()
 	pkgPatterns := flag.Args()
 
-	pkgs, err := packages.Load(util.NewPackageConfig(modDir, false), pkgPatterns...)
+	pkgs, err := packages.Load(util.NewPackageConfig(modDir, true), pkgPatterns...)
 	if err != nil {
 		panic(err)
 	} else if len(pkgs) == 0 {
@@ -32,10 +42,40 @@ func main() {
 	}
 
 	blue := color.New(color.FgBlue).SprintfFunc()
+	red := color.New(color.FgRed).SprintFunc()
 
 	for _, pkg := range pkgs {
-		pf := proofsetup.New(pkg)
+		pf := proofsetup.New(pkg, verbose)
 		fmt.Printf("%s:\n", blue(pf.ProofPath))
-		fmt.Printf(pf.SkeletonFile())
+		w := pf.SkeletonFile()
+
+		filePath := path.Join(outRootDir, glang.ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(pkg.PkgPath))
+
+		outDir := path.Dir(filePath)
+		err = os.MkdirAll(outDir, 0777)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err.Error())
+			fmt.Fprintln(os.Stderr, red("could not create output directory"))
+		}
+
+		outFile := filePath + ".v"
+		_, err = os.Stat(outFile)
+		if err == nil {
+			pf.UpdateFile(outFile, verbose)
+		} else {
+			if verbose {
+				fmt.Printf("writing new file\n")
+			}
+			err = os.WriteFile(outFile, []byte(w), 0666)
+
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err.Error())
+				fmt.Fprintln(os.Stderr, red("could not write output"))
+				os.Exit(1)
+			}
+		}
+		if verbose {
+			fmt.Println()
+		}
 	}
 }
