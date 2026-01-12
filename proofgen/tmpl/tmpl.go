@@ -21,13 +21,6 @@ type PackageProof struct {
 	HasTrusted bool
 	Imports    []Import
 	Types      []TypeDecl
-	Names      NamesInfo
-}
-
-type NamesInfo struct {
-	Vars             []Variable
-	FunctionNames    []string
-	NamedTypeMethods []MethodSet
 }
 
 type TypeDecl struct {
@@ -60,14 +53,6 @@ type TypeAxiom struct{}
 
 func (t TypeAxiom) Kind() string {
 	return "axiom"
-}
-
-type TypeSimple struct {
-	Body string
-}
-
-func (t TypeSimple) Kind() string {
-	return "simple"
 }
 
 type TypeStruct struct {

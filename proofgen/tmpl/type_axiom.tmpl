@@ -5,9 +5,6 @@ Axiom t : Type.
 End def.
 End {{.Name}}.
 
-Global Instance bounded_size_{{.Name}} : BoundedTypeSize {{.GoTypeName}}.
-Admitted.
-
 Global Instance into_val_{{.Name}} `{ffi_syntax} : IntoVal {{.Name}}.t.
 Admitted.
 

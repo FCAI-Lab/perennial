@@ -1,7 +1,6 @@
 package proofgen
 
 import (
-	"fmt"
 	"go/ast"
 	"go/token"
 	"go/types"
@@ -12,7 +11,6 @@ import (
 	"github.com/goose-lang/goose/deptracker"
 	"github.com/goose-lang/goose/glang"
 	"github.com/goose-lang/goose/proofgen/tmpl"
-	"github.com/goose-lang/goose/util"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -31,40 +29,6 @@ func (tr typesTranslator) ReadablePos(p token.Pos) string {
 	return tr.pkg.Fset.Position(p).String()
 }
 
-func (tr *typesTranslator) toCoqTypeWithDeps(t types.Type) string {
-	switch t := types.Unalias(t).(type) {
-	case *types.Basic:
-		return util.BasicTypeToCoq(t)
-	case *types.Slice:
-		return "slice.t"
-	case *types.Array:
-		return fmt.Sprintf("(vec %s (uint.nat (W64 %d)))", tr.toCoqTypeWithDeps(t.Elem()), t.Len())
-	case *types.Pointer:
-		return "loc"
-	case *types.Signature:
-		return "func.t"
-	case *types.Interface:
-		return "interface.t"
-	case *types.Map, *types.Chan:
-		return "loc"
-	case *types.Named:
-		n := util.NamedTypeToCoq(t, tr.pkg)
-		tr.deps.Add(n)
-		return n
-	case *types.Struct:
-		if t.NumFields() == 0 {
-			return "unit"
-		} else {
-			panic(fmt.Sprintf("Anonymous structs with fields are not supported (%s): %s",
-				tr.ReadablePos(t.Field(0).Pos()),
-				t.String()))
-		}
-	case *types.TypeParam:
-		return t.Obj().Name() + "'"
-	}
-	panic(fmt.Sprintf("Unknown type %v (of type %T)", t, t))
-}
-
 func (tr *typesTranslator) newDecl(spec *ast.TypeSpec, info tmpl.TypeInfo) tmpl.TypeDecl {
 	return tmpl.TypeDecl{
 		PkgName:  tr.pkg.Name,
@@ -80,20 +44,6 @@ func (tr *typesTranslator) axiomatizeType(spec *ast.TypeSpec) {
 	defer tr.deps.UnsetCurrentName()
 
 	decl := tr.newDecl(spec, tmpl.TypeAxiom{})
-	tr.defNames = append(tr.defNames, defName)
-	tr.defs[defName] = decl
-}
-
-func (tr *typesTranslator) translateSimpleType(spec *ast.TypeSpec, t types.Type) {
-	name := spec.Name.Name
-	defName := name + ".t"
-	tr.deps.SetCurrentName(defName)
-	defer tr.deps.UnsetCurrentName()
-
-	typeBody := tr.toCoqTypeWithDeps(t)
-	decl := tr.newDecl(spec, tmpl.TypeSimple{
-		Body: typeBody,
-	})
 	tr.defNames = append(tr.defNames, defName)
 	tr.defs[defName] = decl
 }
@@ -122,7 +72,7 @@ func (tr *typesTranslator) translateStructType(spec *ast.TypeSpec, s *types.Stru
 		}
 		field := tmpl.TypeField{
 			Name: fieldName,
-			Type: tr.toCoqTypeWithDeps(s.Field(i).Type()),
+			// Type: tr.toCoqTypeWithDeps(s.Field(i).Type()),
 		}
 		info.Fields = append(info.Fields, field)
 	}
@@ -136,7 +86,6 @@ func (tr *typesTranslator) translateType(spec *ast.TypeSpec) {
 	case *types.Struct:
 		tr.translateStructType(spec, s)
 	default:
-		tr.translateSimpleType(spec, s)
 	}
 }
 
