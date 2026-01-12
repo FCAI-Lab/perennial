@@ -156,7 +156,7 @@ func (ctx *Ctx) namedTypePropClassDecl(t *types.Named) []glang.Decl {
 	fmt.Fprintln(w, "{")
 
 	// zero val instance
-	fmt.Fprintf(w, "  #[global] %s_zero_val ", typeName)
+	fmt.Fprintf(w, "  #[global] %s_type_repr ", typeName)
 	if t.TypeParams() != nil {
 		for i := range t.TypeParams().Len() {
 			fmt.Fprintf(w, "%s %[1]s' `{!ZeroVal %[1]s'} `{!go.TypeRepr %[1]s %[1]s'}", t.TypeParams().At(i).Obj().Name())
