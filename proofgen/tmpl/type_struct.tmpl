@@ -1,7 +1,7 @@
 {{ $T := . -}}
 {{ $name := $T.Name -}}
-{{ $Fields := $T.TypeInfo.Fields -}}
-{{ $TypeParams := $T.TypeInfo.TypeParams -}}
+{{ $Fields := $T.Fields -}}
+{{ $TypeParams := $T.TypeParams -}}
 Module {{$name}}.
 Section def.
 Context `{ffi_syntax}.
@@ -57,14 +57,10 @@ Global Instance into_val_{{$name}} : IntoVal {{$T.GallinaType}} :=
     ]%struct
   |}.
 
-Global Program Instance into_val_typed_{{$name}} : IntoValTyped {{$T.GallinaType}} {{$T.GoTypeName}} :=
-{|
-  default_val := {{$name}}.mk {{- range $Fields }} (default_val _){{ end }};
-|}.
-Next Obligation. solve_to_val_type. Qed.
-Next Obligation. solve_zero_val. Qed.
-Next Obligation. solve_to_val_inj. Qed.
-Final Obligation. solve_decision. Qed.
+Global Instance into_val_typed_{{$name}} : IntoValTyped {{$T.GallinaType}} {{$T.GoTypeName}}.
+Proof.
+  solve_into_val_typed_struct.
+Qed.
 
 {{ range $f := $Fields -}}
 Global Instance into_val_struct_field_{{$name}}_{{$f.Name}} : {{/* type on next line */ -}}

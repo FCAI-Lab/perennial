@@ -24,51 +24,23 @@ type PackageProof struct {
 }
 
 type TypeDecl struct {
-	PkgName string
-	Name    string
-	TypeInfo
-}
-
-func (t TypeDecl) GoTypeName() string {
-	return t.PkgName + "." + glang.GallinaIdent(t.Name).Coq(false)
-}
-
-func (t TypeDecl) GallinaType() string {
-	if info, ok := t.TypeInfo.(TypeStruct); ok {
-		var params []string
-		for _, tp := range info.TypeParams {
-			params = append(params, toCoqName(tp))
-		}
-		return fmt.Sprintf("(%s.t %s)", t.Name, strings.Join(params, " "))
-	} else {
-		panic("GallinaType not defined for non-struct types")
-	}
-}
-
-type TypeInfo interface {
-	Kind() string
-}
-
-type TypeAxiom struct{}
-
-func (t TypeAxiom) Kind() string {
-	return "axiom"
-}
-
-type TypeStruct struct {
+	PkgName    string
+	Name       string
 	TypeParams []string
 	Fields     []TypeField
 }
 
-func (t TypeStruct) Kind() string {
-	return "struct"
+func (t TypeDecl) GoTypeName() string {
+	// FIXME: GallinaIdent() is redundant because it's done on the caller side
+	return t.PkgName + "." + glang.GallinaIdent(t.Name).Coq(false)
 }
 
-func (t TypeStruct) FieldsExceptLast() []TypeField {
-	if len(t.Fields) == 0 {
-		return nil
+func (t TypeDecl) GallinaType() string {
+	var params []string
+	for _, tp := range t.TypeParams {
+		params = append(params, toCoqName(tp))
 	}
-	return t.Fields[:len(t.Fields)-1]
+	return fmt.Sprintf("(%s.t %s)", t.Name, strings.Join(params, " "))
 }
 
 type TypeField struct {
