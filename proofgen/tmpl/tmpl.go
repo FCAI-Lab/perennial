@@ -2,12 +2,10 @@ package tmpl
 
 import (
 	"embed"
-	"fmt"
 	"io"
 	"strings"
 	"text/template"
 
-	"github.com/goose-lang/goose/glang"
 	"github.com/pkg/errors"
 )
 
@@ -27,15 +25,6 @@ type TypeDecl struct {
 	Name       string
 	TypeParams []string
 	Fields     []string
-}
-
-func (t TypeDecl) GoTypeName() string {
-	// FIXME: GallinaIdent() is redundant because it's done on the caller side
-	return t.PkgName + "." + glang.GallinaIdent(t.Name).Coq(false)
-}
-
-func (t TypeDecl) GallinaType() string {
-	return fmt.Sprintf("(%s.%s.t %s)", t.PkgName, t.Name, strings.Join(t.TypeParams, " "))
 }
 
 type Import struct {
