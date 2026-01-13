@@ -2,6 +2,10 @@
 ({{.PkgName}}.{{.Name}}.t {{- range $param := .TypeParams }} {{$param}}'{{ end -}})
 {{- end -}}
 
+{{ define "GoType" -}}
+({{.PkgName}}.{{.Name}} {{- range $param := .TypeParams }} {{$param}}{{ end -}})
+{{- end -}}
+
 {{ define "TypedPointstoParams" -}}
 {{- range $param := . -}}`{!TypedPointsto (Σ:=Σ) {{$param}}'} {{ end -}}
 {{- end -}}
@@ -38,7 +42,7 @@ Final Obligation. solve_typed_pointsto_agree. Qed.
 
 Instance {{$t.Name}}_into_val_typed
   {{ template "IntoValParams" $t.TypeParams }} :
-  IntoValTyped (channel.Channel.t T') (channel.Channel T).
+  IntoValTyped {{template "GallinaType" $t}} {{ template "GoType" $t}}.
 Proof. solve_into_val_typed_struct. Qed.
 
 End def.
