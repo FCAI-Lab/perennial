@@ -35,7 +35,7 @@ func (t TypeDecl) GoTypeName() string {
 }
 
 func (t TypeDecl) GallinaType() string {
-	return fmt.Sprintf("(%s.t %s)", t.Name, strings.Join(t.TypeParams, " "))
+	return fmt.Sprintf("(%s.%s.t %s)", t.PkgName, t.Name, strings.Join(t.TypeParams, " "))
 }
 
 type Import struct {
