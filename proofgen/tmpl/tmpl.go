@@ -4,7 +4,6 @@ import (
 	"embed"
 	"fmt"
 	"io"
-	"iter"
 	"strings"
 	"text/template"
 
@@ -27,7 +26,7 @@ type TypeDecl struct {
 	PkgName    string
 	Name       string
 	TypeParams []string
-	Fields     []TypeField
+	Fields     []string
 }
 
 func (t TypeDecl) GoTypeName() string {
@@ -36,20 +35,7 @@ func (t TypeDecl) GoTypeName() string {
 }
 
 func (t TypeDecl) GallinaType() string {
-	var params []string
-	for _, tp := range t.TypeParams {
-		params = append(params, toCoqName(tp))
-	}
-	return fmt.Sprintf("(%s.t %s)", t.Name, strings.Join(params, " "))
-}
-
-type TypeField struct {
-	Name string
-	Type string
-}
-
-func (f TypeField) CoqName() string {
-	return toCoqName(f.Name)
+	return fmt.Sprintf("(%s.t %s)", t.Name, strings.Join(t.TypeParams, " "))
 }
 
 type Import struct {
@@ -69,41 +55,6 @@ type MethodSet struct {
 	Methods  []string
 }
 
-// Adding a "'" to avoid conflicting with Coq keywords and definitions that
-// would already be in context (like `t`). Could do this only when there is a
-// conflict, but it's lower entropy to do it always rather than pick and
-// choosing when.
-func toCoqName(n string) string {
-	return n + "'"
-}
-
-// isSep returns true if index i is not the last index in a list of length l.
-func isSep(i int, l int) bool {
-	return i < l-1
-}
-
-type SepItem[T any] struct {
-	X   T
-	Sep string
-}
-
-// Iterate over a list and wrap each item with a SepItem struct that provides a
-// .Sep field when in between elements (that is, for all but the last item of
-// the list).
-func IterSep[T any](sep string, l []T) iter.Seq[SepItem[T]] {
-	return func(yield func(SepItem[T]) bool) {
-		for i, x := range l {
-			item := SepItem[T]{X: x, Sep: ""}
-			if i < len(l)-1 {
-				item.Sep = sep
-			}
-			if !yield(item) {
-				return
-			}
-		}
-	}
-}
-
 func indent(n int) string {
 	return strings.Repeat(" ", n)
 }
@@ -116,10 +67,7 @@ var tmplFS embed.FS
 func loadTemplates() *template.Template {
 	tmpl := template.New("proofgen")
 	funcs := template.FuncMap{
-		"indent":        indent,
-		"coqName":       toCoqName,
-		"isSep":         isSep,
-		"iterSepFields": IterSep[TypeField],
+		"indent": indent,
 	}
 	tmpl, err := tmpl.Funcs(funcs).ParseFS(tmplFS, "*.tmpl")
 	if err != nil {

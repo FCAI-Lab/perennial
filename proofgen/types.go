@@ -29,39 +29,22 @@ func (tr typesTranslator) ReadablePos(p token.Pos) string {
 	return tr.pkg.Fset.Position(p).String()
 }
 
-func (tr *typesTranslator) newDecl(spec *ast.TypeSpec, info tmpl.TypeInfo) tmpl.TypeDecl {
-	return tmpl.TypeDecl{
-		PkgName:  tr.pkg.Name,
-		Name:     glang.GallinaIdent(spec.Name.Name).Coq(false),
-		TypeInfo: info,
-	}
-}
-
-func (tr *typesTranslator) axiomatizeType(spec *ast.TypeSpec) {
-	name := spec.Name.Name
-	defName := name + ".t"
-	tr.deps.SetCurrentName(defName)
-	defer tr.deps.UnsetCurrentName()
-
-	decl := tr.newDecl(spec, tmpl.TypeAxiom{})
-	tr.defNames = append(tr.defNames, defName)
-	tr.defs[defName] = decl
-}
-
 func (tr *typesTranslator) translateStructType(spec *ast.TypeSpec, s *types.Struct) {
 	name := spec.Name.Name
 	defName := name + ".t"
 	tr.deps.SetCurrentName(defName)
 	defer tr.deps.UnsetCurrentName()
 
-	info := tmpl.TypeStruct{
+	decl := tmpl.TypeDecl{
+		PkgName:    tr.pkg.Name,
+		Name:       glang.GallinaIdent(spec.Name.Name).Coq(false),
 		TypeParams: nil, // populated below
 		Fields:     nil, // populated below
 	}
 	if spec.TypeParams != nil {
 		for _, tp := range spec.TypeParams.List {
 			for _, name := range tp.Names {
-				info.TypeParams = append(info.TypeParams, name.Name)
+				decl.TypeParams = append(decl.TypeParams, name.Name)
 			}
 		}
 	}
@@ -70,13 +53,8 @@ func (tr *typesTranslator) translateStructType(spec *ast.TypeSpec, s *types.Stru
 		if fieldName == "_" {
 			fieldName = "_" + strconv.Itoa(i)
 		}
-		field := tmpl.TypeField{
-			Name: fieldName,
-			// Type: tr.toCoqTypeWithDeps(s.Field(i).Type()),
-		}
-		info.Fields = append(info.Fields, field)
+		decl.Fields = append(decl.Fields, fieldName)
 	}
-	decl := tr.newDecl(spec, info)
 	tr.defNames = append(tr.defNames, defName)
 	tr.defs[defName] = decl
 }
@@ -101,7 +79,7 @@ func (tr *typesTranslator) Decl(d ast.Decl) {
 				case declfilter.Translate:
 					tr.translateType(spec)
 				case declfilter.Axiomatize:
-					tr.axiomatizeType(spec)
+					continue
 				case declfilter.Trust:
 					continue
 				}
