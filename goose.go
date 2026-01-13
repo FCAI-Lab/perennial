@@ -597,10 +597,11 @@ func (ctx *Ctx) compositeLiteral(e *ast.CompositeLit) glang.Expr {
 	handleValue := func(e ast.Expr) glang.Expr {
 		switch e := e.(type) {
 		case *ast.CompositeLit:
-			return ctx.expr(e)
-		default:
-			return glang.NewCallExpr(glang.GallinaIdent("ElementExpression"), ctx.expr(e))
+			if e.Type == nil {
+				return ctx.expr(e)
+			}
 		}
+		return glang.NewCallExpr(glang.GallinaIdent("ElementExpression"), ctx.expr(e))
 	}
 
 	for _, el := range e.Elts {

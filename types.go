@@ -77,17 +77,20 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	fmt.Fprintf(w, "Section def.\nContext {ext : ffi_syntax} {go_gctx : GoGlobalContext}.\n")
 	typeParams := ""
 	namedType := ctx.typeOf(spec.Name).(*types.Named)
-	if tps := namedType.TypeParams(); tps != nil {
-		fmt.Fprintf(w, "Context {")
-		for i := range tps.Len() {
-			fmt.Fprintf(w, "%s ", tps.At(i).Obj().Name())
-		}
-		fmt.Fprint(w, ": Type}.\n")
-	}
 
 	switch t := ctx.typeOf(spec.Type).(type) {
 	case *types.Struct:
-		fmt.Fprintf(w, "Record t :=\nmk {\n")
+		fmt.Fprintf(w, "Record t")
+
+		if tps := namedType.TypeParams(); tps != nil {
+			fmt.Fprintf(w, " {")
+			for i := range tps.Len() {
+				fmt.Fprintf(w, "%s ", tps.At(i).Obj().Name())
+			}
+			fmt.Fprint(w, ": Type}")
+		}
+		fmt.Fprintf(w, " :=\nmk {\n")
+
 		for i := range t.NumFields() {
 			f := t.Field(i)
 			err, ft := util.ToCoqType(f.Type())
@@ -99,26 +102,33 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 		fmt.Fprintf(w, "}.\n")
 
 		// ZeroVal instance
-		fmt.Fprintf(w, "#[global] Instance zero_val")
+		fmt.Fprintf(w, "\n#[global] Instance zero_val")
 		if tps := namedType.TypeParams(); tps != nil {
 			for i := range tps.Len() {
-				fmt.Fprintf(w, "`{!ZeroVal %s} ", tps.At(i).Obj().Name())
+				fmt.Fprintf(w, " `{!ZeroVal %s}", tps.At(i).Obj().Name())
 			}
 		}
 		fmt.Fprintf(w, " : ZeroVal t := {| zero_val := mk")
+
+		if tps := namedType.TypeParams(); tps != nil {
+			for i := range tps.Len() {
+				fmt.Fprintf(w, " %s", tps.At(i).Obj().Name())
+			}
+		}
 		for range t.NumFields() {
 			fmt.Fprint(w, " (zero_val _)")
 		}
 		fmt.Fprint(w, "|}.")
 
-		fmt.Fprintf(w, "\nEnd def.\n")
-
 		fmt.Fprint(w, "\n#[global] Arguments mk : clear implicits.")
 		fmt.Fprint(w, "\n#[global] Arguments t : clear implicits.")
+
+		fmt.Fprintf(w, "\nEnd def.\n")
 
 		fmt.Fprintf(w, "\nEnd %s.", spec.Name.Name)
 	default:
 		fmt.Fprintf(w, "Definition t %s : Type := ", typeParams)
+
 		err, rocqType := util.ToCoqType(t)
 		if err != nil {
 			ctx.unsupported(spec, "%s", err.Error())
