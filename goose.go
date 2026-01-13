@@ -32,9 +32,8 @@ import (
 
 // Ctx is a context for resolving Go code's types and source code
 type Ctx struct {
-	namesToTranslate map[string]bool
-	info             *types.Info
-	pkgPath          string
+	info    *types.Info
+	pkgPath string
 
 	// XXX: Initially tried using `pkg.Name` as the Gallina identifier holding
 	// the full package path, but that doesn't work in a `package main` with a `func main`.

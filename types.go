@@ -10,7 +10,6 @@ import (
 
 	"github.com/goose-lang/goose/declfilter"
 	"github.com/goose-lang/goose/glang"
-	"github.com/goose-lang/goose/util"
 )
 
 // this file has the translations for types themselves
@@ -96,10 +95,7 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 
 		for i := range t.NumFields() {
 			f := t.Field(i)
-			err, ft := util.ToCoqType(f.Type())
-			if err != nil {
-				ctx.unsupported(spec, "%s", err.Error())
-			}
+			ft := ctx.toGallinaType(spec, f.Type())
 			ctx.dep.Add(ft)
 			fmt.Fprintf(w, "  %s : %s;\n", f.Name(), ft)
 		}
@@ -133,10 +129,7 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	default:
 		fmt.Fprintf(w, "Definition t %s : Type := ", typeParams)
 
-		err, rocqType := util.ToCoqType(t)
-		if err != nil {
-			ctx.unsupported(spec, "%s", err.Error())
-		}
+		rocqType := ctx.toGallinaType(spec, t)
 		fmt.Fprintf(w, "%s.", rocqType)
 		fmt.Fprint(w, "\nEnd def.")
 		fmt.Fprintf(w, "\nEnd %s.", spec.Name.Name)
@@ -562,4 +555,79 @@ func (ctx *Ctx) getInterfaceInfo(t types.Type) (interfaceTypeInfo, bool) {
 		}
 	}
 	return interfaceTypeInfo{}, false
+}
+
+func (ctx *Ctx) basicTypeToGallina(n locatable, t *types.Basic) string {
+	switch t.Name() {
+	case "uint64", "int64":
+		return "w64"
+	case "uint32", "int32":
+		return "w32"
+	case "uint16", "int16":
+		return "w16"
+	case "uint8", "int8", "byte":
+		return "w8"
+	case "uint", "int":
+		return "w64"
+	case "float64":
+		return "w64"
+	case "bool":
+		return "bool"
+	case "string", "untyped string":
+		return "go_string"
+	case "Pointer", "uintptr":
+		return "loc"
+	}
+	ctx.unsupported(n, "Unknown basic type %s,", t.Name())
+	return ""
+}
+
+func (ctx *Ctx) namedTypeToGallina(l locatable, t *types.Named) string {
+	var baseName string
+	pkg := t.Obj().Pkg()
+	if pkg != nil {
+		baseName = pkg.Name() + "." + t.Obj().Name() + ".t"
+	} else {
+		baseName = t.Obj().Name() + ".t"
+	}
+	// if TypeParams() is not nil, there are type parameters in the base named type
+	if t.TypeParams() != nil {
+		var params []string
+		for i := 0; i < t.TypeArgs().Len(); i++ {
+			params = append(params, ctx.toGallinaType(l, t.TypeArgs().At(i)))
+		}
+		return fmt.Sprintf("(%s %s)", baseName, strings.Join(params, " "))
+	}
+	return baseName
+}
+
+// ToCoqType converts a type to a Gallina type modeling that type
+func (ctx *Ctx) toGallinaType(l locatable, t types.Type) string {
+	switch t := types.Unalias(t).(type) {
+	case *types.Basic:
+		return ctx.basicTypeToGallina(l, t)
+	case *types.Slice:
+		return "slice.t"
+	case *types.Array:
+		return fmt.Sprintf("(vec %s (uint.nat (W64 %d)))", ctx.toGallinaType(l, t.Elem()), t.Len())
+	case *types.Pointer:
+		return "loc"
+	case *types.Signature:
+		return "func.t"
+	case *types.Interface:
+		return "interface.t"
+	case *types.Map, *types.Chan:
+		return "loc"
+	case *types.Named:
+		return ctx.namedTypeToGallina(l, t)
+	case *types.TypeParam:
+		return t.String()
+	case *types.Struct:
+		if t.NumFields() == 0 {
+			return "unit"
+		}
+		ctx.unsupported(l, "Anonymous structs with fields are not supported %s", t.String())
+	}
+	ctx.unsupported(l, "Unknown type %s (of type %T)", t, t)
+	return ""
 }

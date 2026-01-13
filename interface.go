@@ -61,19 +61,6 @@ type declId struct {
 	declIdx int
 }
 
-func (ctx *Ctx) filterDecls(decls []glang.Decl) (newDecls []glang.Decl) {
-	if ctx.namesToTranslate == nil {
-		return decls
-	}
-	for _, d := range decls {
-		hasName, name := d.DefName()
-		if hasName && ctx.namesToTranslate[name] {
-			newDecls = append(newDecls, d)
-		}
-	}
-	return
-}
-
 // Decls converts an entire package (possibly multiple files) to a list of decls
 func (ctx *Ctx) decls(fs []*ast.File) (imports glang.ImportDecls, sortedDecls []glang.Decl, errs []error) {
 	decls := make(map[string]glang.Decl)
@@ -87,7 +74,6 @@ func (ctx *Ctx) decls(fs []*ast.File) (imports glang.ImportDecls, sortedDecls []
 		for di, d := range f.Decls {
 			id := declId{fi, di}
 			newDecls, err := ctx.declsOrError(d)
-			newDecls = ctx.filterDecls(newDecls)
 			if err != nil {
 				errs = append(errs, err)
 			}
