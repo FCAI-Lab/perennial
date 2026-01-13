@@ -30,6 +30,16 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
+type outputDecls struct {
+	imports         []glang.Decl
+	typeSyntaxDecls []glang.Decl
+	constDecls      []glang.Decl
+	varDecls        []glang.Decl
+	funcDecls       []glang.Decl
+	funcImplDecls   []glang.Decl
+	typeSemDecls    []glang.Decl
+}
+
 // Ctx is a context for resolving Go code's types and source code
 type Ctx struct {
 	info    *types.Info
@@ -71,6 +81,7 @@ type Ctx struct {
 	inits []glang.Expr
 
 	filter declfilter.DeclFilter
+	out    *outputDecls
 }
 
 // NewPkgCtx initializes a context based on a properly loaded package
@@ -2300,27 +2311,32 @@ func funcName(f *types.Func) string {
 
 // Returns a glang.FuncDecl and maybe also a glang.NameDecl. If the function is an `init` or `_`, this
 // returns None.
-func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
+func (ctx *Ctx) funcDecl(d *ast.FuncDecl) {
+	ctx.curFuncType = ctx.typeOf(d.Name).(*types.Signature)
+	defer func() {
+		ctx.curFuncType = nil
+	}()
+
 	funcName := funcName(ctx.info.ObjectOf(d.Name).(*types.Func))
 	if funcName == "_" {
-		return ret
+		return
 	}
 
-	// Always emit func id, even if the function is trusted or axiomatized.
 	if d.Recv == nil {
+		// Always emit func name decl, even if the function is trusted or axiomatized.
 		funcId := ctx.info.Defs[d.Name].Pkg().Path() + "." + ctx.info.Defs[d.Name].Name()
-		ret = append(ret, glang.ConstDecl{
-			Name: d.Name.Name,
-			Val:  glang.StringLiteral{Value: funcId},
-			Type: glang.VerbatimExpr("go_string"),
-		})
 		if d.Name.Name != "init" {
+			ctx.out.funcDecls = append(ctx.out.funcDecls, glang.ConstDecl{
+				Name: d.Name.Name,
+				Val:  glang.StringLiteral{Value: funcId},
+				Type: glang.VerbatimExpr("go_string"),
+			})
 			ctx.functions = append(ctx.functions, d)
 		}
 	}
 
 	if ctx.filter.GetAction(funcName) != declfilter.Translate {
-		return ret
+		return
 	}
 
 	ctx.usesDefer = false
@@ -2383,7 +2399,6 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 		case declfilter.Trust:
 			return
 		case declfilter.Axiomatize:
-			ret = append(ret, glang.AxiomDecl{DeclName: fd.Name, Type: glang.VerbatimExpr("val")})
 			return
 		}
 		ctx.dep.SetCurrentName(fd.Name)
@@ -2440,7 +2455,7 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 		}
 		f := glang.FuncLit{Args: nil, Body: body}
 		ctx.inits = append(ctx.inits, f)
-		return nil
+		return
 	}
 
 	fd.Body = body
@@ -2478,7 +2493,7 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) (ret []glang.Decl) {
 	} else {
 		fd.Body = glang.NewCallExpr(glang.VerbatimExpr("exception_do"), fd.Body)
 	}
-	ret = append(ret, fd)
+	ctx.out.funcImplDecls = append(ctx.out.funcImplDecls, fd)
 	return
 }
 
@@ -2656,28 +2671,22 @@ func (ctx *Ctx) imports(d []ast.Spec) []glang.Decl {
 	return decls
 }
 
-func (ctx *Ctx) decl(d ast.Decl) []glang.Decl {
+func (ctx *Ctx) decl(d ast.Decl) {
 	switch d := d.(type) {
 	case *ast.FuncDecl:
-		ctx.curFuncType = ctx.typeOf(d.Name).(*types.Signature)
-		fd := ctx.funcDecl(d)
-		ctx.curFuncType = nil
-		return fd
+		ctx.funcDecl(d)
 	case *ast.GenDecl:
 		switch d.Tok {
 		case token.IMPORT:
-			return ctx.imports(d.Specs)
+			ctx.imports(d.Specs)
 		case token.CONST:
-			return ctx.constDecl(d)
+			ctx.constDecl(d)
 		case token.VAR:
-			return ctx.globalVarDecl(d)
+			ctx.globalVarDecl(d)
 		case token.TYPE:
-			var decls []glang.Decl
 			for _, spec := range d.Specs {
-				spec := spec.(*ast.TypeSpec)
-				decls = append(decls, ctx.typeDecl(spec)...)
+				ctx.typeDecl(spec.(*ast.TypeSpec))
 			}
-			return decls
 		default:
 			ctx.nope(d, "unknown token type in decl")
 		}
@@ -2686,7 +2695,6 @@ func (ctx *Ctx) decl(d ast.Decl) []glang.Decl {
 	default:
 		ctx.nope(d, "top-level decl")
 	}
-	return nil
 }
 
 func (ctx *Ctx) packagePropClass() []glang.Decl {
@@ -2737,7 +2745,7 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 
 // After using Ctx to translate every decl, this will return the extra decls
 // that should be added to the accumulated set of glang.Decls.
-func (ctx *Ctx) finalExtraDecls() []glang.Decl {
+func (ctx *Ctx) finalExtraDecls() {
 	var decls = []glang.Decl{}
 
 	ctx.dep.SetCurrentName("info'")

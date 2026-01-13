@@ -14,100 +14,38 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-// declsOrError translates one top-level declaration,
-// catching Goose translation errors and returning them as a regular Go error
-func (ctx *Ctx) declsOrError(stmt ast.Decl) (decls []glang.Decl, err error) {
+type errorCatcher struct {
+	errs []error
+}
+
+func (e *errorCatcher) do(f func()) {
 	defer func() {
 		if r := recover(); r != nil {
 			if gooseErr, ok := r.(gooseError); ok {
-				err = gooseErr.err
+				e.errs = append(e.errs, gooseErr.err)
 			} else {
 				// r is an error from a non-goose error, indicating a bug
 				panic(r)
 			}
 		}
 	}()
-	return ctx.decl(stmt), nil
-}
-
-func (ctx *Ctx) initOrError() (decls []glang.Decl, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			if gooseErr, ok := r.(gooseError); ok {
-				err = gooseErr.err
-			} else {
-				// r is an error from a non-goose error, indicating a bug
-				panic(r)
-			}
-		}
-	}()
-	return ctx.finalExtraDecls(), nil
-}
-
-func filterImports(decls []glang.Decl) (nonImports []glang.Decl, imports glang.ImportDecls) {
-	for _, d := range decls {
-		switch d := d.(type) {
-		case glang.ImportDecl:
-			imports = append(imports, d)
-		default:
-			nonImports = append(nonImports, d)
-		}
-	}
-	return
-}
-
-type declId struct {
-	fileIdx int
-	declIdx int
+	f()
 }
 
 // Decls converts an entire package (possibly multiple files) to a list of decls
-func (ctx *Ctx) decls(fs []*ast.File) (imports glang.ImportDecls, sortedDecls []glang.Decl, errs []error) {
+func (ctx *Ctx) files(fs []*ast.File) (sortedDecls []glang.Decl, errs []error) {
 	decls := make(map[string]glang.Decl)
 	var declNames []string
-	declNameToId := make(map[string]declId)
-	imports = make([]glang.ImportDecl, 0)
 
-	// Translate every Go decl into a Glang decl and build up dependencies for
-	// each of them.
-	for fi, f := range fs {
-		for di, d := range f.Decls {
-			id := declId{fi, di}
-			newDecls, err := ctx.declsOrError(d)
-			if err != nil {
-				errs = append(errs, err)
-			}
-			newDecls, newImports := filterImports(newDecls)
-			imports = append(imports, newImports...)
-			for _, d := range newDecls {
-				named, name := d.DefName()
-				if !named {
-					panic("Unnamed decl")
-				}
-				declNames = append(declNames, name)
-				declNameToId[name] = id
-				decls[name] = d
-			}
+	var e errorCatcher
+	for _, f := range fs {
+		for _, d := range f.Decls {
+			e.do(func() { ctx.decl(d) })
 		}
 	}
-
-	newDecls, err := ctx.initOrError()
-	if err != nil {
-		errs = append(errs, err)
-	} else {
-		for _, newDecl := range newDecls {
-			named, name := newDecl.DefName()
-			if !named {
-				panic("Unnamed decl")
-			}
-			declNames = append(declNames, name)
-			// declNameToId[newDecl.DefName()] =
-			decls[name] = newDecl
-		}
-	}
+	e.do(func() { ctx.finalExtraDecls() })
 
 	// Sort Glang decls based on dependencies
-
 	generated := make(map[string]bool)
 	generating := make(map[string]bool)
 	var processDecl func(name string)
@@ -116,8 +54,6 @@ func (ctx *Ctx) decls(fs []*ast.File) (imports glang.ImportDecls, sortedDecls []
 			return
 		}
 		if generating[name] {
-			id := declNameToId[name]
-
 			cycleDesc := name
 			printed := make(map[string]bool)
 		OuterLoop:
@@ -135,11 +71,10 @@ func (ctx *Ctx) decls(fs []*ast.File) (imports glang.ImportDecls, sortedDecls []
 			}
 
 			errs = append(errs, &ConversionError{
-				Category:    "unsupported",
+				Category:    "nope",
 				Message:     fmt.Sprintf("cycle in dependencies while generating %s (%v)", name, cycleDesc),
 				GoCode:      "???",
 				GooseCaller: "decls() in interface.go",
-				Position:    ctx.fset.Position(fs[id.fileIdx].Decls[id.declIdx].Pos()),
 			})
 			generated[name] = true
 			sortedDecls = append(sortedDecls, decls[name])
@@ -198,6 +133,16 @@ func translatePackage(pkg *packages.Package, config declfilter.FilterConfig) (gl
 	ctx := NewPkgCtx(pkg, declfilter.New(config))
 	coqFile := ctx.initCoqFile(pkg, config)
 	imports, decls, errs := ctx.decls(pkg.Syntax)
+
+	// imports
+	// type syntax
+	// consts
+	// vars
+	// funcs
+	// funcImpls
+	// type semantics
+	// package level assumption
+
 	coqFile.Imports = imports
 	coqFile.Decls = decls
 	if len(errs) != 0 {
@@ -209,7 +154,6 @@ func translatePackage(pkg *packages.Package, config declfilter.FilterConfig) (gl
 
 func (ctx *Ctx) initCoqFile(pkg *packages.Package, config declfilter.FilterConfig) (f glang.File) {
 	f.PkgPath = pkg.PkgPath
-	f.GoPackage = pkg.Name
 	if config.Bootstrap.Enabled {
 		f.Header = glang.BootstrapHeader + "\n" + strings.Join(config.Bootstrap.Prelude, "\n") + "\n"
 	} else {
