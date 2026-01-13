@@ -1525,6 +1525,10 @@ func (ctx *Ctx) exprAddr(e ast.Expr) glang.Expr {
 	return nil
 }
 
+func (ctx *Ctx) exprIntoType(e ast.Expr, target types.Type) glang.Expr {
+	return ctx.handleImplicitConversion(e, ctx.typeOf(e), target, ctx.expr(e))
+}
+
 func (ctx *Ctx) assignFromTo(lhs ast.Expr, rhs glang.Expr, cont glang.Expr) glang.Expr {
 	// lhs should either be a map index expression, or is addressable
 	switch lhs := lhs.(type) {
@@ -1534,11 +1538,12 @@ func (ctx *Ctx) assignFromTo(lhs ast.Expr, rhs glang.Expr, cont glang.Expr) glan
 		}
 	case *ast.IndexExpr:
 		targetTy := ctx.typeOf(lhs.X).Underlying()
-		switch targetTy.(type) {
+		switch t := targetTy.(type) {
 		case *types.Map:
 			return glang.NewDoSeq(glang.NewCallExpr(glang.VerbatimExpr("map.insert"),
+				ctx.glangType(lhs.Index, ctx.typeOf(lhs.Index)),
 				ctx.expr(lhs.X),
-				ctx.expr(lhs.Index),
+				ctx.exprIntoType(lhs.Index, t.Key()),
 				rhs), cont)
 		}
 	}
@@ -2082,7 +2087,7 @@ func (ctx *Ctx) sendStmt(s *ast.SendStmt, cont glang.Expr) (expr glang.Expr) {
 		glang.IdentExpr("$v"))
 	// XXX: left-to-right evaluation, might not match Go
 	expr = glang.LetExpr{Names: []string{"$v"},
-		ValExpr: ctx.handleImplicitConversion(s.Value, ctx.typeOf(s.Value), elemType, ctx.expr(s.Value)),
+		ValExpr: ctx.exprIntoType(s.Value, elemType),
 		Cont:    expr}
 	expr = glang.LetExpr{Names: []string{"$chan"}, ValExpr: ctx.expr(s.Chan), Cont: expr}
 	expr = glang.NewDoSeq(expr, cont)
