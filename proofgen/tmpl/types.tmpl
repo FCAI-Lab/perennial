@@ -1,9 +1,15 @@
+{{ define "GallinaType" -}}
+({{.PkgName}}.{{.Name}}.t {{- range $param := .TypeParams }} {{$param}}'{{ end -}})
+{{- end -}}
+
 {{ define "TypedPointstoParams" -}}
 {{- range $param := . -}}`{!TypedPointsto (Σ:=Σ) {{$param}}'} {{ end -}}
 {{- end -}}
 
-{{ define "GallinaType" -}}
-({{.PkgName}}.{{.Name}}.t {{- range $param := .TypeParams }} {{$param}}'{{ end -}})
+{{ define "IntoValParams" -}}
+{{- range $p:= . -}}
+`{!ZeroVal {{$p}}'} `{!TypedPointsto (Σ:=Σ) {{$p}}'} `{!IntoValTyped {{$p}}' {{$p}}} {{/* */ -}}
+`{!go.TypeRepr {{$p}} {{$p}}'} {{ end -}}
 {{- end -}}
 
 {{- range $t := .Types -}}
@@ -29,6 +35,11 @@ Local Set Default Proof Using "All".
       )%I
   |}.
 Final Obligation. solve_typed_pointsto_agree. Qed.
+
+Instance {{$t.Name}}_into_val_typed
+  {{ template "IntoValParams" $t.TypeParams }} :
+  IntoValTyped (channel.Channel.t T') (channel.Channel T).
+Proof. solve_into_val_typed_struct. Qed.
 
 End def.
 End {{$t.Name}}.
