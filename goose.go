@@ -1020,13 +1020,13 @@ func (ctx *Ctx) indexExpr(e *ast.IndexExpr, multipleBindings bool) glang.Expr {
 				ctx.glangType(e.X, xTy.Key()),
 				ctx.glangType(e.X, xTy.Elem()),
 				ctx.expr(e.X),
-				ctx.expr(e.Index))
+				ctx.exprIntoType(e.Index, xTy.Key()))
 		} else {
 			return glang.NewCallExpr(glang.VerbatimExpr("map.lookup1"),
 				ctx.glangType(e.X, xTy.Key()),
 				ctx.glangType(e.X, xTy.Elem()),
 				ctx.expr(e.X),
-				ctx.expr(e.Index))
+				ctx.exprIntoType(e.Index, xTy.Key()))
 		}
 	case *types.Slice:
 		return glang.DerefExpr{

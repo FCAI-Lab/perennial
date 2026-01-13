@@ -64,3 +64,8 @@ func mapClearTest() int {
 	clear(m)
 	return len(m)
 }
+
+func mapLookupConversion() bool {
+	m := make(map[any]bool)
+	return m["ok"]
+}
