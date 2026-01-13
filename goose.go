@@ -1015,15 +1015,19 @@ func (ctx *Ctx) indexExpr(e *ast.IndexExpr, multipleBindings bool) glang.Expr {
 	xTy := ctx.typeOf(e.X).Underlying()
 	switch xTy := xTy.(type) {
 	case *types.Map:
-		e := glang.NewCallExpr(glang.VerbatimExpr("map.get"),
-			ctx.expr(e.X),
-			ctx.expr(e.Index))
-		// FIXME: this is non-local. Should decide whether to do "Fst" based on
-		// assign statement or parent expression.
-		if !multipleBindings {
-			e = glang.NewCallExpr(glang.VerbatimExpr("Fst"), e)
+		if multipleBindings {
+			return glang.NewCallExpr(glang.VerbatimExpr("map.lookup2"),
+				ctx.glangType(e.X, xTy.Key()),
+				ctx.glangType(e.X, xTy.Elem()),
+				ctx.expr(e.X),
+				ctx.expr(e.Index))
+		} else {
+			return glang.NewCallExpr(glang.VerbatimExpr("map.lookup1"),
+				ctx.glangType(e.X, xTy.Key()),
+				ctx.glangType(e.X, xTy.Elem()),
+				ctx.expr(e.X),
+				ctx.expr(e.Index))
 		}
-		return e
 	case *types.Slice:
 		return glang.DerefExpr{
 			X:  ctx.exprAddr(e),
@@ -1491,6 +1495,19 @@ func (ctx *Ctx) varDeclStmt(s *ast.DeclStmt, cont glang.Expr) glang.Expr {
 	return nil
 }
 
+func (ctx *Ctx) getIndexType(n locatable, t types.Type) types.Type {
+	switch t := t.Underlying().(type) {
+	case *types.Slice:
+		return types.Typ[types.Int]
+	case *types.Map:
+		return t.Key()
+	case *types.Array:
+		return types.Typ[types.Int]
+	}
+	ctx.unsupported(n, "unexpected type for indexing")
+	return nil
+}
+
 // Returns the address of the given expression.
 // Requires that e is actually addressable
 func (ctx *Ctx) exprAddr(e ast.Expr) glang.Expr {
@@ -1515,7 +1532,8 @@ func (ctx *Ctx) exprAddr(e ast.Expr) glang.Expr {
 		targetTy := ctx.typeOf(e.X)
 		return glang.NewCallExpr(glang.VerbatimExpr("IndexRef"),
 			ctx.glangType(e, targetTy),
-			glang.TupleExpr{ctx.expr(e.X), ctx.expr(e.Index)})
+			glang.TupleExpr{ctx.expr(e.X),
+				ctx.exprIntoType(e.Index, ctx.getIndexType(e.Index, targetTy))})
 	case *ast.StarExpr:
 		return ctx.expr(e.X)
 	case *ast.SelectorExpr:
@@ -1670,31 +1688,23 @@ func (ctx *Ctx) handleImplicitConversion(n locatable, from, to types.Type, e gla
 		}
 	}
 	if fromBasic, ok := fromUnder.(*types.Basic); ok && isIntegerKind(fromBasic.Kind()) {
-		if isUnsignedIntegerKind(fromBasic.Kind()) {
-			if toBasic, ok := toUnder.(*types.Basic); ok {
-				switch toBasic.Kind() {
-				case types.Uint64:
-					return glang.NewCallExpr(glang.VerbatimExpr("u_to_w64"), e)
-				case types.Uint32:
-					return glang.NewCallExpr(glang.VerbatimExpr("u_to_w32"), e)
-				case types.Uint16:
-					return glang.NewCallExpr(glang.VerbatimExpr("u_to_w16"), e)
-				case types.Uint8:
-					return glang.NewCallExpr(glang.VerbatimExpr("u_to_w8"), e)
-				}
+		if toBasic, ok := toUnder.(*types.Basic); ok {
+			s := ""
+			if isUnsignedIntegerKind(fromBasic.Kind()) {
+				s += "u_to_"
+			} else {
+				s += "s_to_"
 			}
-		} else { // from signed integer
-			if toBasic, ok := toUnder.(*types.Basic); ok {
-				switch toBasic.Kind() {
-				case types.Int64:
-					return glang.NewCallExpr(glang.VerbatimExpr("s_to_w64"), e)
-				case types.Int32:
-					return glang.NewCallExpr(glang.VerbatimExpr("s_to_w32"), e)
-				case types.Int16:
-					return glang.NewCallExpr(glang.VerbatimExpr("s_to_w16"), e)
-				case types.Int8:
-					return glang.NewCallExpr(glang.VerbatimExpr("s_to_w8"), e)
-				}
+
+			switch toBasic.Kind() {
+			case types.Int64, types.Int, types.Uint64, types.Uint:
+				return glang.NewCallExpr(glang.VerbatimExpr(s+"w64"), e)
+			case types.Uint32, types.Int32:
+				return glang.NewCallExpr(glang.VerbatimExpr(s+"w32"), e)
+			case types.Uint16, types.Int16:
+				return glang.NewCallExpr(glang.VerbatimExpr(s+"w16"), e)
+			case types.Uint8, types.Int8:
+				return glang.NewCallExpr(glang.VerbatimExpr(s+"w8"), e)
 			}
 		}
 	}
