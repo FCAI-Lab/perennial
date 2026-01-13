@@ -15,17 +15,12 @@ import (
 
 // this file has the translations for types themselves
 func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
-	declName := spec.Name.Name
-	if _, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
-		declName = spec.Name.Name + "ⁱᵐᵖˡ"
-	}
+	typeName := spec.Name.Name
 
-	ctx.dep.SetCurrentName(declName)
-	defer ctx.dep.UnsetCurrentName()
 	switch ctx.filter.GetAction(spec.Name.Name) {
 	case declfilter.Axiomatize:
 		decls = append(decls, glang.AxiomDecl{
-			DeclName: declName,
+			DeclName: typeName,
 			Type:     glang.VerbatimExpr("go.type"),
 		})
 		return
@@ -35,15 +30,20 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 			decls = append(decls, ctx.namedTypePropClassDecl(namedType)...)
 		}
 	case declfilter.Translate:
+		ctx.dep.SetCurrentName(typeName + "ⁱᵐᵖˡ")
 		ty := ctx.typeOf(spec.Type)
 		decl := glang.TypeDecl{
-			Name:       declName,
+			Name:       typeName + "ⁱᵐᵖˡ",
 			Body:       ctx.glangType(spec, ty),
 			TypeParams: ctx.typeParamList(spec.TypeParams),
 		}
 		decls = append(decls, decl)
+		ctx.dep.UnsetCurrentName()
+
 		if namedType, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
 			ctx.namedTypes = append(ctx.namedTypes, namedType)
+
+			ctx.dep.SetCurrentName(typeName)
 			// Add a go.type declaration
 			var typeParams []string
 			var typeParamsList glang.ListExpr
@@ -54,13 +54,14 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 				}
 			}
 			decls = append(decls, glang.TypeDecl{
-				Name: namedType.Obj().Name(),
+				Name: typeName,
 				Body: glang.NewCallExpr(glang.VerbatimExpr("go.Named"),
 					glang.StringLiteral{Value: namedType.Obj().Pkg().Path() + "." + namedType.Obj().Name()},
 					typeParamsList,
 				),
 				TypeParams: typeParams,
 			})
+			ctx.dep.UnsetCurrentName()
 
 			// Add all the declarations associated with a new struct type
 			decls = append(decls, ctx.namedRocqTypeDecl(spec)...)
@@ -78,6 +79,8 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	typeParams := ""
 	namedType := ctx.typeOf(spec.Name).(*types.Named)
 
+	ctx.dep.SetCurrentName(spec.Name.Name + ".t")
+	defer ctx.dep.UnsetCurrentName()
 	switch t := ctx.typeOf(spec.Type).(type) {
 	case *types.Struct:
 		fmt.Fprintf(w, "Record t")
@@ -97,6 +100,7 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 			if err != nil {
 				ctx.unsupported(spec, "%s", err.Error())
 			}
+			ctx.dep.Add(ft)
 			fmt.Fprintf(w, "  %s : %s;\n", f.Name(), ft)
 		}
 		fmt.Fprintf(w, "}.\n")
@@ -161,6 +165,8 @@ func (ctx *Ctx) namedTypePropClassDecl(t *types.Named) []glang.Decl {
 	ptrTy := "(go.PointerType " + ty + ")"
 
 	w := new(strings.Builder)
+	ctx.dep.SetCurrentName(typeName + "_Assumptions")
+	defer ctx.dep.UnsetCurrentName()
 	fmt.Fprintln(w, "Class "+typeName+"_Assumptions "+
 		"{ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=")
 	fmt.Fprintln(w, "{")
