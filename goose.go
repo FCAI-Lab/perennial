@@ -16,6 +16,7 @@ import (
 	"go/constant"
 	"go/token"
 	"go/types"
+	"iter"
 	"log"
 	"math/big"
 	"path/filepath"
@@ -2696,11 +2697,17 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 	fmt.Fprintln(w, "Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=")
 	fmt.Fprintln(w, "{")
 
-	// FIXME: toposort
-	for _, t := range ctx.namedTypeSpecs {
-		decls = append(decls, ctx.namedTypeSemanticsDecl(t)...)
-		fmt.Fprintln(w, "  #[global] "+t.Name.Name+"_instance :: "+t.Name.Name+"_Assumptions;")
-	}
+	// toposort named types specs
+	for t := range toposortVisit(slices.Values(ctx.namedTypeSpecs),
+		func(s *ast.TypeSpec) iter.Seq[*ast.TypeSpec] {
+			return slices.Values[[]*ast.TypeSpec](nil)
+		},
+		func(cycle []*ast.TypeSpec) {
+			ctx.unsupported(cycle[0], "cycle")
+		}) {
+			decls = append(decls, ctx.namedTypeSemanticsDecl(t)...)
+			fmt.Fprintln(w, "  #[global] "+t.Name.Name+"_instance :: "+t.Name.Name+"_Assumptions;")
+}
 
 	for _, f := range ctx.functions {
 		if ctx.filter.GetAction(f.Name.Name) == declfilter.Axiomatize {
