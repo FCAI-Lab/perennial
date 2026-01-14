@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/types"
 	"math/big"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -67,8 +68,8 @@ func (ctx *Ctx) namedTypeSemanticsDecl(spec *ast.TypeSpec) (decls []glang.Decl) 
 	case declfilter.Trust:
 		decls = ctx.namedTypePropClassDecl(ctx.typeOf(spec.Name).(*types.Named))
 	case declfilter.Translate:
-		decls = append(ctx.namedRocqTypeDecl(spec),
-			ctx.namedTypePropClassDecl(ctx.typeOf(spec.Name).(*types.Named))...)
+		decls = slices.Concat(ctx.namedRocqTypeDecl(spec), ctx.namedTypeImplDecl(spec),
+			ctx.namedTypePropClassDecl(ctx.typeOf(spec.Name).(*types.Named)))
 	}
 	return decls
 }
@@ -140,6 +141,16 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	}
 	decls = append(decls, recordDecl)
 	return decls
+}
+
+func (ctx *Ctx) namedTypeImplDecl(spec *ast.TypeSpec) []glang.Decl {
+	typeName := spec.Name.Name
+	decl := glang.TypeDecl{
+		Name:       typeName + "ⁱᵐᵖˡ",
+		Body:       ctx.glangType(spec, ctx.typeOf(spec.Type)),
+		TypeParams: ctx.typeParamList(spec.TypeParams),
+	}
+	return []glang.Decl{decl}
 }
 
 func (ctx *Ctx) namedTypePropClassDecl(t *types.Named) []glang.Decl {
