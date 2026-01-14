@@ -74,8 +74,6 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	typeParams := ""
 	namedType := ctx.typeOf(spec.Name).(*types.Named)
 
-	ctx.dep.SetCurrentName(spec.Name.Name + ".t")
-	defer ctx.dep.UnsetCurrentName()
 	switch t := ctx.typeOf(spec.Type).(type) {
 	case *types.Struct:
 		fmt.Fprintf(w, "Record t")
@@ -92,7 +90,6 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 		for i := range t.NumFields() {
 			f := t.Field(i)
 			ft := ctx.toGallinaType(spec, f.Type())
-			ctx.dep.Add(ft)
 			fmt.Fprintf(w, "  %s : %s;\n", f.Name(), ft)
 		}
 		fmt.Fprintf(w, "}.\n")
@@ -154,8 +151,6 @@ func (ctx *Ctx) namedTypePropClassDecl(t *types.Named) []glang.Decl {
 	ptrTy := "(go.PointerType " + ty + ")"
 
 	w := new(strings.Builder)
-	ctx.dep.SetCurrentName(typeName + "_Assumptions")
-	defer ctx.dep.UnsetCurrentName()
 	fmt.Fprintln(w, "Class "+typeName+"_Assumptions "+
 		"{ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=")
 	fmt.Fprintln(w, "{")
@@ -223,7 +218,6 @@ func (ctx *Ctx) namedTypePropClassDecl(t *types.Named) []glang.Decl {
 		if len(index) == 0 {
 			ctx.nope(t.Obj(), "expected non-empty index in methodSet translation")
 		} else if len(index) == 1 {
-			ctx.dep.Add(glang.TypeMethod(typeName, methodName))
 			impl = "(" + glang.TypeMethod(typeName, methodName) + typeParams + ")"
 		} else {
 			structType, ok := t.Underlying().(*types.Struct)
@@ -249,10 +243,8 @@ func (ctx *Ctx) namedTypePropClassDecl(t *types.Named) []glang.Decl {
 		if len(index) == 0 {
 			ctx.nope(t.Obj(), "expected non-empty index in methodSet translation")
 		} else if len(index) == 1 {
-			ctx.dep.Add(glang.TypeMethod(typeName, methodName))
 			recvType := t.Method(index[0]).Signature().Recv().Type()
 			if _, recvIsPointer := recvType.(*types.Pointer); recvIsPointer {
-				ctx.dep.Add(glang.TypeMethod(typeName, methodName))
 				impl = "(" + glang.TypeMethod(typeName, methodName) + typeParams + ")"
 			} else {
 				impl = `(λ: "$r", MethodResolve ` + ty + ` "` +
@@ -409,7 +401,6 @@ func (ctx *Ctx) glangType(n locatable, t types.Type) glang.Expr {
 			}
 			ctx.nope(n, "unexpected built-in type %v", t.Obj())
 		}
-		ctx.dep.Add(ctx.qualifiedName(t.Obj()))
 		if t.TypeArgs().Len() != 0 {
 			return glang.CallExpr{
 				MethodName: glang.GallinaIdent(ctx.qualifiedName(t.Obj())),
@@ -503,7 +494,6 @@ type structTypeInfo struct {
 }
 
 func (ctx *Ctx) structInfoToGlangType(info structTypeInfo) glang.Expr {
-	ctx.dep.Add(info.name)
 	return glang.GallinaIdent(info.name)
 }
 

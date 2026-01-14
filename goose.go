@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	"github.com/goose-lang/goose/declfilter"
-	"github.com/goose-lang/goose/deptracker"
 	"github.com/goose-lang/goose/glang"
 	"github.com/goose-lang/goose/util"
 	"golang.org/x/tools/go/packages"
@@ -82,9 +81,6 @@ type Ctx struct {
 	// include a defer prelude+prologue.
 	usesDefer bool
 
-	// One of these tracks *all* the dependencies for an entire package
-	dep *deptracker.Deps
-
 	globalVars     []*ast.Ident
 	functions      []*ast.FuncDecl
 	namedTypeSpecs []*ast.TypeSpec
@@ -113,7 +109,6 @@ func NewPkgCtx(pkg *packages.Package, filter declfilter.DeclFilter) Ctx {
 		declImplicitParams: declImplicitParams,
 		pkgIdent:           pkgIdent + "." + pkg.Name,
 		errorReporter:      newErrorReporter(pkg.Fset),
-		dep:                deptracker.New(),
 		importNames:        make(map[string]*types.PkgName),
 		filter:             filter,
 	}
@@ -138,7 +133,6 @@ func (ctx *Ctx) paramList(fs *ast.FieldList) (names []glang.Binder, types []glan
 }
 
 func (ctx *Ctx) gallinaIdent(x string) glang.Expr {
-	ctx.dep.Add(x)
 	return glang.GallinaIdent(x)
 }
 
@@ -992,7 +986,6 @@ func (ctx *Ctx) identExpr(e *ast.Ident, multipleBindings bool) glang.Expr {
 	obj := ctx.info.ObjectOf(e)
 	if constObj, ok := obj.(*types.Const); ok {
 		// is a constant
-		ctx.dep.Add(e.Name)
 		if constTy, ok := constObj.Type().(*types.Basic); ok && constTy.Kind() == types.UntypedFloat {
 			dstTy := ctx.typeOf(e)
 			if dstTy, ok := dstTy.(*types.Basic); ok && dstTy.Info()&types.IsInteger != 0 {
@@ -2387,9 +2380,6 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) {
 
 		fd.Name = glang.TypeMethod(typeName, d.Name.Name)
 
-		ctx.dep.SetCurrentName(fd.Name)
-		defer ctx.dep.UnsetCurrentName()
-
 		name := "_"
 		if len(receiver.Names) > 0 {
 			name = receiver.Names[0].Name
@@ -2415,8 +2405,6 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) {
 		case declfilter.Axiomatize:
 			return
 		}
-		ctx.dep.SetCurrentName(fd.Name)
-		defer ctx.dep.UnsetCurrentName()
 	}
 
 	if d.Type.TypeParams != nil {
@@ -2566,8 +2554,6 @@ func (ctx *Ctx) constSpec(spec *ast.ValueSpec) {
 				cd := glang.ConstDecl{
 					Name: spec.Names[i].Name,
 				}
-				ctx.dep.SetCurrentName(cd.Name)
-				defer ctx.dep.UnsetCurrentName()
 				// copy the line comment only to the first one
 				if i == 0 {
 					addSourceDoc(spec.Comment, &cd.Comment)
@@ -2712,7 +2698,7 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 
 	// FIXME: toposort
 	for _, t := range ctx.namedTypeSpecs {
-		ctx.namedTypeSemanticsDecl(t)
+		decls = append(decls, ctx.namedTypeSemanticsDecl(t)...)
 		fmt.Fprintln(w, "  #[global] "+t.Name.Name+"_instance :: "+t.Name.Name+"_Assumptions;")
 	}
 
@@ -2735,7 +2721,6 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 		typeArgList += "]"
 
 		impl := glang.FuncImpl(f.Name.Name)
-		ctx.dep.Add(impl)
 		fmt.Fprintf(w, "  #[global] %s_unfold%s :: FuncUnfold %s %s (%s%s);\n",
 			f.Name.Name, typeParams, f.Name.Name, typeArgList, impl, typeParams)
 	}
@@ -2755,8 +2740,6 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 func (ctx *Ctx) finalExtraDecls() {
 	var decls = []glang.Decl{}
 
-	ctx.dep.SetCurrentName("info'")
-
 	infoContents := fmt.Sprintf("#[global] Instance info' : PkgInfo %s := \n", ctx.pkgIdent) +
 		"{|\n  pkg_imported_pkgs := ["
 	sep := ""
@@ -2771,9 +2754,7 @@ func (ctx *Ctx) finalExtraDecls() {
 		Content: infoContents,
 	}
 	decls = append(decls, infoInstanceDecl)
-	ctx.dep.UnsetCurrentName()
 
-	ctx.dep.SetCurrentName("initialize'")
 	initFunc := glang.FuncDecl{Name: "initialize'"}
 
 	var e glang.Expr
@@ -2901,7 +2882,6 @@ InitLoop:
 
 	initFunc.Body = e
 	decls = append(decls, initFunc)
-	ctx.dep.UnsetCurrentName()
 
 	decls = append(decls, ctx.packagePropClass()...)
 	ctx.out.finalDecls = decls
