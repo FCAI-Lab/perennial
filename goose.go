@@ -31,25 +31,25 @@ import (
 )
 
 type outputDecls struct {
-	imports         []glang.Decl
-	typeSyntaxDecls []glang.Decl
-	constDecls      []glang.Decl
-	varDecls        []glang.Decl
-	funcDecls       []glang.Decl
-	funcImplDecls   []glang.Decl
-	typeSemDecls    []glang.Decl
-	finalDecls      []glang.Decl
+	importDecls    []glang.Decl
+	typeNamedDecls []glang.Decl
+	typeAliasDecls []glang.Decl
+	constDecls     []glang.Decl
+	varDecls       []glang.Decl
+	funcDecls      []glang.Decl
+	funcImplDecls  []glang.Decl
+	finalDecls     []glang.Decl
 }
 
 func (o *outputDecls) decls() []glang.Decl {
 	return slices.Concat(
-		o.imports,
-		o.typeSyntaxDecls,
+		o.importDecls,
+		o.typeNamedDecls,
+		o.typeAliasDecls,
 		o.constDecls,
 		o.varDecls,
 		o.funcDecls,
 		o.funcImplDecls,
-		o.typeSemDecls,
 		o.finalDecls,
 	)
 }
@@ -85,9 +85,9 @@ type Ctx struct {
 	// One of these tracks *all* the dependencies for an entire package
 	dep *deptracker.Deps
 
-	globalVars []*ast.Ident
-	functions  []*ast.FuncDecl
-	namedTypes []*types.Named
+	globalVars     []*ast.Ident
+	functions      []*ast.FuncDecl
+	namedTypeSpecs []*ast.TypeSpec
 
 	importNames        map[string]*types.PkgName
 	importNamesOrdered []*types.PkgName
@@ -2548,8 +2548,7 @@ func (ctx *Ctx) declType(t types.Type) glang.Expr {
 }
 
 // constSpec handles one specification in a const block
-func (ctx *Ctx) constSpec(spec *ast.ValueSpec) []glang.Decl {
-	var cds []glang.Decl
+func (ctx *Ctx) constSpec(spec *ast.ValueSpec) {
 	// Note that a spec is one line, typically something like `C = 1` or maybe just C
 	// if using iota, and spec.Names has more than 1 item only for something like
 	// `C, D = 2, 3`.
@@ -2559,7 +2558,7 @@ func (ctx *Ctx) constSpec(spec *ast.ValueSpec) []glang.Decl {
 		}
 		switch ctx.filter.GetAction(spec.Names[i].Name) {
 		case declfilter.Axiomatize:
-			cds = append(cds, glang.AxiomDecl{DeclName: spec.Names[i].Name,
+			ctx.out.constDecls = append(ctx.out.constDecls, glang.AxiomDecl{DeclName: spec.Names[i].Name,
 				Type: ctx.declType(ctx.typeOf(spec.Names[i])),
 			})
 		case declfilter.Translate:
@@ -2576,20 +2575,16 @@ func (ctx *Ctx) constSpec(spec *ast.ValueSpec) []glang.Decl {
 				fromT, v := ctx.constantLiteral(spec.Names[i], ctx.info.ObjectOf(spec.Names[i]).(*types.Const).Val())
 				cd.Val = ctx.handleImplicitConversion(spec.Names[i], fromT, ctx.typeOf(spec.Names[i]), v)
 				cd.Type = ctx.declType(ctx.typeOf(spec.Names[i]))
-				cds = append(cds, cd)
+				ctx.out.constDecls = append(ctx.out.constDecls, cd)
 			}()
 		}
 	}
-	return cds
 }
 
-func (ctx *Ctx) constDecl(d *ast.GenDecl) []glang.Decl {
-	var specs []glang.Decl
+func (ctx *Ctx) constDecl(d *ast.GenDecl) {
 	for _, spec := range d.Specs {
-		spec := spec.(*ast.ValueSpec)
-		specs = append(specs, ctx.constSpec(spec)...)
+		ctx.constSpec(spec.(*ast.ValueSpec))
 	}
-	return specs
 }
 
 // functionConstSpec translates constant declarations within functions, which
@@ -2618,15 +2613,14 @@ func (ctx *Ctx) functionConstSpec(spec *ast.ValueSpec, cont glang.Expr) glang.Ex
 	return e
 }
 
-func (ctx *Ctx) globalVarDecl(d *ast.GenDecl) []glang.Decl {
-	var decls []glang.Decl
+func (ctx *Ctx) globalVarDecl(d *ast.GenDecl) {
 	for _, spec := range d.Specs {
 		s := spec.(*ast.ValueSpec)
 		for _, name := range s.Names {
 			if name.Name == "_" {
 				continue
 			}
-			decls = append(decls, glang.ConstDecl{
+			ctx.out.varDecls = append(ctx.out.varDecls, glang.ConstDecl{
 				Name: name.Name,
 				Val: glang.StringLiteral{
 					Value: ctx.info.Defs[name].Pkg().Path() + "." + ctx.info.Defs[name].Name(),
@@ -2638,7 +2632,7 @@ func (ctx *Ctx) globalVarDecl(d *ast.GenDecl) []glang.Decl {
 				ctx.globalVars = append(ctx.globalVars, name)
 			default:
 				if s.Values != nil {
-					decls = append(decls, glang.AxiomDecl{
+					ctx.out.varDecls = append(ctx.out.varDecls, glang.AxiomDecl{
 						DeclName: name.Name + "'init",
 						Type:     glang.VerbatimExpr("val"),
 					})
@@ -2646,7 +2640,6 @@ func (ctx *Ctx) globalVarDecl(d *ast.GenDecl) []glang.Decl {
 			}
 		}
 	}
-	return decls
 }
 
 func stringLitValue(lit *ast.BasicLit) string {
@@ -2666,8 +2659,7 @@ var ffiMapping = map[string]string{
 	"github.com/goose-lang/primitive/async_disk": "async_disk",
 }
 
-func (ctx *Ctx) imports(d []ast.Spec) []glang.Decl {
-	var decls []glang.Decl
+func (ctx *Ctx) imports(d []ast.Spec) {
 	for _, s := range d {
 		s := s.(*ast.ImportSpec)
 		importPath := stringLitValue(s.Path)
@@ -2675,14 +2667,13 @@ func (ctx *Ctx) imports(d []ast.Spec) []glang.Decl {
 			continue
 		}
 
-		decls = append(decls, glang.ImportDecl{Path: importPath})
+		ctx.out.importDecls = append(ctx.out.importDecls, glang.ImportDecl{Path: importPath})
 		n := ctx.info.PkgNameOf(s)
 		if _, ok := ctx.importNames[n.Imported().Path()]; !ok {
 			ctx.importNames[n.Imported().Path()] = n
 			ctx.importNamesOrdered = append(ctx.importNamesOrdered, n)
 		}
 	}
-	return decls
 }
 
 func (ctx *Ctx) decl(d ast.Decl) {
@@ -2719,8 +2710,10 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 	fmt.Fprintln(w, "Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=")
 	fmt.Fprintln(w, "{")
 
-	for _, t := range ctx.namedTypes {
-		fmt.Fprintln(w, "  #[global] "+t.Obj().Name()+"_instance :: "+t.Obj().Name()+"_Assumptions;")
+	// FIXME: toposort
+	for _, t := range ctx.namedTypeSpecs {
+		ctx.namedTypeSemanticsDecl(t)
+		fmt.Fprintln(w, "  #[global] "+t.Name.Name+"_instance :: "+t.Name.Name+"_Assumptions;")
 	}
 
 	for _, f := range ctx.functions {
@@ -2781,7 +2774,6 @@ func (ctx *Ctx) finalExtraDecls() {
 	ctx.dep.UnsetCurrentName()
 
 	ctx.dep.SetCurrentName("initialize'")
-	defer ctx.dep.UnsetCurrentName()
 	initFunc := glang.FuncDecl{Name: "initialize'"}
 
 	var e glang.Expr
@@ -2909,6 +2901,7 @@ InitLoop:
 
 	initFunc.Body = e
 	decls = append(decls, initFunc)
+	ctx.dep.UnsetCurrentName()
 
 	decls = append(decls, ctx.packagePropClass()...)
 	ctx.out.finalDecls = decls

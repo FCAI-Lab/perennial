@@ -13,37 +13,22 @@ import (
 )
 
 // this file has the translations for types themselves
-func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
+func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) {
 	typeName := spec.Name.Name
 
 	switch ctx.filter.GetAction(spec.Name.Name) {
 	case declfilter.Axiomatize:
-		decls = append(decls, glang.AxiomDecl{
+		ctx.out.typeAliasDecls = append(ctx.out.typeAliasDecls, glang.AxiomDecl{
 			DeclName: typeName,
 			Type:     glang.VerbatimExpr("go.type"),
 		})
 		return
 	case declfilter.Trust:
-		if namedType, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
-			ctx.namedTypes = append(ctx.namedTypes, namedType)
-			decls = append(decls, ctx.namedTypePropClassDecl(namedType)...)
+		if _, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
+			ctx.namedTypeSpecs = append(ctx.namedTypeSpecs, spec)
 		}
 	case declfilter.Translate:
-		ctx.dep.SetCurrentName(typeName + "ⁱᵐᵖˡ")
-		ty := ctx.typeOf(spec.Type)
-		decl := glang.TypeDecl{
-			Name:       typeName + "ⁱᵐᵖˡ",
-			Body:       ctx.glangType(spec, ty),
-			TypeParams: ctx.typeParamList(spec.TypeParams),
-		}
-		decls = append(decls, decl)
-		ctx.dep.UnsetCurrentName()
-
 		if namedType, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
-			ctx.namedTypes = append(ctx.namedTypes, namedType)
-
-			ctx.dep.SetCurrentName(typeName)
-			// Add a go.type declaration
 			var typeParams []string
 			var typeParamsList glang.ListExpr
 			if tps := namedType.TypeParams(); tps != nil {
@@ -52,7 +37,8 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 					typeParamsList = append(typeParamsList, glang.GallinaIdent(tps.At(i).Obj().Name()))
 				}
 			}
-			decls = append(decls, glang.TypeDecl{
+			ctx.namedTypeSpecs = append(ctx.namedTypeSpecs, spec)
+			ctx.out.typeNamedDecls = append(ctx.out.typeNamedDecls, glang.TypeDecl{
 				Name: typeName,
 				Body: glang.NewCallExpr(glang.VerbatimExpr("go.Named"),
 					glang.StringLiteral{Value: namedType.Obj().Pkg().Path() + "." + namedType.Obj().Name()},
@@ -60,15 +46,25 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 				),
 				TypeParams: typeParams,
 			})
-			ctx.dep.UnsetCurrentName()
-
-			// Add all the declarations associated with a new struct type
-			decls = append(decls, ctx.namedRocqTypeDecl(spec)...)
-			decls = append(decls, ctx.namedTypePropClassDecl(namedType)...)
+		} else if aliasedType, ok := ctx.typeOf(spec.Name).(*types.Alias); ok {
+			var typeParams []string
+			if tps := aliasedType.TypeParams(); tps != nil {
+				for i := range tps.Len() {
+					typeParams = append(typeParams, tps.At(i).Obj().Name())
+				}
+			}
+			ctx.out.typeAliasDecls = append(ctx.out.typeAliasDecls, glang.TypeDecl{
+				Name:       typeName,
+				Body:       ctx.glangType(spec.Type, types.Unalias(aliasedType)),
+				TypeParams: typeParams,
+			})
 		}
 	}
+}
 
-	return
+func (ctx *Ctx) namedTypeSemanticsDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
+	return append(ctx.namedRocqTypeDecl(spec),
+		ctx.namedTypePropClassDecl(ctx.typeOf(spec.Name).(*types.Named))...)
 }
 
 func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
@@ -321,7 +317,7 @@ func (ctx *Ctx) structType(t *types.Struct) glang.Expr {
 	return ty
 }
 
-func (ctx *Ctx) basicType(n locatable, t *types.Basic) glang.Expr {
+func (ctx *Ctx) basicType(t *types.Basic) glang.Expr {
 	switch t.Name() {
 	case "untyped string":
 		return glang.GallinaIdent("go.string")
@@ -400,7 +396,7 @@ func (ctx *Ctx) glangType(n locatable, t types.Type) glang.Expr {
 	case *types.TypeParam:
 		return glang.GallinaIdent(t.Obj().Name())
 	case *types.Basic:
-		return ctx.basicType(n, t)
+		return ctx.basicType(t)
 	case *types.Pointer:
 		return glang.NewCallExpr(glang.VerbatimExpr("go.PointerType"), ctx.glangType(n, t.Elem()))
 	case *types.Named:
