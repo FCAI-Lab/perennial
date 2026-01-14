@@ -2755,6 +2755,11 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 		fmt.Fprintf(w, "  #[global] %s_unfold%s :: FuncUnfold %s %s (%s%s);\n",
 			f.Name.Name, typeParams, f.Name.Name, typeArgList, impl, typeParams)
 	}
+
+	for _, impName := range ctx.importNamesOrdered {
+		fmt.Fprintf(w, "  #[global] import_%[1]s_Assumption :: %[1]s.Assumptions;\n", impName.Name())
+	}
+
 	fmt.Fprint(w, "}.")
 
 	topDecl := glang.VerbatimDecl{
