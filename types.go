@@ -63,8 +63,14 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) {
 }
 
 func (ctx *Ctx) namedTypeSemanticsDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
-	return append(ctx.namedRocqTypeDecl(spec),
-		ctx.namedTypePropClassDecl(ctx.typeOf(spec.Name).(*types.Named))...)
+	switch ctx.filter.GetAction(spec.Name.Name) {
+	case declfilter.Trust:
+		decls = ctx.namedTypePropClassDecl(ctx.typeOf(spec.Name).(*types.Named))
+	case declfilter.Translate:
+		decls = append(ctx.namedRocqTypeDecl(spec),
+			ctx.namedTypePropClassDecl(ctx.typeOf(spec.Name).(*types.Named))...)
+	}
+	return decls
 }
 
 func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {

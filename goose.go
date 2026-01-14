@@ -2698,16 +2698,40 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 	fmt.Fprintln(w, "{")
 
 	// toposort named types specs
-	for t := range toposortVisit(slices.Values(ctx.namedTypeSpecs),
+	nameToTypeSpecMap := make(map[string]*ast.TypeSpec)
+	for _, t := range ctx.namedTypeSpecs {
+		nameToTypeSpecMap[t.Name.Name] = t
+		fmt.Fprintln(w, "  #[global] "+t.Name.Name+"_instance :: "+t.Name.Name+"_Assumptions;")
+	}
+	for t := range toposortSeq(slices.Values(ctx.namedTypeSpecs),
 		func(s *ast.TypeSpec) iter.Seq[*ast.TypeSpec] {
-			return slices.Values[[]*ast.TypeSpec](nil)
+			return func(yield func(s *ast.TypeSpec) bool) {
+				ast.Inspect(s.Type, func(n ast.Node) bool {
+					switch n := n.(type) {
+					case *ast.SelectorExpr, *ast.StarExpr:
+						return false
+					case *ast.ArrayType:
+						return n.Len != nil
+					case *ast.Ident:
+						if t, ok := nameToTypeSpecMap[n.Name]; ok {
+							return yield(t)
+						}
+					}
+					return true
+				})
+			}
 		},
 		func(cycle []*ast.TypeSpec) {
-			ctx.unsupported(cycle[0], "cycle")
+			s := "cycle: "
+			sep := ""
+			for _, t := range cycle {
+				s += sep + t.Name.Name
+				sep = "-> "
+			}
+			ctx.unsupported(cycle[0], "%s", s)
 		}) {
-			decls = append(decls, ctx.namedTypeSemanticsDecl(t)...)
-			fmt.Fprintln(w, "  #[global] "+t.Name.Name+"_instance :: "+t.Name.Name+"_Assumptions;")
-}
+		decls = append(decls, ctx.namedTypeSemanticsDecl(t)...)
+	}
 
 	for _, f := range ctx.functions {
 		if ctx.filter.GetAction(f.Name.Name) == declfilter.Axiomatize {
