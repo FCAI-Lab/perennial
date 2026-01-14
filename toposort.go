@@ -1,7 +1,9 @@
 package goose
 
+import "iter"
+
 // uses depth first search
-func toposortVisit[V comparable](vs []V, deps func(v V)[]V, f func(v V),
+func toposortVisit[V comparable](vs iter.Seq[V], deps func(v V) iter.Seq[V], f func(v V),
 	handleCycle func(vs []V)) {
 	visited := make(map[V]bool)
 	dipath := make([]V, 0)
@@ -15,7 +17,7 @@ func toposortVisit[V comparable](vs []V, deps func(v V)[]V, f func(v V),
 			handleCycle(dipath)
 		} else {
 			dipath, onDipath[v] = append(dipath, v), true
-			for _, d := range deps(v) {
+			for d := range deps(v) {
 				visit(d)
 			}
 		}
@@ -25,7 +27,7 @@ func toposortVisit[V comparable](vs []V, deps func(v V)[]V, f func(v V),
 		f(v)
 	}
 
-	for _, v := range vs {
+	for v := range vs {
 		visit(v)
 	}
 

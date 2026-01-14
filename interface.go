@@ -34,9 +34,6 @@ func (e *errorCatcher) do(f func()) {
 
 // Decls converts an entire package (possibly multiple files) to a list of decls
 func (ctx *Ctx) files(fs []*ast.File) (sortedDecls []glang.Decl, errs []error) {
-	decls := make(map[string]glang.Decl)
-	var declNames []string
-
 	var e errorCatcher
 	for _, f := range fs {
 		for _, d := range f.Decls {
@@ -45,58 +42,17 @@ func (ctx *Ctx) files(fs []*ast.File) (sortedDecls []glang.Decl, errs []error) {
 	}
 	e.do(func() { ctx.finalExtraDecls() })
 
-	// Sort Glang decls based on dependencies
-	generated := make(map[string]bool)
-	generating := make(map[string]bool)
-	var processDecl func(name string)
-	processDecl = func(name string) {
-		if generated[name] {
-			return
+	decls := ctx.out.decls()
+	declMap := make(map[string]glang.Decl)
+	for _, d := range decls {
+		if ok, n := d.DefName(); ok {
+			declMap[n] = d
 		}
-		if generating[name] {
-			cycleDesc := name
-			printed := make(map[string]bool)
-		OuterLoop:
-			for n := name; ; {
-				for d := range ctx.dep.GetDeps(n) {
-					if generating[d] {
-						if printed[n] {
-							break OuterLoop
-						}
-						printed[n] = true
-						cycleDesc += " -> " + d
-						n = d
-					}
-				}
-			}
-
-			errs = append(errs, &ConversionError{
-				Category:    "nope",
-				Message:     fmt.Sprintf("cycle in dependencies while generating %s (%v)", name, cycleDesc),
-				GoCode:      "???",
-				GooseCaller: "decls() in interface.go",
-			})
-			generated[name] = true
-			sortedDecls = append(sortedDecls, decls[name])
-			return
-		}
-		generating[name] = true
-
-		for dep := range ctx.dep.GetDeps(name) {
-			if _, ok := decls[dep]; ok {
-				processDecl(dep)
-			}
-		}
-		generated[name] = true
-		delete(generating, name)
-		sortedDecls = append(sortedDecls, decls[name])
 	}
 
-	for _, declName := range declNames {
-		processDecl(declName)
-	}
-
-	return
+	// FIXME:
+	// toposortVisit(ctx.out.decls())
+	return ctx.out.decls(), e.errs
 }
 
 type MultipleErrors []error
@@ -132,18 +88,8 @@ func translatePackage(pkg *packages.Package, config declfilter.FilterConfig) (gl
 	}
 	ctx := NewPkgCtx(pkg, declfilter.New(config))
 	coqFile := ctx.initCoqFile(pkg, config)
-	imports, decls, errs := ctx.decls(pkg.Syntax)
+	decls, errs := ctx.files(pkg.Syntax)
 
-	// imports
-	// type syntax
-	// consts
-	// vars
-	// funcs
-	// funcImpls
-	// type semantics
-	// package level assumption
-
-	coqFile.Imports = imports
 	coqFile.Decls = decls
 	if len(errs) != 0 {
 		return coqFile, errors.Wrap(MultipleErrors(errs),

@@ -38,6 +38,20 @@ type outputDecls struct {
 	funcDecls       []glang.Decl
 	funcImplDecls   []glang.Decl
 	typeSemDecls    []glang.Decl
+	finalDecls      []glang.Decl
+}
+
+func (o *outputDecls) decls() []glang.Decl {
+	return slices.Concat(
+		o.imports,
+		o.typeSyntaxDecls,
+		o.constDecls,
+		o.varDecls,
+		o.funcDecls,
+		o.funcImplDecls,
+		o.typeSemDecls,
+		o.finalDecls,
+	)
 }
 
 // Ctx is a context for resolving Go code's types and source code
@@ -81,7 +95,7 @@ type Ctx struct {
 	inits []glang.Expr
 
 	filter declfilter.DeclFilter
-	out    *outputDecls
+	out    outputDecls
 }
 
 // NewPkgCtx initializes a context based on a properly loaded package
@@ -2897,5 +2911,5 @@ InitLoop:
 	decls = append(decls, initFunc)
 
 	decls = append(decls, ctx.packagePropClass()...)
-	return decls
+	ctx.out.finalDecls = decls
 }
