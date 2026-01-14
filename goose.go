@@ -43,7 +43,6 @@ type outputDecls struct {
 
 func (o *outputDecls) decls() []glang.Decl {
 	return slices.Concat(
-		o.importDecls,
 		o.typeNamedDecls,
 		o.typeAliasDecls,
 		o.constDecls,
@@ -52,6 +51,10 @@ func (o *outputDecls) decls() []glang.Decl {
 		o.funcImplDecls,
 		o.finalDecls,
 	)
+}
+
+func (o *outputDecls) preHeaderDecls() []glang.Decl {
+	return o.importDecls
 }
 
 // Ctx is a context for resolving Go code's types and source code

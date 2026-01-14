@@ -33,7 +33,7 @@ func (e *errorCatcher) do(f func()) {
 }
 
 // Decls converts an entire package (possibly multiple files) to a list of decls
-func (ctx *Ctx) files(fs []*ast.File) (sortedDecls []glang.Decl, errs []error) {
+func (ctx *Ctx) files(fs []*ast.File) (preDecls []glang.Decl, sortedDecls []glang.Decl, errs []error) {
 	var e errorCatcher
 	for _, f := range fs {
 		for _, d := range f.Decls {
@@ -50,9 +50,7 @@ func (ctx *Ctx) files(fs []*ast.File) (sortedDecls []glang.Decl, errs []error) {
 		}
 	}
 
-	// FIXME:
-	// toposortVisit(ctx.out.decls())
-	return ctx.out.decls(), e.errs
+	return ctx.out.preHeaderDecls(), ctx.out.decls(), e.errs
 }
 
 type MultipleErrors []error
@@ -88,8 +86,9 @@ func translatePackage(pkg *packages.Package, config declfilter.FilterConfig) (gl
 	}
 	ctx := NewPkgCtx(pkg, declfilter.New(config))
 	coqFile := ctx.initCoqFile(pkg, config)
-	decls, errs := ctx.files(pkg.Syntax)
+	preDecls, decls, errs := ctx.files(pkg.Syntax)
 
+	coqFile.PreHeaderDecls = preDecls
 	coqFile.Decls = decls
 	if len(errs) != 0 {
 		return coqFile, errors.Wrap(MultipleErrors(errs),
