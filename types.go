@@ -70,6 +70,10 @@ func (ctx *Ctx) namedTypeSemanticsDecl(spec *ast.TypeSpec) []glang.Decl {
 		ctx.namedTypePropClassDecl(spec))
 }
 
+// Adding a "'" to avoid conflicting with Coq keywords and definitions that
+// would already be in context (like `t`). Could do this only when there is a
+// conflict, but it's lower entropy to do it always rather than pick and
+// choosing when.
 func recordProjection(i int, s string) string {
 	if s == "_" {
 		return s + fmt.Sprint(i) + "'"
