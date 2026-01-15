@@ -961,3 +961,57 @@ func (f File) Write(w io.Writer) {
 	}
 	fmt.Fprint(w, f.Footer)
 }
+
+type CommCase interface {
+	Expr
+}
+
+type SendCase struct {
+	ElemType Expr
+	Chan     Expr
+	Value    Expr
+}
+
+func (s SendCase) Coq(needs_paren bool) string {
+	return fmt.Sprintf("(SendCase %s %s %s)", s.ElemType.Coq(true), s.Chan.Coq(true), s.Value.Coq(true))
+}
+
+type RecvCase struct {
+	ElemType Expr
+	Chan     Expr
+}
+
+func (s RecvCase) Coq(needs_paren bool) string {
+	return fmt.Sprintf("(RecvCase %s %s)", s.ElemType.Coq(true), s.Chan.Coq(true))
+}
+
+type CommClause struct {
+	Comm CommCase
+	Body Expr
+}
+
+func (c CommClause) Coq(needs_paren bool) string {
+	return fmt.Sprintf("(CommClause %s %s)", c.Comm.Coq(true), c.Body.Coq(true))
+}
+
+type SelectStmtClauses struct {
+	Default Expr // nil for None
+	Clauses []CommClause
+}
+
+func (s SelectStmtClauses) Coq(needs_paren bool) string {
+	var def string
+	if s.Default == nil {
+		def = "None"
+	} else {
+		def = fmt.Sprintf("(Some %s)", s.Default.Coq(true))
+	}
+
+	var clauses []string
+	for _, c := range s.Clauses {
+		clauses = append(clauses, c.Coq(false))
+	}
+	list := "[" + strings.Join(clauses, "; ") + "]"
+
+	return addParens(needs_paren, fmt.Sprintf("SelectStmtClauses %s %s", def, list))
+}

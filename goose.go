@@ -2021,8 +2021,8 @@ func (ctx *Ctx) deferStmt(s *ast.DeferStmt, cont glang.Expr) (expr glang.Expr) {
 }
 
 func (ctx *Ctx) selectStmt(s *ast.SelectStmt, cont glang.Expr) (expr glang.Expr) {
-	var ops glang.ListExpr
-	var def glang.Expr = nil
+	var clauses []glang.CommClause
+	var def glang.Expr // nil initially (None)
 
 	// build up select statement itself
 	for _, s := range s.Body.List {
@@ -2031,13 +2031,14 @@ func (ctx *Ctx) selectStmt(s *ast.SelectStmt, cont glang.Expr) (expr glang.Expr)
 			// a default: case
 			def = glang.FuncLit{Body: ctx.stmtList(s.Body, nil)}
 		} else if c, ok := s.Comm.(*ast.SendStmt); ok {
-			ops = append(ops, glang.NewCallExpr(
-				glang.VerbatimExpr("chan.select_send"),
-				ctx.glangType(s.Comm, chanElem(ctx.typeOf(c.Chan))),
-				ctx.expr(c.Chan),
-				ctx.expr(c.Value),
-				glang.FuncLit{Body: ctx.stmtList(s.Body, nil)},
-			))
+			clauses = append(clauses, glang.CommClause{
+				Comm: glang.SendCase{
+					ElemType: ctx.glangType(s.Comm, chanElem(ctx.typeOf(c.Chan))),
+					Chan:     ctx.expr(c.Chan),
+					Value:    ctx.expr(c.Value),
+				},
+				Body: glang.FuncLit{Body: ctx.stmtList(s.Body, nil)},
+			})
 		} else { // must be a receive stmt
 			var recvChan glang.Expr
 			var chanType types.Type
@@ -2089,19 +2090,20 @@ func (ctx *Ctx) selectStmt(s *ast.SelectStmt, cont glang.Expr) (expr glang.Expr)
 				ctx.unsupported(s.Comm, "unexpected statement in select clause")
 			}
 
-			ops = append(ops, glang.NewCallExpr(glang.VerbatimExpr("chan.select_receive"),
-				ctx.glangType(s.Comm, chanElem(chanType)),
-				recvChan,
-				glang.FuncLit{Args: []glang.Binder{{Name: "$recvVal"}}, Body: body},
-			))
+			clauses = append(clauses, glang.CommClause{
+				Comm: glang.RecvCase{
+					ElemType: ctx.glangType(s.Comm, chanElem(chanType)),
+					Chan:     recvChan,
+				},
+				Body: glang.FuncLit{Args: []glang.Binder{{Name: "$recvVal"}}, Body: body},
+			})
 		}
 	}
 
-	if def == nil {
-		expr = glang.NewCallExpr(glang.VerbatimExpr("chan.select_blocking"), ops)
-	} else {
-		expr = glang.NewCallExpr(glang.VerbatimExpr("chan.select_nonblocking"), ops, def)
-	}
+	expr = glang.NewCallExpr(glang.VerbatimExpr("SelectStmt"), glang.SelectStmtClauses{
+		Default: def,
+		Clauses: clauses,
+	})
 	expr = glang.SeqExpr{Expr: expr, Cont: cont}
 	return
 }
