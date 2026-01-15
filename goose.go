@@ -2830,7 +2830,7 @@ InitLoop:
 				e = glang.NewDoSeq(
 					glang.StoreStmt{
 						Dst: glang.NewCallExpr(glang.VerbatimExpr("GlobalVarAddr"),
-							glang.ToVal{Value: ctx.gallinaIdent(init.Lhs[i-1].Name())},
+							ctx.gallinaIdent(init.Lhs[i-1].Name()), glang.Tt,
 						),
 						X:  glang.IdentExpr(fmt.Sprintf("$r%d", i-1)),
 						Ty: ctx.glangType(init.Lhs[i-1], init.Lhs[i-1].Type()),
@@ -2903,9 +2903,10 @@ InitLoop:
 	for _, varIdent := range ctx.globalVars {
 		e = glang.NewDoSeq(
 			glang.NewCallExpr(
-				glang.VerbatimExpr("GoGlobalAlloc"),
+				glang.VerbatimExpr("go.GlobalAlloc"),
 				glang.GallinaIdent(varIdent.Name),
 				ctx.glangType(varIdent, ctx.typeOf(varIdent)),
+				glang.Tt,
 			),
 			e)
 	}
