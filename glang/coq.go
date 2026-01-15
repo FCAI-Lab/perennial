@@ -838,10 +838,6 @@ func (d FuncDecl) CoqDecl() string {
 	return pp.Build()
 }
 
-func (d FuncDecl) DefName() (bool, string) {
-	return true, d.Name
-}
-
 type ConstDecl struct {
 	Name    string
 	Val     Expr
@@ -858,10 +854,6 @@ func (d ConstDecl) CoqDecl() string {
 	return pp.Build()
 }
 
-func (d ConstDecl) DefName() (bool, string) {
-	return true, d.Name
-}
-
 // VerbatimDecl is translated literally as a Coq declaration.
 type VerbatimDecl struct {
 	Content string
@@ -870,10 +862,6 @@ type VerbatimDecl struct {
 
 func (e VerbatimDecl) CoqDecl() string {
 	return e.Content
-}
-
-func (e VerbatimDecl) DefName() (bool, string) {
-	return true, e.Content
 }
 
 type AxiomDecl struct {
@@ -886,14 +874,9 @@ func (d AxiomDecl) CoqDecl() string {
 		GallinaIdent(d.DeclName).Coq(false), declImplicitParams, d.Type.Coq(false))
 }
 
-func (d AxiomDecl) DefName() (bool, string) {
-	return true, d.DeclName
-}
-
 // Decl is a FuncDecl, StructDecl, CommentDecl, or ConstDecl
 type Decl interface {
 	CoqDecl() string
-	DefName() (bool, string) // If true, then the Gallina identifier that is defined by this decl.
 }
 
 func TypeMethod(typeName string, methodName string) string {
@@ -938,10 +921,6 @@ func ImportToPath(pkgPath string) string {
 func (decl ImportDecl) CoqDecl() string {
 	coqImportQualid := strings.ReplaceAll(ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(decl.Path), "/", ".")
 	return fmt.Sprintf("Require Export New.code.%s.", coqImportQualid)
-}
-
-func (decl ImportDecl) DefName() (bool, string) {
-	return false, ""
 }
 
 type RecordField struct {

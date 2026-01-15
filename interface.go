@@ -41,15 +41,6 @@ func (ctx *Ctx) files(fs []*ast.File) (preDecls []glang.Decl, sortedDecls []glan
 		}
 	}
 	e.do(func() { ctx.finalExtraDecls() })
-
-	decls := ctx.out.decls()
-	declMap := make(map[string]glang.Decl)
-	for _, d := range decls {
-		if ok, n := d.DefName(); ok {
-			declMap[n] = d
-		}
-	}
-
 	return ctx.out.preHeaderDecls(), ctx.out.decls(), e.errs
 }
 
