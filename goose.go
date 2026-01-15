@@ -2777,7 +2777,7 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 func (ctx *Ctx) finalExtraDecls() {
 	var decls = []glang.Decl{}
 
-	infoContents := fmt.Sprintf("#[global] Instance info' : PkgInfo %s := \n", ctx.pkgIdent) +
+	infoContents := fmt.Sprintf("#[global] Instance info' : PkgInfo %s :=\n", ctx.pkgIdent) +
 		"{|\n  pkg_imported_pkgs := ["
 	sep := ""
 	for _, impName := range ctx.importNamesOrdered {
