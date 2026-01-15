@@ -65,83 +65,111 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) {
 	}
 }
 
-func (ctx *Ctx) namedTypeSemanticsDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
-	switch ctx.filter.GetAction(spec.Name.Name) {
-	case declfilter.Axiomatize:
-		// FIXME: axiomatized record
-		// FIXME: axiomatized record
-	case declfilter.Trust:
-		decls = ctx.namedTypePropClassDecl(ctx.typeOf(spec.Name).(*types.Named))
-	case declfilter.Translate:
-		decls = slices.Concat(ctx.namedRocqTypeDecl(spec), ctx.namedTypeImplDecl(spec),
-			ctx.namedTypePropClassDecl(ctx.typeOf(spec.Name).(*types.Named)))
-	}
-	return decls
+func (ctx *Ctx) namedTypeSemanticsDecl(spec *ast.TypeSpec) []glang.Decl {
+	return slices.Concat(ctx.namedRocqTypeDecl(spec), ctx.namedTypeImplDecl(spec),
+		ctx.namedTypePropClassDecl(ctx.typeOf(spec.Name).(*types.Named)))
 }
 
 func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	w := new(strings.Builder)
 	fmt.Fprintf(w, "Module %s.\n", spec.Name.Name)
 	fmt.Fprintf(w, "Section def.\nContext {ext : ffi_syntax} {go_gctx : GoGlobalContext}.\n")
-	typeParams := ""
 	namedType := ctx.typeOf(spec.Name).(*types.Named)
 
-	switch t := ctx.typeOf(spec.Type).(type) {
-	case *types.Struct:
-		fmt.Fprintf(w, "Record t")
-
+	switch ctx.filter.GetAction(spec.Name.Name) {
+	case declfilter.Trust:
+		return
+	case declfilter.Axiomatize:
+		fmt.Fprintf(w, "Axiom t : ")
 		if tps := namedType.TypeParams(); tps != nil {
-			fmt.Fprintf(w, " {")
+			fmt.Fprintf(w, "∀ {")
 			for i := range tps.Len() {
 				fmt.Fprintf(w, "%s ", tps.At(i).Obj().Name())
 			}
-			fmt.Fprint(w, ": Type}")
+			fmt.Fprint(w, ": Type}, ")
 		}
-		fmt.Fprintf(w, " :=\nmk {\n")
-
-		for i := range t.NumFields() {
-			f := t.Field(i)
-			fieldName := f.Name()
-			if fieldName == "_" {
-				fieldName += fmt.Sprint(i)
-			}
-			ft := ctx.toGallinaType(spec, f.Type())
-			fmt.Fprintf(w, "  %s : %s;\n", fieldName, ft)
-		}
-		fmt.Fprintf(w, "}.\n")
-
+		fmt.Fprintf(w, "Type.")
 		// ZeroVal instance
-		fmt.Fprintf(w, "\n#[global] Instance zero_val")
+		fmt.Fprintf(w, "\nAxiom zero_val : ")
 		if tps := namedType.TypeParams(); tps != nil {
+			fmt.Fprintf(w, "∀")
 			for i := range tps.Len() {
 				fmt.Fprintf(w, " `{!ZeroVal %s}", tps.At(i).Obj().Name())
 			}
+			fmt.Fprintf(w, ", ")
 		}
-		fmt.Fprintf(w, " : ZeroVal t := {| zero_val := mk")
+		fmt.Fprintf(w, "ZeroVal t.")
+		fmt.Fprintf(w, "\n#[global] Existing Instance zero_val.")
 
-		if tps := namedType.TypeParams(); tps != nil {
-			for i := range tps.Len() {
-				fmt.Fprintf(w, " %s", tps.At(i).Obj().Name())
-			}
-		}
-		for range t.NumFields() {
-			fmt.Fprint(w, " (zero_val _)")
-		}
-		fmt.Fprint(w, "|}.")
-
-		fmt.Fprint(w, "\n#[global] Arguments mk : clear implicits.")
-		fmt.Fprint(w, "\n#[global] Arguments t : clear implicits.")
-
-		fmt.Fprintf(w, "\nEnd def.\n")
-
-		fmt.Fprintf(w, "\nEnd %s.", spec.Name.Name)
-	default:
-		fmt.Fprintf(w, "Definition t %s : Type := ", typeParams)
-
-		rocqType := ctx.toGallinaType(spec, t)
-		fmt.Fprintf(w, "%s.", rocqType)
 		fmt.Fprint(w, "\nEnd def.")
 		fmt.Fprintf(w, "\nEnd %s.", spec.Name.Name)
+	case declfilter.Translate:
+		switch t := ctx.typeOf(spec.Type).(type) {
+		case *types.Struct:
+			fmt.Fprintf(w, "Record t")
+
+			if tps := namedType.TypeParams(); tps != nil {
+				fmt.Fprintf(w, " {")
+				for i := range tps.Len() {
+					fmt.Fprintf(w, "%s ", tps.At(i).Obj().Name())
+				}
+				fmt.Fprint(w, ": Type}")
+			}
+			fmt.Fprintf(w, " :=\nmk {\n")
+
+			for i := range t.NumFields() {
+				f := t.Field(i)
+				fieldName := f.Name()
+				if fieldName == "_" {
+					fieldName += fmt.Sprint(i)
+				}
+				ft := ctx.toGallinaType(spec, f.Type())
+				fmt.Fprintf(w, "  %s : %s;\n", fieldName, ft)
+			}
+			fmt.Fprintf(w, "}.\n")
+
+			// ZeroVal instance
+			fmt.Fprintf(w, "\n#[global] Instance zero_val")
+			if tps := namedType.TypeParams(); tps != nil {
+				for i := range tps.Len() {
+					fmt.Fprintf(w, " `{!ZeroVal %s}", tps.At(i).Obj().Name())
+				}
+			}
+			fmt.Fprintf(w, " : ZeroVal t := {| zero_val := mk")
+
+			if tps := namedType.TypeParams(); tps != nil {
+				for i := range tps.Len() {
+					fmt.Fprintf(w, " %s", tps.At(i).Obj().Name())
+				}
+			}
+			for range t.NumFields() {
+				fmt.Fprint(w, " (zero_val _)")
+			}
+			fmt.Fprint(w, "|}.")
+
+			fmt.Fprint(w, "\n#[global] Arguments mk : clear implicits.")
+			fmt.Fprint(w, "\n#[global] Arguments t : clear implicits.")
+
+			fmt.Fprintf(w, "\nEnd def.\n")
+
+			fmt.Fprintf(w, "\nEnd %s.", spec.Name.Name)
+		default:
+			fmt.Fprintf(w, "Definition t")
+
+			if tps := namedType.TypeParams(); tps != nil {
+				fmt.Fprintf(w, " {")
+				for i := range tps.Len() {
+					fmt.Fprintf(w, "%s ", tps.At(i).Obj().Name())
+				}
+				fmt.Fprint(w, ": Type}")
+			}
+			fmt.Fprintf(w, " : Type := ")
+
+			rocqType := ctx.toGallinaType(spec, t)
+			fmt.Fprintf(w, "%s.", rocqType)
+			fmt.Fprint(w, "\nEnd def.")
+			fmt.Fprintf(w, "\nEnd %s.", spec.Name.Name)
+		}
 	}
 
 	recordDecl := glang.VerbatimDecl{
@@ -153,6 +181,9 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 }
 
 func (ctx *Ctx) namedTypeImplDecl(spec *ast.TypeSpec) []glang.Decl {
+	if ctx.filter.GetAction(spec.Name.Name) != declfilter.Translate {
+		return nil
+	}
 	typeName := spec.Name.Name
 	decl := glang.TypeDecl{
 		Name:       typeName + "ⁱᵐᵖˡ",
@@ -162,6 +193,7 @@ func (ctx *Ctx) namedTypeImplDecl(spec *ast.TypeSpec) []glang.Decl {
 	return []glang.Decl{decl}
 }
 
+// FIXME: this should take the TypeSpec
 func (ctx *Ctx) namedTypePropClassDecl(t *types.Named) []glang.Decl {
 	typeName := t.Obj().Name()
 
@@ -181,7 +213,7 @@ func (ctx *Ctx) namedTypePropClassDecl(t *types.Named) []glang.Decl {
 		"{ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=")
 	fmt.Fprintln(w, "{")
 
-	// zero val instance
+	// type repr instance
 	fmt.Fprintf(w, "  #[global] %s_type_repr ", typeName)
 	if t.TypeParams() != nil {
 		for i := range t.TypeParams().Len() {
@@ -205,7 +237,9 @@ func (ctx *Ctx) namedTypePropClassDecl(t *types.Named) []glang.Decl {
 	}
 
 	// underlying instance
-	fmt.Fprintf(w, "  #[global] %[1]s_underlying%[2]s :: go.Underlying (%[1]s%[2]s) (%[1]sⁱᵐᵖˡ%[2]s);\n", typeName, typeParams)
+	if ctx.filter.GetAction(typeName) != declfilter.Axiomatize {
+		fmt.Fprintf(w, "  #[global] %[1]s_underlying%[2]s :: go.Underlying (%[1]s%[2]s) (%[1]sⁱᵐᵖˡ%[2]s);\n", typeName, typeParams)
+	}
 
 	// StructFieldSet and StructFieldGet instances
 	if ctx.filter.GetAction(t.Obj().Name()) == declfilter.Translate {

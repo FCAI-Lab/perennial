@@ -2706,6 +2706,9 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 	for t := range toposortSeq(slices.Values(ctx.namedTypeSpecs),
 		func(s *ast.TypeSpec) iter.Seq[*ast.TypeSpec] {
 			return func(yield func(s *ast.TypeSpec) bool) {
+				if ctx.filter.GetAction(s.Name.Name) == declfilter.Axiomatize {
+					return
+				}
 				ast.Inspect(s.Type, func(n ast.Node) bool {
 					switch n := n.(type) {
 					case *ast.SelectorExpr, *ast.StarExpr:
@@ -2713,6 +2716,7 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 					case *ast.ArrayType:
 						return n.Len != nil
 					case *ast.Ident:
+						// FIXME: maybe write a custom traverser here.
 						if t, ok := nameToTypeSpecMap[n.Name]; ok {
 							return yield(t)
 						}
