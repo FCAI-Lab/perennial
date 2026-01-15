@@ -17,7 +17,7 @@ func (d TypeDecl) CoqDecl() string {
 
 	typeParams := ""
 	for _, t := range d.TypeParams {
-		typeParams += fmt.Sprintf("(%s : go.type) ", t)
+		typeParams += fmt.Sprintf(" (%s : go.type)", t)
 	}
 
 	pp.Add("Definition %s%s : go.type := %s.", GallinaIdent(d.Name).Coq(false), typeParams, d.Body.Coq(false))

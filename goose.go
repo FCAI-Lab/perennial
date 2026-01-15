@@ -638,8 +638,6 @@ func (ctx *Ctx) compositeLiteral(e *ast.CompositeLit) glang.Expr {
 					k = glang.NewCallExpr(glang.GallinaIdent("KeyField"),
 						glang.StringLiteral{Value: elKey.Name})
 					done = true
-				} else {
-					fmt.Println(ctx.info.Uses[elKey])
 				}
 			}
 			if !done {
@@ -2329,7 +2327,6 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) {
 	}()
 
 	funcName := funcName(ctx.info.ObjectOf(d.Name).(*types.Func))
-	fmt.Println("fname: ", funcName)
 	if funcName == "_" {
 		return
 	}
@@ -2501,7 +2498,6 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) {
 	}
 
 	ctx.out.funcImplDecls = append(ctx.out.funcImplDecls, fd)
-	fmt.Println(fd.Name, fd.Body.Coq(false))
 }
 
 // this should only be used for untyped constant literals
