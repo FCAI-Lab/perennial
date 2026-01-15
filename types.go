@@ -67,7 +67,7 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) {
 
 func (ctx *Ctx) namedTypeSemanticsDecl(spec *ast.TypeSpec) []glang.Decl {
 	return slices.Concat(ctx.namedRocqTypeDecl(spec), ctx.namedTypeImplDecl(spec),
-		ctx.namedTypePropClassDecl(ctx.typeOf(spec.Name).(*types.Named)))
+		ctx.namedTypePropClassDecl(spec))
 }
 
 func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
@@ -194,8 +194,10 @@ func (ctx *Ctx) namedTypeImplDecl(spec *ast.TypeSpec) []glang.Decl {
 }
 
 // FIXME: this should take the TypeSpec
-func (ctx *Ctx) namedTypePropClassDecl(t *types.Named) []glang.Decl {
-	typeName := t.Obj().Name()
+func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
+	typeName := spec.Name.Name
+	t := ctx.typeOf(spec.Name).(*types.Named)
+	tunder := ctx.typeOf(spec.Type)
 
 	typeParams := ""
 	if t.TypeParams() != nil {
@@ -241,9 +243,9 @@ func (ctx *Ctx) namedTypePropClassDecl(t *types.Named) []glang.Decl {
 		fmt.Fprintf(w, "  #[global] %[1]s_underlying%[2]s :: go.Underlying (%[1]s%[2]s) (%[1]sⁱᵐᵖˡ%[2]s);\n", typeName, typeParams)
 	}
 
-	// StructFieldSet and StructFieldGet instances
+	// maybe emit StructFieldSet and StructFieldGet instances
 	if ctx.filter.GetAction(t.Obj().Name()) == declfilter.Translate {
-		if st, ok := t.Underlying().(*types.Struct); ok {
+		if st, ok := tunder.(*types.Struct); ok {
 			rocqTypeParams := ""
 			if t.TypeParams() != nil {
 				for i := range t.TypeParams().Len() {
@@ -296,6 +298,7 @@ func (ctx *Ctx) namedTypePropClassDecl(t *types.Named) []glang.Decl {
 			" :: MethodUnfold "+ty+` "`+methodName+`" `+impl+";")
 	}
 
+	// for every method in `*t`
 	goPtrMset := types.NewMethodSet(types.NewPointer(t))
 	for i := range goPtrMset.Len() {
 		selection := goPtrMset.At(i)
