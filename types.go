@@ -70,6 +70,13 @@ func (ctx *Ctx) namedTypeSemanticsDecl(spec *ast.TypeSpec) []glang.Decl {
 		ctx.namedTypePropClassDecl(spec))
 }
 
+func recordProjection(i int, s string) string {
+	if s == "_" {
+		return s + fmt.Sprint(i) + "'"
+	}
+	return s + "'"
+}
+
 func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	w := new(strings.Builder)
 	fmt.Fprintf(w, "Module %s.\n", spec.Name.Name)
@@ -119,12 +126,8 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 
 			for i := range t.NumFields() {
 				f := t.Field(i)
-				fieldName := f.Name()
-				if fieldName == "_" {
-					fieldName += fmt.Sprint(i)
-				}
 				ft := ctx.toGallinaType(spec, f.Type())
-				fmt.Fprintf(w, "  %s : %s;\n", fieldName, ft)
+				fmt.Fprintf(w, "  %s : %s;\n", recordProjection(i, f.Name()), ft)
 			}
 			fmt.Fprintf(w, "}.\n")
 
@@ -254,10 +257,7 @@ func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 			}
 
 			for i := range st.NumFields() {
-				fieldName := st.Field(i).Name()
-				if fieldName == "_" {
-					continue
-				}
+				fieldName := recordProjection(i, st.Field(i).Name())
 
 				fmt.Fprintf(w, "  #[global] %s_get_%s", typeName, fieldName)
 				fmt.Fprintf(w, "%[3]s%[2]s (x : %[1]s.t%[2]s) :: "+

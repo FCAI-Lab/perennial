@@ -121,6 +121,10 @@ var GallinaKeywords map[string]bool = map[string]bool{
 	"False":  true,
 }
 
+func ToGallinaIdent(s string) string {
+	return GallinaIdent(s).Coq(false)
+}
+
 // GallinaIdent is treated as a possibly qualified Gallina identifier (and thus
 // deconflicted with keywords).
 type GallinaIdent string
