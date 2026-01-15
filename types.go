@@ -96,8 +96,12 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 
 		for i := range t.NumFields() {
 			f := t.Field(i)
+			fieldName := f.Name()
+			if fieldName == "_" {
+				fieldName += fmt.Sprint(i)
+			}
 			ft := ctx.toGallinaType(spec, f.Type())
-			fmt.Fprintf(w, "  %s : %s;\n", f.Name(), ft)
+			fmt.Fprintf(w, "  %s : %s;\n", fieldName, ft)
 		}
 		fmt.Fprintf(w, "}.\n")
 
@@ -201,13 +205,17 @@ func (ctx *Ctx) namedTypePropClassDecl(t *types.Named) []glang.Decl {
 	// StructFieldSet and StructFieldGet instances
 	if ctx.filter.GetAction(t.Obj().Name()) == declfilter.Translate {
 		if st, ok := t.Underlying().(*types.Struct); ok {
+			rocqTypeParams := ""
+			if t.TypeParams() != nil {
+				for i := range t.TypeParams().Len() {
+					rocqTypeParams += " " + t.TypeParams().At(i).Obj().Name() + "'"
+				}
+			}
+
 			for i := range st.NumFields() {
 				fieldName := st.Field(i).Name()
-				rocqTypeParams := ""
-				if t.TypeParams() != nil {
-					for i := range t.TypeParams().Len() {
-						rocqTypeParams += " " + t.TypeParams().At(i).Obj().Name() + "'"
-					}
+				if fieldName == "_" {
+					continue
 				}
 
 				fmt.Fprintf(w, "  #[global] %s_get_%s", typeName, fieldName)
@@ -612,7 +620,7 @@ func (ctx *Ctx) toGallinaType(l locatable, t types.Type) string {
 	case *types.Slice:
 		return "slice.t"
 	case *types.Array:
-		return fmt.Sprintf("(vec %s (uint.nat (W64 %d)))", ctx.toGallinaType(l, t.Elem()), t.Len())
+		return fmt.Sprintf("(array.t %s %d)", ctx.toGallinaType(l, t.Elem()), t.Len())
 	case *types.Pointer:
 		return "loc"
 	case *types.Signature:

@@ -2329,6 +2329,7 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) {
 	}()
 
 	funcName := funcName(ctx.info.ObjectOf(d.Name).(*types.Func))
+	fmt.Println("fname: ", funcName)
 	if funcName == "_" {
 		return
 	}
@@ -2409,12 +2410,11 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) {
 		case declfilter.Axiomatize:
 			return
 		}
-	}
-
-	if d.Type.TypeParams != nil {
-		for _, p := range d.Type.TypeParams.List {
-			for _, name := range p.Names {
-				fd.TypeArgs = append(fd.TypeArgs, glang.GallinaIdent(name.Name))
+		if d.Type.TypeParams != nil {
+			for _, p := range d.Type.TypeParams.List {
+				for _, name := range p.Names {
+					fd.TypeArgs = append(fd.TypeArgs, glang.GallinaIdent(name.Name))
+				}
 			}
 		}
 	}
@@ -2499,8 +2499,9 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) {
 	} else {
 		fd.Body = glang.NewCallExpr(glang.VerbatimExpr("exception_do"), fd.Body)
 	}
+
 	ctx.out.funcImplDecls = append(ctx.out.funcImplDecls, fd)
-	return
+	fmt.Println(fd.Name, fd.Body.Coq(false))
 }
 
 // this should only be used for untyped constant literals
