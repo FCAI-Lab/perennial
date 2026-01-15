@@ -100,9 +100,6 @@ type Ctx struct {
 
 // NewPkgCtx initializes a context based on a properly loaded package
 func NewPkgCtx(pkg *packages.Package, filter declfilter.DeclFilter) Ctx {
-	coqPath := glang.ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(pkg.PkgPath)
-	ss := strings.Split(coqPath, "/")
-	pkgIdent := ss[len(ss)-1]
 	declImplicitParams := "{go_gctx : GoGlobalsContext}"
 	if util.GetFfi(pkg) == "" {
 		declImplicitParams = "{ext : ffi_syntax} " + declImplicitParams
@@ -111,7 +108,7 @@ func NewPkgCtx(pkg *packages.Package, filter declfilter.DeclFilter) Ctx {
 		info:               pkg.TypesInfo,
 		pkgPath:            pkg.PkgPath,
 		declImplicitParams: declImplicitParams,
-		pkgIdent:           pkgIdent + "." + pkg.Name,
+		pkgIdent:           "pkg_id" + "." + pkg.Name,
 		errorReporter:      newErrorReporter(pkg.Fset),
 		importNames:        make(map[string]*types.PkgName),
 		filter:             filter,
@@ -2785,7 +2782,7 @@ func (ctx *Ctx) finalExtraDecls() {
 	sep := ""
 	for _, impName := range ctx.importNamesOrdered {
 		pkg := impName.Imported()
-		infoContents += sep + fmt.Sprintf("code.%s.%s", strings.ReplaceAll(glang.ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(pkg.Path()), "/", "."), pkg.Name())
+		infoContents += sep + fmt.Sprintf("code.%s.pkg_id.%s", strings.ReplaceAll(glang.ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(pkg.Path()), "/", "."), pkg.Name())
 		sep = "; "
 	}
 	infoContents += "]\n|}."

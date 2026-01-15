@@ -107,7 +107,10 @@ func (ctx *Ctx) initCoqFile(pkg *packages.Package, config declfilter.FilterConfi
 		f.Header += fmt.Sprintf("From New Require Import %s_prelude.\n", ffi)
 	}
 
+	f.Header += "Module pkg_id.\n"
 	f.Header += fmt.Sprintf("Definition %s : go_string := \"%s\".\n\n", pkg.Name, pkg.PkgPath)
+	f.Header += "End pkg_id.\nExport pkg_id.\n"
+
 	f.Header += fmt.Sprintf("Module %s.", pkg.Name)
 
 	f.Footer = fmt.Sprintf("End %s.\n", pkg.Name)
