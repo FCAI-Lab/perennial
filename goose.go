@@ -2654,11 +2654,11 @@ func (ctx *Ctx) imports(d []ast.Spec) {
 			continue
 		}
 
-		ctx.out.importDecls = append(ctx.out.importDecls, glang.ImportDecl{Path: importPath})
 		n := ctx.info.PkgNameOf(s)
 		if _, ok := ctx.importNames[n.Imported().Path()]; !ok {
 			ctx.importNames[n.Imported().Path()] = n
 			ctx.importNamesOrdered = append(ctx.importNamesOrdered, n)
+			ctx.out.importDecls = append(ctx.out.importDecls, glang.ImportDecl{Path: importPath})
 		}
 	}
 }
@@ -2829,7 +2829,7 @@ InitLoop:
 			if init.Lhs[i-1].Name() != "_" {
 				e = glang.NewDoSeq(
 					glang.StoreStmt{
-						Dst: glang.NewCallExpr(glang.VerbatimExpr("GloblalVarAddr"),
+						Dst: glang.NewCallExpr(glang.VerbatimExpr("GlobalVarAddr"),
 							glang.ToVal{Value: ctx.gallinaIdent(init.Lhs[i-1].Name())},
 						),
 						X:  glang.IdentExpr(fmt.Sprintf("$r%d", i-1)),

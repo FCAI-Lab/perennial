@@ -24,30 +24,8 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) {
 			Type:     glang.VerbatimExpr("go.type"),
 		})
 		return
-	case declfilter.Trust:
-		if _, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
-			ctx.namedTypeSpecs = append(ctx.namedTypeSpecs, spec)
-		}
 	case declfilter.Translate:
-		if namedType, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
-			var typeParams []string
-			var typeParamsList glang.ListExpr
-			if tps := namedType.TypeParams(); tps != nil {
-				for i := range tps.Len() {
-					typeParams = append(typeParams, tps.At(i).Obj().Name())
-					typeParamsList = append(typeParamsList, glang.GallinaIdent(tps.At(i).Obj().Name()))
-				}
-			}
-			ctx.namedTypeSpecs = append(ctx.namedTypeSpecs, spec)
-			ctx.out.typeNamedDecls = append(ctx.out.typeNamedDecls, glang.TypeDecl{
-				Name: typeName,
-				Body: glang.NewCallExpr(glang.VerbatimExpr("go.Named"),
-					glang.StringLiteral{Value: namedType.Obj().Pkg().Path() + "." + namedType.Obj().Name()},
-					typeParamsList,
-				),
-				TypeParams: typeParams,
-			})
-		} else if aliasedType, ok := ctx.typeOf(spec.Name).(*types.Alias); ok {
+		if aliasedType, ok := ctx.typeOf(spec.Name).(*types.Alias); ok {
 			var typeParams []string
 			if tps := aliasedType.TypeParams(); tps != nil {
 				for i := range tps.Len() {
@@ -57,6 +35,28 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) {
 			ctx.out.typeAliasDecls = append(ctx.out.typeAliasDecls, glang.TypeDecl{
 				Name:       typeName,
 				Body:       ctx.glangType(spec.Type, types.Unalias(aliasedType)),
+				TypeParams: typeParams,
+			})
+		}
+		fallthrough
+	case declfilter.Trust:
+		if namedType, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
+			ctx.namedTypeSpecs = append(ctx.namedTypeSpecs, spec)
+
+			var typeParams []string
+			var typeParamsList glang.ListExpr
+			if tps := namedType.TypeParams(); tps != nil {
+				for i := range tps.Len() {
+					typeParams = append(typeParams, tps.At(i).Obj().Name())
+					typeParamsList = append(typeParamsList, glang.GallinaIdent(tps.At(i).Obj().Name()))
+				}
+			}
+			ctx.out.typeNamedDecls = append(ctx.out.typeNamedDecls, glang.TypeDecl{
+				Name: typeName,
+				Body: glang.NewCallExpr(glang.VerbatimExpr("go.Named"),
+					glang.StringLiteral{Value: namedType.Obj().Pkg().Path() + "." + namedType.Obj().Name()},
+					typeParamsList,
+				),
 				TypeParams: typeParams,
 			})
 		}
