@@ -18,6 +18,7 @@ import (
 	"go/types"
 	"iter"
 	"log"
+	"math"
 	"math/big"
 	"path/filepath"
 	"slices"
@@ -396,9 +397,9 @@ func (ctx *Ctx) maybeHandleSpecialBuiltin(s *ast.CallExpr) (glang.Expr, bool) {
 			return nil, false
 		}
 		name := s.Fun.(*ast.Ident).Name
-		// array.len and array.cap take the array type (not the element type)
-		return glang.NewCallExpr(glang.VerbatimExpr(fmt.Sprintf("array.%s", name)),
-			ctx.glangType(s, ctx.typeOf(s.Args[0]))), true
+		return glang.NewCallExpr(glang.VerbatimExpr("FuncResolve"),
+			glang.VerbatimExpr("go."+name), glang.ListExpr{ctx.glangType(s, ctx.typeOf(s.Args[0]))},
+			glang.Tt), true
 	}
 
 	return nil, false
@@ -2516,7 +2517,9 @@ func (ctx *Ctx) constantLiteral(l locatable, v constant.Value) (types.Type, glan
 			ctx.nope(l, "untyped int const with unexpected type")
 		}
 	case constant.Float:
-		return types.Typ[types.UntypedFloat], glang.VerbatimExpr("float_placeholder")
+		f, _ := constant.Float64Val(v)
+		bits := math.Float64bits(f)
+		return types.Typ[types.UntypedFloat], glang.Int64Val{Value: glang.ZLiteral{Value: new(big.Int).SetUint64(bits)}}
 	}
 	ctx.unsupported(l, "unsupported constant val")
 	return nil, nil
