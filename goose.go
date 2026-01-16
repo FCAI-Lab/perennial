@@ -1739,6 +1739,12 @@ func (ctx *Ctx) handleImplicitConversion(n locatable, from, to types.Type, e gla
 		}
 	}
 
+	if fromBasic, ok := fromUnder.(*types.Basic); ok && fromBasic.Kind() == types.Byte {
+		if toBasic, ok := toUnder.(*types.Basic); ok && toBasic.Kind() == types.String {
+			return glang.NewCallExpr(glang.VerbatimExpr("to_string"), e)
+		}
+	}
+
 	ctx.unsupported(n, "(possibly implicit) conversion from %s to %s", from, to)
 	panic("unreachable")
 }
