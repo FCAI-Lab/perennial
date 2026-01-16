@@ -287,67 +287,13 @@ func (ctx *Ctx) callExprPrelude(call *ast.CallExpr, cont glang.Expr) (expr glang
 	return
 }
 
-// integerConversion generates an expression for converting x to an integer
-// of a specific width
-//
-// s is only used for error reporting
-func (ctx *Ctx) integerConversion(s ast.Node, x ast.Expr, width int) glang.Expr {
-	if basicTy, ok := ctx.typeOf(x).Underlying().(*types.Basic); ok {
-		switch basicTy.Kind() {
-		case types.Uint, types.Uint64, types.Uint32, types.Uint16, types.Uint8:
-			return glang.NewCallExpr(glang.VerbatimExpr(fmt.Sprintf("u_to_w%d", width)),
-				ctx.expr(x))
-		case types.Int, types.Int64, types.Int32, types.Int16, types.Int8:
-			return glang.NewCallExpr(glang.VerbatimExpr(fmt.Sprintf("s_to_w%d", width)),
-				ctx.expr(x))
-		case types.Float32, types.Float64:
-			return glang.NewCallExpr(glang.VerbatimExpr("make_nondet"), ctx.glangType(s, basicTy), ctx.expr(x))
-		}
-	}
-	ctx.unsupported(s, "casts from unsupported type %v to {u}int%d", ctx.typeOf(x), width)
-	return nil
-}
-
 func (ctx *Ctx) conversionExpr(s *ast.CallExpr) glang.Expr {
 	if len(s.Args) != 1 {
 		ctx.nope(s, "expect exactly one argument in a conversion")
 	}
 	toType := ctx.info.TypeOf(s.Fun).Underlying()
 	fromType := ctx.info.TypeOf(s.Args[0]).Underlying()
-	if types.Identical(toType, fromType) {
-		return ctx.expr(s.Args[0])
-	}
-	switch toType := toType.(type) {
-	case *types.Basic:
-		switch toType.Kind() {
-		// XXX: int is treated as a 64 bit word
-		case types.Uint, types.Int, types.Uint64, types.Int64:
-			return ctx.integerConversion(s, s.Args[0], 64)
-		case types.Int32, types.Uint32:
-			return ctx.integerConversion(s, s.Args[0], 32)
-		case types.Int8, types.Uint8:
-			return ctx.integerConversion(s, s.Args[0], 8)
-		case types.Float32:
-			return glang.NewCallExpr(glang.VerbatimExpr("make_nondet"), glang.VerbatimExpr("float32T"), ctx.expr(s.Args[0]))
-		case types.Float64:
-			return glang.NewCallExpr(glang.VerbatimExpr("make_nondet"), glang.VerbatimExpr("float64T"), ctx.expr(s.Args[0]))
-		}
-
-		// handle `string(b)`, where b : []byte
-		if toType.Kind() == types.String && isByteSlice(fromType) {
-			return glang.NewCallExpr(glang.VerbatimExpr("string.from_bytes"), ctx.expr(s.Args[0]))
-		}
-	case *types.Slice:
-		// handle `[]byte(s)`, where s : string
-		if eltType, ok := toType.Elem().Underlying().(*types.Basic); ok &&
-			eltType.Kind() == types.Byte && isString(fromType) {
-			return glang.NewCallExpr(glang.VerbatimExpr("string.to_bytes"), ctx.expr(s.Args[0]))
-		}
-	}
-
 	return ctx.handleImplicitConversion(s, fromType, toType, ctx.expr(s.Args[0]))
-	// ctx.unsupported(s, "explicit conversion from %s to %s", fromType, toType)
-	// return nil
 }
 
 // This handles:
@@ -436,19 +382,6 @@ func (ctx *Ctx) qualifiedName(obj types.Object) string {
 		return name
 	}
 	return fmt.Sprintf("%s.%s", obj.Pkg().Name(), name)
-}
-
-func (ctx *Ctx) getPkgAndName(obj types.Object) (pkg string, name string) {
-	if obj.Pkg() == nil {
-		ctx.unsupported(obj, "expected object to have package")
-	}
-	name = obj.Name()
-	if obj.Pkg().Path() == ctx.pkgPath {
-		pkg = ctx.pkgIdent
-	} else {
-		pkg = obj.Pkg().Name()
-	}
-	return
 }
 
 func (ctx *Ctx) selectorExprAddr(e *ast.SelectorExpr) glang.Expr {
@@ -876,20 +809,6 @@ func underlyingType(t types.Type) types.Type {
 		return t.Underlying()
 	}
 	return t.Underlying()
-}
-
-func getSliceType(t types.Type) (*types.Slice, bool) {
-	if t, ok := underlyingType(t).(*types.Slice); ok {
-		return t, true
-	}
-	return nil, false
-}
-
-func getMapType(t types.Type) (*types.Map, bool) {
-	if t, ok := underlyingType(t).(*types.Map); ok {
-		return t, true
-	}
-	return nil, false
 }
 
 func (ctx *Ctx) builtinIdent(e *ast.Ident) glang.Expr {
@@ -1579,18 +1498,6 @@ func (ctx *Ctx) assignFromTo(lhs ast.Expr, rhs glang.Expr, cont glang.Expr) glan
 	}, cont)
 }
 
-func isUnsignedIntegerKind(t types.BasicKind) bool {
-	return t == types.Uint || t == types.Uint8 || t == types.Uint16 || t == types.Uint32 || t == types.Uint64
-}
-
-func isSignedIntegerKind(t types.BasicKind) bool {
-	return t == types.Int || t == types.Int8 || t == types.Int16 || t == types.Int32 || t == types.Int64 || t == types.Rune
-}
-
-func isIntegerKind(t types.BasicKind) bool {
-	return isUnsignedIntegerKind(t) || isSignedIntegerKind(t)
-}
-
 // This handles conversions arising from the notion of "assignability" in the Go spec.
 func (ctx *Ctx) handleImplicitConversion(n locatable, from, to types.Type, e glang.Expr) glang.Expr {
 	if to == nil {
@@ -1606,149 +1513,10 @@ func (ctx *Ctx) handleImplicitConversion(n locatable, from, to types.Type, e gla
 	toUnder := underlyingType(to)
 	if types.Identical(fromUnder, toUnder) {
 		return e
+	} else {
+		return glang.NewCallExpr(glang.VerbatimExpr("Convert"),
+			ctx.glangType(n, from), ctx.glangType(n, to), e)
 	}
-
-	if fromPtr, ok := fromUnder.(*types.Pointer); ok {
-		if toPtr, ok := toUnder.(*types.Pointer); ok {
-			fromBase := fromPtr.Elem().Underlying()
-			toBase := toPtr.Elem().Underlying()
-			if types.Identical(fromBase, toBase) {
-				return e
-			} else {
-				ctx.nope(n, "Cannot convert between pointer types from base %s to %s",
-					fromBase, toBase,
-				)
-			}
-		} else if toBasic, ok := toUnder.(*types.Basic); ok {
-			if toBasic.Kind() == types.UnsafePointer {
-				return e
-			}
-		}
-	}
-
-	if fromBasic, ok := fromUnder.(*types.Basic); ok {
-		if fromBasic.Kind() == types.UnsafePointer {
-			if _, ok := toUnder.(*types.Pointer); ok {
-				return e
-			}
-		}
-	}
-
-	if fromBasic, ok := fromUnder.(*types.Basic); ok && fromBasic.Kind() == types.UntypedNil {
-		if _, ok := toUnder.(*types.Slice); ok {
-			return glang.VerbatimExpr("#slice.nil")
-		} else if _, ok := toUnder.(*types.Interface); ok {
-			return glang.VerbatimExpr("#interface.nil")
-		} else if _, ok := toUnder.(*types.Pointer); ok {
-			return glang.VerbatimExpr("#null")
-		} else if _, ok := toUnder.(*types.Chan); ok {
-			return glang.VerbatimExpr("#null")
-		} else if _, ok := toUnder.(*types.Map); ok {
-			return glang.VerbatimExpr("#null")
-		} else if _, ok := toUnder.(*types.Signature); ok {
-			return glang.VerbatimExpr("#func.nil")
-		} else if toBasic, ok := toUnder.(*types.Basic); ok && toBasic.Kind() == types.UnsafePointer {
-			return glang.VerbatimExpr("#null")
-		}
-	}
-	if _, ok := toUnder.(*types.Interface); ok {
-		if _, ok := fromUnder.(*types.Interface); ok {
-			// if both are interface types, then no need to convert anything
-			// because the GooseLang representation of interface values is
-			// independent of the particular interface type.
-			return e
-		}
-		ty := ctx.glangType(n, from)
-		return glang.NewCallExpr(glang.VerbatimExpr("InterfaceMake"), ty, e)
-	}
-
-	if fromBasic, ok := fromUnder.(*types.Basic); ok && fromBasic.Kind() == types.UntypedBool {
-		if toBasic, ok := toUnder.(*types.Basic); ok && toBasic.Kind() == types.Bool {
-			// XXX: not making a distinction between typed and untyped bool.
-			// Untyped bool are the runtime result of comparison operators,
-			// whereas other untyped types are only used in constants.
-			return e
-		}
-	}
-
-	if fromBasic, ok := fromUnder.(*types.Basic); ok && fromBasic.Kind() == types.UntypedString {
-		if toBasic, ok := toUnder.(*types.Basic); ok && toBasic.Kind() == types.String {
-			return glang.ToVal{Value: e}
-		}
-	}
-
-	if fromBasic, ok := fromUnder.(*types.Basic); ok && (fromBasic.Kind() == types.UntypedInt || fromBasic.Kind() == types.UntypedRune) {
-		if toBasic, ok := toUnder.(*types.Basic); ok {
-			switch toBasic.Kind() {
-			case types.Uint64, types.Int64, types.Int, types.Uint:
-				// XXX: treat an `int` as a `int64` and `uint` as `uint64`
-				return glang.Int64Val{Value: e}
-			case types.Uint32, types.Int32:
-				return glang.Int32Val{Value: e}
-			case types.Uint8, types.Int8:
-				return glang.Int8Val{Value: e}
-			case types.UntypedRune, types.UntypedInt:
-				return e
-			}
-		}
-	}
-	if fromBasic, ok := fromUnder.(*types.Basic); ok && isIntegerKind(fromBasic.Kind()) {
-		if toBasic, ok := toUnder.(*types.Basic); ok {
-			s := ""
-			if isUnsignedIntegerKind(fromBasic.Kind()) {
-				s += "u_to_"
-			} else {
-				s += "s_to_"
-			}
-
-			switch toBasic.Kind() {
-			case types.Int64, types.Int, types.Uint64, types.Uint:
-				return glang.NewCallExpr(glang.VerbatimExpr(s+"w64"), e)
-			case types.Uint32, types.Int32:
-				return glang.NewCallExpr(glang.VerbatimExpr(s+"w32"), e)
-			case types.Uint16, types.Int16:
-				return glang.NewCallExpr(glang.VerbatimExpr(s+"w16"), e)
-			case types.Uint8, types.Int8:
-				return glang.NewCallExpr(glang.VerbatimExpr(s+"w8"), e)
-			}
-		}
-	}
-
-	if toBasic, ok := toUnder.(*types.Basic); ok && (toBasic.Info()&types.IsFloat != 0) {
-		switch toBasic.Kind() {
-		case types.Float32:
-			return glang.NewCallExpr(glang.VerbatimExpr("make_nondet"), glang.VerbatimExpr("float32T"), e)
-		case types.Float64:
-			return glang.NewCallExpr(glang.VerbatimExpr("make_nondet"), glang.VerbatimExpr("float64T"), e)
-		}
-	}
-
-	fromChan, ok1 := fromUnder.(*types.Chan)
-	toChan, ok2 := toUnder.(*types.Chan)
-	if ok1 && ok2 {
-		if types.Identical(fromChan.Elem(), toChan.Elem()) {
-			return e
-		}
-	}
-
-	if _, ok := toUnder.(*types.Signature); ok {
-		if _, ok := fromUnder.(*types.Signature); ok {
-			if types.AssignableTo(fromUnder, toUnder) {
-				return e
-			} else {
-				ctx.unsupported(n, "function conversion from %s to %s", from, to)
-			}
-		}
-	}
-
-	if fromBasic, ok := fromUnder.(*types.Basic); ok && fromBasic.Kind() == types.Byte {
-		if toBasic, ok := toUnder.(*types.Basic); ok && toBasic.Kind() == types.String {
-			return glang.NewCallExpr(glang.VerbatimExpr("to_string"), e)
-		}
-	}
-
-	ctx.unsupported(n, "(possibly implicit) conversion from %s to %s", from, to)
-	panic("unreachable")
 }
 
 func (ctx *Ctx) assignStmt(s *ast.AssignStmt, cont glang.Expr) glang.Expr {
