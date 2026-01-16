@@ -1045,28 +1045,14 @@ func (ctx *Ctx) indexExpr(e *ast.IndexExpr, multipleBindings bool) glang.Expr {
 				ctx.expr(e.X),
 				ctx.exprIntoType(e.Index, xTy.Key()))
 		}
-	case *types.Slice:
-		return glang.DerefExpr{
-			X:  ctx.exprAddr(e),
-			Ty: ctx.glangType(e, ctx.typeOf(e)),
-		}
-	case *types.Array:
-		if ctx.info.Types[e].Addressable() {
-			return glang.DerefExpr{
-				X:  ctx.exprAddr(e),
-				Ty: ctx.glangType(e, ctx.typeOf(e)),
-			}
-		} else {
-			return glang.NewCallExpr(glang.VerbatimExpr("array.elem_get"),
-				ctx.glangType(e, xTy.Elem()),
-				ctx.expr(e.X), ctx.expr(e.Index))
-		}
 	case *types.Signature:
 		// generic arguments are grabbed from go ast, ignore explicit type args
 		return ctx.expr(e.X)
 	}
-	ctx.unsupported(e, "index into unknown type %v", xTy)
-	return glang.CallExpr{}
+
+	return glang.NewCallExpr(glang.VerbatimExpr("Index"),
+		ctx.glangType(e, ctx.typeOf(e.X)),
+		ctx.expr(e.X), ctx.expr(e.Index))
 }
 
 func (ctx *Ctx) indexListExpr(e *ast.IndexListExpr) glang.Expr {
