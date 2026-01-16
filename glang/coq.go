@@ -702,6 +702,7 @@ func (e ForRangeChanExpr) Coq(needs_paren bool) string {
 
 // ForRangeMapExpr is a call to the map iteration helper.
 type ForRangeMapExpr struct {
+	KeyType, ElemType Expr
 	// map to iterate over
 	Map Expr
 	// body of loop, with KeyIdent and ValueIdent as free variables
@@ -710,7 +711,8 @@ type ForRangeMapExpr struct {
 
 func (e ForRangeMapExpr) Coq(needs_paren bool) string {
 	var pp buffer
-	pp.Add("map.for_range %s (λ: \"$key\" \"value\",", e.Map.Coq(true))
+	pp.Add("map.for_range %s %s %s (λ: \"$key\" \"value\",", e.KeyType.Coq(true),
+		e.ElemType.Coq(true), e.Map.Coq(true))
 	pp.Indent(2)
 	pp.Add("%s)", e.Body.Coq(false))
 	return addParens(needs_paren, pp.Build())

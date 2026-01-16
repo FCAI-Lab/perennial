@@ -262,6 +262,9 @@ func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 
 			for i := range st.NumFields() {
 				fieldName := st.Field(i).Name()
+				if fieldName == "_" {
+					continue
+				}
 				projName := recordProjection(i, st.Field(i).Name())
 
 				fmt.Fprintf(w, "  #[global] %s_get_%s", typeName, fieldName)

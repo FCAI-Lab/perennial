@@ -1340,11 +1340,13 @@ func (ctx *Ctx) rangeStmt(s *ast.RangeStmt) glang.Expr {
 	}
 
 	var e glang.Expr
-	switch ctx.typeOf(s.X).Underlying().(type) {
+	switch t := ctx.typeOf(s.X).Underlying().(type) {
 	case *types.Map:
 		e = glang.ForRangeMapExpr{
-			Map:  glang.IdentExpr("$range"),
-			Body: body,
+			KeyType:  ctx.glangType(s.X, t.Key()),
+			ElemType: ctx.glangType(s.X, t.Elem()),
+			Map:      glang.IdentExpr("$range"),
+			Body:     body,
 		}
 	case *types.Slice:
 		e = glang.ForRangeSliceExpr{
