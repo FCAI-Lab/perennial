@@ -261,17 +261,18 @@ func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 			}
 
 			for i := range st.NumFields() {
-				fieldName := recordProjection(i, st.Field(i).Name())
+				fieldName := st.Field(i).Name()
+				projName := recordProjection(i, st.Field(i).Name())
 
 				fmt.Fprintf(w, "  #[global] %s_get_%s", typeName, fieldName)
 				fmt.Fprintf(w, "%[3]s%[2]s (x : %[1]s.t%[2]s) :: "+
-					"go.IsGoStepPureDet (StructFieldGet (%[1]s%[3]s) \"%[4]s\") #x #x.(%[1]s.%[4]s);\n",
-					typeName, rocqTypeParams, typeParams, fieldName)
+					"go.IsGoStepPureDet (StructFieldGet (%[1]s%[3]s) \"%[4]s\") #x #x.(%[1]s.%[5]s);\n",
+					typeName, rocqTypeParams, typeParams, fieldName, projName)
 
 				fmt.Fprintf(w, "  #[global] %s_set_%s", typeName, fieldName)
 				fmt.Fprintf(w, "%[3]s%[2]s (x : %[1]s.t%[2]s) y :: "+
-					"go.IsGoStepPureDet (StructFieldSet (%[1]s%[3]s) \"%[4]s\") (#x, #y) #(x <|%[1]s.%[4]s := y|>);\n",
-					typeName, rocqTypeParams, typeParams, fieldName)
+					"go.IsGoStepPureDet (StructFieldSet (%[1]s%[3]s) \"%[4]s\") (#x, #y) #(x <|%[1]s.%[5]s := y|>);\n",
+					typeName, rocqTypeParams, typeParams, fieldName, projName)
 			}
 		}
 	}

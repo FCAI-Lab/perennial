@@ -33,14 +33,14 @@ Local Set Default Proof Using "All".
     typed_pointsto_def l dq v :=
       (
       {{ range $f := $t.Fields -}}
-        "{{$f}}" ∷ l.[{{template "GallinaType" $t}}, "{{$f}}"] ↦{dq} v.({{$t.PkgName}}.{{$t.Name}}.{{$f}}) ∗
+        "{{$f}}" ∷ l.[{{template "GallinaType" $t}}, "{{$f}}"] ↦{dq} v.({{$t.PkgName}}.{{$t.Name}}.{{$f}}') ∗
       {{ end -}}
         "_" ∷ True
       )%I
   |}.
 Final Obligation. solve_typed_pointsto_agree. Qed.
 
-Instance {{$t.Name}}_into_val_typed
+#[global] Instance {{$t.Name}}_into_val_typed
   {{ template "IntoValParams" $t.TypeParams }} :
   IntoValTyped {{template "GallinaType" $t}} {{ template "GoType" $t}}.
 Proof. solve_into_val_typed_struct. Qed.
