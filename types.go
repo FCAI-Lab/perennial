@@ -387,7 +387,13 @@ func (ctx *Ctx) structType(t *types.Struct) glang.Expr {
 func (ctx *Ctx) basicType(t *types.Basic) glang.Expr {
 	switch t.Name() {
 	case "untyped string":
-		return glang.GallinaIdent("go.string")
+		return glang.GallinaIdent("go.untyped_string")
+	case "untyped int":
+		return glang.GallinaIdent("go.untyped_int")
+	case "untyped bool":
+		return glang.GallinaIdent("go.untyped_bool")
+	case "untyped nil":
+		return glang.GallinaIdent("go.untyped_nil")
 	case "Pointer":
 		return glang.GallinaIdent("unsafe.Pointer")
 	}
