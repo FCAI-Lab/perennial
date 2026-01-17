@@ -101,9 +101,9 @@ type Ctx struct {
 
 // NewPkgCtx initializes a context based on a properly loaded package
 func NewPkgCtx(pkg *packages.Package, filter declfilter.DeclFilter) Ctx {
-	declImplicitParams := "{go_gctx : GoGlobalsContext}"
+	declImplicitParams := ""
 	if util.GetFfi(pkg) == "" {
-		declImplicitParams = "{ext : ffi_syntax} " + declImplicitParams
+		declImplicitParams = " {ext : ffi_syntax}"
 	}
 	return Ctx{
 		info:               pkg.TypesInfo,
@@ -2442,7 +2442,9 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 
 	// top-level decl
 	w := new(strings.Builder)
-	fmt.Fprintln(w, "Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=")
+	fmt.Fprintf(w, "Class Assumptions%s `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=\n",
+		ctx.declImplicitParams,
+	)
 	fmt.Fprintln(w, "{")
 
 	// toposort named types specs
