@@ -291,8 +291,8 @@ func (ctx *Ctx) conversionExpr(s *ast.CallExpr) glang.Expr {
 	if len(s.Args) != 1 {
 		ctx.nope(s, "expect exactly one argument in a conversion")
 	}
-	toType := ctx.info.TypeOf(s.Fun).Underlying()
-	fromType := ctx.info.TypeOf(s.Args[0]).Underlying()
+	toType := ctx.info.TypeOf(s.Fun)
+	fromType := ctx.info.TypeOf(s.Args[0])
 	return ctx.handleImplicitConversion(s, fromType, toType, ctx.expr(s.Args[0]))
 }
 
