@@ -280,78 +280,80 @@ func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 		}
 	}
 
-	// for every method in `t`
-	goMset := types.NewMethodSet(t)
-	for i := range goMset.Len() {
-		selection := goMset.At(i)
-		methodName, index := selection.Obj().Name(), selection.Index()
-		if ctx.filter.GetAction(typeName+"."+methodName) == declfilter.Axiomatize {
-			continue
-		}
-		var impl string
-		if len(index) == 0 {
-			ctx.nope(t.Obj(), "expected non-empty index in methodSet translation")
-		} else if len(index) == 1 {
-			impl = "(" + glang.TypeMethod(typeName, methodName) + typeParams + ")"
-		} else {
-			structType, ok := t.Underlying().(*types.Struct)
-			if !ok {
-				ctx.nope(t.Obj(), "type with embedded method should be a struct")
+	if !types.IsInterface(t) {
+		// for every method in `t`
+		goMset := types.NewMethodSet(t)
+		for i := range goMset.Len() {
+			selection := goMset.At(i)
+			methodName, index := selection.Obj().Name(), selection.Index()
+			if ctx.filter.GetAction(typeName+"."+methodName) == declfilter.Axiomatize {
+				continue
 			}
-			field := structType.Field(index[0])
-			impl = `(λ: "$r", MethodResolve ` + ctx.glangType(field, field.Type()).Coq(true) + " " +
-				methodName + " #() (StructFieldGet " + ty + ` "` + field.Name() + `" "$r" ))%V`
-		}
-		fmt.Fprintln(w, "  #[global] "+typeName+"_"+methodName+"_unfold"+typeParams+
-			" :: MethodUnfold "+ty+` "`+methodName+`" `+impl+";")
-	}
-
-	// for every method in `*t`
-	goPtrMset := types.NewMethodSet(types.NewPointer(t))
-	for i := range goPtrMset.Len() {
-		selection := goPtrMset.At(i)
-		methodName, index := selection.Obj().Name(), selection.Index()
-		if ctx.filter.GetAction(typeName+"."+methodName) == declfilter.Axiomatize {
-			continue
-		}
-		var impl string
-		if len(index) == 0 {
-			ctx.nope(t.Obj(), "expected non-empty index in methodSet translation")
-		} else if len(index) == 1 {
-			recvType := t.Method(index[0]).Signature().Recv().Type()
-			if _, recvIsPointer := recvType.(*types.Pointer); recvIsPointer {
+			var impl string
+			if len(index) == 0 {
+				ctx.nope(t.Obj(), "expected non-empty index in methodSet translation")
+			} else if len(index) == 1 {
 				impl = "(" + glang.TypeMethod(typeName, methodName) + typeParams + ")"
 			} else {
-				impl = `(λ: "$r", MethodResolve ` + ty + ` "` +
-					methodName + `" #() (![` + ty + `] "$r"))`
-			}
-		} else {
-			structType, ok := t.Underlying().(*types.Struct)
-			if !ok {
-				ctx.nope(t.Obj(), "type with embedded method should be a struct")
-			}
-			field := structType.Field(index[0])
-			var fieldType types.Type = types.NewPointer(field.Type())
-			var fieldExpr glang.Expr = glang.NewCallExpr(
-				glang.VerbatimExpr("StructFieldRef"),
-				ctx.glangType(t.Obj(), t),
-				glang.NewStringVal(field.Name()),
-				glang.IdentExpr("$r"),
-			)
-
-			// if `&(x.f)` would be a `**T`, dereference it to get `*T`
-			if _, fieldIsPointer := field.Type().(*types.Pointer); fieldIsPointer {
-				fieldExpr = glang.DerefExpr{
-					X:  fieldExpr,
-					Ty: ctx.glangType(field, field.Type()),
+				structType, ok := t.Underlying().(*types.Struct)
+				if !ok {
+					ctx.nope(t.Obj(), "type with embedded method should be a struct")
 				}
-				fieldType = field.Type()
+				field := structType.Field(index[0])
+				impl = `(λ: "$r", MethodResolve ` + ctx.glangType(field, field.Type()).Coq(true) + ` "` +
+					methodName + `" #() (StructFieldGet ` + ty + ` "` + field.Name() + `" "$r" ))%V`
 			}
-			impl = `(λ: "$r", MethodResolve ` + ctx.glangType(field, fieldType).Coq(true) + " " +
-				methodName + " #() " + fieldExpr.Coq(true) + ")"
+			fmt.Fprintln(w, "  #[global] "+typeName+"_"+methodName+"_unfold"+typeParams+
+				" :: MethodUnfold "+ty+` "`+methodName+`" `+impl+";")
 		}
-		fmt.Fprintln(w, "  #[global] "+typeName+"'ptr_"+methodName+"_unfold"+typeParams+
-			" :: MethodUnfold "+ptrTy+` "`+methodName+`" `+impl+";")
+
+		// for every method in `*t`
+		goPtrMset := types.NewMethodSet(types.NewPointer(t))
+		for i := range goPtrMset.Len() {
+			selection := goPtrMset.At(i)
+			methodName, index := selection.Obj().Name(), selection.Index()
+			if ctx.filter.GetAction(typeName+"."+methodName) == declfilter.Axiomatize {
+				continue
+			}
+			var impl string
+			if len(index) == 0 {
+				ctx.nope(t.Obj(), "expected non-empty index in methodSet translation")
+			} else if len(index) == 1 {
+				recvType := t.Method(index[0]).Signature().Recv().Type()
+				if _, recvIsPointer := recvType.(*types.Pointer); recvIsPointer {
+					impl = "(" + glang.TypeMethod(typeName, methodName) + typeParams + ")"
+				} else {
+					impl = `(λ: "$r", MethodResolve ` + ty + ` "` +
+						methodName + `" #() (![` + ty + `] "$r"))`
+				}
+			} else {
+				structType, ok := t.Underlying().(*types.Struct)
+				if !ok {
+					ctx.nope(t.Obj(), "type with embedded method should be a struct")
+				}
+				field := structType.Field(index[0])
+				var fieldType types.Type = types.NewPointer(field.Type())
+				var fieldExpr glang.Expr = glang.NewCallExpr(
+					glang.VerbatimExpr("StructFieldRef"),
+					ctx.glangType(t.Obj(), t),
+					glang.StringLiteral{Value: field.Name()},
+					glang.IdentExpr("$r"),
+				)
+
+				// if `&(x.f)` would be a `**T`, dereference it to get `*T`
+				if _, fieldIsPointer := field.Type().(*types.Pointer); fieldIsPointer {
+					fieldExpr = glang.DerefExpr{
+						X:  fieldExpr,
+						Ty: ctx.glangType(field, field.Type()),
+					}
+					fieldType = field.Type()
+				}
+				impl = `(λ: "$r", MethodResolve ` + ctx.glangType(field, fieldType).Coq(true) + ` "` +
+					methodName + `" #() ` + fieldExpr.Coq(true) + ")"
+			}
+			fmt.Fprintln(w, "  #[global] "+typeName+"'ptr_"+methodName+"_unfold"+typeParams+
+				" :: MethodUnfold "+ptrTy+` "`+methodName+`" `+impl+";")
+		}
 	}
 	fmt.Fprint(w, "}.")
 
@@ -385,15 +387,10 @@ func (ctx *Ctx) structType(t *types.Struct) glang.Expr {
 }
 
 func (ctx *Ctx) basicType(t *types.Basic) glang.Expr {
+	if after, ok := strings.CutPrefix(t.Name(), "untyped "); ok {
+		return glang.GallinaIdent("go.untyped_" + after)
+	}
 	switch t.Name() {
-	case "untyped string":
-		return glang.GallinaIdent("go.untyped_string")
-	case "untyped int":
-		return glang.GallinaIdent("go.untyped_int")
-	case "untyped bool":
-		return glang.GallinaIdent("go.untyped_bool")
-	case "untyped nil":
-		return glang.GallinaIdent("go.untyped_nil")
 	case "Pointer":
 		return glang.GallinaIdent("unsafe.Pointer")
 	}
@@ -542,22 +539,6 @@ func chanElem(t types.Type) types.Type {
 	panic(fmt.Errorf("expected channel type, got %v", t))
 }
 
-func isByteSlice(t types.Type) bool {
-	if t, ok := t.(*types.Slice); ok {
-		if elTy, ok := t.Elem().Underlying().(*types.Basic); ok {
-			return elTy.Kind() == types.Byte
-		}
-	}
-	return false
-}
-
-func isString(t types.Type) bool {
-	if t, ok := t.(*types.Basic); ok {
-		return t.Kind() == types.String
-	}
-	return false
-}
-
 func (ctx *Ctx) convertTypeArgsToGlang(l locatable, typeList *types.TypeList) (glangTypeArgs []glang.Expr) {
 	glangTypeArgs = make([]glang.Expr, typeList.Len())
 	for i := range glangTypeArgs {
@@ -597,31 +578,6 @@ func (ctx *Ctx) getStructInfo(t types.Type) (structTypeInfo, bool) {
 		}
 	}
 	return structTypeInfo{}, false
-}
-
-type interfaceTypeInfo struct {
-	name           string
-	interfaceType  *types.Interface
-	throughPointer bool
-}
-
-func (ctx *Ctx) getInterfaceInfo(t types.Type) (interfaceTypeInfo, bool) {
-	throughPointer := false
-	if pt, ok := t.(*types.Pointer); ok {
-		throughPointer = true
-		t = pt.Elem()
-	}
-	if t, ok := t.(*types.Named); ok {
-		name := ctx.qualifiedName(t.Obj())
-		if interfaceType, ok := t.Underlying().(*types.Interface); ok {
-			return interfaceTypeInfo{
-				name:           name,
-				interfaceType:  interfaceType,
-				throughPointer: throughPointer,
-			}, true
-		}
-	}
-	return interfaceTypeInfo{}, false
 }
 
 func (ctx *Ctx) basicTypeToGallina(n locatable, t *types.Basic) string {

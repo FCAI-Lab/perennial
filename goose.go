@@ -1479,11 +1479,7 @@ func (ctx *Ctx) handleImplicitConversion(n locatable, from, to types.Type, e gla
 	if from == nil {
 		ctx.unsupported(n, "implicit conversion: don't know from type")
 	}
-	from = types.Unalias(from)
-	to = types.Unalias(to)
-	fromUnder := underlyingType(from)
-	toUnder := underlyingType(to)
-	if types.Identical(fromUnder, toUnder) {
+	if types.Identical(from.Underlying(), to.Underlying()) {
 		return e
 	} else {
 		return glang.NewCallExpr(glang.VerbatimExpr("Convert"),
@@ -2256,7 +2252,7 @@ func (ctx *Ctx) constantLiteral(e ast.Expr) glang.Expr {
 	case *types.Basic:
 		switch t.Kind() {
 		case types.Bool, types.UntypedBool:
-			return glang.BoolLiteral(v.(bool))
+			return glang.GooseBoolLiteral(v.(bool))
 		case types.Uint64, types.Int64, types.Int, types.Uint:
 			return constInt("W64")
 		case types.Uint32, types.Int32:
@@ -2265,18 +2261,16 @@ func (ctx *Ctx) constantLiteral(e ast.Expr) glang.Expr {
 			return constInt("W16")
 		case types.Uint8, types.Int8:
 			return constInt("W8")
-		case types.String:
+		case types.String, types.UntypedString:
 			return glang.ToVal{Value: glang.StringLiteral{Value: v.(string)}}
-		case types.UntypedString:
-			return glang.StringLiteral{Value: v.(string)}
 		case types.UntypedNil:
 			return glang.VerbatimExpr("UntypedNil")
 		case types.UntypedInt, types.UntypedRune:
 			switch v := v.(type) {
 			case *big.Int:
-				return glang.ZLiteral{Value: v}
+				return glang.ToVal{Value: glang.ZLiteral{Value: v}}
 			case int64:
-				return glang.ZLiteral{Value: big.NewInt(v)}
+				return glang.ToVal{Value: glang.ZLiteral{Value: big.NewInt(v)}}
 			}
 		case types.Float64, types.UntypedFloat:
 			f, _ := constant.Float64Val(val)
@@ -2292,19 +2286,6 @@ func (ctx *Ctx) constantLiteral(e ast.Expr) glang.Expr {
 	return nil
 }
 
-func (ctx *Ctx) declType(t types.Type) glang.Expr {
-	switch t := t.(type) {
-	case *types.Basic:
-		switch t.Kind() {
-		case types.UntypedString:
-			return glang.VerbatimExpr("go_string")
-		case types.UntypedInt, types.UntypedRune:
-			return glang.VerbatimExpr("Z")
-		}
-	}
-	return glang.VerbatimExpr("val")
-}
-
 // constSpec handles one specification in a const block
 func (ctx *Ctx) constSpec(spec *ast.ValueSpec) {
 	// Note that a spec is one line, typically something like `C = 1` or maybe just C
@@ -2317,7 +2298,7 @@ func (ctx *Ctx) constSpec(spec *ast.ValueSpec) {
 		switch ctx.filter.GetAction(spec.Names[i].Name) {
 		case declfilter.Axiomatize:
 			ctx.out.constDecls = append(ctx.out.constDecls, glang.AxiomDecl{DeclName: spec.Names[i].Name,
-				Type: ctx.declType(ctx.typeOf(spec.Names[i])),
+				Type: glang.VerbatimExpr("val"),
 			})
 		case declfilter.Translate:
 			func() {
@@ -2329,7 +2310,7 @@ func (ctx *Ctx) constSpec(spec *ast.ValueSpec) {
 					addSourceDoc(spec.Comment, &cd.Comment)
 				}
 				cd.Val = ctx.constantLiteral(spec.Names[i])
-				cd.Type = ctx.declType(ctx.typeOf(spec.Names[i]))
+				cd.Type = glang.VerbatimExpr("val")
 				ctx.out.constDecls = append(ctx.out.constDecls, cd)
 			}()
 		}
