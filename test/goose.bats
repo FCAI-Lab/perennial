@@ -53,7 +53,6 @@ assert_file_not_exist() {
     goose -out Goose
     run cat "$OUT"/m.v
     assert_output --partial "Require Export New.code.github_com.tchajed.marshal."
-    assert_output --partial "Section code."
 }
 
 @test "goose ." {
