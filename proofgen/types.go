@@ -4,37 +4,32 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
+	"iter"
 	"log"
+	"slices"
 	"strconv"
 
 	"github.com/goose-lang/goose/declfilter"
-	"github.com/goose-lang/goose/deptracker"
 	"github.com/goose-lang/goose/glang"
 	"github.com/goose-lang/goose/proofgen/tmpl"
+	"github.com/goose-lang/goose/util/toposort"
 	"golang.org/x/tools/go/packages"
 )
 
 type typesTranslator struct {
 	pkg *packages.Package
 
-	filter declfilter.DeclFilter
+	specs          []*ast.TypeSpec
+	nameToTypeSpec map[string]*ast.TypeSpec
 
-	deps *deptracker.Deps
-	defs map[string]tmpl.TypeDecl
-	// tracks the order definitions were seen in
-	defNames []string
+	filter declfilter.DeclFilter
 }
 
 func (tr typesTranslator) ReadablePos(p token.Pos) string {
 	return tr.pkg.Fset.Position(p).String()
 }
 
-func (tr *typesTranslator) translateStructType(spec *ast.TypeSpec, s *types.Struct) {
-	name := spec.Name.Name
-	defName := name + ".t"
-	tr.deps.SetCurrentName(defName)
-	defer tr.deps.UnsetCurrentName()
-
+func (tr *typesTranslator) translateStructType(spec *ast.TypeSpec, s *types.Struct) []tmpl.TypeDecl {
 	decl := tmpl.TypeDecl{
 		PkgName:    tr.pkg.Name,
 		Name:       glang.GallinaIdent(spec.Name.Name).Coq(false),
@@ -55,16 +50,15 @@ func (tr *typesTranslator) translateStructType(spec *ast.TypeSpec, s *types.Stru
 		}
 		decl.Fields = append(decl.Fields, fieldName)
 	}
-	tr.defNames = append(tr.defNames, defName)
-	tr.defs[defName] = decl
+	return []tmpl.TypeDecl{decl}
 }
 
-func (tr *typesTranslator) translateType(spec *ast.TypeSpec) {
+func (tr *typesTranslator) translateType(spec *ast.TypeSpec) []tmpl.TypeDecl {
 	switch s := tr.pkg.TypesInfo.TypeOf(spec.Type).(type) {
 	case *types.Struct:
-		tr.translateStructType(spec, s)
-	default:
+		return tr.translateStructType(spec, s)
 	}
+	return nil
 }
 
 func (tr *typesTranslator) Decl(d ast.Decl) {
@@ -77,7 +71,8 @@ func (tr *typesTranslator) Decl(d ast.Decl) {
 				spec := spec.(*ast.TypeSpec)
 				switch tr.filter.GetAction(spec.Name.Name) {
 				case declfilter.Translate:
-					tr.translateType(spec)
+					tr.specs = append(tr.specs, spec)
+					tr.nameToTypeSpec[spec.Name.Name] = spec
 				case declfilter.Axiomatize:
 					continue
 				case declfilter.Trust:
@@ -92,10 +87,9 @@ func (tr *typesTranslator) Decl(d ast.Decl) {
 
 func translateTypes(pkg *packages.Package, filter declfilter.DeclFilter) []tmpl.TypeDecl {
 	tr := &typesTranslator{
-		deps:   deptracker.New(),
-		defs:   make(map[string]tmpl.TypeDecl),
 		pkg:    pkg,
 		filter: filter,
+		nameToTypeSpec: make(map[string]*ast.TypeSpec),
 	}
 	for _, f := range pkg.Syntax {
 		for _, d := range f.Decls {
@@ -103,37 +97,39 @@ func translateTypes(pkg *packages.Package, filter declfilter.DeclFilter) []tmpl.
 		}
 	}
 
-	var printingOrdered []string
-	printing := make(map[string]bool)
-	printed := make(map[string]bool)
-	var printDefAndDeps func(string)
-
 	var decls []tmpl.TypeDecl
-	printDefAndDeps = func(n string) {
-		if printed[n] {
-			return
-		} else if printing[n] {
-			log.Fatal("Found a cyclic dependency: ", printingOrdered)
-		}
 
-		printingOrdered = append(printingOrdered, n)
-		printing[n] = true
-		defer func() {
-			printingOrdered = printingOrdered[:len(printingOrdered)-1]
-			delete(printing, n)
-		}()
-
-		for depName := range tr.deps.GetDeps(n) {
-			printDefAndDeps(depName)
-		}
-		decl, ok := tr.defs[n]
-		if ok {
-			decls = append(decls, decl)
-		}
-		printed[n] = true
-	}
-	for _, d := range tr.defNames {
-		printDefAndDeps(d)
+	for t := range toposort.ToposortSeq(slices.Values(tr.specs),
+		func(s *ast.TypeSpec) iter.Seq[*ast.TypeSpec] {
+			return func(yield func(s *ast.TypeSpec) bool) {
+				if tr.filter.GetAction(s.Name.Name) == declfilter.Axiomatize {
+					return
+				}
+				ast.Inspect(s.Type, func(n ast.Node) bool {
+					switch n := n.(type) {
+					case *ast.SelectorExpr, *ast.StarExpr:
+						return false
+					case *ast.ArrayType:
+						return n.Len != nil
+					case *ast.Ident:
+						if t, ok := tr.nameToTypeSpec[n.Name]; ok {
+							return yield(t)
+						}
+					}
+					return true
+				})
+			}
+		},
+		func(cycle []*ast.TypeSpec) {
+			s := "cycle: "
+			sep := ""
+			for _, t := range cycle {
+				s += sep + t.Name.Name
+				sep = "-> "
+			}
+			log.Fatal(cycle[0], "%s", s)
+		}) {
+		decls = append(decls, tr.translateType(t)...)
 	}
 	return decls
 }

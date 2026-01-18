@@ -28,6 +28,7 @@ import (
 	"github.com/goose-lang/goose/declfilter"
 	"github.com/goose-lang/goose/glang"
 	"github.com/goose-lang/goose/util"
+	"github.com/goose-lang/goose/util/toposort"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -2453,7 +2454,7 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 		nameToTypeSpecMap[t.Name.Name] = t
 		fmt.Fprintln(w, "  #[global] "+t.Name.Name+"_instance :: "+t.Name.Name+"_Assumptions;")
 	}
-	for t := range toposortSeq(slices.Values(ctx.namedTypeSpecs),
+	for t := range toposort.ToposortSeq(slices.Values(ctx.namedTypeSpecs),
 		func(s *ast.TypeSpec) iter.Seq[*ast.TypeSpec] {
 			return func(yield func(s *ast.TypeSpec) bool) {
 				if ctx.filter.GetAction(s.Name.Name) == declfilter.Axiomatize {
