@@ -2,6 +2,7 @@ package proofgen
 
 import (
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/goose-lang/goose/declfilter"
@@ -19,6 +20,21 @@ func Package(w io.Writer, pkg *packages.Package, ffi string, bootstrap bool, fil
 		Name:       pkg.Name,
 		HasTrusted: filter.HasTrusted(),
 		ImportPath: coqPath,
+	}
+
+	var imports []string
+	for path := range pkg.Imports {
+		if filter.ShouldImport(path) {
+			imports = append(imports, path)
+		}
+	}
+	sort.Strings(imports)
+
+	for _, path := range imports {
+		coqPath := strings.ReplaceAll(glang.ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(path), "/", ".")
+		pf.Imports = append(pf.Imports, tmpl.Import{
+			Path: coqPath,
+		})
 	}
 
 	pf.Types = translateTypes(pkg, filter)
