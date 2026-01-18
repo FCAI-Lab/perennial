@@ -14,6 +14,7 @@ import (
 type PackageProof struct {
 	Name       string
 	Ffi        string
+	Bootstrap  bool
 	ImportPath string // import path (corresponding to Go PkgPath)
 	HasTrusted bool
 	Imports    []Import

@@ -893,7 +893,7 @@ func TypeMethod(typeName string, methodName string) string {
 const DefaultHeader string = `From New.golang Require Import defn.`
 
 // The bootstrap import header if using a minimal list of imports.
-const BootstrapHeader string = `From New.golang Require Import defn.core.`
+const BootstrapHeader string = `From New.golang Require Import defn.pre.`
 
 // These will not end up in `File.Decls`, they are put into `File.Imports` by `translatePackage`.
 type ImportDecl struct {

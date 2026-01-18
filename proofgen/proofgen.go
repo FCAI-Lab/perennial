@@ -10,11 +10,12 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-func Package(w io.Writer, pkg *packages.Package, ffi string, filter declfilter.DeclFilter) {
+func Package(w io.Writer, pkg *packages.Package, ffi string, bootstrap bool, filter declfilter.DeclFilter) {
 	coqPath := strings.ReplaceAll(glang.ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(pkg.PkgPath), "/", ".")
 
 	pf := tmpl.PackageProof{
 		Ffi:        ffi,
+		Bootstrap:  bootstrap,
 		Name:       pkg.Name,
 		HasTrusted: filter.HasTrusted(),
 		ImportPath: coqPath,

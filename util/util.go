@@ -17,7 +17,7 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-type PackageTranslator func(io.Writer, *packages.Package, string, declfilter.DeclFilter)
+type PackageTranslator func(io.Writer, *packages.Package, string, bool, declfilter.DeclFilter)
 
 func NewPackageConfig(modDir string, needDeps bool) *packages.Config {
 	mode := packages.NeedName | packages.NeedCompiledGoFiles
@@ -151,7 +151,7 @@ func Translate(translatePkg PackageTranslator, pkgPatterns []string, outRootDir 
 		filter := declfilter.New(config)
 
 		ffi := GetFfi(pkg)
-		translatePkg(w, pkg, ffi, filter)
+		translatePkg(w, pkg, ffi, config.Bootstrap.Enabled, filter)
 
 		filePath := path.Join(outRootDir, glang.ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(pkg.PkgPath))
 		outDir := path.Dir(filePath)

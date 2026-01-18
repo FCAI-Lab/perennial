@@ -19,12 +19,19 @@
 {{- range $t := .Types -}}
 Module {{$t.Name}}.
 Section def.
-Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-(* FIXME: bundling *)
-Context {core_sem : go.CoreSemantics} {pre_sem : go.PredeclaredSemantics}
-  {array_sem : go.ArraySemantics} {slice_sem : go.SliceSemantics}.
 
+{{ if eq $.Ffi "" -}}
+Context `{hG: heapGS Σ, !ffi_semantics _ _}.
+{{ else -}}
+Context `{!heapGS Σ}.
+{{ end -}}
+{{ if $.Bootstrap -}}
+Context {sem_fn : GoSemanticsFunctions} {pre_sem : go.PreSemantics}.
+{{ else -}}
+Context {sem : go.Semantics}.
+{{ end -}}
 Context {package_sem' : {{$t.PkgName}}.Assumptions}.
+
 Local Set Default Proof Using "All".
 
 #[global] Program Instance {{$t.Name}}_typed_pointsto {{ template "TypedPointstoParams" $t.TypeParams }} :
