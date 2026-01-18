@@ -78,13 +78,15 @@ func (tr *typesTranslator) Decl(d ast.Decl) {
 		case token.TYPE:
 			for _, spec := range d.Specs {
 				spec := spec.(*ast.TypeSpec)
-				switch tr.filter.GetAction(spec.Name.Name) {
-				case declfilter.Translate, declfilter.Axiomatize:
-					tr.specs = append(tr.specs, spec)
-					tr.nameToTypeSpec[spec.Name.Name] = spec
-					continue
-				case declfilter.Trust:
-					continue
+				if spec.Assign == token.NoPos {
+					switch tr.filter.GetAction(spec.Name.Name) {
+					case declfilter.Translate, declfilter.Axiomatize:
+						tr.specs = append(tr.specs, spec)
+						tr.nameToTypeSpec[spec.Name.Name] = spec
+						continue
+					case declfilter.Trust:
+						continue
+					}
 				}
 			}
 		}
