@@ -26,6 +26,7 @@ type TypeDecl struct {
 	Name       string
 	TypeParams []string
 	Fields     []string
+	Axiomatize bool
 }
 
 type Import struct {

@@ -34,8 +34,10 @@ Context {package_sem' : {{$t.PkgName}}.Assumptions}.
 
 Local Set Default Proof Using "All".
 
-#[global] Program Instance {{$t.Name}}_typed_pointsto {{ template "TypedPointstoParams" $t.TypeParams }} :
-  TypedPointsto (Σ:=Σ) {{template "GallinaType" $t}} :=
+#[global] {{- if not $t.Axiomatize  }}Program{{- end }} Instance {{$t.Name}}_typed_pointsto {{ template "TypedPointstoParams" $t.TypeParams }} :
+  TypedPointsto (Σ:=Σ) {{template "GallinaType" $t}}
+  {{- if $t.Axiomatize }}. Admitted.
+  {{- else }} :=
   {|
     typed_pointsto_def l dq v :=
       (
@@ -46,11 +48,15 @@ Local Set Default Proof Using "All".
       )%I
   |}.
 Final Obligation. solve_typed_pointsto_agree. Qed.
+{{- end }}
 
 #[global] Instance {{$t.Name}}_into_val_typed
   {{ template "IntoValParams" $t.TypeParams }} :
   IntoValTyped {{template "GallinaType" $t}} {{ template "GoType" $t}}.
-Proof. solve_into_val_typed_struct. Qed.
+Proof.
+{{- if $t.Axiomatize }} Admitted.
+{{- else }} solve_into_val_typed_struct. Qed.
+{{- end }}
 
 End def.
 End {{$t.Name}}.

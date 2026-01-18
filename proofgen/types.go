@@ -35,6 +35,7 @@ func (tr *typesTranslator) translateStructType(spec *ast.TypeSpec, s *types.Stru
 		Name:       glang.GallinaIdent(spec.Name.Name).Coq(false),
 		TypeParams: nil, // populated below
 		Fields:     nil, // populated below
+		Axiomatize: false,
 	}
 	if spec.TypeParams != nil {
 		for _, tp := range spec.TypeParams.List {
@@ -54,6 +55,14 @@ func (tr *typesTranslator) translateStructType(spec *ast.TypeSpec, s *types.Stru
 }
 
 func (tr *typesTranslator) translateType(spec *ast.TypeSpec) []tmpl.TypeDecl {
+	if tr.filter.GetAction(spec.Name.Name) == declfilter.Axiomatize {
+		return []tmpl.TypeDecl{{
+			PkgName:    tr.pkg.Name,
+			Name:       glang.GallinaIdent(spec.Name.Name).Coq(false),
+			Axiomatize: true,
+		}}
+	}
+
 	switch s := tr.pkg.TypesInfo.TypeOf(spec.Type).(type) {
 	case *types.Struct:
 		return tr.translateStructType(spec, s)
@@ -70,10 +79,9 @@ func (tr *typesTranslator) Decl(d ast.Decl) {
 			for _, spec := range d.Specs {
 				spec := spec.(*ast.TypeSpec)
 				switch tr.filter.GetAction(spec.Name.Name) {
-				case declfilter.Translate:
+				case declfilter.Translate, declfilter.Axiomatize:
 					tr.specs = append(tr.specs, spec)
 					tr.nameToTypeSpec[spec.Name.Name] = spec
-				case declfilter.Axiomatize:
 					continue
 				case declfilter.Trust:
 					continue
@@ -87,8 +95,8 @@ func (tr *typesTranslator) Decl(d ast.Decl) {
 
 func translateTypes(pkg *packages.Package, filter declfilter.DeclFilter) []tmpl.TypeDecl {
 	tr := &typesTranslator{
-		pkg:    pkg,
-		filter: filter,
+		pkg:            pkg,
+		filter:         filter,
 		nameToTypeSpec: make(map[string]*ast.TypeSpec),
 	}
 	for _, f := range pkg.Syntax {
