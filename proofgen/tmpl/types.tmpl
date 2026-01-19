@@ -39,7 +39,7 @@ Local Set Default Proof Using "All".
   {{- if $t.Axiomatize }}. Admitted.
   {{- else }} :=
   {|
-    typed_pointsto_def l dq v :=
+    typed_pointsto_def l v dq :=
       (
       {{ range $f := $t.Fields -}}
         "{{$f}}" ∷ l.[{{template "GallinaType" $t}}, "{{$f}}"] ↦{dq} v.({{$t.PkgName}}.{{$t.Name}}.{{$f}}') ∗
