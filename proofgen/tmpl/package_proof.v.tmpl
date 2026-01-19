@@ -7,7 +7,11 @@ Require Export New.manualproof.{{ .ImportPath }}.
 {{ range .Imports -}}
 Require Export New.generatedproof.{{ .Path }}.
 {{ end -}}
+{{ if .Bootstrap -}}
+Require Export New.golang.theory.pre.
+{{  else -}}
 Require Export New.golang.theory.
+{{ end -}}
 
 Require Export New.code.{{ .ImportPath }}.
 
