@@ -6,7 +6,6 @@ import (
 	"go/types"
 	"math/big"
 	"slices"
-	"strconv"
 	"strings"
 
 	"github.com/goose-lang/goose/declfilter"
@@ -70,15 +69,19 @@ func (ctx *Ctx) namedTypeSemanticsDecl(spec *ast.TypeSpec) []glang.Decl {
 		ctx.namedTypePropClassDecl(spec))
 }
 
+func fieldName(i int, s string) string {
+	if s == "_" {
+		return s + fmt.Sprint(i)
+	}
+	return s
+}
+
 // Adding a "'" to avoid conflicting with Coq keywords and definitions that
 // would already be in context (like `t`). Could do this only when there is a
 // conflict, but it's lower entropy to do it always rather than pick and
 // choosing when.
 func recordProjection(i int, s string) string {
-	if s == "_" {
-		return s + fmt.Sprint(i) + "'"
-	}
-	return s + "'"
+	return fieldName(i, s) + "'"
 }
 
 func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
@@ -261,10 +264,7 @@ func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 			}
 
 			for i := range st.NumFields() {
-				fieldName := st.Field(i).Name()
-				if fieldName == "_" {
-					continue
-				}
+				fieldName := fieldName(i, st.Field(i).Name())
 				projName := recordProjection(i, st.Field(i).Name())
 
 				fmt.Fprintf(w, "  #[global] %s_get_%s", typeName, fieldName)
@@ -373,10 +373,7 @@ func (ctx *Ctx) structType(t *types.Struct) glang.Expr {
 	ty := glang.StructType{}
 	for i := range t.NumFields() {
 		fieldType := t.Field(i).Type()
-		fieldName := t.Field(i).Name()
-		if fieldName == "_" {
-			fieldName = "_" + strconv.Itoa(i)
-		}
+		fieldName := fieldName(i, t.Field(i).Name())
 
 		ty.Fields = append(ty.Fields, glang.FieldDecl{
 			Name: fieldName,
