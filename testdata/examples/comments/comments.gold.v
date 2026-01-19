@@ -46,7 +46,7 @@ Definition Fooⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.ty
 Class Foo_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
   #[global] Foo_type_repr  :: go.TypeRepr Foo Foo.t;
-  #[global] Foo_underlying :: go.Underlying (Foo) (Fooⁱᵐᵖˡ);
+  #[global] Foo_underlying :: (Foo) <u (Fooⁱᵐᵖˡ);
   #[global] Foo_get_a (x : Foo.t) :: go.IsGoStepPureDet (StructFieldGet (Foo) "a") #x #x.(Foo.a');
   #[global] Foo_set_a (x : Foo.t) y :: go.IsGoStepPureDet (StructFieldSet (Foo) "a") (#x, #y) #(x <|Foo.a' := y|>);
 }.

@@ -394,7 +394,7 @@ Definition Logⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.ty
 Class Log_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
   #[global] Log_type_repr  :: go.TypeRepr Log Log.t;
-  #[global] Log_underlying :: go.Underlying (Log) (Logⁱᵐᵖˡ);
+  #[global] Log_underlying :: (Log) <u (Logⁱᵐᵖˡ);
   #[global] Log_get_logLock (x : Log.t) :: go.IsGoStepPureDet (StructFieldGet (Log) "logLock") #x #x.(Log.logLock');
   #[global] Log_set_logLock (x : Log.t) y :: go.IsGoStepPureDet (StructFieldSet (Log) "logLock") (#x, #y) #(x <|Log.logLock' := y|>);
   #[global] Log_get_memLock (x : Log.t) :: go.IsGoStepPureDet (StructFieldGet (Log) "memLock") #x #x.(Log.memLock');
@@ -459,7 +459,7 @@ Definition Txnⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.ty
 Class Txn_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
   #[global] Txn_type_repr  :: go.TypeRepr Txn Txn.t;
-  #[global] Txn_underlying :: go.Underlying (Txn) (Txnⁱᵐᵖˡ);
+  #[global] Txn_underlying :: (Txn) <u (Txnⁱᵐᵖˡ);
   #[global] Txn_get_log (x : Txn.t) :: go.IsGoStepPureDet (StructFieldGet (Txn) "log") #x #x.(Txn.log');
   #[global] Txn_set_log (x : Txn.t) y :: go.IsGoStepPureDet (StructFieldSet (Txn) "log") (#x, #y) #(x <|Txn.log' := y|>);
   #[global] Txn_get_blks (x : Txn.t) :: go.IsGoStepPureDet (StructFieldGet (Txn) "blks") #x #x.(Txn.blks');

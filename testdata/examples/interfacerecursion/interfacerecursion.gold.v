@@ -56,7 +56,7 @@ Definition Aⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type
 Class A_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
   #[global] A_type_repr  :: go.TypeRepr A A.t;
-  #[global] A_underlying :: go.Underlying (A) (Aⁱᵐᵖˡ);
+  #[global] A_underlying :: (A) <u (Aⁱᵐᵖˡ);
 }.
 
 Module B.
@@ -71,7 +71,7 @@ Definition Bⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type
 Class B_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
   #[global] B_type_repr  :: go.TypeRepr B B.t;
-  #[global] B_underlying :: go.Underlying (B) (Bⁱᵐᵖˡ);
+  #[global] B_underlying :: (B) <u (Bⁱᵐᵖˡ);
 }.
 
 Module c.
@@ -94,7 +94,7 @@ Definition cⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type
 Class c_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
   #[global] c_type_repr  :: go.TypeRepr c c.t;
-  #[global] c_underlying :: go.Underlying (c) (cⁱᵐᵖˡ);
+  #[global] c_underlying :: (c) <u (cⁱᵐᵖˡ);
   #[global] c'ptr_Bar_unfold :: MethodUnfold (go.PointerType (c)) "Bar" (c__Barⁱᵐᵖˡ);
   #[global] c'ptr_Foo_unfold :: MethodUnfold (go.PointerType (c)) "Foo" (c__Fooⁱᵐᵖˡ);
 }.

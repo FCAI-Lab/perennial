@@ -1005,7 +1005,7 @@ Definition Tableⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.
 Class Table_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
   #[global] Table_type_repr  :: go.TypeRepr Table Table.t;
-  #[global] Table_underlying :: go.Underlying (Table) (Tableⁱᵐᵖˡ);
+  #[global] Table_underlying :: (Table) <u (Tableⁱᵐᵖˡ);
   #[global] Table_get_Index (x : Table.t) :: go.IsGoStepPureDet (StructFieldGet (Table) "Index") #x #x.(Table.Index');
   #[global] Table_set_Index (x : Table.t) y :: go.IsGoStepPureDet (StructFieldSet (Table) "Index") (#x, #y) #(x <|Table.Index' := y|>);
   #[global] Table_get_File (x : Table.t) :: go.IsGoStepPureDet (StructFieldGet (Table) "File") #x #x.(Table.File');
@@ -1036,7 +1036,7 @@ Definition Entryⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.
 Class Entry_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
   #[global] Entry_type_repr  :: go.TypeRepr Entry Entry.t;
-  #[global] Entry_underlying :: go.Underlying (Entry) (Entryⁱᵐᵖˡ);
+  #[global] Entry_underlying :: (Entry) <u (Entryⁱᵐᵖˡ);
   #[global] Entry_get_Key (x : Entry.t) :: go.IsGoStepPureDet (StructFieldGet (Entry) "Key") #x #x.(Entry.Key');
   #[global] Entry_set_Key (x : Entry.t) y :: go.IsGoStepPureDet (StructFieldSet (Entry) "Key") (#x, #y) #(x <|Entry.Key' := y|>);
   #[global] Entry_get_Value (x : Entry.t) :: go.IsGoStepPureDet (StructFieldGet (Entry) "Value") #x #x.(Entry.Value');
@@ -1067,7 +1067,7 @@ Definition lazyFileBufⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext}
 Class lazyFileBuf_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
   #[global] lazyFileBuf_type_repr  :: go.TypeRepr lazyFileBuf lazyFileBuf.t;
-  #[global] lazyFileBuf_underlying :: go.Underlying (lazyFileBuf) (lazyFileBufⁱᵐᵖˡ);
+  #[global] lazyFileBuf_underlying :: (lazyFileBuf) <u (lazyFileBufⁱᵐᵖˡ);
   #[global] lazyFileBuf_get_offset (x : lazyFileBuf.t) :: go.IsGoStepPureDet (StructFieldGet (lazyFileBuf) "offset") #x #x.(lazyFileBuf.offset');
   #[global] lazyFileBuf_set_offset (x : lazyFileBuf.t) y :: go.IsGoStepPureDet (StructFieldSet (lazyFileBuf) "offset") (#x, #y) #(x <|lazyFileBuf.offset' := y|>);
   #[global] lazyFileBuf_get_next (x : lazyFileBuf.t) :: go.IsGoStepPureDet (StructFieldGet (lazyFileBuf) "next") #x #x.(lazyFileBuf.next');
@@ -1098,7 +1098,7 @@ Definition bufFileⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : g
 Class bufFile_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
   #[global] bufFile_type_repr  :: go.TypeRepr bufFile bufFile.t;
-  #[global] bufFile_underlying :: go.Underlying (bufFile) (bufFileⁱᵐᵖˡ);
+  #[global] bufFile_underlying :: (bufFile) <u (bufFileⁱᵐᵖˡ);
   #[global] bufFile_get_file (x : bufFile.t) :: go.IsGoStepPureDet (StructFieldGet (bufFile) "file") #x #x.(bufFile.file');
   #[global] bufFile_set_file (x : bufFile.t) y :: go.IsGoStepPureDet (StructFieldSet (bufFile) "file") (#x, #y) #(x <|bufFile.file' := y|>);
   #[global] bufFile_get_buf (x : bufFile.t) :: go.IsGoStepPureDet (StructFieldGet (bufFile) "buf") #x #x.(bufFile.buf');
@@ -1133,7 +1133,7 @@ Definition tableWriterⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext}
 Class tableWriter_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
   #[global] tableWriter_type_repr  :: go.TypeRepr tableWriter tableWriter.t;
-  #[global] tableWriter_underlying :: go.Underlying (tableWriter) (tableWriterⁱᵐᵖˡ);
+  #[global] tableWriter_underlying :: (tableWriter) <u (tableWriterⁱᵐᵖˡ);
   #[global] tableWriter_get_index (x : tableWriter.t) :: go.IsGoStepPureDet (StructFieldGet (tableWriter) "index") #x #x.(tableWriter.index');
   #[global] tableWriter_set_index (x : tableWriter.t) y :: go.IsGoStepPureDet (StructFieldSet (tableWriter) "index") (#x, #y) #(x <|tableWriter.index' := y|>);
   #[global] tableWriter_get_name (x : tableWriter.t) :: go.IsGoStepPureDet (StructFieldGet (tableWriter) "name") #x #x.(tableWriter.name');
@@ -1178,7 +1178,7 @@ Definition Databaseⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : 
 Class Database_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
   #[global] Database_type_repr  :: go.TypeRepr Database Database.t;
-  #[global] Database_underlying :: go.Underlying (Database) (Databaseⁱᵐᵖˡ);
+  #[global] Database_underlying :: (Database) <u (Databaseⁱᵐᵖˡ);
   #[global] Database_get_wbuffer (x : Database.t) :: go.IsGoStepPureDet (StructFieldGet (Database) "wbuffer") #x #x.(Database.wbuffer');
   #[global] Database_set_wbuffer (x : Database.t) y :: go.IsGoStepPureDet (StructFieldSet (Database) "wbuffer") (#x, #y) #(x <|Database.wbuffer' := y|>);
   #[global] Database_get_rbuffer (x : Database.t) :: go.IsGoStepPureDet (StructFieldGet (Database) "rbuffer") #x #x.(Database.rbuffer');
