@@ -247,7 +247,7 @@ func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 
 	// underlying instance
 	if ctx.filter.GetAction(typeName) != declfilter.Axiomatize {
-		fmt.Fprintf(w, "  #[global] %[1]s_underlying%[2]s :: go.Underlying (%[1]s%[2]s) (%[1]sⁱᵐᵖˡ%[2]s);\n", typeName, typeParams)
+		fmt.Fprintf(w, "  #[global] %[1]s_underlying%[2]s :: (%[1]s%[2]s) <u (%[1]sⁱᵐᵖˡ%[2]s);\n", typeName, typeParams)
 	}
 
 	// maybe emit StructFieldSet and StructFieldGet instances
