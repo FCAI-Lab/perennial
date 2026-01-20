@@ -469,10 +469,8 @@ func (ctx *Ctx) glangType(n locatable, t types.Type) glang.Expr {
 	case *types.Named:
 		if t.Obj().Pkg() == nil {
 			switch t.Obj().Name() {
-			case "error":
-				return glang.GallinaIdent("go.error")
-			case "any":
-				return glang.GallinaIdent("go.any")
+			case "error", "any", "comparable":
+				return glang.GallinaIdent("go." + t.Obj().Name())
 			}
 			ctx.nope(n, "unexpected built-in type %v", t.Obj())
 		}
