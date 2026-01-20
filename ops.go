@@ -1,8 +1,9 @@
 package goose
 
 import (
-	"github.com/goose-lang/goose/glang"
 	"go/token"
+
+	"github.com/goose-lang/goose/glang"
 )
 
 var gooseLangOps = map[token.Token]glang.OpId{
@@ -26,4 +27,6 @@ var gooseLangOps = map[token.Token]glang.OpId{
 	token.AND_NOT: glang.OpAndNot,
 	token.OR:      glang.OpOr,
 	token.XOR:     glang.OpXor,
+
+	token.NOT: glang.OpNot,
 }

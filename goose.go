@@ -717,21 +717,19 @@ func (ctx *Ctx) unaryExpr(e *ast.UnaryExpr, multipleBindings bool) glang.Expr {
 		}
 		return expr
 	}
-	if e.Op == token.SUB {
-		var coqExpr glang.Expr
-		xT := ctx.typeOf(e.X).Underlying()
-		if t, ok := xT.(*types.Basic); ok {
-			switch t.Kind() {
-			case types.UntypedInt:
-				coqExpr = glang.NewCallExpr(glang.VerbatimExpr("-"), ctx.expr(e.X))
-			case types.Int, types.Int64, types.Int32, types.Int16, types.Int8:
-				coqExpr = glang.NewCallExpr(glang.VerbatimExpr("int_negative"), ctx.expr(e.X))
-			}
-			return ctx.handleImplicitConversion(e, xT, ctx.typeOf(e), coqExpr)
-		}
+	op, ok := gooseLangOps[e.Op]
+	if !ok {
+		ctx.unsupported(e, "unary expression %s", e.Op)
 	}
-	ctx.unsupported(e, "unary expression %s", e.Op)
-	return nil
+	ty := ctx.typeOf(e.X)
+	expr := glang.UnaryExpr{
+		X: ctx.expr(e.X),
+		Op: glang.UnaryOp{
+			OpId: op,
+			Type: ctx.glangType(e.X, ty),
+		},
+	}
+	return ctx.handleImplicitConversion(e, ty, ctx.typeOf(e), expr)
 }
 
 func (ctx *Ctx) function(s *ast.Ident) glang.Expr {

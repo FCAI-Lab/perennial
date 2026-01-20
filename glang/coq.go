@@ -479,7 +479,7 @@ type BinOp struct {
 	Type Expr
 }
 
-// Constants for the supported Coq binary operators
+// Constants for the supported binary and unary operators
 const (
 	OpPlus OpId = iota
 	OpMinus
@@ -502,6 +502,8 @@ const (
 	OpXor
 	OpLAnd
 	OpLOr
+
+	OpNot
 )
 
 var withTypeAnnotation = map[OpId]string{
@@ -522,6 +524,7 @@ var withTypeAnnotation = map[OpId]string{
 	OpAndNot:      "&^",
 	OpOr:          "|",
 	OpXor:         "^",
+	OpNot:         "!",
 }
 
 var withoutTypeAnnotation = map[OpId]string{
@@ -548,6 +551,29 @@ type BinaryExpr struct {
 func (be BinaryExpr) Coq(needs_paren bool) string {
 	expr := fmt.Sprintf("%s %s %s",
 		be.X.Coq(true), be.Op.renderOp(), be.Y.Coq(true))
+	return addParens(needs_paren, expr)
+}
+
+type UnaryOp struct {
+	OpId
+	Type Expr
+}
+
+func (o UnaryOp) renderOp() string {
+	if op, ok := withTypeAnnotation[o.OpId]; ok {
+		return "⟨" + o.Type.Coq(false) + "⟩" + op
+	} else {
+		panic(fmt.Sprint("unsupported unary op: ", o))
+	}
+}
+
+type UnaryExpr struct {
+	X  Expr
+	Op UnaryOp
+}
+
+func (be UnaryExpr) Coq(needs_paren bool) string {
+	expr := fmt.Sprintf("%s %s", be.Op.renderOp(), be.X.Coq(true))
 	return addParens(needs_paren, expr)
 }
 
