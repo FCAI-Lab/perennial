@@ -566,7 +566,7 @@ Definition Readⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val 
   λ: "db" "k",
     exception_do (let: "k" := (GoAlloc go.uint64 "k") in
     let: "db" := (GoAlloc Database "db") in
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
     let: "buf" := (GoAlloc (go.MapType go.uint64 (go.SliceType go.byte)) (GoZeroVal (go.MapType go.uint64 (go.SliceType go.byte)) #())) in
     let: "$r0" := (![go.MapType go.uint64 (go.SliceType go.byte)] (![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] (StructFieldRef Database "wbuffer"%go "db"))) in
     do:  ("buf" <-[go.MapType go.uint64 (go.SliceType go.byte)] "$r0");;;
@@ -579,7 +579,7 @@ Definition Readⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val 
     do:  ("ok" <-[go.bool] "$r1");;;
     (if: ![go.bool] "ok"
     then
-      do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
+      do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
       return: (![go.SliceType go.byte] "v", #true)
     else do:  #());;;
     let: "rbuf" := (GoAlloc (go.MapType go.uint64 (go.SliceType go.byte)) (GoZeroVal (go.MapType go.uint64 (go.SliceType go.byte)) #())) in
@@ -593,10 +593,10 @@ Definition Readⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val 
     do:  ("ok" <-[go.bool] "$r1");;;
     (if: ![go.bool] "ok"
     then
-      do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
+      do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
       return: (![go.SliceType go.byte] "v2", #true)
     else do:  #());;;
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Database "tableL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go (![go.PointerType sync.Mutex] (StructFieldRef Database "tableL"%go "db"))) #());;;
     let: "tbl" := (GoAlloc Table (GoZeroVal Table #())) in
     let: "$r0" := (![Table] (![go.PointerType Table] (StructFieldRef Database "table"%go "db"))) in
     do:  ("tbl" <-[Table] "$r0");;;
@@ -608,8 +608,8 @@ Definition Readⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val 
     let: "$r1" := "$ret1" in
     do:  ("v3" <-[go.SliceType go.byte] "$r0");;;
     do:  ("ok" <-[go.bool] "$r1");;;
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Database "tableL"%go "db"))) #());;;
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go (![go.PointerType sync.Mutex] (StructFieldRef Database "tableL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
     return: (![go.SliceType go.byte] "v3", ![go.bool] "ok")).
 
 (* Write sets a key to a new value.
@@ -625,13 +625,13 @@ Definition Writeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val
     exception_do (let: "v" := (GoAlloc (go.SliceType go.byte) "v") in
     let: "k" := (GoAlloc go.uint64 "k") in
     let: "db" := (GoAlloc Database "db") in
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
     let: "buf" := (GoAlloc (go.MapType go.uint64 (go.SliceType go.byte)) (GoZeroVal (go.MapType go.uint64 (go.SliceType go.byte)) #())) in
     let: "$r0" := (![go.MapType go.uint64 (go.SliceType go.byte)] (![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] (StructFieldRef Database "wbuffer"%go "db"))) in
     do:  ("buf" <-[go.MapType go.uint64 (go.SliceType go.byte)] "$r0");;;
     let: "$r0" := (![go.SliceType go.byte] "v") in
     do:  (map.insert go.uint64 (![go.MapType go.uint64 (go.SliceType go.byte)] "buf") (![go.uint64] "k") "$r0");;;
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
     return: #()).
 
 (* go: simpledb.go:333:6 *)
@@ -773,8 +773,8 @@ Definition constructNewTableⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCo
 Definition Compactⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "db",
     exception_do (let: "db" := (GoAlloc Database "db") in
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Database "compactionL"%go "db"))) #());;;
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go (![go.PointerType sync.Mutex] (StructFieldRef Database "compactionL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
     let: "buf" := (GoAlloc (go.MapType go.uint64 (go.SliceType go.byte)) (GoZeroVal (go.MapType go.uint64 (go.SliceType go.byte)) #())) in
     let: "$r0" := (![go.MapType go.uint64 (go.SliceType go.byte)] (![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] (StructFieldRef Database "wbuffer"%go "db"))) in
     do:  ("buf" <-[go.MapType go.uint64 (go.SliceType go.byte)] "$r0");;;
@@ -785,8 +785,8 @@ Definition Compactⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : v
     do:  ((![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] (StructFieldRef Database "wbuffer"%go "db")) <-[go.MapType go.uint64 (go.SliceType go.byte)] "$r0");;;
     let: "$r0" := (![go.MapType go.uint64 (go.SliceType go.byte)] "buf") in
     do:  ((![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] (StructFieldRef Database "rbuffer"%go "db")) <-[go.MapType go.uint64 (go.SliceType go.byte)] "$r0");;;
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Database "tableL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go (![go.PointerType sync.Mutex] (StructFieldRef Database "tableL"%go "db"))) #());;;
     let: "oldTableName" := (GoAlloc go.string (GoZeroVal go.string #())) in
     let: "$r0" := (![go.string] (![go.PointerType go.string] (StructFieldRef Database "tableName"%go "db"))) in
     do:  ("oldTableName" <-[go.string] "$r0");;;
@@ -819,8 +819,8 @@ Definition Compactⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : v
     do:  (let: "$a0" := #"db"%go in
     let: "$a1" := (![go.string] "oldTableName") in
     (FuncResolve filesys.Delete [] #()) "$a0" "$a1");;;
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Database "tableL"%go "db"))) #());;;
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Database "compactionL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go (![go.PointerType sync.Mutex] (StructFieldRef Database "tableL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go (![go.PointerType sync.Mutex] (StructFieldRef Database "compactionL"%go "db"))) #());;;
     return: #()).
 
 (* go: simpledb.go:450:6 *)
@@ -942,15 +942,15 @@ Definition Recoverⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : v
 Definition Shutdownⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "db",
     exception_do (let: "db" := (GoAlloc Database "db") in
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Database "compactionL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go (![go.PointerType sync.Mutex] (StructFieldRef Database "compactionL"%go "db"))) #());;;
     let: "t" := (GoAlloc Table (GoZeroVal Table #())) in
     let: "$r0" := (![Table] (![go.PointerType Table] (StructFieldRef Database "table"%go "db"))) in
     do:  ("t" <-[Table] "$r0");;;
     do:  (let: "$a0" := (![Table] "t") in
     (FuncResolve CloseTable [] #()) "$a0");;;
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Database "compactionL"%go "db"))) #());;;
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go (![go.PointerType sync.Mutex] (StructFieldRef Database "compactionL"%go "db"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go (![go.PointerType sync.Mutex] (StructFieldRef Database "bufferL"%go "db"))) #());;;
     return: #()).
 
 (* Close closes an open database cleanly, flushing any in-memory writes.

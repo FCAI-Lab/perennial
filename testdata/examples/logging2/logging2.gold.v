@@ -51,7 +51,7 @@ Definition Initⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val 
     let: "$r0" := (CompositeLiteral Log (LiteralValue [KeyedElement (Some (KeyField "logLock"%go)) (ElementExpression (GoAlloc sync.Mutex (GoZeroVal sync.Mutex #()))); KeyedElement (Some (KeyField "memLock"%go)) (ElementExpression (GoAlloc sync.Mutex (GoZeroVal sync.Mutex #()))); KeyedElement (Some (KeyField "logSz"%go)) (ElementExpression (![go.uint64] "logSz")); KeyedElement (Some (KeyField "memLog"%go)) (ElementExpression (GoAlloc (go.SliceType (go.SliceType go.byte)) (GoZeroVal (go.SliceType (go.SliceType go.byte)) #()))); KeyedElement (Some (KeyField "memLen"%go)) (ElementExpression (GoAlloc go.uint64 (GoZeroVal go.uint64 #()))); KeyedElement (Some (KeyField "memTxnNxt"%go)) (ElementExpression (GoAlloc go.uint64 (GoZeroVal go.uint64 #()))); KeyedElement (Some (KeyField "logTxnNxt"%go)) (ElementExpression (GoAlloc go.uint64 (GoZeroVal go.uint64 #())))])) in
     do:  ("log" <-[Log] "$r0");;;
     do:  (let: "$a0" := #(W64 0) in
-    (MethodResolve Log "writeHdr"%go #() (![Log] "log")) "$a0");;;
+    (MethodResolve Log "writeHdr"%go (![Log] "log")) "$a0");;;
     return: (![Log] "log")).
 
 (* go: logging2.go:45:16 *)
@@ -95,15 +95,15 @@ Definition Log__readBlocksⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCont
 Definition Log__Readⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "log" <>,
     exception_do (let: "log" := (GoAlloc Log "log") in
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Log "logLock"%go "log"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go (![go.PointerType sync.Mutex] (StructFieldRef Log "logLock"%go "log"))) #());;;
     let: "disklen" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
-    let: "$r0" := ((MethodResolve Log "readHdr"%go #() (![Log] "log")) #()) in
+    let: "$r0" := ((MethodResolve Log "readHdr"%go (![Log] "log")) #()) in
     do:  ("disklen" <-[go.uint64] "$r0");;;
     let: "blks" := (GoAlloc (go.SliceType (go.SliceType go.byte)) (GoZeroVal (go.SliceType (go.SliceType go.byte)) #())) in
     let: "$r0" := (let: "$a0" := (![go.uint64] "disklen") in
-    (MethodResolve Log "readBlocks"%go #() (![Log] "log")) "$a0") in
+    (MethodResolve Log "readBlocks"%go (![Log] "log")) "$a0") in
     do:  ("blks" <-[go.SliceType (go.SliceType go.byte)] "$r0");;;
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Log "logLock"%go "log"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go (![go.PointerType sync.Mutex] (StructFieldRef Log "logLock"%go "log"))) #());;;
     return: (![go.SliceType (go.SliceType go.byte)] "blks")).
 
 (* go: logging2.go:68:16 *)
@@ -131,11 +131,11 @@ Definition Log__memAppendⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalConte
   λ: "log" "l",
     exception_do (let: "log" := (GoAlloc Log "log") in
     let: "l" := (GoAlloc (go.SliceType (go.SliceType go.byte)) "l") in
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Log "memLock"%go "log"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go (![go.PointerType sync.Mutex] (StructFieldRef Log "memLock"%go "log"))) #());;;
     (if: Convert go.untyped_bool go.bool (((![go.uint64] (![go.PointerType go.uint64] (StructFieldRef Log "memLen"%go "log"))) +⟨go.uint64⟩ (Convert go.int go.uint64 (let: "$a0" := (![go.SliceType (go.SliceType go.byte)] "l") in
     (FuncResolve go.len [go.SliceType (go.SliceType go.byte)] #()) "$a0"))) ≥⟨go.uint64⟩ (![go.uint64] (StructFieldRef Log "logSz"%go "log")))
     then
-      do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Log "memLock"%go "log"))) #());;;
+      do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go (![go.PointerType sync.Mutex] (StructFieldRef Log "memLock"%go "log"))) #());;;
       return: (#false, #(W64 0))
     else do:  #());;;
     let: "txn" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
@@ -149,7 +149,7 @@ Definition Log__memAppendⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalConte
     do:  ((![go.PointerType go.uint64] (StructFieldRef Log "memLen"%go "log")) <-[go.uint64] "$r0");;;
     let: "$r0" := ((![go.uint64] (![go.PointerType go.uint64] (StructFieldRef Log "memTxnNxt"%go "log"))) +⟨go.uint64⟩ #(W64 1)) in
     do:  ((![go.PointerType go.uint64] (StructFieldRef Log "memTxnNxt"%go "log")) <-[go.uint64] "$r0");;;
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Log "memLock"%go "log"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go (![go.PointerType sync.Mutex] (StructFieldRef Log "memLock"%go "log"))) #());;;
     return: (#true, ![go.uint64] "txn")).
 
 (* XXX just an atomic read?
@@ -158,11 +158,11 @@ Definition Log__memAppendⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalConte
 Definition Log__readLogTxnNxtⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "log" <>,
     exception_do (let: "log" := (GoAlloc Log "log") in
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Log "memLock"%go "log"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go (![go.PointerType sync.Mutex] (StructFieldRef Log "memLock"%go "log"))) #());;;
     let: "n" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
     let: "$r0" := (![go.uint64] (![go.PointerType go.uint64] (StructFieldRef Log "logTxnNxt"%go "log"))) in
     do:  ("n" <-[go.uint64] "$r0");;;
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Log "memLock"%go "log"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go (![go.PointerType sync.Mutex] (StructFieldRef Log "memLock"%go "log"))) #());;;
     return: (![go.uint64] "n")).
 
 (* go: logging2.go:97:16 *)
@@ -172,7 +172,7 @@ Definition Log__diskAppendWaitⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobal
     let: "txn" := (GoAlloc go.uint64 "txn") in
     (for: (λ: <>, #true); (λ: <>, #()) := λ: <>,
       let: "logtxn" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
-      let: "$r0" := ((MethodResolve Log "readLogTxnNxt"%go #() (![Log] "log")) #()) in
+      let: "$r0" := ((MethodResolve Log "readLogTxnNxt"%go (![Log] "log")) #()) in
       do:  ("logtxn" <-[go.uint64] "$r0");;;
       (if: Convert go.untyped_bool go.bool ((![go.uint64] "txn") <⟨go.uint64⟩ (![go.uint64] "logtxn"))
       then break: #()
@@ -188,7 +188,7 @@ Definition Log__Appendⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext}
     let: "txn" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
     let: "ok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
     let: ("$ret0", "$ret1") := (let: "$a0" := (![go.SliceType (go.SliceType go.byte)] "l") in
-    (MethodResolve Log "memAppend"%go #() (![Log] "log")) "$a0") in
+    (MethodResolve Log "memAppend"%go (![Log] "log")) "$a0") in
     let: "$r0" := "$ret0" in
     let: "$r1" := "$ret1" in
     do:  ("ok" <-[go.bool] "$r0");;;
@@ -196,7 +196,7 @@ Definition Log__Appendⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext}
     (if: ![go.bool] "ok"
     then
       do:  (let: "$a0" := (![go.uint64] "txn") in
-      (MethodResolve Log "diskAppendWait"%go #() (![Log] "log")) "$a0")
+      (MethodResolve Log "diskAppendWait"%go (![Log] "log")) "$a0")
     else do:  #());;;
     return: (![go.bool] "ok")).
 
@@ -226,11 +226,11 @@ Definition Log__writeBlocksⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCon
 Definition Log__diskAppendⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "log" <>,
     exception_do (let: "log" := (GoAlloc Log "log") in
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Log "logLock"%go "log"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go (![go.PointerType sync.Mutex] (StructFieldRef Log "logLock"%go "log"))) #());;;
     let: "disklen" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
-    let: "$r0" := ((MethodResolve Log "readHdr"%go #() (![Log] "log")) #()) in
+    let: "$r0" := ((MethodResolve Log "readHdr"%go (![Log] "log")) #()) in
     do:  ("disklen" <-[go.uint64] "$r0");;;
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Log "memLock"%go "log"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Lock"%go (![go.PointerType sync.Mutex] (StructFieldRef Log "memLock"%go "log"))) #());;;
     let: "memlen" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
     let: "$r0" := (![go.uint64] (![go.PointerType go.uint64] (StructFieldRef Log "memLen"%go "log"))) in
     do:  ("memlen" <-[go.uint64] "$r0");;;
@@ -244,15 +244,15 @@ Definition Log__diskAppendⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCont
     let: "memnxt" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
     let: "$r0" := (![go.uint64] (![go.PointerType go.uint64] (StructFieldRef Log "memTxnNxt"%go "log"))) in
     do:  ("memnxt" <-[go.uint64] "$r0");;;
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Log "memLock"%go "log"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go (![go.PointerType sync.Mutex] (StructFieldRef Log "memLock"%go "log"))) #());;;
     do:  (let: "$a0" := (![go.SliceType (go.SliceType go.byte)] "blks") in
     let: "$a1" := (![go.uint64] "disklen") in
-    (MethodResolve Log "writeBlocks"%go #() (![Log] "log")) "$a0" "$a1");;;
+    (MethodResolve Log "writeBlocks"%go (![Log] "log")) "$a0" "$a1");;;
     do:  (let: "$a0" := (![go.uint64] "memlen") in
-    (MethodResolve Log "writeHdr"%go #() (![Log] "log")) "$a0");;;
+    (MethodResolve Log "writeHdr"%go (![Log] "log")) "$a0");;;
     let: "$r0" := (![go.uint64] "memnxt") in
     do:  ((![go.PointerType go.uint64] (StructFieldRef Log "logTxnNxt"%go "log")) <-[go.uint64] "$r0");;;
-    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go #() (![go.PointerType sync.Mutex] (StructFieldRef Log "logLock"%go "log"))) #());;;
+    do:  ((MethodResolve (go.PointerType sync.Mutex) "Unlock"%go (![go.PointerType sync.Mutex] (StructFieldRef Log "logLock"%go "log"))) #());;;
     return: #()).
 
 (* go: logging2.go:142:16 *)
@@ -260,7 +260,7 @@ Definition Log__Loggerⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext}
   λ: "log" <>,
     exception_do (let: "log" := (GoAlloc Log "log") in
     (for: (λ: <>, #true); (λ: <>, #()) := λ: <>,
-      do:  ((MethodResolve Log "diskAppend"%go #() (![Log] "log")) #()));;;
+      do:  ((MethodResolve Log "diskAppend"%go (![Log] "log")) #()));;;
     return: #()).
 
 (* XXX wait if cannot reserve space in log
@@ -343,7 +343,7 @@ Definition Txn__Commitⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext}
       do:  ((![go.PointerType (go.SliceType (go.SliceType go.byte))] "blks") <-[go.SliceType (go.SliceType go.byte)] "$r0")));;;
     let: "ok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
     let: "$r0" := (let: "$a0" := (![go.SliceType (go.SliceType go.byte)] (![go.PointerType (go.SliceType (go.SliceType go.byte))] "blks")) in
-    (MethodResolve Log "Append"%go #() (![Log] (![go.PointerType Log] (StructFieldRef Txn "log"%go "txn")))) "$a0") in
+    (MethodResolve Log "Append"%go (![Log] (![go.PointerType Log] (StructFieldRef Txn "log"%go "txn")))) "$a0") in
     do:  ("ok" <-[go.bool] "$r0");;;
     return: (![go.bool] "ok")).
 

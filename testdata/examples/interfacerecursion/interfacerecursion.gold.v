@@ -20,7 +20,7 @@ Definition c__Fooⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : va
     let: "y" := (GoAlloc B (GoZeroVal B #())) in
     let: "$r0" := (Convert (go.PointerType c) B (![go.PointerType c] "c")) in
     do:  ("y" <-[B] "$r0");;;
-    do:  ((MethodResolve B "Bar"%go #() (![B] "y")) #());;;
+    do:  ((MethodResolve B "Bar"%go (![B] "y")) #());;;
     return: #()).
 
 (* go: x.go:19:13 *)
@@ -30,7 +30,7 @@ Definition c__Barⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : va
     let: "y" := (GoAlloc A (GoZeroVal A #())) in
     let: "$r0" := (Convert (go.PointerType c) A (![go.PointerType c] "c")) in
     do:  ("y" <-[A] "$r0");;;
-    do:  ((MethodResolve A "Foo"%go #() (![A] "y")) #());;;
+    do:  ((MethodResolve A "Foo"%go (![A] "y")) #());;;
     return: #()).
 
 #[global] Instance info' : PkgInfo pkg_id.interfacerecursion :=

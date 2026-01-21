@@ -28,8 +28,8 @@ Definition UseDiskⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : v
     do:  ("v" <-[go.SliceType go.byte] "$r0");;;
     do:  (let: "$a0" := #(W64 0) in
     let: "$a1" := (![go.SliceType go.byte] "v") in
-    (MethodResolve disk.Disk "Write"%go #() (![disk.Disk] "d")) "$a0" "$a1");;;
-    do:  ((MethodResolve disk.Disk "Barrier"%go #() (![disk.Disk] "d")) #());;;
+    (MethodResolve disk.Disk "Write"%go (![disk.Disk] "d")) "$a0" "$a1");;;
+    do:  ((MethodResolve disk.Disk "Barrier"%go (![disk.Disk] "d")) #());;;
     return: #()).
 
 #[global] Instance info' : PkgInfo pkg_id.async :=
