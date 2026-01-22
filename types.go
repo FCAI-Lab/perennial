@@ -456,7 +456,6 @@ func (ctx *Ctx) interfaceType(n locatable, t *types.Interface) glang.Expr {
 }
 
 func (ctx *Ctx) glangType(n locatable, t types.Type) glang.Expr {
-	t = types.Unalias(t)
 	switch t := t.(type) {
 	case *types.Struct:
 		return ctx.structType(t)
@@ -467,6 +466,22 @@ func (ctx *Ctx) glangType(n locatable, t types.Type) glang.Expr {
 	case *types.Pointer:
 		return glang.NewCallExpr(glang.VerbatimExpr("go.PointerType"), ctx.glangType(n, t.Elem()))
 	case *types.Named:
+		if t.Obj().Pkg() == nil {
+			switch t.Obj().Name() {
+			case "error", "any", "comparable":
+				return glang.GallinaIdent("go." + t.Obj().Name())
+			}
+			ctx.nope(n, "unexpected built-in type %v", t.Obj())
+		}
+		if t.TypeArgs().Len() != 0 {
+			return glang.CallExpr{
+				MethodName: glang.GallinaIdent(ctx.qualifiedName(t.Obj())),
+				Args:       ctx.convertTypeArgsToGlang(n, t.TypeArgs()),
+			}
+		} else {
+			return glang.GallinaIdent(ctx.qualifiedName(t.Obj()))
+		}
+	case *types.Alias:
 		if t.Obj().Pkg() == nil {
 			switch t.Obj().Name() {
 			case "error", "any", "comparable":
@@ -509,7 +524,7 @@ func (ctx *Ctx) glangType(n locatable, t types.Type) glang.Expr {
 	case *types.Slice:
 		return glang.NewCallExpr(glang.GallinaIdent("go.SliceType"), ctx.glangType(n, t.Elem()))
 	}
-	ctx.unsupported(n, "unknown type %v", t)
+	ctx.unsupported(n, "unknown type %v, %T", t, t)
 	return nil // unreachable
 }
 

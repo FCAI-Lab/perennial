@@ -1904,7 +1904,12 @@ func (ctx *Ctx) typeSwitchStmt(s *ast.TypeSwitchStmt, cont glang.Expr) (e glang.
 				addAllocation(ctx.glangType(y, ctx.typeOf(y)))
 			} else {
 				// The type of x will depend on the case
-				addAllocation(ctx.glangType(c.List[0], ctx.typeOf(c.List[0])))
+
+				if types.Identical(ctx.typeOf(c.List[0]), types.Typ[types.UntypedNil]) {
+					addAllocation(ctx.glangType(y, ctx.typeOf(y)))
+				} else {
+					addAllocation(ctx.glangType(c.List[0], ctx.typeOf(c.List[0])))
+				}
 			}
 		}
 
