@@ -194,6 +194,7 @@ func (ctx *Ctx) sliceLiteralAux(es []exprWithInfo, expectedType types.Type) glan
 					glang.GallinaIdent("None"),
 					glang.NewCallExpr(
 						glang.GallinaIdent("ElementExpression"),
+						ctx.glangType(es[i].n, expectedType),
 						glang.IdentExpr(fmt.Sprintf("$sl%d", i))),
 				),
 			)
@@ -555,7 +556,8 @@ func (ctx *Ctx) compositeLiteral(e *ast.CompositeLit) glang.Expr {
 				return ctx.expr(e)
 			}
 		}
-		return glang.NewCallExpr(glang.GallinaIdent("ElementExpression"), ctx.expr(e))
+		return glang.NewCallExpr(glang.GallinaIdent("ElementExpression"),
+			ctx.glangType(e, ctx.typeOf(e)), ctx.expr(e))
 	}
 
 	for _, el := range e.Elts {
@@ -574,7 +576,7 @@ func (ctx *Ctx) compositeLiteral(e *ast.CompositeLit) glang.Expr {
 			}
 			if !done {
 				k = glang.NewCallExpr(glang.GallinaIdent("KeyExpression"),
-					ctx.expr(el.Key))
+					ctx.glangType(el.Key, ctx.typeOf(el.Key)), ctx.expr(el.Key))
 			}
 			k = glang.NewCallExpr(glang.GallinaIdent("Some"), k)
 			v = handleValue(el.Value)
