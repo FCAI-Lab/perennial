@@ -53,3 +53,16 @@ func testNumWrapper() {
 	n := numWrapper(0)
 	n.inc()
 }
+
+type withInterface struct {
+	a any
+}
+
+func testConversionLiteral() bool {
+	s := withInterface{nil}
+	s = withInterface{a: nil}
+	m := map[any]any{nil: nil}
+	m[nil] = s
+	m[s] = nil
+	return m[m[s]] == s
+}
