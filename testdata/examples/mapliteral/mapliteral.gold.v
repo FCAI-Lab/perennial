@@ -12,7 +12,7 @@ Definition mapliteral {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string
 (* go: mapliteral.go:3:6 *)
 Definition mapliteralⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
-    exception_do (return: (CompositeLiteral (go.MapType go.uint64 go.uint64) (LiteralValue [KeyedElement (Some (KeyExpression #(W64 1))) (ElementExpression #(W64 2))]))).
+    exception_do (return: (CompositeLiteral (go.MapType go.uint64 go.uint64) (LiteralValue [KeyedElement (Some (KeyExpression go.uint64 #(W64 1))) (ElementExpression go.uint64 #(W64 2))]))).
 
 #[global] Instance info' : PkgInfo pkg_id.example :=
 {|
