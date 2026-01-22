@@ -1931,7 +1931,6 @@ func (ctx *Ctx) typeSwitchStmt(s *ast.TypeSwitchStmt, cont glang.Expr) (e glang.
 						glang.NewCallExpr(glang.VerbatimExpr("TypeAssert2"),
 							ctx.glangType(c.List[i], ty),
 							glang.IdentExpr("$y"),
-							glang.ToVal{Value: ctx.glangType(c.List[i], ty)},
 						),
 					)
 				}
@@ -1968,7 +1967,6 @@ func (ctx *Ctx) typeSwitchStmt(s *ast.TypeSwitchStmt, cont glang.Expr) (e glang.
 					ValExpr: glang.NewCallExpr(glang.VerbatimExpr("TypeAssert2"),
 						ctx.glangType(c.List[0], ty),
 						glang.IdentExpr("$y"),
-						glang.ToVal{Value: ctx.glangType(c.List[0], ty)},
 					),
 					Cont: e,
 				}
