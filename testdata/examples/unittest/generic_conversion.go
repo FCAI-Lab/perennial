@@ -22,7 +22,7 @@ func assert(b bool, s string) {
 	}
 }
 
-func nilConvert[A interface{ *int | []int }](n int) []A {
+func nilConvert[A interface{ *int | []int }]() []A {
 	return []A{nil}
 }
 
@@ -32,5 +32,5 @@ func genericConversions() {
 	assert(maybeConvertToString(maybeConvertFromString("ok")) == "ok", "")
 	assert(maybeConvertToInterface("ok") == "ok", "")
 	assert(maybeConvertToInterface(maybeConvertToInterface("ok")).(string) == "ok", "")
-	assert(&nilConvert[[]int]()[0] == nilConvert[*int]())
+	assert(&(nilConvert[[]int]()[0][0]) == nilConvert[*int]()[0], "")
 }
