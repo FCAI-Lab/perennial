@@ -1,7 +1,7 @@
 package unittest
 
 type embedA struct {
-	a uint64
+	a string
 }
 
 type embedB struct {
@@ -16,20 +16,20 @@ type embedD struct {
 	embedC
 }
 
-func (a embedA) Foo() uint64 {
-	return 0
+func (a embedA) Foo() string {
+	return "embedA.Foo()"
 }
 
-func (a embedB) Foo() uint64 {
-	return 10
+func (a embedB) Foo() string {
+	return "embedB.Foo()"
 }
 
-func (a *embedA) Bar() uint64 {
-	return 13
+func (a *embedA) Bar() string {
+	return "*embedA.Bar()"
 }
 
-func (a *embedB) Car() uint64 {
-	return 14
+func (a *embedB) Car() string {
+	return "*embedB.Car()"
 }
 
 func returnEmbedVal() embedB {
@@ -40,28 +40,28 @@ func returnEmbedValWithPointer() embedD {
 	return embedD{}
 }
 
-func useEmbeddedField(d embedD) uint64 {
+func useEmbeddedField(d embedD) string {
 	x := d.a
 	x = d.embedB.a
-	d.a = 10
+	d.a = "a1"
 
 	y := &embedD{}
-	y.a = 11
+	y.a = "a2"
 
 	return x
 }
 
-func useEmbeddedValField() uint64 {
+func useEmbeddedValField() string {
 	x := returnEmbedVal().a
 	x = returnEmbedValWithPointer().a
 	return x
 }
 
 func useEmbeddedMethod(d embedD) bool {
-	return d.Foo() == d.embedA.Foo()
+	return d.Bar() == d.embedA.Bar()
 }
 
 func useEmbeddedMethod2(d embedD) bool {
 	d.Car()
-	return d.Bar() == d.embedB.Bar()
+	return d.Foo() == d.embedB.Foo()
 }
