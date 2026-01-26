@@ -59,10 +59,18 @@ Proof.
 {{- end }}
 
 {{- range $f := $t.Fields }}
-#[global] Instance {{$t.Name}}_access_{{$f}} {{ template "TypedPointstoParams" $t.TypeParams }}l (v : {{ template "GallinaType" $t}}) dq :
-  PointsToAccess
-    (l.[{{template "GallinaType" $t}}, "{{$f}}"]) (v.({{$t.PkgName}}.{{$t.Name}}.{{$f}}')) dq
-    (l ↦{dq} v) (λ {{$f}}', l ↦{dq} (v <|({{$t.PkgName}}.{{$t.Name}}.{{$f}}') := {{$f}}'|>))%I.
+#[global] Instance {{$t.Name}}_access_load_{{$f}} {{ template "TypedPointstoParams" $t.TypeParams }}l (v : {{ template "GallinaType" $t}}) dq :
+  AccessStrict
+    (l.[{{template "GallinaType" $t}}, "{{$f}}"] ↦{dq} (v.({{$t.PkgName}}.{{$t.Name}}.{{$f}}')))
+    (l.[{{template "GallinaType" $t}}, "{{$f}}"] ↦{dq} (v.({{$t.PkgName}}.{{$t.Name}}.{{$f}}')))
+    (l ↦{dq} v) (l ↦{dq} v)%I.
+Proof. solve_pointsto_access_struct. Qed.
+
+#[global] Instance {{$t.Name}}_access_store_{{$f}} {{ template "TypedPointstoParams" $t.TypeParams }}l (v : {{ template "GallinaType" $t}}) {{$f}}' :
+  AccessStrict
+    (l.[{{template "GallinaType" $t}}, "{{$f}}"] ↦ (v.({{$t.PkgName}}.{{$t.Name}}.{{$f}}')))
+    (l.[{{template "GallinaType" $t}}, "{{$f}}"] ↦ {{$f}}')
+    (l ↦ v) (l ↦ (v <|({{$t.PkgName}}.{{$t.Name}}.{{$f}}') := {{$f}}'|>))%I.
 Proof. solve_pointsto_access_struct. Qed.
 {{-  end }}
 
