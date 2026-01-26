@@ -301,7 +301,7 @@ func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 				}
 				field := structType.Field(index[0])
 				impl = `(λ: "$r", MethodResolve ` + ctx.glangType(field, field.Type()).Coq(true) + ` "` +
-					methodName + `" #() (StructFieldGet ` + ty + ` "` + field.Name() + `" "$r" ))%V`
+					methodName + `" (StructFieldGet ` + ty + ` "` + field.Name() + `" "$r" ))%V`
 			}
 			fmt.Fprintln(w, "  #[global] "+typeName+"_"+methodName+"_unfold"+typeParams+
 				" :: MethodUnfold "+ty+` "`+methodName+`" `+impl+";")
@@ -324,7 +324,7 @@ func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 					impl = "(" + glang.TypeMethod(typeName, methodName) + typeParams + ")"
 				} else {
 					impl = `(λ: "$r", MethodResolve ` + ty + ` "` +
-						methodName + `" #() (![` + ty + `] "$r"))`
+						methodName + `" (![` + ty + `] "$r"))`
 				}
 			} else {
 				structType, ok := t.Underlying().(*types.Struct)
@@ -349,7 +349,7 @@ func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 					fieldType = field.Type()
 				}
 				impl = `(λ: "$r", MethodResolve ` + ctx.glangType(field, fieldType).Coq(true) + ` "` +
-					methodName + `" #() ` + fieldExpr.Coq(true) + ")"
+					methodName + `" ` + fieldExpr.Coq(true) + ")"
 			}
 			fmt.Fprintln(w, "  #[global] "+typeName+"'ptr_"+methodName+"_unfold"+typeParams+
 				" :: MethodUnfold "+ptrTy+` "`+methodName+`" `+impl+";")
