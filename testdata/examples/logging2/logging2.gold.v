@@ -421,18 +421,18 @@ Class Log_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} 
   #[global] Log_readLogTxnNxt_unfold :: MethodUnfold (Log) "readLogTxnNxt" (Log__readLogTxnNxtⁱᵐᵖˡ);
   #[global] Log_writeBlocks_unfold :: MethodUnfold (Log) "writeBlocks" (Log__writeBlocksⁱᵐᵖˡ);
   #[global] Log_writeHdr_unfold :: MethodUnfold (Log) "writeHdr" (Log__writeHdrⁱᵐᵖˡ);
-  #[global] Log'ptr_Append_unfold :: MethodUnfold (go.PointerType (Log)) "Append" (λ: "$r", MethodResolve (Log) "Append" #() (![(Log)] "$r"));
-  #[global] Log'ptr_Logger_unfold :: MethodUnfold (go.PointerType (Log)) "Logger" (λ: "$r", MethodResolve (Log) "Logger" #() (![(Log)] "$r"));
-  #[global] Log'ptr_Read_unfold :: MethodUnfold (go.PointerType (Log)) "Read" (λ: "$r", MethodResolve (Log) "Read" #() (![(Log)] "$r"));
-  #[global] Log'ptr_diskAppend_unfold :: MethodUnfold (go.PointerType (Log)) "diskAppend" (λ: "$r", MethodResolve (Log) "diskAppend" #() (![(Log)] "$r"));
-  #[global] Log'ptr_diskAppendWait_unfold :: MethodUnfold (go.PointerType (Log)) "diskAppendWait" (λ: "$r", MethodResolve (Log) "diskAppendWait" #() (![(Log)] "$r"));
-  #[global] Log'ptr_memAppend_unfold :: MethodUnfold (go.PointerType (Log)) "memAppend" (λ: "$r", MethodResolve (Log) "memAppend" #() (![(Log)] "$r"));
-  #[global] Log'ptr_memWrite_unfold :: MethodUnfold (go.PointerType (Log)) "memWrite" (λ: "$r", MethodResolve (Log) "memWrite" #() (![(Log)] "$r"));
-  #[global] Log'ptr_readBlocks_unfold :: MethodUnfold (go.PointerType (Log)) "readBlocks" (λ: "$r", MethodResolve (Log) "readBlocks" #() (![(Log)] "$r"));
-  #[global] Log'ptr_readHdr_unfold :: MethodUnfold (go.PointerType (Log)) "readHdr" (λ: "$r", MethodResolve (Log) "readHdr" #() (![(Log)] "$r"));
-  #[global] Log'ptr_readLogTxnNxt_unfold :: MethodUnfold (go.PointerType (Log)) "readLogTxnNxt" (λ: "$r", MethodResolve (Log) "readLogTxnNxt" #() (![(Log)] "$r"));
-  #[global] Log'ptr_writeBlocks_unfold :: MethodUnfold (go.PointerType (Log)) "writeBlocks" (λ: "$r", MethodResolve (Log) "writeBlocks" #() (![(Log)] "$r"));
-  #[global] Log'ptr_writeHdr_unfold :: MethodUnfold (go.PointerType (Log)) "writeHdr" (λ: "$r", MethodResolve (Log) "writeHdr" #() (![(Log)] "$r"));
+  #[global] Log'ptr_Append_unfold :: MethodUnfold (go.PointerType (Log)) "Append" (λ: "$r", MethodResolve (Log) "Append" (![(Log)] "$r"));
+  #[global] Log'ptr_Logger_unfold :: MethodUnfold (go.PointerType (Log)) "Logger" (λ: "$r", MethodResolve (Log) "Logger" (![(Log)] "$r"));
+  #[global] Log'ptr_Read_unfold :: MethodUnfold (go.PointerType (Log)) "Read" (λ: "$r", MethodResolve (Log) "Read" (![(Log)] "$r"));
+  #[global] Log'ptr_diskAppend_unfold :: MethodUnfold (go.PointerType (Log)) "diskAppend" (λ: "$r", MethodResolve (Log) "diskAppend" (![(Log)] "$r"));
+  #[global] Log'ptr_diskAppendWait_unfold :: MethodUnfold (go.PointerType (Log)) "diskAppendWait" (λ: "$r", MethodResolve (Log) "diskAppendWait" (![(Log)] "$r"));
+  #[global] Log'ptr_memAppend_unfold :: MethodUnfold (go.PointerType (Log)) "memAppend" (λ: "$r", MethodResolve (Log) "memAppend" (![(Log)] "$r"));
+  #[global] Log'ptr_memWrite_unfold :: MethodUnfold (go.PointerType (Log)) "memWrite" (λ: "$r", MethodResolve (Log) "memWrite" (![(Log)] "$r"));
+  #[global] Log'ptr_readBlocks_unfold :: MethodUnfold (go.PointerType (Log)) "readBlocks" (λ: "$r", MethodResolve (Log) "readBlocks" (![(Log)] "$r"));
+  #[global] Log'ptr_readHdr_unfold :: MethodUnfold (go.PointerType (Log)) "readHdr" (λ: "$r", MethodResolve (Log) "readHdr" (![(Log)] "$r"));
+  #[global] Log'ptr_readLogTxnNxt_unfold :: MethodUnfold (go.PointerType (Log)) "readLogTxnNxt" (λ: "$r", MethodResolve (Log) "readLogTxnNxt" (![(Log)] "$r"));
+  #[global] Log'ptr_writeBlocks_unfold :: MethodUnfold (go.PointerType (Log)) "writeBlocks" (λ: "$r", MethodResolve (Log) "writeBlocks" (![(Log)] "$r"));
+  #[global] Log'ptr_writeHdr_unfold :: MethodUnfold (go.PointerType (Log)) "writeHdr" (λ: "$r", MethodResolve (Log) "writeHdr" (![(Log)] "$r"));
 }.
 
 Module Txn.
@@ -467,9 +467,9 @@ Class Txn_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} 
   #[global] Txn_Commit_unfold :: MethodUnfold (Txn) "Commit" (Txn__Commitⁱᵐᵖˡ);
   #[global] Txn_Read_unfold :: MethodUnfold (Txn) "Read" (Txn__Readⁱᵐᵖˡ);
   #[global] Txn_Write_unfold :: MethodUnfold (Txn) "Write" (Txn__Writeⁱᵐᵖˡ);
-  #[global] Txn'ptr_Commit_unfold :: MethodUnfold (go.PointerType (Txn)) "Commit" (λ: "$r", MethodResolve (Txn) "Commit" #() (![(Txn)] "$r"));
-  #[global] Txn'ptr_Read_unfold :: MethodUnfold (go.PointerType (Txn)) "Read" (λ: "$r", MethodResolve (Txn) "Read" #() (![(Txn)] "$r"));
-  #[global] Txn'ptr_Write_unfold :: MethodUnfold (go.PointerType (Txn)) "Write" (λ: "$r", MethodResolve (Txn) "Write" #() (![(Txn)] "$r"));
+  #[global] Txn'ptr_Commit_unfold :: MethodUnfold (go.PointerType (Txn)) "Commit" (λ: "$r", MethodResolve (Txn) "Commit" (![(Txn)] "$r"));
+  #[global] Txn'ptr_Read_unfold :: MethodUnfold (go.PointerType (Txn)) "Read" (λ: "$r", MethodResolve (Txn) "Read" (![(Txn)] "$r"));
+  #[global] Txn'ptr_Write_unfold :: MethodUnfold (go.PointerType (Txn)) "Write" (λ: "$r", MethodResolve (Txn) "Write" (![(Txn)] "$r"));
 }.
 
 Class Assumptions `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=

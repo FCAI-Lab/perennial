@@ -400,14 +400,14 @@ Class Log_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} 
   #[global] Log_Write_unfold :: MethodUnfold (Log) "Write" (Log__Writeⁱᵐᵖˡ);
   #[global] Log_lock_unfold :: MethodUnfold (Log) "lock" (Log__lockⁱᵐᵖˡ);
   #[global] Log_unlock_unfold :: MethodUnfold (Log) "unlock" (Log__unlockⁱᵐᵖˡ);
-  #[global] Log'ptr_Apply_unfold :: MethodUnfold (go.PointerType (Log)) "Apply" (λ: "$r", MethodResolve (Log) "Apply" #() (![(Log)] "$r"));
-  #[global] Log'ptr_BeginTxn_unfold :: MethodUnfold (go.PointerType (Log)) "BeginTxn" (λ: "$r", MethodResolve (Log) "BeginTxn" #() (![(Log)] "$r"));
-  #[global] Log'ptr_Commit_unfold :: MethodUnfold (go.PointerType (Log)) "Commit" (λ: "$r", MethodResolve (Log) "Commit" #() (![(Log)] "$r"));
-  #[global] Log'ptr_Read_unfold :: MethodUnfold (go.PointerType (Log)) "Read" (λ: "$r", MethodResolve (Log) "Read" #() (![(Log)] "$r"));
-  #[global] Log'ptr_Size_unfold :: MethodUnfold (go.PointerType (Log)) "Size" (λ: "$r", MethodResolve (Log) "Size" #() (![(Log)] "$r"));
-  #[global] Log'ptr_Write_unfold :: MethodUnfold (go.PointerType (Log)) "Write" (λ: "$r", MethodResolve (Log) "Write" #() (![(Log)] "$r"));
-  #[global] Log'ptr_lock_unfold :: MethodUnfold (go.PointerType (Log)) "lock" (λ: "$r", MethodResolve (Log) "lock" #() (![(Log)] "$r"));
-  #[global] Log'ptr_unlock_unfold :: MethodUnfold (go.PointerType (Log)) "unlock" (λ: "$r", MethodResolve (Log) "unlock" #() (![(Log)] "$r"));
+  #[global] Log'ptr_Apply_unfold :: MethodUnfold (go.PointerType (Log)) "Apply" (λ: "$r", MethodResolve (Log) "Apply" (![(Log)] "$r"));
+  #[global] Log'ptr_BeginTxn_unfold :: MethodUnfold (go.PointerType (Log)) "BeginTxn" (λ: "$r", MethodResolve (Log) "BeginTxn" (![(Log)] "$r"));
+  #[global] Log'ptr_Commit_unfold :: MethodUnfold (go.PointerType (Log)) "Commit" (λ: "$r", MethodResolve (Log) "Commit" (![(Log)] "$r"));
+  #[global] Log'ptr_Read_unfold :: MethodUnfold (go.PointerType (Log)) "Read" (λ: "$r", MethodResolve (Log) "Read" (![(Log)] "$r"));
+  #[global] Log'ptr_Size_unfold :: MethodUnfold (go.PointerType (Log)) "Size" (λ: "$r", MethodResolve (Log) "Size" (![(Log)] "$r"));
+  #[global] Log'ptr_Write_unfold :: MethodUnfold (go.PointerType (Log)) "Write" (λ: "$r", MethodResolve (Log) "Write" (![(Log)] "$r"));
+  #[global] Log'ptr_lock_unfold :: MethodUnfold (go.PointerType (Log)) "lock" (λ: "$r", MethodResolve (Log) "lock" (![(Log)] "$r"));
+  #[global] Log'ptr_unlock_unfold :: MethodUnfold (go.PointerType (Log)) "unlock" (λ: "$r", MethodResolve (Log) "unlock" (![(Log)] "$r"));
 }.
 
 Class Assumptions `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
