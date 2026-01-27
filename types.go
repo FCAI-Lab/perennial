@@ -44,6 +44,11 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) {
 				DeclName: typeName,
 				Type:     glang.VerbatimExpr("go.type"),
 			})
+		} else if _, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
+			ctx.out.typeAliasDecls = append(ctx.out.typeAliasDecls, glang.AxiomDecl{
+				DeclName: typeName + "ⁱᵐᵖˡ",
+				Type:     glang.VerbatimExpr("go.type"),
+			})
 		}
 		return
 	case declfilter.Translate:
