@@ -234,7 +234,7 @@ func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 	}
 	fmt.Fprintf(w, " :: go.TypeRepr ")
 	if t.TypeParams() != nil {
-		fmt.Fprintf(w, "(%s", typeName)
+		fmt.Fprintf(w, "(%sⁱᵐᵖˡ", typeName)
 		for i := range t.TypeParams().Len() {
 			fmt.Fprintf(w, " %s", t.TypeParams().At(i).Obj().Name())
 		}
@@ -245,7 +245,7 @@ func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 		}
 		fmt.Fprintf(w, ");\n")
 	} else {
-		fmt.Fprintf(w, "%s %s.t;\n", typeName, typeName)
+		fmt.Fprintf(w, "%sⁱᵐᵖˡ %s.t;\n", typeName, typeName)
 	}
 
 	// underlying instance
@@ -269,12 +269,12 @@ func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 
 				fmt.Fprintf(w, "  #[global] %s_get_%s", typeName, fieldName)
 				fmt.Fprintf(w, "%[3]s%[2]s (x : %[1]s.t%[2]s) :: "+
-					"go.IsGoStepPureDet (StructFieldGet (%[1]s%[3]s) \"%[4]s\") #x #x.(%[1]s.%[5]s);\n",
+					"⟦StructFieldGet (%[1]sⁱᵐᵖˡ%[3]s) \"%[4]s\", #x⟧ ⤳[under] #x.(%[1]s.%[5]s);\n",
 					typeName, rocqTypeParams, typeParams, fieldName, projName)
 
 				fmt.Fprintf(w, "  #[global] %s_set_%s", typeName, fieldName)
 				fmt.Fprintf(w, "%[3]s%[2]s (x : %[1]s.t%[2]s) y :: "+
-					"go.IsGoStepPureDet (StructFieldSet (%[1]s%[3]s) \"%[4]s\") (#x, #y) #(x <|%[1]s.%[5]s := y|>);\n",
+					"⟦StructFieldSet (%[1]sⁱᵐᵖˡ%[3]s) \"%[4]s\", (#x, #y)⟧ ⤳[under] #(x <|%[1]s.%[5]s := y|>);\n",
 					typeName, rocqTypeParams, typeParams, fieldName, projName)
 			}
 		}

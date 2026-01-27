@@ -6,6 +6,10 @@
 ({{.PkgName}}.{{.Name}} {{- range $param := .TypeParams }} {{$param}}{{ end -}})
 {{- end -}}
 
+{{ define "GoTypeImpl" -}}
+({{.PkgName}}.{{.Name}}ⁱᵐᵖˡ {{- range $param := .TypeParams }} {{$param}}{{ end -}})
+{{- end -}}
+
 {{ define "TypedPointstoParams" -}}
 {{- range $param := . -}}`{!TypedPointsto (Σ:=Σ) {{$param}}'} {{ end -}}
 {{- end -}}
@@ -52,7 +56,7 @@ Final Obligation. solve_typed_pointsto_agree. Qed.
 
 #[global] Instance {{$t.Name}}_into_val_typed
   {{ template "IntoValParams" $t.TypeParams }} :
-  IntoValTyped {{template "GallinaType" $t}} {{ template "GoType" $t}}.
+  IntoValTypedUnderlying {{template "GallinaType" $t}} {{ template "GoTypeImpl" $t}}.
 Proof.
 {{- if $t.Axiomatize }} Admitted.
 {{- else }} solve_into_val_typed_struct. Qed.
