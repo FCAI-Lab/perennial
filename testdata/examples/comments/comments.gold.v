@@ -39,16 +39,21 @@ End def.
 
 End Foo.
 
-Definition Fooⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType [
+Definition Foo'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
   (go.FieldDecl "a"%go go.bool)
 ].
+Program Definition Foo'fds {ext : ffi_syntax} {go_gctx : GoGlobalContext} := sealed (Foo'fds_unsealed).
+Global Instance equals_unfold_Foo {ext : ffi_syntax} {go_gctx : GoGlobalContext} : Foo'fds =→ Foo'fds_unsealed.
+Proof. rewrite /Foo'fds seal_eq //. Qed.
+
+Definition Fooⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType (Foo'fds).
 
 Class Foo_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
-  #[global] Foo_type_repr  :: go.TypeRepr Foo Foo.t;
+  #[global] Foo_type_repr  :: go.TypeReprUnderlying Fooⁱᵐᵖˡ Foo.t;
   #[global] Foo_underlying :: (Foo) <u (Fooⁱᵐᵖˡ);
-  #[global] Foo_get_a (x : Foo.t) :: go.IsGoStepPureDet (StructFieldGet (Foo) "a") #x #x.(Foo.a');
-  #[global] Foo_set_a (x : Foo.t) y :: go.IsGoStepPureDet (StructFieldSet (Foo) "a") (#x, #y) #(x <|Foo.a' := y|>);
+  #[global] Foo_get_a (x : Foo.t) :: ⟦StructFieldGet (Fooⁱᵐᵖˡ) "a", #x⟧ ⤳[under] #x.(Foo.a');
+  #[global] Foo_set_a (x : Foo.t) y :: ⟦StructFieldSet (Fooⁱᵐᵖˡ) "a", (#x, #y)⟧ ⤳[under] #(x <|Foo.a' := y|>);
 }.
 
 Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=

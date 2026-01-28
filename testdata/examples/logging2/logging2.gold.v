@@ -381,7 +381,7 @@ End def.
 
 End Log.
 
-Definition Logⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType [
+Definition Log'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
   (go.FieldDecl "logLock"%go (go.PointerType sync.Mutex));
   (go.FieldDecl "memLock"%go (go.PointerType sync.Mutex));
   (go.FieldDecl "logSz"%go go.uint64);
@@ -390,25 +390,30 @@ Definition Logⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.ty
   (go.FieldDecl "memTxnNxt"%go (go.PointerType go.uint64));
   (go.FieldDecl "logTxnNxt"%go (go.PointerType go.uint64))
 ].
+Program Definition Log'fds {ext : ffi_syntax} {go_gctx : GoGlobalContext} := sealed (Log'fds_unsealed).
+Global Instance equals_unfold_Log {ext : ffi_syntax} {go_gctx : GoGlobalContext} : Log'fds =→ Log'fds_unsealed.
+Proof. rewrite /Log'fds seal_eq //. Qed.
+
+Definition Logⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType (Log'fds).
 
 Class Log_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
-  #[global] Log_type_repr  :: go.TypeRepr Log Log.t;
+  #[global] Log_type_repr  :: go.TypeReprUnderlying Logⁱᵐᵖˡ Log.t;
   #[global] Log_underlying :: (Log) <u (Logⁱᵐᵖˡ);
-  #[global] Log_get_logLock (x : Log.t) :: go.IsGoStepPureDet (StructFieldGet (Log) "logLock") #x #x.(Log.logLock');
-  #[global] Log_set_logLock (x : Log.t) y :: go.IsGoStepPureDet (StructFieldSet (Log) "logLock") (#x, #y) #(x <|Log.logLock' := y|>);
-  #[global] Log_get_memLock (x : Log.t) :: go.IsGoStepPureDet (StructFieldGet (Log) "memLock") #x #x.(Log.memLock');
-  #[global] Log_set_memLock (x : Log.t) y :: go.IsGoStepPureDet (StructFieldSet (Log) "memLock") (#x, #y) #(x <|Log.memLock' := y|>);
-  #[global] Log_get_logSz (x : Log.t) :: go.IsGoStepPureDet (StructFieldGet (Log) "logSz") #x #x.(Log.logSz');
-  #[global] Log_set_logSz (x : Log.t) y :: go.IsGoStepPureDet (StructFieldSet (Log) "logSz") (#x, #y) #(x <|Log.logSz' := y|>);
-  #[global] Log_get_memLog (x : Log.t) :: go.IsGoStepPureDet (StructFieldGet (Log) "memLog") #x #x.(Log.memLog');
-  #[global] Log_set_memLog (x : Log.t) y :: go.IsGoStepPureDet (StructFieldSet (Log) "memLog") (#x, #y) #(x <|Log.memLog' := y|>);
-  #[global] Log_get_memLen (x : Log.t) :: go.IsGoStepPureDet (StructFieldGet (Log) "memLen") #x #x.(Log.memLen');
-  #[global] Log_set_memLen (x : Log.t) y :: go.IsGoStepPureDet (StructFieldSet (Log) "memLen") (#x, #y) #(x <|Log.memLen' := y|>);
-  #[global] Log_get_memTxnNxt (x : Log.t) :: go.IsGoStepPureDet (StructFieldGet (Log) "memTxnNxt") #x #x.(Log.memTxnNxt');
-  #[global] Log_set_memTxnNxt (x : Log.t) y :: go.IsGoStepPureDet (StructFieldSet (Log) "memTxnNxt") (#x, #y) #(x <|Log.memTxnNxt' := y|>);
-  #[global] Log_get_logTxnNxt (x : Log.t) :: go.IsGoStepPureDet (StructFieldGet (Log) "logTxnNxt") #x #x.(Log.logTxnNxt');
-  #[global] Log_set_logTxnNxt (x : Log.t) y :: go.IsGoStepPureDet (StructFieldSet (Log) "logTxnNxt") (#x, #y) #(x <|Log.logTxnNxt' := y|>);
+  #[global] Log_get_logLock (x : Log.t) :: ⟦StructFieldGet (Logⁱᵐᵖˡ) "logLock", #x⟧ ⤳[under] #x.(Log.logLock');
+  #[global] Log_set_logLock (x : Log.t) y :: ⟦StructFieldSet (Logⁱᵐᵖˡ) "logLock", (#x, #y)⟧ ⤳[under] #(x <|Log.logLock' := y|>);
+  #[global] Log_get_memLock (x : Log.t) :: ⟦StructFieldGet (Logⁱᵐᵖˡ) "memLock", #x⟧ ⤳[under] #x.(Log.memLock');
+  #[global] Log_set_memLock (x : Log.t) y :: ⟦StructFieldSet (Logⁱᵐᵖˡ) "memLock", (#x, #y)⟧ ⤳[under] #(x <|Log.memLock' := y|>);
+  #[global] Log_get_logSz (x : Log.t) :: ⟦StructFieldGet (Logⁱᵐᵖˡ) "logSz", #x⟧ ⤳[under] #x.(Log.logSz');
+  #[global] Log_set_logSz (x : Log.t) y :: ⟦StructFieldSet (Logⁱᵐᵖˡ) "logSz", (#x, #y)⟧ ⤳[under] #(x <|Log.logSz' := y|>);
+  #[global] Log_get_memLog (x : Log.t) :: ⟦StructFieldGet (Logⁱᵐᵖˡ) "memLog", #x⟧ ⤳[under] #x.(Log.memLog');
+  #[global] Log_set_memLog (x : Log.t) y :: ⟦StructFieldSet (Logⁱᵐᵖˡ) "memLog", (#x, #y)⟧ ⤳[under] #(x <|Log.memLog' := y|>);
+  #[global] Log_get_memLen (x : Log.t) :: ⟦StructFieldGet (Logⁱᵐᵖˡ) "memLen", #x⟧ ⤳[under] #x.(Log.memLen');
+  #[global] Log_set_memLen (x : Log.t) y :: ⟦StructFieldSet (Logⁱᵐᵖˡ) "memLen", (#x, #y)⟧ ⤳[under] #(x <|Log.memLen' := y|>);
+  #[global] Log_get_memTxnNxt (x : Log.t) :: ⟦StructFieldGet (Logⁱᵐᵖˡ) "memTxnNxt", #x⟧ ⤳[under] #x.(Log.memTxnNxt');
+  #[global] Log_set_memTxnNxt (x : Log.t) y :: ⟦StructFieldSet (Logⁱᵐᵖˡ) "memTxnNxt", (#x, #y)⟧ ⤳[under] #(x <|Log.memTxnNxt' := y|>);
+  #[global] Log_get_logTxnNxt (x : Log.t) :: ⟦StructFieldGet (Logⁱᵐᵖˡ) "logTxnNxt", #x⟧ ⤳[under] #x.(Log.logTxnNxt');
+  #[global] Log_set_logTxnNxt (x : Log.t) y :: ⟦StructFieldSet (Logⁱᵐᵖˡ) "logTxnNxt", (#x, #y)⟧ ⤳[under] #(x <|Log.logTxnNxt' := y|>);
   #[global] Log_Append_unfold :: MethodUnfold (Log) "Append" (Log__Appendⁱᵐᵖˡ);
   #[global] Log_Logger_unfold :: MethodUnfold (Log) "Logger" (Log__Loggerⁱᵐᵖˡ);
   #[global] Log_Read_unfold :: MethodUnfold (Log) "Read" (Log__Readⁱᵐᵖˡ);
@@ -451,19 +456,24 @@ End def.
 
 End Txn.
 
-Definition Txnⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType [
+Definition Txn'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
   (go.FieldDecl "log"%go (go.PointerType Log));
   (go.FieldDecl "blks"%go (go.MapType go.uint64 disk.Block))
 ].
+Program Definition Txn'fds {ext : ffi_syntax} {go_gctx : GoGlobalContext} := sealed (Txn'fds_unsealed).
+Global Instance equals_unfold_Txn {ext : ffi_syntax} {go_gctx : GoGlobalContext} : Txn'fds =→ Txn'fds_unsealed.
+Proof. rewrite /Txn'fds seal_eq //. Qed.
+
+Definition Txnⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType (Txn'fds).
 
 Class Txn_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
-  #[global] Txn_type_repr  :: go.TypeRepr Txn Txn.t;
+  #[global] Txn_type_repr  :: go.TypeReprUnderlying Txnⁱᵐᵖˡ Txn.t;
   #[global] Txn_underlying :: (Txn) <u (Txnⁱᵐᵖˡ);
-  #[global] Txn_get_log (x : Txn.t) :: go.IsGoStepPureDet (StructFieldGet (Txn) "log") #x #x.(Txn.log');
-  #[global] Txn_set_log (x : Txn.t) y :: go.IsGoStepPureDet (StructFieldSet (Txn) "log") (#x, #y) #(x <|Txn.log' := y|>);
-  #[global] Txn_get_blks (x : Txn.t) :: go.IsGoStepPureDet (StructFieldGet (Txn) "blks") #x #x.(Txn.blks');
-  #[global] Txn_set_blks (x : Txn.t) y :: go.IsGoStepPureDet (StructFieldSet (Txn) "blks") (#x, #y) #(x <|Txn.blks' := y|>);
+  #[global] Txn_get_log (x : Txn.t) :: ⟦StructFieldGet (Txnⁱᵐᵖˡ) "log", #x⟧ ⤳[under] #x.(Txn.log');
+  #[global] Txn_set_log (x : Txn.t) y :: ⟦StructFieldSet (Txnⁱᵐᵖˡ) "log", (#x, #y)⟧ ⤳[under] #(x <|Txn.log' := y|>);
+  #[global] Txn_get_blks (x : Txn.t) :: ⟦StructFieldGet (Txnⁱᵐᵖˡ) "blks", #x⟧ ⤳[under] #x.(Txn.blks');
+  #[global] Txn_set_blks (x : Txn.t) y :: ⟦StructFieldSet (Txnⁱᵐᵖˡ) "blks", (#x, #y)⟧ ⤳[under] #(x <|Txn.blks' := y|>);
   #[global] Txn_Commit_unfold :: MethodUnfold (Txn) "Commit" (Txn__Commitⁱᵐᵖˡ);
   #[global] Txn_Read_unfold :: MethodUnfold (Txn) "Read" (Txn__Readⁱᵐᵖˡ);
   #[global] Txn_Write_unfold :: MethodUnfold (Txn) "Write" (Txn__Writeⁱᵐᵖˡ);

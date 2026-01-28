@@ -373,25 +373,30 @@ End def.
 
 End Log.
 
-Definition Logⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType [
+Definition Log'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
   (go.FieldDecl "d"%go disk.Disk);
   (go.FieldDecl "l"%go (go.PointerType sync.Mutex));
   (go.FieldDecl "cache"%go (go.MapType go.uint64 disk.Block));
   (go.FieldDecl "length"%go (go.PointerType go.uint64))
 ].
+Program Definition Log'fds {ext : ffi_syntax} {go_gctx : GoGlobalContext} := sealed (Log'fds_unsealed).
+Global Instance equals_unfold_Log {ext : ffi_syntax} {go_gctx : GoGlobalContext} : Log'fds =→ Log'fds_unsealed.
+Proof. rewrite /Log'fds seal_eq //. Qed.
+
+Definition Logⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType (Log'fds).
 
 Class Log_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
-  #[global] Log_type_repr  :: go.TypeRepr Log Log.t;
+  #[global] Log_type_repr  :: go.TypeReprUnderlying Logⁱᵐᵖˡ Log.t;
   #[global] Log_underlying :: (Log) <u (Logⁱᵐᵖˡ);
-  #[global] Log_get_d (x : Log.t) :: go.IsGoStepPureDet (StructFieldGet (Log) "d") #x #x.(Log.d');
-  #[global] Log_set_d (x : Log.t) y :: go.IsGoStepPureDet (StructFieldSet (Log) "d") (#x, #y) #(x <|Log.d' := y|>);
-  #[global] Log_get_l (x : Log.t) :: go.IsGoStepPureDet (StructFieldGet (Log) "l") #x #x.(Log.l');
-  #[global] Log_set_l (x : Log.t) y :: go.IsGoStepPureDet (StructFieldSet (Log) "l") (#x, #y) #(x <|Log.l' := y|>);
-  #[global] Log_get_cache (x : Log.t) :: go.IsGoStepPureDet (StructFieldGet (Log) "cache") #x #x.(Log.cache');
-  #[global] Log_set_cache (x : Log.t) y :: go.IsGoStepPureDet (StructFieldSet (Log) "cache") (#x, #y) #(x <|Log.cache' := y|>);
-  #[global] Log_get_length (x : Log.t) :: go.IsGoStepPureDet (StructFieldGet (Log) "length") #x #x.(Log.length');
-  #[global] Log_set_length (x : Log.t) y :: go.IsGoStepPureDet (StructFieldSet (Log) "length") (#x, #y) #(x <|Log.length' := y|>);
+  #[global] Log_get_d (x : Log.t) :: ⟦StructFieldGet (Logⁱᵐᵖˡ) "d", #x⟧ ⤳[under] #x.(Log.d');
+  #[global] Log_set_d (x : Log.t) y :: ⟦StructFieldSet (Logⁱᵐᵖˡ) "d", (#x, #y)⟧ ⤳[under] #(x <|Log.d' := y|>);
+  #[global] Log_get_l (x : Log.t) :: ⟦StructFieldGet (Logⁱᵐᵖˡ) "l", #x⟧ ⤳[under] #x.(Log.l');
+  #[global] Log_set_l (x : Log.t) y :: ⟦StructFieldSet (Logⁱᵐᵖˡ) "l", (#x, #y)⟧ ⤳[under] #(x <|Log.l' := y|>);
+  #[global] Log_get_cache (x : Log.t) :: ⟦StructFieldGet (Logⁱᵐᵖˡ) "cache", #x⟧ ⤳[under] #x.(Log.cache');
+  #[global] Log_set_cache (x : Log.t) y :: ⟦StructFieldSet (Logⁱᵐᵖˡ) "cache", (#x, #y)⟧ ⤳[under] #(x <|Log.cache' := y|>);
+  #[global] Log_get_length (x : Log.t) :: ⟦StructFieldGet (Logⁱᵐᵖˡ) "length", #x⟧ ⤳[under] #x.(Log.length');
+  #[global] Log_set_length (x : Log.t) y :: ⟦StructFieldSet (Logⁱᵐᵖˡ) "length", (#x, #y)⟧ ⤳[under] #(x <|Log.length' := y|>);
   #[global] Log_Apply_unfold :: MethodUnfold (Log) "Apply" (Log__Applyⁱᵐᵖˡ);
   #[global] Log_BeginTxn_unfold :: MethodUnfold (Log) "BeginTxn" (Log__BeginTxnⁱᵐᵖˡ);
   #[global] Log_Commit_unfold :: MethodUnfold (Log) "Commit" (Log__Commitⁱᵐᵖˡ);

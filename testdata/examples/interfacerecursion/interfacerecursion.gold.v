@@ -55,7 +55,6 @@ Definition Aⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type
 
 Class A_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
-  #[global] A_type_repr  :: go.TypeRepr A A.t;
   #[global] A_underlying :: (A) <u (Aⁱᵐᵖˡ);
 }.
 
@@ -70,7 +69,6 @@ Definition Bⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type
 
 Class B_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
-  #[global] B_type_repr  :: go.TypeRepr B B.t;
   #[global] B_underlying :: (B) <u (Bⁱᵐᵖˡ);
 }.
 
@@ -88,12 +86,18 @@ End def.
 
 End c.
 
-Definition cⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType [
+Definition c'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
+
 ].
+Program Definition c'fds {ext : ffi_syntax} {go_gctx : GoGlobalContext} := sealed (c'fds_unsealed).
+Global Instance equals_unfold_c {ext : ffi_syntax} {go_gctx : GoGlobalContext} : c'fds =→ c'fds_unsealed.
+Proof. rewrite /c'fds seal_eq //. Qed.
+
+Definition cⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType (c'fds).
 
 Class c_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
-  #[global] c_type_repr  :: go.TypeRepr c c.t;
+  #[global] c_type_repr  :: go.TypeReprUnderlying cⁱᵐᵖˡ c.t;
   #[global] c_underlying :: (c) <u (cⁱᵐᵖˡ);
   #[global] c'ptr_Bar_unfold :: MethodUnfold (go.PointerType (c)) "Bar" (c__Barⁱᵐᵖˡ);
   #[global] c'ptr_Foo_unfold :: MethodUnfold (go.PointerType (c)) "Foo" (c__Fooⁱᵐᵖˡ);

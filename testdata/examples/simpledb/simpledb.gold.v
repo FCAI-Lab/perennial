@@ -997,19 +997,24 @@ End def.
 
 End Table.
 
-Definition Tableⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType [
+Definition Table'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
   (go.FieldDecl "Index"%go (go.MapType go.uint64 go.uint64));
   (go.FieldDecl "File"%go filesys.File)
 ].
+Program Definition Table'fds {ext : ffi_syntax} {go_gctx : GoGlobalContext} := sealed (Table'fds_unsealed).
+Global Instance equals_unfold_Table {ext : ffi_syntax} {go_gctx : GoGlobalContext} : Table'fds =→ Table'fds_unsealed.
+Proof. rewrite /Table'fds seal_eq //. Qed.
+
+Definition Tableⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType (Table'fds).
 
 Class Table_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
-  #[global] Table_type_repr  :: go.TypeRepr Table Table.t;
+  #[global] Table_type_repr  :: go.TypeReprUnderlying Tableⁱᵐᵖˡ Table.t;
   #[global] Table_underlying :: (Table) <u (Tableⁱᵐᵖˡ);
-  #[global] Table_get_Index (x : Table.t) :: go.IsGoStepPureDet (StructFieldGet (Table) "Index") #x #x.(Table.Index');
-  #[global] Table_set_Index (x : Table.t) y :: go.IsGoStepPureDet (StructFieldSet (Table) "Index") (#x, #y) #(x <|Table.Index' := y|>);
-  #[global] Table_get_File (x : Table.t) :: go.IsGoStepPureDet (StructFieldGet (Table) "File") #x #x.(Table.File');
-  #[global] Table_set_File (x : Table.t) y :: go.IsGoStepPureDet (StructFieldSet (Table) "File") (#x, #y) #(x <|Table.File' := y|>);
+  #[global] Table_get_Index (x : Table.t) :: ⟦StructFieldGet (Tableⁱᵐᵖˡ) "Index", #x⟧ ⤳[under] #x.(Table.Index');
+  #[global] Table_set_Index (x : Table.t) y :: ⟦StructFieldSet (Tableⁱᵐᵖˡ) "Index", (#x, #y)⟧ ⤳[under] #(x <|Table.Index' := y|>);
+  #[global] Table_get_File (x : Table.t) :: ⟦StructFieldGet (Tableⁱᵐᵖˡ) "File", #x⟧ ⤳[under] #x.(Table.File');
+  #[global] Table_set_File (x : Table.t) y :: ⟦StructFieldSet (Tableⁱᵐᵖˡ) "File", (#x, #y)⟧ ⤳[under] #(x <|Table.File' := y|>);
 }.
 
 Module Entry.
@@ -1028,19 +1033,24 @@ End def.
 
 End Entry.
 
-Definition Entryⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType [
+Definition Entry'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
   (go.FieldDecl "Key"%go go.uint64);
   (go.FieldDecl "Value"%go (go.SliceType go.byte))
 ].
+Program Definition Entry'fds {ext : ffi_syntax} {go_gctx : GoGlobalContext} := sealed (Entry'fds_unsealed).
+Global Instance equals_unfold_Entry {ext : ffi_syntax} {go_gctx : GoGlobalContext} : Entry'fds =→ Entry'fds_unsealed.
+Proof. rewrite /Entry'fds seal_eq //. Qed.
+
+Definition Entryⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType (Entry'fds).
 
 Class Entry_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
-  #[global] Entry_type_repr  :: go.TypeRepr Entry Entry.t;
+  #[global] Entry_type_repr  :: go.TypeReprUnderlying Entryⁱᵐᵖˡ Entry.t;
   #[global] Entry_underlying :: (Entry) <u (Entryⁱᵐᵖˡ);
-  #[global] Entry_get_Key (x : Entry.t) :: go.IsGoStepPureDet (StructFieldGet (Entry) "Key") #x #x.(Entry.Key');
-  #[global] Entry_set_Key (x : Entry.t) y :: go.IsGoStepPureDet (StructFieldSet (Entry) "Key") (#x, #y) #(x <|Entry.Key' := y|>);
-  #[global] Entry_get_Value (x : Entry.t) :: go.IsGoStepPureDet (StructFieldGet (Entry) "Value") #x #x.(Entry.Value');
-  #[global] Entry_set_Value (x : Entry.t) y :: go.IsGoStepPureDet (StructFieldSet (Entry) "Value") (#x, #y) #(x <|Entry.Value' := y|>);
+  #[global] Entry_get_Key (x : Entry.t) :: ⟦StructFieldGet (Entryⁱᵐᵖˡ) "Key", #x⟧ ⤳[under] #x.(Entry.Key');
+  #[global] Entry_set_Key (x : Entry.t) y :: ⟦StructFieldSet (Entryⁱᵐᵖˡ) "Key", (#x, #y)⟧ ⤳[under] #(x <|Entry.Key' := y|>);
+  #[global] Entry_get_Value (x : Entry.t) :: ⟦StructFieldGet (Entryⁱᵐᵖˡ) "Value", #x⟧ ⤳[under] #x.(Entry.Value');
+  #[global] Entry_set_Value (x : Entry.t) y :: ⟦StructFieldSet (Entryⁱᵐᵖˡ) "Value", (#x, #y)⟧ ⤳[under] #(x <|Entry.Value' := y|>);
 }.
 
 Module lazyFileBuf.
@@ -1059,19 +1069,24 @@ End def.
 
 End lazyFileBuf.
 
-Definition lazyFileBufⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType [
+Definition lazyFileBuf'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
   (go.FieldDecl "offset"%go go.uint64);
   (go.FieldDecl "next"%go (go.SliceType go.byte))
 ].
+Program Definition lazyFileBuf'fds {ext : ffi_syntax} {go_gctx : GoGlobalContext} := sealed (lazyFileBuf'fds_unsealed).
+Global Instance equals_unfold_lazyFileBuf {ext : ffi_syntax} {go_gctx : GoGlobalContext} : lazyFileBuf'fds =→ lazyFileBuf'fds_unsealed.
+Proof. rewrite /lazyFileBuf'fds seal_eq //. Qed.
+
+Definition lazyFileBufⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType (lazyFileBuf'fds).
 
 Class lazyFileBuf_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
-  #[global] lazyFileBuf_type_repr  :: go.TypeRepr lazyFileBuf lazyFileBuf.t;
+  #[global] lazyFileBuf_type_repr  :: go.TypeReprUnderlying lazyFileBufⁱᵐᵖˡ lazyFileBuf.t;
   #[global] lazyFileBuf_underlying :: (lazyFileBuf) <u (lazyFileBufⁱᵐᵖˡ);
-  #[global] lazyFileBuf_get_offset (x : lazyFileBuf.t) :: go.IsGoStepPureDet (StructFieldGet (lazyFileBuf) "offset") #x #x.(lazyFileBuf.offset');
-  #[global] lazyFileBuf_set_offset (x : lazyFileBuf.t) y :: go.IsGoStepPureDet (StructFieldSet (lazyFileBuf) "offset") (#x, #y) #(x <|lazyFileBuf.offset' := y|>);
-  #[global] lazyFileBuf_get_next (x : lazyFileBuf.t) :: go.IsGoStepPureDet (StructFieldGet (lazyFileBuf) "next") #x #x.(lazyFileBuf.next');
-  #[global] lazyFileBuf_set_next (x : lazyFileBuf.t) y :: go.IsGoStepPureDet (StructFieldSet (lazyFileBuf) "next") (#x, #y) #(x <|lazyFileBuf.next' := y|>);
+  #[global] lazyFileBuf_get_offset (x : lazyFileBuf.t) :: ⟦StructFieldGet (lazyFileBufⁱᵐᵖˡ) "offset", #x⟧ ⤳[under] #x.(lazyFileBuf.offset');
+  #[global] lazyFileBuf_set_offset (x : lazyFileBuf.t) y :: ⟦StructFieldSet (lazyFileBufⁱᵐᵖˡ) "offset", (#x, #y)⟧ ⤳[under] #(x <|lazyFileBuf.offset' := y|>);
+  #[global] lazyFileBuf_get_next (x : lazyFileBuf.t) :: ⟦StructFieldGet (lazyFileBufⁱᵐᵖˡ) "next", #x⟧ ⤳[under] #x.(lazyFileBuf.next');
+  #[global] lazyFileBuf_set_next (x : lazyFileBuf.t) y :: ⟦StructFieldSet (lazyFileBufⁱᵐᵖˡ) "next", (#x, #y)⟧ ⤳[under] #(x <|lazyFileBuf.next' := y|>);
 }.
 
 Module bufFile.
@@ -1090,19 +1105,24 @@ End def.
 
 End bufFile.
 
-Definition bufFileⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType [
+Definition bufFile'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
   (go.FieldDecl "file"%go filesys.File);
   (go.FieldDecl "buf"%go (go.PointerType (go.SliceType go.byte)))
 ].
+Program Definition bufFile'fds {ext : ffi_syntax} {go_gctx : GoGlobalContext} := sealed (bufFile'fds_unsealed).
+Global Instance equals_unfold_bufFile {ext : ffi_syntax} {go_gctx : GoGlobalContext} : bufFile'fds =→ bufFile'fds_unsealed.
+Proof. rewrite /bufFile'fds seal_eq //. Qed.
+
+Definition bufFileⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType (bufFile'fds).
 
 Class bufFile_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
-  #[global] bufFile_type_repr  :: go.TypeRepr bufFile bufFile.t;
+  #[global] bufFile_type_repr  :: go.TypeReprUnderlying bufFileⁱᵐᵖˡ bufFile.t;
   #[global] bufFile_underlying :: (bufFile) <u (bufFileⁱᵐᵖˡ);
-  #[global] bufFile_get_file (x : bufFile.t) :: go.IsGoStepPureDet (StructFieldGet (bufFile) "file") #x #x.(bufFile.file');
-  #[global] bufFile_set_file (x : bufFile.t) y :: go.IsGoStepPureDet (StructFieldSet (bufFile) "file") (#x, #y) #(x <|bufFile.file' := y|>);
-  #[global] bufFile_get_buf (x : bufFile.t) :: go.IsGoStepPureDet (StructFieldGet (bufFile) "buf") #x #x.(bufFile.buf');
-  #[global] bufFile_set_buf (x : bufFile.t) y :: go.IsGoStepPureDet (StructFieldSet (bufFile) "buf") (#x, #y) #(x <|bufFile.buf' := y|>);
+  #[global] bufFile_get_file (x : bufFile.t) :: ⟦StructFieldGet (bufFileⁱᵐᵖˡ) "file", #x⟧ ⤳[under] #x.(bufFile.file');
+  #[global] bufFile_set_file (x : bufFile.t) y :: ⟦StructFieldSet (bufFileⁱᵐᵖˡ) "file", (#x, #y)⟧ ⤳[under] #(x <|bufFile.file' := y|>);
+  #[global] bufFile_get_buf (x : bufFile.t) :: ⟦StructFieldGet (bufFileⁱᵐᵖˡ) "buf", #x⟧ ⤳[under] #x.(bufFile.buf');
+  #[global] bufFile_set_buf (x : bufFile.t) y :: ⟦StructFieldSet (bufFileⁱᵐᵖˡ) "buf", (#x, #y)⟧ ⤳[under] #(x <|bufFile.buf' := y|>);
 }.
 
 Module tableWriter.
@@ -1123,25 +1143,30 @@ End def.
 
 End tableWriter.
 
-Definition tableWriterⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType [
+Definition tableWriter'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
   (go.FieldDecl "index"%go (go.MapType go.uint64 go.uint64));
   (go.FieldDecl "name"%go go.string);
   (go.FieldDecl "file"%go bufFile);
   (go.FieldDecl "offset"%go (go.PointerType go.uint64))
 ].
+Program Definition tableWriter'fds {ext : ffi_syntax} {go_gctx : GoGlobalContext} := sealed (tableWriter'fds_unsealed).
+Global Instance equals_unfold_tableWriter {ext : ffi_syntax} {go_gctx : GoGlobalContext} : tableWriter'fds =→ tableWriter'fds_unsealed.
+Proof. rewrite /tableWriter'fds seal_eq //. Qed.
+
+Definition tableWriterⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType (tableWriter'fds).
 
 Class tableWriter_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
-  #[global] tableWriter_type_repr  :: go.TypeRepr tableWriter tableWriter.t;
+  #[global] tableWriter_type_repr  :: go.TypeReprUnderlying tableWriterⁱᵐᵖˡ tableWriter.t;
   #[global] tableWriter_underlying :: (tableWriter) <u (tableWriterⁱᵐᵖˡ);
-  #[global] tableWriter_get_index (x : tableWriter.t) :: go.IsGoStepPureDet (StructFieldGet (tableWriter) "index") #x #x.(tableWriter.index');
-  #[global] tableWriter_set_index (x : tableWriter.t) y :: go.IsGoStepPureDet (StructFieldSet (tableWriter) "index") (#x, #y) #(x <|tableWriter.index' := y|>);
-  #[global] tableWriter_get_name (x : tableWriter.t) :: go.IsGoStepPureDet (StructFieldGet (tableWriter) "name") #x #x.(tableWriter.name');
-  #[global] tableWriter_set_name (x : tableWriter.t) y :: go.IsGoStepPureDet (StructFieldSet (tableWriter) "name") (#x, #y) #(x <|tableWriter.name' := y|>);
-  #[global] tableWriter_get_file (x : tableWriter.t) :: go.IsGoStepPureDet (StructFieldGet (tableWriter) "file") #x #x.(tableWriter.file');
-  #[global] tableWriter_set_file (x : tableWriter.t) y :: go.IsGoStepPureDet (StructFieldSet (tableWriter) "file") (#x, #y) #(x <|tableWriter.file' := y|>);
-  #[global] tableWriter_get_offset (x : tableWriter.t) :: go.IsGoStepPureDet (StructFieldGet (tableWriter) "offset") #x #x.(tableWriter.offset');
-  #[global] tableWriter_set_offset (x : tableWriter.t) y :: go.IsGoStepPureDet (StructFieldSet (tableWriter) "offset") (#x, #y) #(x <|tableWriter.offset' := y|>);
+  #[global] tableWriter_get_index (x : tableWriter.t) :: ⟦StructFieldGet (tableWriterⁱᵐᵖˡ) "index", #x⟧ ⤳[under] #x.(tableWriter.index');
+  #[global] tableWriter_set_index (x : tableWriter.t) y :: ⟦StructFieldSet (tableWriterⁱᵐᵖˡ) "index", (#x, #y)⟧ ⤳[under] #(x <|tableWriter.index' := y|>);
+  #[global] tableWriter_get_name (x : tableWriter.t) :: ⟦StructFieldGet (tableWriterⁱᵐᵖˡ) "name", #x⟧ ⤳[under] #x.(tableWriter.name');
+  #[global] tableWriter_set_name (x : tableWriter.t) y :: ⟦StructFieldSet (tableWriterⁱᵐᵖˡ) "name", (#x, #y)⟧ ⤳[under] #(x <|tableWriter.name' := y|>);
+  #[global] tableWriter_get_file (x : tableWriter.t) :: ⟦StructFieldGet (tableWriterⁱᵐᵖˡ) "file", #x⟧ ⤳[under] #x.(tableWriter.file');
+  #[global] tableWriter_set_file (x : tableWriter.t) y :: ⟦StructFieldSet (tableWriterⁱᵐᵖˡ) "file", (#x, #y)⟧ ⤳[under] #(x <|tableWriter.file' := y|>);
+  #[global] tableWriter_get_offset (x : tableWriter.t) :: ⟦StructFieldGet (tableWriterⁱᵐᵖˡ) "offset", #x⟧ ⤳[under] #x.(tableWriter.offset');
+  #[global] tableWriter_set_offset (x : tableWriter.t) y :: ⟦StructFieldSet (tableWriterⁱᵐᵖˡ) "offset", (#x, #y)⟧ ⤳[under] #(x <|tableWriter.offset' := y|>);
 }.
 
 Module Database.
@@ -1165,7 +1190,7 @@ End def.
 
 End Database.
 
-Definition Databaseⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType [
+Definition Database'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
   (go.FieldDecl "wbuffer"%go (go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))));
   (go.FieldDecl "rbuffer"%go (go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))));
   (go.FieldDecl "bufferL"%go (go.PointerType sync.Mutex));
@@ -1174,25 +1199,30 @@ Definition Databaseⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : 
   (go.FieldDecl "tableL"%go (go.PointerType sync.Mutex));
   (go.FieldDecl "compactionL"%go (go.PointerType sync.Mutex))
 ].
+Program Definition Database'fds {ext : ffi_syntax} {go_gctx : GoGlobalContext} := sealed (Database'fds_unsealed).
+Global Instance equals_unfold_Database {ext : ffi_syntax} {go_gctx : GoGlobalContext} : Database'fds =→ Database'fds_unsealed.
+Proof. rewrite /Database'fds seal_eq //. Qed.
+
+Definition Databaseⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType (Database'fds).
 
 Class Database_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
-  #[global] Database_type_repr  :: go.TypeRepr Database Database.t;
+  #[global] Database_type_repr  :: go.TypeReprUnderlying Databaseⁱᵐᵖˡ Database.t;
   #[global] Database_underlying :: (Database) <u (Databaseⁱᵐᵖˡ);
-  #[global] Database_get_wbuffer (x : Database.t) :: go.IsGoStepPureDet (StructFieldGet (Database) "wbuffer") #x #x.(Database.wbuffer');
-  #[global] Database_set_wbuffer (x : Database.t) y :: go.IsGoStepPureDet (StructFieldSet (Database) "wbuffer") (#x, #y) #(x <|Database.wbuffer' := y|>);
-  #[global] Database_get_rbuffer (x : Database.t) :: go.IsGoStepPureDet (StructFieldGet (Database) "rbuffer") #x #x.(Database.rbuffer');
-  #[global] Database_set_rbuffer (x : Database.t) y :: go.IsGoStepPureDet (StructFieldSet (Database) "rbuffer") (#x, #y) #(x <|Database.rbuffer' := y|>);
-  #[global] Database_get_bufferL (x : Database.t) :: go.IsGoStepPureDet (StructFieldGet (Database) "bufferL") #x #x.(Database.bufferL');
-  #[global] Database_set_bufferL (x : Database.t) y :: go.IsGoStepPureDet (StructFieldSet (Database) "bufferL") (#x, #y) #(x <|Database.bufferL' := y|>);
-  #[global] Database_get_table (x : Database.t) :: go.IsGoStepPureDet (StructFieldGet (Database) "table") #x #x.(Database.table');
-  #[global] Database_set_table (x : Database.t) y :: go.IsGoStepPureDet (StructFieldSet (Database) "table") (#x, #y) #(x <|Database.table' := y|>);
-  #[global] Database_get_tableName (x : Database.t) :: go.IsGoStepPureDet (StructFieldGet (Database) "tableName") #x #x.(Database.tableName');
-  #[global] Database_set_tableName (x : Database.t) y :: go.IsGoStepPureDet (StructFieldSet (Database) "tableName") (#x, #y) #(x <|Database.tableName' := y|>);
-  #[global] Database_get_tableL (x : Database.t) :: go.IsGoStepPureDet (StructFieldGet (Database) "tableL") #x #x.(Database.tableL');
-  #[global] Database_set_tableL (x : Database.t) y :: go.IsGoStepPureDet (StructFieldSet (Database) "tableL") (#x, #y) #(x <|Database.tableL' := y|>);
-  #[global] Database_get_compactionL (x : Database.t) :: go.IsGoStepPureDet (StructFieldGet (Database) "compactionL") #x #x.(Database.compactionL');
-  #[global] Database_set_compactionL (x : Database.t) y :: go.IsGoStepPureDet (StructFieldSet (Database) "compactionL") (#x, #y) #(x <|Database.compactionL' := y|>);
+  #[global] Database_get_wbuffer (x : Database.t) :: ⟦StructFieldGet (Databaseⁱᵐᵖˡ) "wbuffer", #x⟧ ⤳[under] #x.(Database.wbuffer');
+  #[global] Database_set_wbuffer (x : Database.t) y :: ⟦StructFieldSet (Databaseⁱᵐᵖˡ) "wbuffer", (#x, #y)⟧ ⤳[under] #(x <|Database.wbuffer' := y|>);
+  #[global] Database_get_rbuffer (x : Database.t) :: ⟦StructFieldGet (Databaseⁱᵐᵖˡ) "rbuffer", #x⟧ ⤳[under] #x.(Database.rbuffer');
+  #[global] Database_set_rbuffer (x : Database.t) y :: ⟦StructFieldSet (Databaseⁱᵐᵖˡ) "rbuffer", (#x, #y)⟧ ⤳[under] #(x <|Database.rbuffer' := y|>);
+  #[global] Database_get_bufferL (x : Database.t) :: ⟦StructFieldGet (Databaseⁱᵐᵖˡ) "bufferL", #x⟧ ⤳[under] #x.(Database.bufferL');
+  #[global] Database_set_bufferL (x : Database.t) y :: ⟦StructFieldSet (Databaseⁱᵐᵖˡ) "bufferL", (#x, #y)⟧ ⤳[under] #(x <|Database.bufferL' := y|>);
+  #[global] Database_get_table (x : Database.t) :: ⟦StructFieldGet (Databaseⁱᵐᵖˡ) "table", #x⟧ ⤳[under] #x.(Database.table');
+  #[global] Database_set_table (x : Database.t) y :: ⟦StructFieldSet (Databaseⁱᵐᵖˡ) "table", (#x, #y)⟧ ⤳[under] #(x <|Database.table' := y|>);
+  #[global] Database_get_tableName (x : Database.t) :: ⟦StructFieldGet (Databaseⁱᵐᵖˡ) "tableName", #x⟧ ⤳[under] #x.(Database.tableName');
+  #[global] Database_set_tableName (x : Database.t) y :: ⟦StructFieldSet (Databaseⁱᵐᵖˡ) "tableName", (#x, #y)⟧ ⤳[under] #(x <|Database.tableName' := y|>);
+  #[global] Database_get_tableL (x : Database.t) :: ⟦StructFieldGet (Databaseⁱᵐᵖˡ) "tableL", #x⟧ ⤳[under] #x.(Database.tableL');
+  #[global] Database_set_tableL (x : Database.t) y :: ⟦StructFieldSet (Databaseⁱᵐᵖˡ) "tableL", (#x, #y)⟧ ⤳[under] #(x <|Database.tableL' := y|>);
+  #[global] Database_get_compactionL (x : Database.t) :: ⟦StructFieldGet (Databaseⁱᵐᵖˡ) "compactionL", #x⟧ ⤳[under] #x.(Database.compactionL');
+  #[global] Database_set_compactionL (x : Database.t) y :: ⟦StructFieldSet (Databaseⁱᵐᵖˡ) "compactionL", (#x, #y)⟧ ⤳[under] #(x <|Database.compactionL' := y|>);
 }.
 
 Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
