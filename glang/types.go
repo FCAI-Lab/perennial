@@ -41,11 +41,9 @@ type StructType struct {
 
 var _ Expr = StructType{}
 
-// Coq is the GooseLang type
-func (d StructType) Coq(needs_paren bool) string {
+func (d StructType) CoqFields(indent int) string {
 	var pp buffer
-	pp.Add("go.StructType [")
-	pp.Indent(2)
+	pp.Indent(indent)
 	for i, fd := range d.Fields {
 		sep := ";"
 		if i == len(d.Fields)-1 {
@@ -59,7 +57,14 @@ func (d StructType) Coq(needs_paren bool) string {
 			StringLiteral{fd.Name}.Coq(true),
 			fd.Type.Coq(true), sep)
 	}
-	pp.Indent(-2)
+	pp.Indent(-indent)
+	return pp.Build()
+}
+
+func (d StructType) Coq(needs_paren bool) string {
+	var pp buffer
+	pp.Add("go.StructType [")
+	pp.Add("%s", d.CoqFields(2))
 	pp.AddLine("]")
 	return addParens(needs_paren, pp.Build())
 }

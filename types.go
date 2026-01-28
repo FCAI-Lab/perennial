@@ -195,20 +195,48 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	return decls
 }
 
-func (ctx *Ctx) namedTypeImplDecl(spec *ast.TypeSpec) []glang.Decl {
+func (ctx *Ctx) namedTypeImplDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	if ctx.filter.GetAction(spec.Name.Name) != declfilter.Translate {
 		return nil
 	}
 	typeName := spec.Name.Name
+
+	var body glang.Expr
+	if s, ok := ctx.typeOf(spec.Type).(*types.Struct); ok {
+		ty := ctx.structType(s)
+		w := new(strings.Builder)
+		typeParams := ""
+		typeArgs := ""
+		for _, t := range ctx.typeParamList(spec.TypeParams) {
+			typeParams += fmt.Sprintf(" (%s : go.type)", t)
+			typeArgs += fmt.Sprintf(" %s", t)
+		}
+
+		body = glang.VerbatimExpr(fmt.Sprintf("go.StructType (%s'fds%s)",
+			spec.Name.Name, typeArgs))
+
+		fmt.Fprintf(w, "Definition %s'fds_unsealed%s {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [\n%s\n].", spec.Name.Name, typeParams, ty.CoqFields(2))
+		fmt.Fprintf(w, "\nProgram Definition %s'fds%s {ext : ffi_syntax} {go_gctx : GoGlobalContext} := sealed (%s'fds_unsealed%s).", spec.Name.Name, typeParams, spec.Name.Name, typeArgs)
+
+		fmt.Fprintf(w, "\nGlobal Instance equals_unfold_%[1]s%[2]s {ext : ffi_syntax} {go_gctx : GoGlobalContext} : %[1]s'fds%[2]s =→ %[1]s'fds_unsealed%[2]s.",
+			spec.Name.Name, typeArgs)
+		fmt.Fprintf(w, "\nProof. rewrite /%s'fds seal_eq //. Qed.", spec.Name.Name)
+
+		decl := glang.VerbatimDecl{Content: w.String()}
+		decls = append(decls, decl)
+	} else {
+		body = ctx.glangType(spec, ctx.typeOf(spec.Type))
+	}
+
 	decl := glang.TypeDecl{
 		Name:       typeName + "ⁱᵐᵖˡ",
-		Body:       ctx.glangType(spec, ctx.typeOf(spec.Type)),
+		Body:       body,
 		TypeParams: ctx.typeParamList(spec.TypeParams),
 	}
-	return []glang.Decl{decl}
+	decls = append(decls, decl)
+	return decls
 }
 
-// FIXME: this should take the TypeSpec
 func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 	typeName := spec.Name.Name
 	t := ctx.typeOf(spec.Name).(*types.Named)
@@ -234,10 +262,10 @@ func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 	fmt.Fprintf(w, "  #[global] %s_type_repr ", typeName)
 	if t.TypeParams() != nil {
 		for i := range t.TypeParams().Len() {
-			fmt.Fprintf(w, "%s %[1]s' `{!ZeroVal %[1]s'} `{!go.TypeRepr %[1]s %[1]s'}", t.TypeParams().At(i).Obj().Name())
+			fmt.Fprintf(w, "%s %[1]s' `{!ZeroVal %[1]s'} `{!TypeRepr %[1]s %[1]s'}", t.TypeParams().At(i).Obj().Name())
 		}
 	}
-	fmt.Fprintf(w, " :: go.TypeRepr ")
+	fmt.Fprintf(w, " :: go.TypeReprUnderlying ")
 	if t.TypeParams() != nil {
 		fmt.Fprintf(w, "(%sⁱᵐᵖˡ", typeName)
 		for i := range t.TypeParams().Len() {
@@ -374,15 +402,16 @@ func (ctx *Ctx) typeOf(e ast.Expr) types.Type {
 	return ctx.info.TypeOf(e)
 }
 
-func (ctx *Ctx) structType(t *types.Struct) glang.Expr {
+func (ctx *Ctx) structType(t *types.Struct) glang.StructType {
 	ty := glang.StructType{}
 	for i := range t.NumFields() {
 		fieldType := t.Field(i).Type()
 		fieldName := fieldName(i, t.Field(i).Name())
 
 		ty.Fields = append(ty.Fields, glang.FieldDecl{
-			Name: fieldName,
-			Type: ctx.glangType(t.Field(i), fieldType),
+			Name:     fieldName,
+			Type:     ctx.glangType(t.Field(i), fieldType),
+			Embedded: t.Field(i).Embedded(),
 		})
 	}
 	return ty
