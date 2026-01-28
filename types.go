@@ -259,26 +259,29 @@ func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 	fmt.Fprintln(w, "{")
 
 	// type repr instance
-	fmt.Fprintf(w, "  #[global] %s_type_repr ", typeName)
-	if t.TypeParams() != nil {
-		for i := range t.TypeParams().Len() {
-			fmt.Fprintf(w, "%s %[1]s' `{!ZeroVal %[1]s'} `{!TypeRepr %[1]s %[1]s'}", t.TypeParams().At(i).Obj().Name())
+	if _, ok := ctx.typeOf(spec.Type).(*types.Struct); ok ||
+		ctx.filter.GetAction(typeName) == declfilter.Axiomatize {
+		fmt.Fprintf(w, "  #[global] %s_type_repr ", typeName)
+		if t.TypeParams() != nil {
+			for i := range t.TypeParams().Len() {
+				fmt.Fprintf(w, "%s %[1]s' `{!ZeroVal %[1]s'} `{!TypeRepr %[1]s %[1]s'}", t.TypeParams().At(i).Obj().Name())
+			}
 		}
-	}
-	fmt.Fprintf(w, " :: go.TypeReprUnderlying ")
-	if t.TypeParams() != nil {
-		fmt.Fprintf(w, "(%sⁱᵐᵖˡ", typeName)
-		for i := range t.TypeParams().Len() {
-			fmt.Fprintf(w, " %s", t.TypeParams().At(i).Obj().Name())
-		}
-		fmt.Fprintf(w, ") (%s.t", typeName)
+		fmt.Fprintf(w, " :: go.TypeReprUnderlying ")
+		if t.TypeParams() != nil {
+			fmt.Fprintf(w, "(%sⁱᵐᵖˡ", typeName)
+			for i := range t.TypeParams().Len() {
+				fmt.Fprintf(w, " %s", t.TypeParams().At(i).Obj().Name())
+			}
+			fmt.Fprintf(w, ") (%s.t", typeName)
 
-		for i := range t.TypeParams().Len() {
-			fmt.Fprintf(w, " %s'", t.TypeParams().At(i).Obj().Name())
+			for i := range t.TypeParams().Len() {
+				fmt.Fprintf(w, " %s'", t.TypeParams().At(i).Obj().Name())
+			}
+			fmt.Fprintf(w, ");\n")
+		} else {
+			fmt.Fprintf(w, "%sⁱᵐᵖˡ %s.t;\n", typeName, typeName)
 		}
-		fmt.Fprintf(w, ");\n")
-	} else {
-		fmt.Fprintf(w, "%sⁱᵐᵖˡ %s.t;\n", typeName, typeName)
 	}
 
 	// underlying instance
