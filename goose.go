@@ -2508,7 +2508,7 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 	}
 
 	for _, impName := range ctx.importNamesOrdered {
-		fmt.Fprintf(w, "  #[global] import_%[1]s_Assumption :: %[1]s.Assumptions;\n", impName.Name())
+		fmt.Fprintf(w, "  #[global] import_%[1]s_Assumption :: %[1]s.Assumptions;\n", impName.Imported().Name())
 	}
 
 	fmt.Fprint(w, "}.")
