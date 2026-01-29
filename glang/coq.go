@@ -158,7 +158,7 @@ var GallinaKeywords map[string]bool = map[string]bool{
 	"w8":                  true,
 }
 
-func ToGallinaIdent(s string) string {
+func ToIdent(s string) string {
 	return GallinaIdent(s).Coq(false)
 }
 

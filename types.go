@@ -238,6 +238,9 @@ func (ctx *Ctx) namedTypeImplDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 
 func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 	typeName := spec.Name.Name
+	gallinaTypeName := glang.ToIdent(typeName)
+	gallinaImplTypeName := glang.ToIdent(typeName + "ⁱᵐᵖˡ")
+
 	t := ctx.typeOf(spec.Name).(*types.Named)
 	tunder := ctx.typeOf(spec.Type)
 
@@ -248,9 +251,6 @@ func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 			typeParams += " " + name
 		}
 	}
-
-	ty := "(" + typeName + typeParams + ")"
-	ptrTy := "(go.PointerType " + ty + ")"
 
 	w := new(strings.Builder)
 	fmt.Fprintln(w, "Class "+typeName+"_Assumptions "+
@@ -268,25 +268,25 @@ func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 		}
 		fmt.Fprintf(w, " :: go.TypeReprUnderlying ")
 		if t.TypeParams() != nil {
-			fmt.Fprintf(w, "(%sⁱᵐᵖˡ", typeName)
+			fmt.Fprintf(w, "(%s", gallinaImplTypeName)
 			for i := range t.TypeParams().Len() {
 				fmt.Fprintf(w, " %s", t.TypeParams().At(i).Obj().Name())
 			}
-			fmt.Fprintf(w, ") (%s.t", typeName)
+			fmt.Fprintf(w, ") (%s.t", gallinaTypeName)
 
 			for i := range t.TypeParams().Len() {
 				fmt.Fprintf(w, " %s'", t.TypeParams().At(i).Obj().Name())
 			}
 			fmt.Fprintf(w, ");\n")
 		} else {
-			fmt.Fprintf(w, "%sⁱᵐᵖˡ %s.t;\n", typeName, typeName)
+			fmt.Fprintf(w, "%s %s.t;\n", gallinaImplTypeName, gallinaTypeName)
 		}
 	}
 
 	// underlying instance
-	fmt.Fprintf(w, "  #[global] %[1]s_underlying%[2]s :: (%[1]s%[2]s) <u (%[1]sⁱᵐᵖˡ%[2]s);\n", typeName, typeParams)
+	fmt.Fprintf(w, "  #[global] %[1]s_underlying%[2]s :: (%[3]s%[2]s) <u (%[4]s%[2]s);\n", typeName, typeParams, gallinaTypeName, gallinaImplTypeName)
 	if ctx.filter.GetAction(typeName) == declfilter.Axiomatize {
-		fmt.Fprintf(w, "  #[global] %[1]sⁱᵐᵖˡ_underlying%[2]s :: (%[1]sⁱᵐᵖˡ%[2]s) ↓u (%[1]sⁱᵐᵖˡ%[2]s);\n", typeName, typeParams)
+		fmt.Fprintf(w, "  #[global] %[1]s_underlying%[2]s :: (%[1]s%[2]s) ↓u (%[1]s%[2]s);\n", gallinaImplTypeName, typeParams)
 	}
 
 	// maybe emit StructFieldSet and StructFieldGet instances
@@ -303,18 +303,21 @@ func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 				fieldName := fieldName(i, st.Field(i).Name())
 				projName := recordProjection(i, st.Field(i).Name())
 
-				fmt.Fprintf(w, "  #[global] %s_get_%s", typeName, fieldName)
-				fmt.Fprintf(w, "%[3]s%[2]s (x : %[1]s.t%[2]s) :: "+
-					"⟦StructFieldGet (%[1]sⁱᵐᵖˡ%[3]s) \"%[4]s\", #x⟧ ⤳[under] #x.(%[1]s.%[5]s);\n",
-					typeName, rocqTypeParams, typeParams, fieldName, projName)
+				fmt.Fprintf(w, "  #[global] %s_get_%s%s%s", typeName, fieldName, typeParams, rocqTypeParams)
+				fmt.Fprintf(w, "(x : %[1]s.t%[2]s) :: "+
+					"⟦StructFieldGet (%[3]s%[4]s) \"%[5]s\", #x⟧ ⤳[under] #x.(%[1]s.%[6]s);\n",
+					gallinaTypeName, rocqTypeParams, gallinaImplTypeName, typeParams, fieldName, projName)
 
-				fmt.Fprintf(w, "  #[global] %s_set_%s", typeName, fieldName)
-				fmt.Fprintf(w, "%[3]s%[2]s (x : %[1]s.t%[2]s) y :: "+
-					"⟦StructFieldSet (%[1]sⁱᵐᵖˡ%[3]s) \"%[4]s\", (#x, #y)⟧ ⤳[under] #(x <|%[1]s.%[5]s := y|>);\n",
-					typeName, rocqTypeParams, typeParams, fieldName, projName)
+				fmt.Fprintf(w, "  #[global] %s_set_%s%s%s", typeName, fieldName, typeParams, rocqTypeParams)
+				fmt.Fprintf(w, "(x : %[1]s.t%[2]s) y :: "+
+					"⟦StructFieldSet (%[3]s%[4]s) \"%[5]s\", (#x, #y)⟧ ⤳[under] #(x <|%[1]s.%[6]s := y|>);\n",
+					gallinaTypeName, rocqTypeParams, gallinaImplTypeName, typeParams, fieldName, projName)
 			}
 		}
 	}
+
+	ty := "(" + gallinaTypeName + typeParams + ")"
+	ptrTy := "(go.PointerType " + ty + ")"
 
 	if !types.IsInterface(t) {
 		// for every method in `t`
