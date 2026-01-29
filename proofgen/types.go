@@ -12,6 +12,7 @@ import (
 	"github.com/goose-lang/goose/declfilter"
 	"github.com/goose-lang/goose/glang"
 	"github.com/goose-lang/goose/proofgen/tmpl"
+	"github.com/goose-lang/goose/util"
 	"github.com/goose-lang/goose/util/toposort"
 	"golang.org/x/tools/go/packages"
 )
@@ -115,19 +116,13 @@ func translateTypes(pkg *packages.Package, filter declfilter.DeclFilter) []tmpl.
 				if tr.filter.GetAction(s.Name.Name) == declfilter.Axiomatize {
 					return
 				}
-				ast.Inspect(s.Type, func(n ast.Node) bool {
-					switch n := n.(type) {
-					case *ast.SelectorExpr, *ast.StarExpr:
-						return false
-					case *ast.ArrayType:
-						return n.Len != nil
-					case *ast.Ident:
-						if t, ok := tr.nameToTypeSpec[n.Name]; ok {
-							return yield(t)
+				for n := range util.TypeGetDependencies(pkg.PkgPath, pkg.TypesInfo.TypeOf(s.Type)) {
+					if t, ok := tr.nameToTypeSpec[n]; ok {
+						if !yield(t) {
+							return
 						}
 					}
-					return true
-				})
+				}
 			}
 		},
 		func(cycle []*ast.TypeSpec) {

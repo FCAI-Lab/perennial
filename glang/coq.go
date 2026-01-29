@@ -889,7 +889,6 @@ func (d ConstDecl) CoqDecl() string {
 // VerbatimDecl is translated literally as a Coq declaration.
 type VerbatimDecl struct {
 	Content string
-	Name    string
 }
 
 func (e VerbatimDecl) CoqDecl() string {

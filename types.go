@@ -188,7 +188,6 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	}
 
 	recordDecl := glang.VerbatimDecl{
-		Name:    spec.Name.Name + ".t",
 		Content: w.String(),
 	}
 	decls = append(decls, recordDecl)
@@ -395,7 +394,6 @@ func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 	fmt.Fprint(w, "}.")
 
 	decl := glang.VerbatimDecl{
-		Name:    t.Obj().Name() + "_Assumptions",
 		Content: w.String(),
 	}
 

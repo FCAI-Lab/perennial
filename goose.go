@@ -2463,20 +2463,13 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 				if ctx.filter.GetAction(s.Name.Name) == declfilter.Axiomatize {
 					return
 				}
-				ast.Inspect(s.Type, func(n ast.Node) bool {
-					switch n := n.(type) {
-					case *ast.SelectorExpr, *ast.StarExpr:
-						return false
-					case *ast.ArrayType:
-						return n.Len != nil
-					case *ast.Ident:
-						// FIXME: maybe write a custom traverser here.
-						if t, ok := nameToTypeSpecMap[n.Name]; ok {
-							return yield(t)
+				for n := range util.TypeGetDependencies(ctx.pkgPath, ctx.typeOf(s.Type)) {
+					if t, ok := nameToTypeSpecMap[n]; ok {
+						if !yield(t) {
+							return
 						}
 					}
-					return true
-				})
+				}
 			}
 		},
 		func(cycle []*ast.TypeSpec) {
@@ -2521,7 +2514,6 @@ func (ctx *Ctx) packagePropClass() []glang.Decl {
 	fmt.Fprint(w, "}.")
 
 	topDecl := glang.VerbatimDecl{
-		Name:    "Assumptions",
 		Content: w.String(),
 	}
 	decls = append(decls, topDecl)
@@ -2544,7 +2536,6 @@ func (ctx *Ctx) finalExtraDecls() {
 	}
 	infoContents += "]\n|}."
 	infoInstanceDecl := glang.VerbatimDecl{
-		Name:    "info'",
 		Content: infoContents,
 	}
 	decls = append(decls, infoInstanceDecl)
