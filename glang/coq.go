@@ -119,6 +119,7 @@ var GallinaKeywords map[string]bool = map[string]bool{
 	"list":   true,
 	"True":   true,
 	"False":  true,
+	"None":   true,
 }
 
 func ToGallinaIdent(s string) string {
