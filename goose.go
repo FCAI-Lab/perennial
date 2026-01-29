@@ -190,10 +190,10 @@ func (ctx *Ctx) sliceLiteralAux(es []exprWithInfo, expectedType types.Type) glan
 		for i := 0; i < len(es); i++ {
 			sliceLitArgs = append(sliceLitArgs,
 				glang.NewCallExpr(
-					glang.GallinaIdent("KeyedElement"),
-					glang.GallinaIdent("None"),
+					glang.VerbatimExpr("KeyedElement"),
+					glang.VerbatimExpr("None"),
 					glang.NewCallExpr(
-						glang.GallinaIdent("ElementExpression"),
+						glang.VerbatimExpr("ElementExpression"),
 						ctx.glangType(es[i].n, expectedType),
 						glang.IdentExpr(fmt.Sprintf("$sl%d", i))),
 				),
@@ -201,7 +201,7 @@ func (ctx *Ctx) sliceLiteralAux(es []exprWithInfo, expectedType types.Type) glan
 		}
 		expr = glang.NewCallExpr(glang.VerbatimExpr("CompositeLiteral"),
 			ctx.glangType(es[0].n, types.NewSlice(expectedType)),
-			glang.NewCallExpr(glang.GallinaIdent("LiteralValue"), glang.ListExpr(sliceLitArgs)),
+			glang.NewCallExpr(glang.VerbatimExpr("LiteralValue"), glang.ListExpr(sliceLitArgs)),
 		)
 
 		for i := len(es); i > 0; i-- {
@@ -338,7 +338,7 @@ func (ctx *Ctx) maybeHandleSpecialBuiltin(s *ast.CallExpr) (glang.Expr, bool) {
 	case "new":
 		sig := ctx.typeOf(s.Fun).(*types.Signature)
 		ty := ctx.glangType(s.Args[0], sig.Params().At(0).Type())
-		return glang.NewCallExpr(glang.GallinaIdent("GoAlloc"), ty,
+		return glang.NewCallExpr(glang.VerbatimExpr("GoAlloc"), ty,
 			glang.NewCallExpr(glang.VerbatimExpr("GoZeroVal"), ty, glang.Tt)), true
 	case "len", "cap":
 		if _, ok := ctx.typeOf(s.Fun).(*types.Signature); ok {
@@ -556,42 +556,42 @@ func (ctx *Ctx) compositeLiteral(e *ast.CompositeLit) glang.Expr {
 				return ctx.expr(e)
 			}
 		}
-		return glang.NewCallExpr(glang.GallinaIdent("ElementExpression"),
+		return glang.NewCallExpr(glang.VerbatimExpr("ElementExpression"),
 			ctx.glangType(e, ctx.typeOf(e)), ctx.expr(e))
 	}
 
 	for _, el := range e.Elts {
-		var k glang.Expr = glang.GallinaIdent("None")
-		var v glang.Expr = glang.GallinaIdent("BUG")
+		var k glang.Expr = glang.VerbatimExpr("None")
+		var v glang.Expr
 
 		switch el := el.(type) {
 		case *ast.KeyValueExpr:
 			done := false
 			if elKey, ok := el.Key.(*ast.Ident); ok {
 				if vr, ok := ctx.info.Uses[elKey].(*types.Var); ok && vr.Kind() == types.FieldVar {
-					k = glang.NewCallExpr(glang.GallinaIdent("KeyField"),
+					k = glang.NewCallExpr(glang.VerbatimExpr("KeyField"),
 						glang.StringLiteral{Value: elKey.Name})
 					done = true
 				}
 			}
 			if !done {
-				k = glang.NewCallExpr(glang.GallinaIdent("KeyExpression"),
+				k = glang.NewCallExpr(glang.VerbatimExpr("KeyExpression"),
 					ctx.glangType(el.Key, ctx.typeOf(el.Key)), ctx.expr(el.Key))
 			}
-			k = glang.NewCallExpr(glang.GallinaIdent("Some"), k)
+			k = glang.NewCallExpr(glang.VerbatimExpr("Some"), k)
 			v = handleValue(el.Value)
 		default:
 			v = handleValue(el)
 		}
 
-		elements = append(elements, glang.NewCallExpr(glang.GallinaIdent("KeyedElement"), k, v))
+		elements = append(elements, glang.NewCallExpr(glang.VerbatimExpr("KeyedElement"), k, v))
 	}
 	if e.Type != nil {
-		return glang.NewCallExpr(glang.GallinaIdent("CompositeLiteral"),
+		return glang.NewCallExpr(glang.VerbatimExpr("CompositeLiteral"),
 			ctx.glangType(e.Type, ctx.typeOf(e.Type)),
-			glang.NewCallExpr(glang.GallinaIdent("LiteralValue"), elements))
+			glang.NewCallExpr(glang.VerbatimExpr("LiteralValue"), elements))
 	} else {
-		return glang.NewCallExpr(glang.GallinaIdent("ElementLiteralValue"), elements)
+		return glang.NewCallExpr(glang.VerbatimExpr("ElementLiteralValue"), elements)
 	}
 }
 
