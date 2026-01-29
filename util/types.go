@@ -36,6 +36,8 @@ func TypeGetDependencies(pkgPath string, ty types.Type) iter.Seq[string] {
 				for i := 0; i < t.NumFields(); i++ {
 					q = append(q, t.Field(i).Type())
 				}
+			case *types.Array:
+				q = append(q, t.Elem())
 			}
 		}
 	}
