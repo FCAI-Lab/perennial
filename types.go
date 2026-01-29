@@ -303,12 +303,12 @@ func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 				fieldName := fieldName(i, st.Field(i).Name())
 				projName := recordProjection(i, st.Field(i).Name())
 
-				fmt.Fprintf(w, "  #[global] %s_get_%s%s%s", typeName, fieldName, typeParams, rocqTypeParams)
+				fmt.Fprintf(w, "  #[global] %s_get_%s%s%s ", typeName, fieldName, typeParams, rocqTypeParams)
 				fmt.Fprintf(w, "(x : %[1]s.t%[2]s) :: "+
 					"⟦StructFieldGet (%[3]s%[4]s) \"%[5]s\", #x⟧ ⤳[under] #x.(%[1]s.%[6]s);\n",
 					gallinaTypeName, rocqTypeParams, gallinaImplTypeName, typeParams, fieldName, projName)
 
-				fmt.Fprintf(w, "  #[global] %s_set_%s%s%s", typeName, fieldName, typeParams, rocqTypeParams)
+				fmt.Fprintf(w, "  #[global] %s_set_%s%s%s ", typeName, fieldName, typeParams, rocqTypeParams)
 				fmt.Fprintf(w, "(x : %[1]s.t%[2]s) y :: "+
 					"⟦StructFieldSet (%[3]s%[4]s) \"%[5]s\", (#x, #y)⟧ ⤳[under] #(x <|%[1]s.%[6]s := y|>);\n",
 					gallinaTypeName, rocqTypeParams, gallinaImplTypeName, typeParams, fieldName, projName)
