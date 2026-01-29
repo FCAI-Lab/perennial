@@ -91,7 +91,7 @@ func recordProjection(i int, s string) string {
 
 func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	w := new(strings.Builder)
-	fmt.Fprintf(w, "Module %s.\n", spec.Name.Name)
+	fmt.Fprintf(w, "Module %s.\n", glang.ToIdent(spec.Name.Name))
 	fmt.Fprintf(w, "Section def.\nContext {ext : ffi_syntax} {go_gctx : GoGlobalContext}.\n")
 	namedType := ctx.typeOf(spec.Name).(*types.Named)
 
@@ -121,7 +121,7 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 		fmt.Fprintf(w, "\n#[global] Existing Instance zero_val.")
 
 		fmt.Fprint(w, "\nEnd def.")
-		fmt.Fprintf(w, "\nEnd %s.", spec.Name.Name)
+		fmt.Fprintf(w, "\nEnd %s.", glang.ToIdent(spec.Name.Name))
 	case declfilter.Translate:
 		switch t := ctx.typeOf(spec.Type).(type) {
 		case *types.Struct:
@@ -167,7 +167,7 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 
 			fmt.Fprintf(w, "\nEnd def.\n")
 
-			fmt.Fprintf(w, "\nEnd %s.", spec.Name.Name)
+			fmt.Fprintf(w, "\nEnd %s.", glang.ToIdent(spec.Name.Name))
 		default:
 			fmt.Fprintf(w, "Definition t")
 
@@ -183,7 +183,7 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 			rocqType := ctx.toGallinaType(spec, t)
 			fmt.Fprintf(w, "%s.", rocqType)
 			fmt.Fprint(w, "\nEnd def.")
-			fmt.Fprintf(w, "\nEnd %s.", spec.Name.Name)
+			fmt.Fprintf(w, "\nEnd %s.", glang.ToIdent(spec.Name.Name))
 		}
 	}
 
@@ -199,6 +199,7 @@ func (ctx *Ctx) namedTypeImplDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 		return nil
 	}
 	typeName := spec.Name.Name
+	gallinaTypeName := glang.ToIdent(typeName)
 
 	var body glang.Expr
 	if s, ok := ctx.typeOf(spec.Type).(*types.Struct); ok {
@@ -228,7 +229,7 @@ func (ctx *Ctx) namedTypeImplDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	}
 
 	decl := glang.TypeDecl{
-		Name:       typeName + "ⁱᵐᵖˡ",
+		Name:       gallinaTypeName + "ⁱᵐᵖˡ",
 		Body:       body,
 		TypeParams: ctx.typeParamList(spec.TypeParams),
 	}
@@ -239,7 +240,7 @@ func (ctx *Ctx) namedTypeImplDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 	typeName := spec.Name.Name
 	gallinaTypeName := glang.ToIdent(typeName)
-	gallinaImplTypeName := glang.ToIdent(typeName + "ⁱᵐᵖˡ")
+	gallinaImplTypeName := glang.ToIdent(typeName) + "ⁱᵐᵖˡ"
 
 	t := ctx.typeOf(spec.Name).(*types.Named)
 	tunder := ctx.typeOf(spec.Type)
