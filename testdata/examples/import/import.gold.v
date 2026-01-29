@@ -21,6 +21,6 @@ Definition initialize' {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
 
 Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
-  #[global] import___Assumption :: _.Assumptions;
+  #[global] import_atomic_Assumption :: atomic.Assumptions;
 }.
 End example.
