@@ -29,6 +29,8 @@ type FilterConfig struct {
 	Trusted []string `toml:"trusted"`
 	// Translate for bootstrapping by importing a subset of golang.
 	Bootstrap Bootstrap `toml:"bootstrap"`
+	// Set to true to emit Admitted proofs.
+	TrustProofGen bool `toml:"trust_proofgen"`
 }
 
 type Bootstrap struct {
@@ -104,9 +106,10 @@ func newStringSet(s []string) stringSet {
 }
 
 type declFilter struct {
-	imports     stringSet
-	trusted     stringSet
-	toTranslate stringSet
+	imports       stringSet
+	trusted       stringSet
+	toTranslate   stringSet
+	trustProofGen bool
 }
 
 type Action int
@@ -122,6 +125,7 @@ type DeclFilter interface {
 	GetAction(string) Action
 	ShouldImport(string) bool
 	HasTrusted() bool
+	TrustProofGen() bool
 }
 
 func (df *declFilter) GetAction(name string) Action {
@@ -143,6 +147,10 @@ func (df *declFilter) HasTrusted() bool {
 	return len(df.trusted) > 0
 }
 
+func (df *declFilter) TrustProofGen() bool {
+	return df.trustProofGen
+}
+
 func New(c FilterConfig) DeclFilter {
 	toTranslate := c.ToTranslate
 	if len(toTranslate) == 0 {
@@ -158,6 +166,7 @@ func New(c FilterConfig) DeclFilter {
 	df.imports = newStringSet(imports)
 	df.toTranslate = newStringSet(toTranslate)
 	df.trusted = newStringSet(c.Trusted)
+	df.trustProofGen = c.TrustProofGen
 	return &df
 }
 

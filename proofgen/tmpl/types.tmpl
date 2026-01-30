@@ -50,14 +50,14 @@ Local Set Default Proof Using "All".
         "_" ∷ True
       )%I
   |}.
-Final Obligation. solve_typed_pointsto_agree. Qed.
+Final Obligation. {{ if $.TrustProofGen }}Admitted.{{ else }}solve_typed_pointsto_agree. Qed.{{ end }}
 {{- end }}
 
 #[global] Instance {{$t.Name}}_into_val_typed
   {{ template "IntoValParams" $t.TypeParams }} :
   IntoValTypedUnderlying {{template "GallinaType" $t}} {{ template "GoTypeImpl" $t}}.
 Proof.
-{{- if $t.Axiomatize }} Admitted.
+{{- if or $t.Axiomatize $.TrustProofGen }} Admitted.
 {{- else }} solve_into_val_typed_struct. Qed.
 {{- end }}
 
@@ -67,14 +67,14 @@ Proof.
     (l.[{{template "GallinaType" $t}}, "{{$f}}"] ↦{dq} (v.({{$t.PkgName}}.{{$t.Name}}.{{$f}}')))
     (l.[{{template "GallinaType" $t}}, "{{$f}}"] ↦{dq} (v.({{$t.PkgName}}.{{$t.Name}}.{{$f}}')))
     (l ↦{dq} v) (l ↦{dq} v)%I.
-Proof. solve_pointsto_access_struct. Qed.
+Proof. {{ if $.TrustProofGen }}Admitted.{{ else }}solve_pointsto_access_struct. Qed.{{ end }}
 
 #[global] Instance {{$t.Name}}_access_store_{{$f}} {{ template "TypedPointstoParams" $t.TypeParams }}l (v : {{ template "GallinaType" $t}}) {{$f}}' :
   AccessStrict
     (l.[{{template "GallinaType" $t}}, "{{$f}}"] ↦ (v.({{$t.PkgName}}.{{$t.Name}}.{{$f}}')))
     (l.[{{template "GallinaType" $t}}, "{{$f}}"] ↦ {{$f}}')
     (l ↦ v) (l ↦ (v <|({{$t.PkgName}}.{{$t.Name}}.{{$f}}') := {{$f}}'|>))%I.
-Proof. solve_pointsto_access_struct. Qed.
+Proof. {{ if $.TrustProofGen }}Admitted.{{ else }}solve_pointsto_access_struct. Qed.{{ end }}
 {{-  end }}
 
 End def.

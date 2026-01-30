@@ -12,13 +12,14 @@ import (
 // PackageProof is the data that is passed to the top-level package_proof.v.tmpl
 // template.
 type PackageProof struct {
-	Name       string
-	Ffi        string
-	Bootstrap  bool
-	ImportPath string // import path (corresponding to Go PkgPath)
-	HasTrusted bool
-	Imports    []Import
-	Types      []TypeDecl
+	Name          string
+	Ffi           string
+	Bootstrap     bool
+	ImportPath    string // import path (corresponding to Go PkgPath)
+	HasTrusted    bool
+	TrustProofGen bool
+	Imports       []Import
+	Types         []TypeDecl
 }
 
 type TypeDecl struct {

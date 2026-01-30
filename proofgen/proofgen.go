@@ -15,11 +15,12 @@ func Package(w io.Writer, pkg *packages.Package, ffi string, bootstrap bool, fil
 	coqPath := strings.ReplaceAll(glang.ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(pkg.PkgPath), "/", ".")
 
 	pf := tmpl.PackageProof{
-		Ffi:        ffi,
-		Bootstrap:  bootstrap,
-		Name:       pkg.Name,
-		HasTrusted: filter.HasTrusted(),
-		ImportPath: coqPath,
+		Ffi:           ffi,
+		Bootstrap:     bootstrap,
+		Name:          pkg.Name,
+		HasTrusted:    filter.HasTrusted(),
+		TrustProofGen: filter.TrustProofGen(),
+		ImportPath:    coqPath,
 	}
 
 	var imports []string
