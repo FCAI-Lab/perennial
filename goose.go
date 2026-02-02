@@ -1453,7 +1453,7 @@ func (ctx *Ctx) assignFromTo(lhs ast.Expr, rhs glang.Expr, cont glang.Expr) glan
 			return glang.NewDoSeq(rhs, cont)
 		}
 	case *ast.IndexExpr:
-		targetTy := ctx.typeOf(lhs.X).Underlying()
+		targetTy := ctx.typeOf(lhs.X)
 		switch t := targetTy.(type) {
 		case *types.Map:
 			return glang.NewDoSeq(glang.NewCallExpr(glang.VerbatimExpr("map.insert"),
@@ -1763,7 +1763,7 @@ func (ctx *Ctx) selectStmt(s *ast.SelectStmt, cont glang.Expr) (expr glang.Expr)
 		s := s.(*ast.CommClause)
 		if s.Comm == nil {
 			// a default: case
-			def = glang.FuncLit{Body: ctx.stmtList(s.Body, nil)}
+			def = ctx.stmtList(s.Body, nil)
 		} else if c, ok := s.Comm.(*ast.SendStmt); ok {
 			chs = append(chs, ctx.expr(c.Chan))
 
@@ -1773,7 +1773,7 @@ func (ctx *Ctx) selectStmt(s *ast.SelectStmt, cont glang.Expr) (expr glang.Expr)
 					Chan:     glang.IdentExpr(fmt.Sprintf("$ch%d", i)),
 					Value:    ctx.expr(c.Value),
 				},
-				Body: glang.FuncLit{Body: ctx.stmtList(s.Body, nil)},
+				Body: ctx.stmtList(s.Body, nil),
 			})
 		} else { // must be a receive stmt
 			var recvChan glang.Expr
