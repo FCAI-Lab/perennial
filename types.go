@@ -644,6 +644,8 @@ func (ctx *Ctx) basicTypeToGallina(n locatable, t *types.Basic) string {
 		return "w64"
 	case "float64":
 		return "w64"
+	case "float32":
+		return "w32"
 	case "bool":
 		return "bool"
 	case "string", "untyped string":
@@ -689,8 +691,10 @@ func (ctx *Ctx) toGallinaType(l locatable, t types.Type) string {
 		return "func.t"
 	case *types.Interface:
 		return "interface.t"
-	case *types.Map, *types.Chan:
-		return "loc"
+	case *types.Map:
+		return "map.t"
+	case *types.Chan:
+		return "chan.t"
 	case *types.Named:
 		return ctx.namedTypeToGallina(l, t)
 	case *types.TypeParam:

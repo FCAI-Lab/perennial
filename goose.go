@@ -2251,6 +2251,7 @@ func (ctx *Ctx) funcDecl(d *ast.FuncDecl) {
 
 // this should only be used for untyped constant literals
 func (ctx *Ctx) constantLiteral(e ast.Expr) glang.Expr {
+	// FIXME: emit `Convert` rather than doing it all statically here.
 	val := ctx.info.Types[e].Value
 	if e, ok := e.(*ast.Ident); ok {
 		val = ctx.info.ObjectOf(e).(*types.Const).Val()
@@ -2267,6 +2268,7 @@ func (ctx *Ctx) constantLiteral(e ast.Expr) glang.Expr {
 		ctx.nope(e, "expected integer constant")
 		return nil
 	}
+
 	switch t := t.Underlying().(type) {
 	case *types.Basic:
 		switch t.Kind() {
