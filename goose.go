@@ -1756,17 +1756,21 @@ func (ctx *Ctx) selectStmt(s *ast.SelectStmt, cont glang.Expr) (expr glang.Expr)
 	var clauses []glang.CommClause
 	var def glang.Expr // nil initially (None)
 
+	var chs []glang.Expr
+
 	// build up select statement itself
-	for _, s := range s.Body.List {
+	for i, s := range s.Body.List {
 		s := s.(*ast.CommClause)
 		if s.Comm == nil {
 			// a default: case
 			def = glang.FuncLit{Body: ctx.stmtList(s.Body, nil)}
 		} else if c, ok := s.Comm.(*ast.SendStmt); ok {
+			chs = append(chs, ctx.expr(c.Chan))
+
 			clauses = append(clauses, glang.CommClause{
 				Comm: glang.SendCase{
 					ElemType: ctx.glangType(s.Comm, chanElem(ctx.typeOf(c.Chan))),
-					Chan:     ctx.expr(c.Chan),
+					Chan:     glang.IdentExpr(fmt.Sprintf("$ch%d", i)),
 					Value:    ctx.expr(c.Value),
 				},
 				Body: glang.FuncLit{Body: ctx.stmtList(s.Body, nil)},
@@ -1822,12 +1826,14 @@ func (ctx *Ctx) selectStmt(s *ast.SelectStmt, cont glang.Expr) (expr glang.Expr)
 				ctx.unsupported(s.Comm, "unexpected statement in select clause")
 			}
 
+			chs = append(chs, recvChan)
+
 			clauses = append(clauses, glang.CommClause{
 				Comm: glang.RecvCase{
 					ElemType: ctx.glangType(s.Comm, chanElem(chanType)),
-					Chan:     recvChan,
+					Chan:     glang.IdentExpr(fmt.Sprintf("$ch%d", i)),
 				},
-				Body: glang.FuncLit{Args: []glang.Binder{{Name: "$recvVal"}}, Body: body},
+				Body: body,
 			})
 		}
 	}
@@ -1836,6 +1842,15 @@ func (ctx *Ctx) selectStmt(s *ast.SelectStmt, cont glang.Expr) (expr glang.Expr)
 		Default: def,
 		Clauses: clauses,
 	})
+
+	for i := len(chs) - 1; i >= 0; i-- {
+		expr = glang.LetExpr{
+			Names:   []string{fmt.Sprintf("$ch%d", i)},
+			ValExpr: chs[i],
+			Cont:    expr,
+		}
+	}
+
 	expr = glang.SeqExpr{Expr: expr, Cont: cont}
 	return
 }
