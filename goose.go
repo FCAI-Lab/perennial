@@ -1771,7 +1771,7 @@ func (ctx *Ctx) selectStmt(s *ast.SelectStmt, cont glang.Expr) (expr glang.Expr)
 				Comm: glang.SendCase{
 					ElemType: ctx.glangType(s.Comm, chanElem(ctx.typeOf(c.Chan))),
 					Chan:     glang.IdentExpr(fmt.Sprintf("$ch%d", i)),
-					Value:    ctx.expr(c.Value),
+					Value:    glang.IdentExpr(fmt.Sprintf("$v%d", i)),
 				},
 				Body: ctx.stmtList(s.Body, nil),
 			})
@@ -1848,6 +1848,15 @@ func (ctx *Ctx) selectStmt(s *ast.SelectStmt, cont glang.Expr) (expr glang.Expr)
 			Names:   []string{fmt.Sprintf("$ch%d", i)},
 			ValExpr: chs[i],
 			Cont:    expr,
+		}
+
+		s := s.Body.List[i].(*ast.CommClause)
+		if c, ok := s.Comm.(*ast.SendStmt); ok {
+			expr = glang.LetExpr{
+				Names:   []string{fmt.Sprintf("$v%d", i)},
+				ValExpr: ctx.expr(c.Value),
+				Cont:    expr,
+			}
 		}
 	}
 
