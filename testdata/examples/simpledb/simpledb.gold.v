@@ -986,7 +986,7 @@ Section def.
 Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
 Record t :=
 mk {
-  Index' : loc;
+  Index' : map.t;
   File' : filesys.File.t;
 }.
 
@@ -1130,7 +1130,7 @@ Section def.
 Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
 Record t :=
 mk {
-  index' : loc;
+  index' : map.t;
   name' : go_string;
   file' : simpledb.bufFile.t;
   offset' : loc;

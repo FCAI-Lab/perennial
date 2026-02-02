@@ -362,7 +362,7 @@ Record t :=
 mk {
   d' : disk.Disk.t;
   l' : loc;
-  cache' : loc;
+  cache' : map.t;
   length' : loc;
 }.
 
