@@ -39,15 +39,32 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) {
 
 	switch ctx.filter.GetAction(spec.Name.Name) {
 	case declfilter.Axiomatize:
-		if _, ok := ctx.typeOf(spec.Name).(*types.Alias); ok {
+		typ := ctx.typeOf(spec.Name)
+		var tps *types.TypeParamList
+		if alias, ok := typ.(*types.Alias); ok {
+			tps = alias.TypeParams()
+		} else if named, ok := typ.(*types.Named); ok {
+			tps = named.TypeParams()
+		}
+
+		typeStr := "go.type"
+		if tps != nil && tps.Len() > 0 {
+			var params []string
+			for i := 0; i < tps.Len(); i++ {
+				params = append(params, tps.At(i).Obj().Name())
+			}
+			typeStr = fmt.Sprintf("∀ (%s : go.type), go.type", strings.Join(params, " "))
+		}
+
+		if _, ok := typ.(*types.Alias); ok {
 			ctx.out.typeAliasDecls = append(ctx.out.typeAliasDecls, glang.AxiomDecl{
 				DeclName: typeName,
-				Type:     glang.VerbatimExpr("go.type"),
+				Type:     glang.VerbatimExpr(typeStr),
 			})
-		} else if _, ok := ctx.typeOf(spec.Name).(*types.Named); ok {
+		} else if _, ok := typ.(*types.Named); ok {
 			ctx.out.typeAliasDecls = append(ctx.out.typeAliasDecls, glang.AxiomDecl{
 				DeclName: typeName + "ⁱᵐᵖˡ",
-				Type:     glang.VerbatimExpr("go.type"),
+				Type:     glang.VerbatimExpr(typeStr),
 			})
 		}
 		return
@@ -101,11 +118,11 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 	case declfilter.Axiomatize:
 		fmt.Fprintf(w, "Axiom t : ")
 		if tps := namedType.TypeParams(); tps != nil {
-			fmt.Fprintf(w, "∀ {")
+			fmt.Fprintf(w, "∀ (")
 			for i := range tps.Len() {
 				fmt.Fprintf(w, "%s ", tps.At(i).Obj().Name())
 			}
-			fmt.Fprint(w, ": Type}, ")
+			fmt.Fprint(w, ": Type), ")
 		}
 		fmt.Fprintf(w, "Type.")
 		// ZeroVal instance
@@ -117,7 +134,14 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 			}
 			fmt.Fprintf(w, ", ")
 		}
-		fmt.Fprintf(w, "ZeroVal t.")
+		// FIXME: params.
+		fmt.Fprintf(w, "ZeroVal (t")
+		if tps := namedType.TypeParams(); tps != nil {
+			for i := range tps.Len() {
+				fmt.Fprintf(w, " %s", tps.At(i).Obj().Name())
+			}
+		}
+		fmt.Fprintf(w, ").")
 		fmt.Fprintf(w, "\n#[global] Existing Instance zero_val.")
 
 		fmt.Fprint(w, "\nEnd def.")
