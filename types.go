@@ -135,13 +135,17 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 			fmt.Fprintf(w, ", ")
 		}
 		// FIXME: params.
-		fmt.Fprintf(w, "ZeroVal (t")
+		fmt.Fprintf(w, "ZeroVal ")
 		if tps := namedType.TypeParams(); tps != nil {
+			fmt.Fprintf(w, "(")
 			for i := range tps.Len() {
 				fmt.Fprintf(w, " %s", tps.At(i).Obj().Name())
 			}
+			fmt.Fprintf(w, ")")
+		} else {
+			fmt.Fprintf(w, "t")
 		}
-		fmt.Fprintf(w, ").")
+		fmt.Fprintf(w, ".")
 		fmt.Fprintf(w, "\n#[global] Existing Instance zero_val.")
 
 		fmt.Fprint(w, "\nEnd def.")
