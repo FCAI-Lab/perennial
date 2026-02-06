@@ -137,7 +137,7 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 		// FIXME: params.
 		fmt.Fprintf(w, "ZeroVal ")
 		if tps := namedType.TypeParams(); tps != nil {
-			fmt.Fprintf(w, "(")
+			fmt.Fprintf(w, "(t")
 			for i := range tps.Len() {
 				fmt.Fprintf(w, " %s", tps.At(i).Obj().Name())
 			}
