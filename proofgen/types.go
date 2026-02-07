@@ -57,11 +57,19 @@ func (tr *typesTranslator) translateStructType(spec *ast.TypeSpec, s *types.Stru
 
 func (tr *typesTranslator) translateType(spec *ast.TypeSpec) []tmpl.TypeDecl {
 	if tr.filter.GetAction(spec.Name.Name) == declfilter.Axiomatize {
-		return []tmpl.TypeDecl{{
+		decl := tmpl.TypeDecl{
 			PkgName:    tr.pkg.Name,
 			Name:       glang.GallinaIdent(spec.Name.Name).Coq(false),
 			Axiomatize: true,
-		}}
+		}
+		if spec.TypeParams != nil {
+			for _, tp := range spec.TypeParams.List {
+				for _, name := range tp.Names {
+					decl.TypeParams = append(decl.TypeParams, name.Name)
+				}
+			}
+		}
+		return []tmpl.TypeDecl{decl}
 	}
 
 	switch s := tr.pkg.TypesInfo.TypeOf(spec.Type).(type) {

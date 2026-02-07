@@ -828,7 +828,8 @@ func (ctx *Ctx) builtinIdent(e *ast.Ident) glang.Expr {
 	case "iota":
 		return ctx.constantLiteral(e)
 	case "recover":
-		return glang.VerbatimExpr("recover")
+		return glang.NewCallExpr(glang.VerbatimExpr("FuncResolve"),
+			glang.VerbatimExpr("go."+e.Name), glang.ListExpr{}, glang.Tt)
 	default:
 		ctx.unsupported(e, "builtin identifier of type %v", ctx.typeOf(e))
 	}
