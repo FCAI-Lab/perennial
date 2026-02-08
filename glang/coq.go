@@ -193,7 +193,8 @@ type PackageIdent struct {
 }
 
 func (e PackageIdent) Coq(needs_paren bool) string {
-	return fmt.Sprintf("%s.%s", ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(e.Package), e.Ident)
+	return fmt.Sprintf("%s.%s", ThisIsBadAndShouldBeDeprecatedGoPathToCoqPath(e.Package),
+		ToIdent(e.Ident))
 }
 
 type ParenExpr struct {
