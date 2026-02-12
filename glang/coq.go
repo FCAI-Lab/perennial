@@ -638,7 +638,7 @@ type NotExpr struct {
 }
 
 func (e NotExpr) Coq(needs_paren bool) string {
-	return fmt.Sprintf("(~ %s)", e.X.Coq(true))
+	return fmt.Sprintf("(⟨go.bool⟩! %s)", e.X.Coq(true))
 }
 
 type TupleExpr []Expr
