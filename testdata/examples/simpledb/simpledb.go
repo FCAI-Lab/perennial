@@ -9,9 +9,9 @@ Keys in the table are cached for efficient reads.
 package simpledb
 
 import (
+	"encoding/binary"
 	"sync"
 
-	"github.com/goose-lang/primitive"
 	"github.com/goose-lang/primitive/filesys"
 
 	"github.com/tchajed/marshal" // to test these imports
@@ -53,7 +53,7 @@ func DecodeUInt64(p []byte) (uint64, uint64) {
 	if len(p) < 8 {
 		return 0, 0
 	}
-	n := primitive.UInt64Get(p)
+	n := binary.LittleEndian.Uint64(p)
 	return n, 8
 }
 
@@ -122,7 +122,7 @@ func CloseTable(t Table) {
 
 func readValue(f filesys.File, off uint64) []byte {
 	startBuf := filesys.ReadAt(f, off, 512)
-	totalBytes := primitive.UInt64Get(startBuf)
+	totalBytes := binary.LittleEndian.Uint64(startBuf)
 	// should have enough data for the key if the file is a proper encoding
 	buf := startBuf[8:]
 	haveBytes := uint64(len(buf))
@@ -214,7 +214,7 @@ func tableWriterClose(w tableWriter) Table {
 // EncodeUInt64 is an Encoder(uint64)
 func EncodeUInt64(x uint64, p []byte) []byte {
 	tmp := make([]byte, 8)
-	primitive.UInt64Put(tmp, x)
+	binary.LittleEndian.PutUint64(tmp, x)
 	p2 := append(p, tmp...)
 	return p2
 }

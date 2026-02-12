@@ -114,30 +114,6 @@ func (suite *GoTestSuite) TestDeferFuncLit() {
 	suite.Equal(true, testDeferFuncLit())
 }
 
-func (suite *GoTestSuite) TestEncDec32Simple() {
-	d := disk.NewMemDisk(30)
-	disk.Init(d)
-	suite.Equal(true, testEncDec32Simple())
-}
-
-func (suite *GoTestSuite) TestEncDec32() {
-	d := disk.NewMemDisk(30)
-	disk.Init(d)
-	suite.Equal(true, failing_testEncDec32())
-}
-
-func (suite *GoTestSuite) TestEncDec64Simple() {
-	d := disk.NewMemDisk(30)
-	disk.Init(d)
-	suite.Equal(true, testEncDec64Simple())
-}
-
-func (suite *GoTestSuite) TestEncDec64() {
-	d := disk.NewMemDisk(30)
-	disk.Init(d)
-	suite.Equal(true, testEncDec64())
-}
-
 func (suite *GoTestSuite) TestFirstClassFunction() {
 	d := disk.NewMemDisk(30)
 	disk.Init(d)

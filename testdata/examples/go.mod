@@ -20,3 +20,4 @@ require (
 )
 
 replace github.com/goose-lang/primitive => ./../../../primitive
+replace github.com/tchajed/marshal => ./../../../marshal

@@ -1,7 +1,8 @@
 package logging2
 
 import (
-	"github.com/goose-lang/primitive"
+	"encoding/binary"
+
 	"github.com/goose-lang/primitive/disk"
 
 	"sync"
@@ -24,7 +25,7 @@ type Log struct {
 
 func (log Log) writeHdr(len uint64) {
 	hdr := make([]byte, 4096)
-	primitive.UInt64Put(hdr, len)
+	binary.LittleEndian.PutUint64(hdr, len)
 	disk.Write(LOGCOMMIT, hdr)
 }
 
@@ -44,7 +45,7 @@ func Init(logSz uint64) Log {
 
 func (log Log) readHdr() uint64 {
 	hdr := disk.Read(LOGCOMMIT)
-	disklen := primitive.UInt64Get(hdr)
+	disklen := binary.LittleEndian.Uint64(hdr)
 	return disklen
 }
 

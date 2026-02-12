@@ -1,9 +1,8 @@
 package semantics
 
 import (
+	"encoding/binary"
 	"sync"
-
-	"github.com/goose-lang/primitive"
 
 	"github.com/goose-lang/primitive/disk"
 )
@@ -24,13 +23,12 @@ type Log struct {
 
 func intToBlock(a uint64) disk.Block {
 	b := make([]byte, disk.BlockSize)
-	primitive.UInt64Put(b, a)
+	binary.LittleEndian.PutUint64(b, a)
 	return b
 }
 
 func blockToInt(v disk.Block) uint64 {
-	a := primitive.UInt64Get(v)
-	return a
+	return binary.LittleEndian.Uint64(v)
 }
 
 // New initializes a fresh log
