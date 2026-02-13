@@ -48,7 +48,14 @@ Definition Initⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val 
   λ: "logSz",
     exception_do (let: "logSz" := (GoAlloc go.uint64 "logSz") in
     let: "log" := (GoAlloc Log (GoZeroVal Log #())) in
-    let: "$r0" := (CompositeLiteral Log (LiteralValue [KeyedElement (Some (KeyField "logLock"%go)) (ElementExpression (go.PointerType sync.Mutex) (GoAlloc sync.Mutex (GoZeroVal sync.Mutex #()))); KeyedElement (Some (KeyField "memLock"%go)) (ElementExpression (go.PointerType sync.Mutex) (GoAlloc sync.Mutex (GoZeroVal sync.Mutex #()))); KeyedElement (Some (KeyField "logSz"%go)) (ElementExpression go.uint64 (![go.uint64] "logSz")); KeyedElement (Some (KeyField "memLog"%go)) (ElementExpression (go.PointerType (go.SliceType disk.Block)) (GoAlloc (go.SliceType disk.Block) (GoZeroVal (go.SliceType disk.Block) #()))); KeyedElement (Some (KeyField "memLen"%go)) (ElementExpression (go.PointerType go.uint64) (GoAlloc go.uint64 (GoZeroVal go.uint64 #()))); KeyedElement (Some (KeyField "memTxnNxt"%go)) (ElementExpression (go.PointerType go.uint64) (GoAlloc go.uint64 (GoZeroVal go.uint64 #()))); KeyedElement (Some (KeyField "logTxnNxt"%go)) (ElementExpression (go.PointerType go.uint64) (GoAlloc go.uint64 (GoZeroVal go.uint64 #())))])) in
+    let: "$r0" := (let: "$v0" := (GoAlloc sync.Mutex (GoZeroVal sync.Mutex #())) in
+    let: "$v1" := (GoAlloc sync.Mutex (GoZeroVal sync.Mutex #())) in
+    let: "$v2" := (![go.uint64] "logSz") in
+    let: "$v3" := (GoAlloc (go.SliceType disk.Block) (GoZeroVal (go.SliceType disk.Block) #())) in
+    let: "$v4" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
+    let: "$v5" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
+    let: "$v6" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
+    CompositeLiteral Log (LiteralValue [KeyedElement (Some (KeyField "logLock"%go)) (ElementExpression (go.PointerType sync.Mutex) "$v0"); KeyedElement (Some (KeyField "memLock"%go)) (ElementExpression (go.PointerType sync.Mutex) "$v1"); KeyedElement (Some (KeyField "logSz"%go)) (ElementExpression go.uint64 "$v2"); KeyedElement (Some (KeyField "memLog"%go)) (ElementExpression (go.PointerType (go.SliceType disk.Block)) "$v3"); KeyedElement (Some (KeyField "memLen"%go)) (ElementExpression (go.PointerType go.uint64) "$v4"); KeyedElement (Some (KeyField "memTxnNxt"%go)) (ElementExpression (go.PointerType go.uint64) "$v5"); KeyedElement (Some (KeyField "logTxnNxt"%go)) (ElementExpression (go.PointerType go.uint64) "$v6")])) in
     do:  ("log" <-[Log] "$r0");;;
     do:  (let: "$a0" := #(W64 0) in
     (MethodResolve Log "writeHdr"%go (![Log] "log")) "$a0");;;
@@ -270,7 +277,9 @@ Definition Beginⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val
   λ: "log",
     exception_do (let: "log" := (GoAlloc (go.PointerType Log) "log") in
     let: "txn" := (GoAlloc Txn (GoZeroVal Txn #())) in
-    let: "$r0" := (CompositeLiteral Txn (LiteralValue [KeyedElement (Some (KeyField "log"%go)) (ElementExpression (go.PointerType Log) (![go.PointerType Log] "log")); KeyedElement (Some (KeyField "blks"%go)) (ElementExpression (go.MapType go.uint64 disk.Block) ((FuncResolve go.make1 [go.MapType go.uint64 disk.Block] #()) #()))])) in
+    let: "$r0" := (let: "$v0" := (![go.PointerType Log] "log") in
+    let: "$v1" := ((FuncResolve go.make1 [go.MapType go.uint64 disk.Block] #()) #()) in
+    CompositeLiteral Txn (LiteralValue [KeyedElement (Some (KeyField "log"%go)) (ElementExpression (go.PointerType Log) "$v0"); KeyedElement (Some (KeyField "blks"%go)) (ElementExpression (go.MapType go.uint64 disk.Block) "$v1")])) in
     do:  ("txn" <-[Txn] "$r0");;;
     return: (![Txn] "txn")).
 

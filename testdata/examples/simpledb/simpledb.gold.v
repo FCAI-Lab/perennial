@@ -122,7 +122,9 @@ Definition CreateTableⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext}
     let: "$a1" := (![go.string] "p") in
     (FuncResolve filesys.Open [] #()) "$a0" "$a1") in
     do:  ("f2" <-[filesys.File] "$r0");;;
-    return: (CompositeLiteral Table (LiteralValue [KeyedElement (Some (KeyField "Index"%go)) (ElementExpression (go.MapType go.uint64 go.uint64) (![go.MapType go.uint64 go.uint64] "index")); KeyedElement (Some (KeyField "File"%go)) (ElementExpression filesys.File (![filesys.File] "f2"))]))).
+    return: (let: "$v0" := (![go.MapType go.uint64 go.uint64] "index") in
+     let: "$v1" := (![filesys.File] "f2") in
+     CompositeLiteral Table (LiteralValue [KeyedElement (Some (KeyField "Index"%go)) (ElementExpression (go.MapType go.uint64 go.uint64) "$v0"); KeyedElement (Some (KeyField "File"%go)) (ElementExpression filesys.File "$v1")]))).
 
 (* DecodeUInt64 is a Decoder(uint64)
 
@@ -160,7 +162,10 @@ Definition DecodeEntryⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext}
     do:  ("key" <-[go.uint64] "$r0");;;
     do:  ("l1" <-[go.uint64] "$r1");;;
     (if: Convert go.untyped_bool go.bool ((![go.uint64] "l1") =⟨go.uint64⟩ #(W64 0))
-    then return: (CompositeLiteral Entry (LiteralValue [KeyedElement (Some (KeyField "Key"%go)) (ElementExpression go.uint64 #(W64 0)); KeyedElement (Some (KeyField "Value"%go)) (ElementExpression go.untyped_nil UntypedNil)]), #(W64 0))
+    then
+      return: (let: "$v0" := #(W64 0) in
+       let: "$v1" := UntypedNil in
+       CompositeLiteral Entry (LiteralValue [KeyedElement (Some (KeyField "Key"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "Value"%go)) (ElementExpression go.untyped_nil "$v1")]), #(W64 0))
     else do:  #());;;
     let: "l2" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
     let: "valueLen" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
@@ -172,17 +177,25 @@ Definition DecodeEntryⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext}
     do:  ("valueLen" <-[go.uint64] "$r0");;;
     do:  ("l2" <-[go.uint64] "$r1");;;
     (if: Convert go.untyped_bool go.bool ((![go.uint64] "l2") =⟨go.uint64⟩ #(W64 0))
-    then return: (CompositeLiteral Entry (LiteralValue [KeyedElement (Some (KeyField "Key"%go)) (ElementExpression go.uint64 #(W64 0)); KeyedElement (Some (KeyField "Value"%go)) (ElementExpression go.untyped_nil UntypedNil)]), #(W64 0))
+    then
+      return: (let: "$v0" := #(W64 0) in
+       let: "$v1" := UntypedNil in
+       CompositeLiteral Entry (LiteralValue [KeyedElement (Some (KeyField "Key"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "Value"%go)) (ElementExpression go.untyped_nil "$v1")]), #(W64 0))
     else do:  #());;;
     (if: Convert go.untyped_bool go.bool ((Convert go.int go.uint64 (let: "$a0" := (![go.SliceType go.byte] "data") in
     (FuncResolve go.len [go.SliceType go.byte] #()) "$a0")) <⟨go.uint64⟩ (((![go.uint64] "l1") +⟨go.uint64⟩ (![go.uint64] "l2")) +⟨go.uint64⟩ (![go.uint64] "valueLen")))
-    then return: (CompositeLiteral Entry (LiteralValue [KeyedElement (Some (KeyField "Key"%go)) (ElementExpression go.uint64 #(W64 0)); KeyedElement (Some (KeyField "Value"%go)) (ElementExpression go.untyped_nil UntypedNil)]), #(W64 0))
+    then
+      return: (let: "$v0" := #(W64 0) in
+       let: "$v1" := UntypedNil in
+       CompositeLiteral Entry (LiteralValue [KeyedElement (Some (KeyField "Key"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "Value"%go)) (ElementExpression go.untyped_nil "$v1")]), #(W64 0))
     else do:  #());;;
     let: "value" := (GoAlloc (go.SliceType go.byte) (GoZeroVal (go.SliceType go.byte) #())) in
     let: "$r0" := (let: "$s" := (![go.SliceType go.byte] "data") in
     Slice (go.SliceType go.byte) ("$s", (![go.uint64] "l1") +⟨go.uint64⟩ (![go.uint64] "l2"), ((![go.uint64] "l1") +⟨go.uint64⟩ (![go.uint64] "l2")) +⟨go.uint64⟩ (![go.uint64] "valueLen"))) in
     do:  ("value" <-[go.SliceType go.byte] "$r0");;;
-    return: (CompositeLiteral Entry (LiteralValue [KeyedElement (Some (KeyField "Key"%go)) (ElementExpression go.uint64 (![go.uint64] "key")); KeyedElement (Some (KeyField "Value"%go)) (ElementExpression (go.SliceType go.byte) (![go.SliceType go.byte] "value"))]), ((![go.uint64] "l1") +⟨go.uint64⟩ (![go.uint64] "l2")) +⟨go.uint64⟩ (![go.uint64] "valueLen"))).
+    return: (let: "$v0" := (![go.uint64] "key") in
+     let: "$v1" := (![go.SliceType go.byte] "value") in
+     CompositeLiteral Entry (LiteralValue [KeyedElement (Some (KeyField "Key"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "Value"%go)) (ElementExpression (go.SliceType go.byte) "$v1")]), ((![go.uint64] "l1") +⟨go.uint64⟩ (![go.uint64] "l2")) +⟨go.uint64⟩ (![go.uint64] "valueLen"))).
 
 (* readTableIndex parses a complete table on disk into a key->offset index
 
@@ -192,7 +205,9 @@ Definition readTableIndexⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalConte
     exception_do (let: "index" := (GoAlloc (go.MapType go.uint64 go.uint64) "index") in
     let: "f" := (GoAlloc filesys.File "f") in
     (let: "buf" := (GoAlloc lazyFileBuf (GoZeroVal lazyFileBuf #())) in
-    let: "$r0" := (CompositeLiteral lazyFileBuf (LiteralValue [KeyedElement (Some (KeyField "offset"%go)) (ElementExpression go.uint64 #(W64 0)); KeyedElement (Some (KeyField "next"%go)) (ElementExpression go.untyped_nil UntypedNil)])) in
+    let: "$r0" := (let: "$v0" := #(W64 0) in
+    let: "$v1" := UntypedNil in
+    CompositeLiteral lazyFileBuf (LiteralValue [KeyedElement (Some (KeyField "offset"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "next"%go)) (ElementExpression go.untyped_nil "$v1")])) in
     do:  ("buf" <-[lazyFileBuf] "$r0");;;
     (for: (λ: <>, #true); (λ: <>, #()) := λ: <>,
       let: "l" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
@@ -207,8 +222,10 @@ Definition readTableIndexⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalConte
       then
         let: "$r0" := (#(W64 8) +⟨go.uint64⟩ (![go.uint64] (StructFieldRef lazyFileBuf "offset"%go "buf"))) in
         do:  (map.insert go.uint64 (![go.MapType go.uint64 go.uint64] "index") (![go.uint64] (StructFieldRef Entry "Key"%go "e")) "$r0");;;
-        let: "$r0" := (CompositeLiteral lazyFileBuf (LiteralValue [KeyedElement (Some (KeyField "offset"%go)) (ElementExpression go.uint64 ((![go.uint64] (StructFieldRef lazyFileBuf "offset"%go "buf")) +⟨go.uint64⟩ (![go.uint64] "l"))); KeyedElement (Some (KeyField "next"%go)) (ElementExpression (go.SliceType go.byte) (let: "$s" := (![go.SliceType go.byte] (StructFieldRef lazyFileBuf "next"%go "buf")) in
-         Slice (go.SliceType go.byte) ("$s", ![go.uint64] "l", FuncResolve go.len [go.SliceType go.byte] #() (![go.SliceType go.byte] (StructFieldRef lazyFileBuf "next"%go "buf")))))])) in
+        let: "$r0" := (let: "$v0" := ((![go.uint64] (StructFieldRef lazyFileBuf "offset"%go "buf")) +⟨go.uint64⟩ (![go.uint64] "l")) in
+        let: "$v1" := (let: "$s" := (![go.SliceType go.byte] (StructFieldRef lazyFileBuf "next"%go "buf")) in
+        Slice (go.SliceType go.byte) ("$s", ![go.uint64] "l", FuncResolve go.len [go.SliceType go.byte] #() (![go.SliceType go.byte] (StructFieldRef lazyFileBuf "next"%go "buf")))) in
+        CompositeLiteral lazyFileBuf (LiteralValue [KeyedElement (Some (KeyField "offset"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "next"%go)) (ElementExpression (go.SliceType go.byte) "$v1")])) in
         do:  ("buf" <-[lazyFileBuf] "$r0");;;
         continue: #()
       else
@@ -228,7 +245,9 @@ Definition readTableIndexⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalConte
           let: "$a1" := (![go.SliceType go.byte] "p") in
           (FuncResolve go.append [go.SliceType go.byte] #()) "$a0" "$a1") in
           do:  ("newBuf" <-[go.SliceType go.byte] "$r0");;;
-          let: "$r0" := (CompositeLiteral lazyFileBuf (LiteralValue [KeyedElement (Some (KeyField "offset"%go)) (ElementExpression go.uint64 (![go.uint64] (StructFieldRef lazyFileBuf "offset"%go "buf"))); KeyedElement (Some (KeyField "next"%go)) (ElementExpression (go.SliceType go.byte) (![go.SliceType go.byte] "newBuf"))])) in
+          let: "$r0" := (let: "$v0" := (![go.uint64] (StructFieldRef lazyFileBuf "offset"%go "buf")) in
+          let: "$v1" := (![go.SliceType go.byte] "newBuf") in
+          CompositeLiteral lazyFileBuf (LiteralValue [KeyedElement (Some (KeyField "offset"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "next"%go)) (ElementExpression (go.SliceType go.byte) "$v1")])) in
           do:  ("buf" <-[lazyFileBuf] "$r0");;;
           continue: #()))));;;
     return: #()).
@@ -250,7 +269,9 @@ Definition RecoverTableⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext
     do:  (let: "$a0" := (![filesys.File] "f") in
     let: "$a1" := (![go.MapType go.uint64 go.uint64] "index") in
     (FuncResolve readTableIndex [] #()) "$a0" "$a1");;;
-    return: (CompositeLiteral Table (LiteralValue [KeyedElement (Some (KeyField "Index"%go)) (ElementExpression (go.MapType go.uint64 go.uint64) (![go.MapType go.uint64 go.uint64] "index")); KeyedElement (Some (KeyField "File"%go)) (ElementExpression filesys.File (![filesys.File] "f"))]))).
+    return: (let: "$v0" := (![go.MapType go.uint64 go.uint64] "index") in
+     let: "$v1" := (![filesys.File] "f") in
+     CompositeLiteral Table (LiteralValue [KeyedElement (Some (KeyField "Index"%go)) (ElementExpression (go.MapType go.uint64 go.uint64) "$v0"); KeyedElement (Some (KeyField "File"%go)) (ElementExpression filesys.File "$v1")]))).
 
 (* CloseTable frees up the fd held by a table.
 
@@ -332,7 +353,9 @@ Definition newBufⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : va
     let: "buf" := (GoAlloc (go.PointerType (go.SliceType go.byte)) (GoZeroVal (go.PointerType (go.SliceType go.byte)) #())) in
     let: "$r0" := (GoAlloc (go.SliceType go.byte) (GoZeroVal (go.SliceType go.byte) #())) in
     do:  ("buf" <-[go.PointerType (go.SliceType go.byte)] "$r0");;;
-    return: (CompositeLiteral bufFile (LiteralValue [KeyedElement (Some (KeyField "file"%go)) (ElementExpression filesys.File (![filesys.File] "f")); KeyedElement (Some (KeyField "buf"%go)) (ElementExpression (go.PointerType (go.SliceType go.byte)) (![go.PointerType (go.SliceType go.byte)] "buf"))]))).
+    return: (let: "$v0" := (![filesys.File] "f") in
+     let: "$v1" := (![go.PointerType (go.SliceType go.byte)] "buf") in
+     CompositeLiteral bufFile (LiteralValue [KeyedElement (Some (KeyField "file"%go)) (ElementExpression filesys.File "$v0"); KeyedElement (Some (KeyField "buf"%go)) (ElementExpression (go.PointerType (go.SliceType go.byte)) "$v1")]))).
 
 (* go: simpledb.go:159:6 *)
 Definition bufFlushⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
@@ -401,7 +424,11 @@ Definition newTableWriterⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalConte
     let: "off" := (GoAlloc (go.PointerType go.uint64) (GoZeroVal (go.PointerType go.uint64) #())) in
     let: "$r0" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
     do:  ("off" <-[go.PointerType go.uint64] "$r0");;;
-    return: (CompositeLiteral tableWriter (LiteralValue [KeyedElement (Some (KeyField "index"%go)) (ElementExpression (go.MapType go.uint64 go.uint64) (![go.MapType go.uint64 go.uint64] "index")); KeyedElement (Some (KeyField "name"%go)) (ElementExpression go.string (![go.string] "p")); KeyedElement (Some (KeyField "file"%go)) (ElementExpression bufFile (![bufFile] "buf")); KeyedElement (Some (KeyField "offset"%go)) (ElementExpression (go.PointerType go.uint64) (![go.PointerType go.uint64] "off"))]))).
+    return: (let: "$v0" := (![go.MapType go.uint64 go.uint64] "index") in
+     let: "$v1" := (![go.string] "p") in
+     let: "$v2" := (![bufFile] "buf") in
+     let: "$v3" := (![go.PointerType go.uint64] "off") in
+     CompositeLiteral tableWriter (LiteralValue [KeyedElement (Some (KeyField "index"%go)) (ElementExpression (go.MapType go.uint64 go.uint64) "$v0"); KeyedElement (Some (KeyField "name"%go)) (ElementExpression go.string "$v1"); KeyedElement (Some (KeyField "file"%go)) (ElementExpression bufFile "$v2"); KeyedElement (Some (KeyField "offset"%go)) (ElementExpression (go.PointerType go.uint64) "$v3")]))).
 
 (* go: simpledb.go:199:6 *)
 Definition tableWriterAppendⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
@@ -430,7 +457,9 @@ Definition tableWriterCloseⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCon
     let: "$a1" := (![go.string] (StructFieldRef tableWriter "name"%go "w")) in
     (FuncResolve filesys.Open [] #()) "$a0" "$a1") in
     do:  ("f" <-[filesys.File] "$r0");;;
-    return: (CompositeLiteral Table (LiteralValue [KeyedElement (Some (KeyField "Index"%go)) (ElementExpression (go.MapType go.uint64 go.uint64) (![go.MapType go.uint64 go.uint64] (StructFieldRef tableWriter "index"%go "w"))); KeyedElement (Some (KeyField "File"%go)) (ElementExpression filesys.File (![filesys.File] "f"))]))).
+    return: (let: "$v0" := (![go.MapType go.uint64 go.uint64] (StructFieldRef tableWriter "index"%go "w")) in
+     let: "$v1" := (![filesys.File] "f") in
+     CompositeLiteral Table (LiteralValue [KeyedElement (Some (KeyField "Index"%go)) (ElementExpression (go.MapType go.uint64 go.uint64) "$v0"); KeyedElement (Some (KeyField "File"%go)) (ElementExpression filesys.File "$v1")]))).
 
 (* EncodeUInt64 is an Encoder(uint64)
 
@@ -552,7 +581,14 @@ Definition NewDbⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val
     let: "compactionL" := (GoAlloc (go.PointerType sync.Mutex) (GoZeroVal (go.PointerType sync.Mutex) #())) in
     let: "$r0" := (GoAlloc sync.Mutex (GoZeroVal sync.Mutex #())) in
     do:  ("compactionL" <-[go.PointerType sync.Mutex] "$r0");;;
-    return: (CompositeLiteral Database (LiteralValue [KeyedElement (Some (KeyField "wbuffer"%go)) (ElementExpression (go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))) (![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] "wbuf")); KeyedElement (Some (KeyField "rbuffer"%go)) (ElementExpression (go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))) (![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] "rbuf")); KeyedElement (Some (KeyField "bufferL"%go)) (ElementExpression (go.PointerType sync.Mutex) (![go.PointerType sync.Mutex] "bufferL")); KeyedElement (Some (KeyField "table"%go)) (ElementExpression (go.PointerType Table) (![go.PointerType Table] "tableRef")); KeyedElement (Some (KeyField "tableName"%go)) (ElementExpression (go.PointerType go.string) (![go.PointerType go.string] "tableNameRef")); KeyedElement (Some (KeyField "tableL"%go)) (ElementExpression (go.PointerType sync.Mutex) (![go.PointerType sync.Mutex] "tableL")); KeyedElement (Some (KeyField "compactionL"%go)) (ElementExpression (go.PointerType sync.Mutex) (![go.PointerType sync.Mutex] "compactionL"))]))).
+    return: (let: "$v0" := (![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] "wbuf") in
+     let: "$v1" := (![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] "rbuf") in
+     let: "$v2" := (![go.PointerType sync.Mutex] "bufferL") in
+     let: "$v3" := (![go.PointerType Table] "tableRef") in
+     let: "$v4" := (![go.PointerType go.string] "tableNameRef") in
+     let: "$v5" := (![go.PointerType sync.Mutex] "tableL") in
+     let: "$v6" := (![go.PointerType sync.Mutex] "compactionL") in
+     CompositeLiteral Database (LiteralValue [KeyedElement (Some (KeyField "wbuffer"%go)) (ElementExpression (go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))) "$v0"); KeyedElement (Some (KeyField "rbuffer"%go)) (ElementExpression (go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))) "$v1"); KeyedElement (Some (KeyField "bufferL"%go)) (ElementExpression (go.PointerType sync.Mutex) "$v2"); KeyedElement (Some (KeyField "table"%go)) (ElementExpression (go.PointerType Table) "$v3"); KeyedElement (Some (KeyField "tableName"%go)) (ElementExpression (go.PointerType go.string) "$v4"); KeyedElement (Some (KeyField "tableL"%go)) (ElementExpression (go.PointerType sync.Mutex) "$v5"); KeyedElement (Some (KeyField "compactionL"%go)) (ElementExpression (go.PointerType sync.Mutex) "$v6")]))).
 
 (* Read gets a key from the database.
 
@@ -673,7 +709,9 @@ Definition tablePutOldTableⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCon
     let: "t" := (GoAlloc Table "t") in
     let: "w" := (GoAlloc tableWriter "w") in
     (let: "buf" := (GoAlloc lazyFileBuf (GoZeroVal lazyFileBuf #())) in
-    let: "$r0" := (CompositeLiteral lazyFileBuf (LiteralValue [KeyedElement (Some (KeyField "offset"%go)) (ElementExpression go.uint64 #(W64 0)); KeyedElement (Some (KeyField "next"%go)) (ElementExpression go.untyped_nil UntypedNil)])) in
+    let: "$r0" := (let: "$v0" := #(W64 0) in
+    let: "$v1" := UntypedNil in
+    CompositeLiteral lazyFileBuf (LiteralValue [KeyedElement (Some (KeyField "offset"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "next"%go)) (ElementExpression go.untyped_nil "$v1")])) in
     do:  ("buf" <-[lazyFileBuf] "$r0");;;
     (for: (λ: <>, #true); (λ: <>, #()) := λ: <>,
       let: "l" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
@@ -699,8 +737,10 @@ Definition tablePutOldTableⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCon
           let: "$a2" := (![go.SliceType go.byte] (StructFieldRef Entry "Value"%go "e")) in
           (FuncResolve tablePut [] #()) "$a0" "$a1" "$a2")
         else do:  #());;;
-        let: "$r0" := (CompositeLiteral lazyFileBuf (LiteralValue [KeyedElement (Some (KeyField "offset"%go)) (ElementExpression go.uint64 ((![go.uint64] (StructFieldRef lazyFileBuf "offset"%go "buf")) +⟨go.uint64⟩ (![go.uint64] "l"))); KeyedElement (Some (KeyField "next"%go)) (ElementExpression (go.SliceType go.byte) (let: "$s" := (![go.SliceType go.byte] (StructFieldRef lazyFileBuf "next"%go "buf")) in
-         Slice (go.SliceType go.byte) ("$s", ![go.uint64] "l", FuncResolve go.len [go.SliceType go.byte] #() (![go.SliceType go.byte] (StructFieldRef lazyFileBuf "next"%go "buf")))))])) in
+        let: "$r0" := (let: "$v0" := ((![go.uint64] (StructFieldRef lazyFileBuf "offset"%go "buf")) +⟨go.uint64⟩ (![go.uint64] "l")) in
+        let: "$v1" := (let: "$s" := (![go.SliceType go.byte] (StructFieldRef lazyFileBuf "next"%go "buf")) in
+        Slice (go.SliceType go.byte) ("$s", ![go.uint64] "l", FuncResolve go.len [go.SliceType go.byte] #() (![go.SliceType go.byte] (StructFieldRef lazyFileBuf "next"%go "buf")))) in
+        CompositeLiteral lazyFileBuf (LiteralValue [KeyedElement (Some (KeyField "offset"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "next"%go)) (ElementExpression (go.SliceType go.byte) "$v1")])) in
         do:  ("buf" <-[lazyFileBuf] "$r0");;;
         continue: #()
       else
@@ -720,7 +760,9 @@ Definition tablePutOldTableⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCon
           let: "$a1" := (![go.SliceType go.byte] "p") in
           (FuncResolve go.append [go.SliceType go.byte] #()) "$a0" "$a1") in
           do:  ("newBuf" <-[go.SliceType go.byte] "$r0");;;
-          let: "$r0" := (CompositeLiteral lazyFileBuf (LiteralValue [KeyedElement (Some (KeyField "offset"%go)) (ElementExpression go.uint64 (![go.uint64] (StructFieldRef lazyFileBuf "offset"%go "buf"))); KeyedElement (Some (KeyField "next"%go)) (ElementExpression (go.SliceType go.byte) (![go.SliceType go.byte] "newBuf"))])) in
+          let: "$r0" := (let: "$v0" := (![go.uint64] (StructFieldRef lazyFileBuf "offset"%go "buf")) in
+          let: "$v1" := (![go.SliceType go.byte] "newBuf") in
+          CompositeLiteral lazyFileBuf (LiteralValue [KeyedElement (Some (KeyField "offset"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "next"%go)) (ElementExpression (go.SliceType go.byte) "$v1")])) in
           do:  ("buf" <-[lazyFileBuf] "$r0");;;
           continue: #()))));;;
     return: #()).
@@ -931,7 +973,14 @@ Definition Recoverⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : v
     let: "compactionL" := (GoAlloc (go.PointerType sync.Mutex) (GoZeroVal (go.PointerType sync.Mutex) #())) in
     let: "$r0" := (GoAlloc sync.Mutex (GoZeroVal sync.Mutex #())) in
     do:  ("compactionL" <-[go.PointerType sync.Mutex] "$r0");;;
-    return: (CompositeLiteral Database (LiteralValue [KeyedElement (Some (KeyField "wbuffer"%go)) (ElementExpression (go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))) (![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] "wbuffer")); KeyedElement (Some (KeyField "rbuffer"%go)) (ElementExpression (go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))) (![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] "rbuffer")); KeyedElement (Some (KeyField "bufferL"%go)) (ElementExpression (go.PointerType sync.Mutex) (![go.PointerType sync.Mutex] "bufferL")); KeyedElement (Some (KeyField "table"%go)) (ElementExpression (go.PointerType Table) (![go.PointerType Table] "tableRef")); KeyedElement (Some (KeyField "tableName"%go)) (ElementExpression (go.PointerType go.string) (![go.PointerType go.string] "tableNameRef")); KeyedElement (Some (KeyField "tableL"%go)) (ElementExpression (go.PointerType sync.Mutex) (![go.PointerType sync.Mutex] "tableL")); KeyedElement (Some (KeyField "compactionL"%go)) (ElementExpression (go.PointerType sync.Mutex) (![go.PointerType sync.Mutex] "compactionL"))]))).
+    return: (let: "$v0" := (![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] "wbuffer") in
+     let: "$v1" := (![go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))] "rbuffer") in
+     let: "$v2" := (![go.PointerType sync.Mutex] "bufferL") in
+     let: "$v3" := (![go.PointerType Table] "tableRef") in
+     let: "$v4" := (![go.PointerType go.string] "tableNameRef") in
+     let: "$v5" := (![go.PointerType sync.Mutex] "tableL") in
+     let: "$v6" := (![go.PointerType sync.Mutex] "compactionL") in
+     CompositeLiteral Database (LiteralValue [KeyedElement (Some (KeyField "wbuffer"%go)) (ElementExpression (go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))) "$v0"); KeyedElement (Some (KeyField "rbuffer"%go)) (ElementExpression (go.PointerType (go.MapType go.uint64 (go.SliceType go.byte))) "$v1"); KeyedElement (Some (KeyField "bufferL"%go)) (ElementExpression (go.PointerType sync.Mutex) "$v2"); KeyedElement (Some (KeyField "table"%go)) (ElementExpression (go.PointerType Table) "$v3"); KeyedElement (Some (KeyField "tableName"%go)) (ElementExpression (go.PointerType go.string) "$v4"); KeyedElement (Some (KeyField "tableL"%go)) (ElementExpression (go.PointerType sync.Mutex) "$v5"); KeyedElement (Some (KeyField "compactionL"%go)) (ElementExpression (go.PointerType sync.Mutex) "$v6")]))).
 
 (* Shutdown immediately closes the database.
 

@@ -546,18 +546,40 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 	panic("unreachable")
 }
 
+type compositeBinding struct {
+	name string
+	val  glang.Expr
+}
+
 func (ctx *Ctx) compositeLiteral(e *ast.CompositeLit) glang.Expr {
+	var bindings []compositeBinding
+	res := ctx.compositeLiteralWithBindings(e, &bindings)
+
+	for i := len(bindings) - 1; i >= 0; i-- {
+		res = glang.LetExpr{
+			Names:   []string{bindings[i].name},
+			ValExpr: bindings[i].val,
+			Cont:    res,
+		}
+	}
+	return res
+}
+
+func (ctx *Ctx) compositeLiteralWithBindings(e *ast.CompositeLit, bindings *[]compositeBinding) glang.Expr {
 	var elements glang.ListExpr
 
-	handleValue := func(e ast.Expr) glang.Expr {
-		switch e := e.(type) {
+	handleValue := func(ev ast.Expr) glang.Expr {
+		switch ev := ev.(type) {
 		case *ast.CompositeLit:
-			if e.Type == nil {
-				return ctx.expr(e)
+			if ev.Type == nil {
+				return ctx.compositeLiteralWithBindings(ev, bindings)
 			}
 		}
+
+		name := fmt.Sprintf("$v%d", len(*bindings))
+		*bindings = append(*bindings, compositeBinding{name: name, val: ctx.expr(ev)})
 		return glang.NewCallExpr(glang.VerbatimExpr("ElementExpression"),
-			ctx.glangType(e, ctx.typeOf(e)), ctx.expr(e))
+			ctx.glangType(ev, ctx.typeOf(ev)), glang.IdentExpr(name))
 	}
 
 	for _, el := range e.Elts {
@@ -575,8 +597,10 @@ func (ctx *Ctx) compositeLiteral(e *ast.CompositeLit) glang.Expr {
 				}
 			}
 			if !done {
+				name := fmt.Sprintf("$k%d", len(*bindings))
+				*bindings = append(*bindings, compositeBinding{name: name, val: ctx.expr(el.Key)})
 				k = glang.NewCallExpr(glang.VerbatimExpr("KeyExpression"),
-					ctx.glangType(el.Key, ctx.typeOf(el.Key)), ctx.expr(el.Key))
+					ctx.glangType(el.Key, ctx.typeOf(el.Key)), glang.IdentExpr(name))
 			}
 			k = glang.NewCallExpr(glang.VerbatimExpr("Some"), k)
 			v = handleValue(el.Value)
@@ -586,6 +610,7 @@ func (ctx *Ctx) compositeLiteral(e *ast.CompositeLit) glang.Expr {
 
 		elements = append(elements, glang.NewCallExpr(glang.VerbatimExpr("KeyedElement"), k, v))
 	}
+
 	if e.Type != nil {
 		return glang.NewCallExpr(glang.VerbatimExpr("CompositeLiteral"),
 			ctx.glangType(e.Type, ctx.typeOf(e.Type)),

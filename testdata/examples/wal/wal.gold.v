@@ -88,7 +88,11 @@ Definition Newⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :
     let: "l" := (GoAlloc (go.PointerType sync.Mutex) (GoZeroVal (go.PointerType sync.Mutex) #())) in
     let: "$r0" := (GoAlloc sync.Mutex (GoZeroVal sync.Mutex #())) in
     do:  ("l" <-[go.PointerType sync.Mutex] "$r0");;;
-    return: (CompositeLiteral Log (LiteralValue [KeyedElement (Some (KeyField "d"%go)) (ElementExpression disk.Disk (![disk.Disk] "d")); KeyedElement (Some (KeyField "cache"%go)) (ElementExpression (go.MapType go.uint64 disk.Block) (![go.MapType go.uint64 disk.Block] "cache")); KeyedElement (Some (KeyField "length"%go)) (ElementExpression (go.PointerType go.uint64) (![go.PointerType go.uint64] "lengthPtr")); KeyedElement (Some (KeyField "l"%go)) (ElementExpression (go.PointerType sync.Mutex) (![go.PointerType sync.Mutex] "l"))]))).
+    return: (let: "$v0" := (![disk.Disk] "d") in
+     let: "$v1" := (![go.MapType go.uint64 disk.Block] "cache") in
+     let: "$v2" := (![go.PointerType go.uint64] "lengthPtr") in
+     let: "$v3" := (![go.PointerType sync.Mutex] "l") in
+     CompositeLiteral Log (LiteralValue [KeyedElement (Some (KeyField "d"%go)) (ElementExpression disk.Disk "$v0"); KeyedElement (Some (KeyField "cache"%go)) (ElementExpression (go.MapType go.uint64 disk.Block) "$v1"); KeyedElement (Some (KeyField "length"%go)) (ElementExpression (go.PointerType go.uint64) "$v2"); KeyedElement (Some (KeyField "l"%go)) (ElementExpression (go.PointerType sync.Mutex) "$v3")]))).
 
 (* go: log.go:51:14 *)
 Definition Log__lockⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
@@ -340,7 +344,11 @@ Definition Openⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val 
     let: "l" := (GoAlloc (go.PointerType sync.Mutex) (GoZeroVal (go.PointerType sync.Mutex) #())) in
     let: "$r0" := (GoAlloc sync.Mutex (GoZeroVal sync.Mutex #())) in
     do:  ("l" <-[go.PointerType sync.Mutex] "$r0");;;
-    return: (CompositeLiteral Log (LiteralValue [KeyedElement (Some (KeyField "d"%go)) (ElementExpression disk.Disk (![disk.Disk] "d")); KeyedElement (Some (KeyField "cache"%go)) (ElementExpression (go.MapType go.uint64 disk.Block) (![go.MapType go.uint64 disk.Block] "cache")); KeyedElement (Some (KeyField "length"%go)) (ElementExpression (go.PointerType go.uint64) (![go.PointerType go.uint64] "lengthPtr")); KeyedElement (Some (KeyField "l"%go)) (ElementExpression (go.PointerType sync.Mutex) (![go.PointerType sync.Mutex] "l"))]))).
+    return: (let: "$v0" := (![disk.Disk] "d") in
+     let: "$v1" := (![go.MapType go.uint64 disk.Block] "cache") in
+     let: "$v2" := (![go.PointerType go.uint64] "lengthPtr") in
+     let: "$v3" := (![go.PointerType sync.Mutex] "l") in
+     CompositeLiteral Log (LiteralValue [KeyedElement (Some (KeyField "d"%go)) (ElementExpression disk.Disk "$v0"); KeyedElement (Some (KeyField "cache"%go)) (ElementExpression (go.MapType go.uint64 disk.Block) "$v1"); KeyedElement (Some (KeyField "length"%go)) (ElementExpression (go.PointerType go.uint64) "$v2"); KeyedElement (Some (KeyField "l"%go)) (ElementExpression (go.PointerType sync.Mutex) "$v3")]))).
 
 #[global] Instance info' : PkgInfo pkg_id.awol :=
 {|
