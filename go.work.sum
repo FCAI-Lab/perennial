@@ -18,6 +18,8 @@ github.com/stretchr/objx v0.5.2/go.mod h1:FRsXN1f5AsAjCGJKqEizvkpNtU+EGNCLh3NxZ/
 github.com/tchajed/goose v0.5.3 h1:+Ag8wwWfsQZfsTSW953HfDvJmzQ6YopLsfnTNzcd/ZE=
 github.com/tchajed/goose v0.5.3/go.mod h1:ISQLiMmllwxTyKhi5wn/PKE3CeseL6Jnvv3CCWOHvVE=
 github.com/tchajed/marshal v0.6.1/go.mod h1:bpCjDLDucqTM51woyzbZP5ku3hT4TORx7YGhyWSUpA4=
+github.com/upamanyus/marshal v0.0.0-20260212025754-cf86d74f6773 h1:YA35N1VodzahcaIbLiWBdSV1WvUSOqy15hMY50vI3Rk=
+github.com/upamanyus/marshal v0.0.0-20260212025754-cf86d74f6773/go.mod h1:AlKL5d6a5lEmJqwuaq5eF5GMlpJIvlOiTGyZROqTZUc=
 github.com/yuin/goldmark v1.4.13 h1:fVcFKWvrslecOb/tg+Cc05dkeYx540o0FuFt3nUVDoE=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 golang.org/x/crypto v0.28.0/go.mod h1:rmgy+3RHxRZMyY0jjAJShp2zgEdOqj2AO7U0pYmeQ7U=

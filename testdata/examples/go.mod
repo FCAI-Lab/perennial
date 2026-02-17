@@ -5,7 +5,7 @@ go 1.22.0
 toolchain go1.23.4
 
 require (
-	github.com/goose-lang/primitive v0.1.0
+	github.com/goose-lang/primitive v0.2.2-0.20260212023729-cb7f52217e65
 	github.com/goose-lang/std v0.5.0
 	github.com/stretchr/testify v1.9.0
 	github.com/tchajed/marshal v0.6.2
@@ -19,5 +19,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/goose-lang/primitive => ./../../../primitive
-replace github.com/tchajed/marshal => ./../../../marshal
+replace (
+	github.com/tchajed/marshal => github.com/upamanyus/marshal cf86d74f677312974fe8a7f3829d3464286caa84
+)
