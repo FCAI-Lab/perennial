@@ -1294,14 +1294,14 @@ Definition useEmbeddedValFieldⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobal
 Definition useEmbeddedMethodⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "d",
     exception_do (let: "d" := (GoAlloc embedD "d") in
-    return: (((MethodResolve embedD "Bar"%go (![embedD] "d")) #()) =⟨go.string⟩ ((MethodResolve (go.PointerType embedA) "Bar"%go (StructFieldRef embedB "embedA"%go (![go.PointerType embedB] (StructFieldRef embedC "embedB"%go (StructFieldRef embedD "embedC"%go "d"))))) #()))).
+    return: (((MethodResolve (go.PointerType embedD) "Bar"%go "d") #()) =⟨go.string⟩ ((MethodResolve (go.PointerType embedA) "Bar"%go (StructFieldRef embedB "embedA"%go (![go.PointerType embedB] (StructFieldRef embedC "embedB"%go (StructFieldRef embedD "embedC"%go "d"))))) #()))).
 
 (* go: embedded.go:64:6 *)
 Definition useEmbeddedMethod2ⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "d",
     exception_do (let: "d" := (GoAlloc embedD "d") in
-    do:  ((MethodResolve embedD "Car"%go (![embedD] "d")) #());;;
-    return: (((MethodResolve embedD "Foo"%go (![embedD] "d")) #()) =⟨go.string⟩ ((MethodResolve (go.PointerType embedB) "Foo"%go (![go.PointerType embedB] (StructFieldRef embedC "embedB"%go (StructFieldRef embedD "embedC"%go "d")))) #()))).
+    do:  ((MethodResolve (go.PointerType embedD) "Car"%go "d") #());;;
+    return: (((MethodResolve (go.PointerType embedD) "Foo"%go "d") #()) =⟨go.string⟩ ((MethodResolve (go.PointerType embedB) "Foo"%go (![go.PointerType embedB] (StructFieldRef embedC "embedB"%go (StructFieldRef embedD "embedC"%go "d")))) #()))).
 
 (* go: empty_functions.go:3:6 *)
 Definition emptyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
@@ -2325,7 +2325,7 @@ Definition R__recurMethodⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalConte
 Definition RecursiveEmbedded__recurEmbeddedMethodⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "r" <>,
     exception_do (let: "r" := (GoAlloc (go.PointerType RecursiveEmbedded) "r") in
-    do:  ((MethodResolve Other "recurEmbeddedMethod"%go (![Other] (StructFieldRef RecursiveEmbedded "Other"%go (![go.PointerType RecursiveEmbedded] "r")))) #());;;
+    do:  ((MethodResolve (go.PointerType Other) "recurEmbeddedMethod"%go (StructFieldRef RecursiveEmbedded "Other"%go (![go.PointerType RecursiveEmbedded] "r"))) #());;;
     return: #()).
 
 (* go: renamedImport.go:7:6 *)
@@ -2741,7 +2741,7 @@ Definition UseAddⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : va
     do:  ("c" <-[Point] "$r0");;;
     let: "r" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
     let: "$r0" := (let: "$a0" := #(W64 4) in
-    (MethodResolve Point "Add"%go (![Point] "c")) "$a0") in
+    (MethodResolve (go.PointerType Point) "Add"%go "c") "$a0") in
     do:  ("r" <-[go.uint64] "$r0");;;
     return: (![go.uint64] "r")).
 

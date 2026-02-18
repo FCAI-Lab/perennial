@@ -523,23 +523,20 @@ func (ctx *Ctx) selectorExpr(e *ast.SelectorExpr) glang.Expr {
 		// 2*2 cases: receiver type could be (T) or (*T), and e.X type
 		// (including embedded fields) could be (T) or (*T).
 
-		f := ctx.info.ObjectOf(e.Sel).(*types.Func)
-		receiver := ctx.expr(e.X)
+		f := selection.Obj().(*types.Func)
 		receiverType := types.Unalias(ctx.typeOf(e.X))
-		typeExpr := ctx.glangType(e.X, receiverType)
+		receiver := ctx.expr(e.X)
 		methodExpr := glang.StringLiteral{Value: e.Sel.Name}
 
-		// figure out if this is shorthand for (&x).m().
-		methodReceiverType := types.Unalias(f.Signature().Recv().Type())
-		if p, ok := methodReceiverType.(*types.Pointer); ok {
-			if types.Identical(p.Elem(), receiverType) {
-				if !ctx.info.Types[e.X].Addressable() {
-					ctx.nope(e.X, "x is not addressable but want (&x).m")
-				}
+		// If x is addressable and &x's method set contains m, x.m() is shorthand for (&x).m().
+		if ctx.info.Types[e.X].Addressable() {
+			ptrType := types.NewPointer(receiverType)
+			if obj, _, _ := types.LookupFieldOrMethod(ptrType, false, f.Pkg(), f.Name()); obj != nil {
+				receiverType = ptrType
 				receiver = ctx.exprAddr(e.X)
-				typeExpr = ctx.glangType(e.X, types.NewPointer(receiverType))
 			}
 		}
+		typeExpr := ctx.glangType(e.X, receiverType)
 
 		return glang.NewCallExpr(glang.VerbatimExpr("MethodResolve"), typeExpr, methodExpr, receiver)
 	}

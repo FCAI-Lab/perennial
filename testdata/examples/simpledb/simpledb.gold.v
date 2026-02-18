@@ -143,7 +143,7 @@ Definition DecodeUInt64ⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext
     else do:  #());;;
     let: "n" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
     let: "$r0" := (let: "$a0" := (![go.SliceType go.byte] "p") in
-    (MethodResolve binary.littleEndian "Uint64"%go (![binary.littleEndian] (GlobalVarAddr binary.LittleEndian #()))) "$a0") in
+    (MethodResolve (go.PointerType binary.littleEndian) "Uint64"%go (GlobalVarAddr binary.LittleEndian #())) "$a0") in
     do:  ("n" <-[go.uint64] "$r0");;;
     return: (![go.uint64] "n", #(W64 8))).
 
@@ -296,7 +296,7 @@ Definition readValueⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} :
     do:  ("startBuf" <-[go.SliceType go.byte] "$r0");;;
     let: "totalBytes" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
     let: "$r0" := (let: "$a0" := (![go.SliceType go.byte] "startBuf") in
-    (MethodResolve binary.littleEndian "Uint64"%go (![binary.littleEndian] (GlobalVarAddr binary.LittleEndian #()))) "$a0") in
+    (MethodResolve (go.PointerType binary.littleEndian) "Uint64"%go (GlobalVarAddr binary.LittleEndian #())) "$a0") in
     do:  ("totalBytes" <-[go.uint64] "$r0");;;
     let: "buf" := (GoAlloc (go.SliceType go.byte) (GoZeroVal (go.SliceType go.byte) #())) in
     let: "$r0" := (let: "$s" := (![go.SliceType go.byte] "startBuf") in
@@ -473,7 +473,7 @@ Definition EncodeUInt64ⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext
     do:  ("tmp" <-[go.SliceType go.byte] "$r0");;;
     do:  (let: "$a0" := (![go.SliceType go.byte] "tmp") in
     let: "$a1" := (![go.uint64] "x") in
-    (MethodResolve binary.littleEndian "PutUint64"%go (![binary.littleEndian] (GlobalVarAddr binary.LittleEndian #()))) "$a0" "$a1");;;
+    (MethodResolve (go.PointerType binary.littleEndian) "PutUint64"%go (GlobalVarAddr binary.LittleEndian #())) "$a0" "$a1");;;
     let: "p2" := (GoAlloc (go.SliceType go.byte) (GoZeroVal (go.SliceType go.byte) #())) in
     let: "$r0" := (let: "$a0" := (![go.SliceType go.byte] "p") in
     let: "$a1" := (![go.SliceType go.byte] "tmp") in
