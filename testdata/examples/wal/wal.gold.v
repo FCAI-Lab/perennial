@@ -41,7 +41,7 @@ Definition intToBlockⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
     do:  ("b" <-[go.SliceType go.byte] "$r0");;;
     do:  (let: "$a0" := (![go.SliceType go.byte] "b") in
     let: "$a1" := (![go.uint64] "a") in
-    (MethodResolve binary.littleEndian "PutUint64"%go (![binary.littleEndian] (GlobalVarAddr binary.LittleEndian #()))) "$a0" "$a1");;;
+    (MethodResolve (go.PointerType binary.littleEndian) "PutUint64"%go (GlobalVarAddr binary.LittleEndian #())) "$a0" "$a1");;;
     return: (![go.SliceType go.byte] "b")).
 
 (* go: log.go:30:6 *)
@@ -50,7 +50,7 @@ Definition blockToIntⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
     exception_do (let: "v" := (GoAlloc disk.Block "v") in
     let: "a" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
     let: "$r0" := (let: "$a0" := (![disk.Block] "v") in
-    (MethodResolve binary.littleEndian "Uint64"%go (![binary.littleEndian] (GlobalVarAddr binary.LittleEndian #()))) "$a0") in
+    (MethodResolve (go.PointerType binary.littleEndian) "Uint64"%go (GlobalVarAddr binary.LittleEndian #())) "$a0") in
     do:  ("a" <-[go.uint64] "$r0");;;
     return: (![go.uint64] "a")).
 
@@ -116,16 +116,16 @@ Definition Log__unlockⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext}
 Definition Log__BeginTxnⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "l" <>,
     exception_do (let: "l" := (GoAlloc Log "l") in
-    do:  ((MethodResolve Log "lock"%go (![Log] "l")) #());;;
+    do:  ((MethodResolve (go.PointerType Log) "lock"%go "l") #());;;
     let: "length" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
     let: "$r0" := (![go.uint64] (![go.PointerType go.uint64] (StructFieldRef Log "length"%go "l"))) in
     do:  ("length" <-[go.uint64] "$r0");;;
     (if: Convert go.untyped_bool go.bool ((![go.uint64] "length") =⟨go.uint64⟩ #(W64 0))
     then
-      do:  ((MethodResolve Log "unlock"%go (![Log] "l")) #());;;
+      do:  ((MethodResolve (go.PointerType Log) "unlock"%go "l") #());;;
       return: (#true)
     else do:  #());;;
-    do:  ((MethodResolve Log "unlock"%go (![Log] "l")) #());;;
+    do:  ((MethodResolve (go.PointerType Log) "unlock"%go "l") #());;;
     return: (#false)).
 
 (* Read from the logical disk.
@@ -137,7 +137,7 @@ Definition Log__Readⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} :
   λ: "l" "a",
     exception_do (let: "l" := (GoAlloc Log "l") in
     let: "a" := (GoAlloc go.uint64 "a") in
-    do:  ((MethodResolve Log "lock"%go (![Log] "l")) #());;;
+    do:  ((MethodResolve (go.PointerType Log) "lock"%go "l") #());;;
     let: "ok" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
     let: "v" := (GoAlloc disk.Block (GoZeroVal disk.Block #())) in
     let: ("$ret0", "$ret1") := (map.lookup2 go.uint64 disk.Block (![go.MapType go.uint64 disk.Block] (StructFieldRef Log "cache"%go "l")) (![go.uint64] "a")) in
@@ -147,10 +147,10 @@ Definition Log__Readⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} :
     do:  ("ok" <-[go.bool] "$r1");;;
     (if: ![go.bool] "ok"
     then
-      do:  ((MethodResolve Log "unlock"%go (![Log] "l")) #());;;
+      do:  ((MethodResolve (go.PointerType Log) "unlock"%go "l") #());;;
       return: (![disk.Block] "v")
     else do:  #());;;
-    do:  ((MethodResolve Log "unlock"%go (![Log] "l")) #());;;
+    do:  ((MethodResolve (go.PointerType Log) "unlock"%go "l") #());;;
     let: "dv" := (GoAlloc disk.Block (GoZeroVal disk.Block #())) in
     let: "$r0" := (let: "$a0" := (logLength +⟨go.uint64⟩ (![go.uint64] "a")) in
     (MethodResolve disk.Disk "Read"%go (![disk.Disk] (StructFieldRef Log "d"%go "l"))) "$a0") in
@@ -174,7 +174,7 @@ Definition Log__Writeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
     exception_do (let: "l" := (GoAlloc Log "l") in
     let: "v" := (GoAlloc disk.Block "v") in
     let: "a" := (GoAlloc go.uint64 "a") in
-    do:  ((MethodResolve Log "lock"%go (![Log] "l")) #());;;
+    do:  ((MethodResolve (go.PointerType Log) "lock"%go "l") #());;;
     let: "length" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
     let: "$r0" := (![go.uint64] (![go.PointerType go.uint64] (StructFieldRef Log "length"%go "l"))) in
     do:  ("length" <-[go.uint64] "$r0");;;
@@ -200,7 +200,7 @@ Definition Log__Writeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
     do:  (map.insert go.uint64 (![go.MapType go.uint64 disk.Block] (StructFieldRef Log "cache"%go "l")) (![go.uint64] "a") "$r0");;;
     let: "$r0" := ((![go.uint64] "length") +⟨go.uint64⟩ #(W64 1)) in
     do:  ((![go.PointerType go.uint64] (StructFieldRef Log "length"%go "l")) <-[go.uint64] "$r0");;;
-    do:  ((MethodResolve Log "unlock"%go (![Log] "l")) #());;;
+    do:  ((MethodResolve (go.PointerType Log) "unlock"%go "l") #());;;
     return: #()).
 
 (* Commit the current transaction.
@@ -209,11 +209,11 @@ Definition Log__Writeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
 Definition Log__Commitⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "l" <>,
     exception_do (let: "l" := (GoAlloc Log "l") in
-    do:  ((MethodResolve Log "lock"%go (![Log] "l")) #());;;
+    do:  ((MethodResolve (go.PointerType Log) "lock"%go "l") #());;;
     let: "length" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
     let: "$r0" := (![go.uint64] (![go.PointerType go.uint64] (StructFieldRef Log "length"%go "l"))) in
     do:  ("length" <-[go.uint64] "$r0");;;
-    do:  ((MethodResolve Log "unlock"%go (![Log] "l")) #());;;
+    do:  ((MethodResolve (go.PointerType Log) "unlock"%go "l") #());;;
     let: "header" := (GoAlloc disk.Block (GoZeroVal disk.Block #())) in
     let: "$r0" := (let: "$a0" := (![go.uint64] "length") in
     (FuncResolve intToBlock [] #()) "$a0") in
@@ -298,7 +298,7 @@ Definition clearLogⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : 
 Definition Log__Applyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "l" <>,
     exception_do (let: "l" := (GoAlloc Log "l") in
-    do:  ((MethodResolve Log "lock"%go (![Log] "l")) #());;;
+    do:  ((MethodResolve (go.PointerType Log) "lock"%go "l") #());;;
     let: "length" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
     let: "$r0" := (![go.uint64] (![go.PointerType go.uint64] (StructFieldRef Log "length"%go "l"))) in
     do:  ("length" <-[go.uint64] "$r0");;;
@@ -309,7 +309,7 @@ Definition Log__Applyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
     (FuncResolve clearLog [] #()) "$a0");;;
     let: "$r0" := #(W64 0) in
     do:  ((![go.PointerType go.uint64] (StructFieldRef Log "length"%go "l")) <-[go.uint64] "$r0");;;
-    do:  ((MethodResolve Log "unlock"%go (![Log] "l")) #());;;
+    do:  ((MethodResolve (go.PointerType Log) "unlock"%go "l") #());;;
     return: #()).
 
 (* Open recovers the log following a crash or shutdown
