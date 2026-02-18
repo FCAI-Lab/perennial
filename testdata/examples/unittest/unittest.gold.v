@@ -1002,7 +1002,7 @@ Definition testU32NewtypeLenⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCo
     let: "$r0" := ((FuncResolve go.make2 [go.SliceType go.byte] #()) #(W64 20)) in
     do:  ("s" <-[go.SliceType go.byte] "$r0");;;
     return: ((Convert go.int Uint32 (let: "$a0" := (![go.SliceType go.byte] "s") in
-     (FuncResolve go.len [go.SliceType go.byte] #()) "$a0")) =⟨go.uint32⟩ #(W32 20))).
+     (FuncResolve go.len [go.SliceType go.byte] #()) "$a0")) =⟨Uint32⟩ #(W32 20))).
 
 (* go: conversions.go:48:22 *)
 Definition numWrapper__incⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
@@ -1039,7 +1039,7 @@ Definition testConversionLiteralⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlob
     do:  (map.insert go.any (![go.MapType go.any go.any] "m") (Convert go.untyped_nil go.any UntypedNil) "$r0");;;
     let: "$r0" := (Convert go.untyped_nil go.any UntypedNil) in
     do:  (map.insert go.any (![go.MapType go.any go.any] "m") (Convert withInterface go.any (![withInterface] "s")) "$r0");;;
-    return: ((map.lookup1 go.any go.any (![go.MapType go.any go.any] "m") (map.lookup1 go.any go.any (![go.MapType go.any go.any] "m") (Convert withInterface go.any (![withInterface] "s")))) =⟨go.InterfaceType []⟩ (Convert withInterface (go.InterfaceType []) (![withInterface] "s")))).
+    return: ((map.lookup1 go.any go.any (![go.MapType go.any go.any] "m") (map.lookup1 go.any go.any (![go.MapType go.any go.any] "m") (Convert withInterface go.any (![withInterface] "s")))) =⟨go.any⟩ (Convert withInterface go.any (![withInterface] "s")))).
 
 (* go: copy.go:3:6 *)
 Definition testCopySimpleⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
@@ -1432,7 +1432,7 @@ Definition genericConversionsⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalC
     let: "$a1" := #""%go in
     (FuncResolve assert [] #()) "$a0" "$a1");;;
     do:  (let: "$a0" := ((let: "$a0" := #"ok"%go in
-    (FuncResolve maybeConvertToInterface [go.string] #()) "$a0") =⟨go.InterfaceType []⟩ (Convert go.string (go.InterfaceType []) #"ok"%go)) in
+    (FuncResolve maybeConvertToInterface [go.string] #()) "$a0") =⟨go.any⟩ (Convert go.string go.any #"ok"%go)) in
     let: "$a1" := #""%go in
     (FuncResolve assert [] #()) "$a0" "$a1");;;
     do:  (let: "$a0" := ((TypeAssert go.string (let: "$a0" := (let: "$a0" := #"ok"%go in
@@ -1611,7 +1611,7 @@ Definition testConversionInEqⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalC
     do:  ("c" <-[go.PointerType concreteFooer] "$r0");;;
     let: "$r0" := (Convert (go.PointerType concreteFooer) Fooer (![go.PointerType concreteFooer] "c")) in
     do:  ("f" <-[Fooer] "$r0");;;
-    return: ((Convert (go.PointerType concreteFooer) (go.InterfaceType [go.MethodElem "Foo"%go (go.Signature [] false [])]) (![go.PointerType concreteFooer] "c")) =⟨go.InterfaceType [go.MethodElem "Foo"%go (go.Signature [] false [])]⟩ (![Fooer] "f"))).
+    return: ((Convert (go.PointerType concreteFooer) Fooer (![go.PointerType concreteFooer] "c")) =⟨Fooer⟩ (![Fooer] "f"))).
 
 (* go: interfaces.go:82:6 *)
 Definition takeMultipleⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=

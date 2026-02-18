@@ -1034,7 +1034,7 @@ Definition testU32NewtypeLenⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCo
     let: "$r0" := ((FuncResolve go.make2 [go.SliceType go.byte] #()) #(W64 20)) in
     do:  ("s" <-[go.SliceType go.byte] "$r0");;;
     return: ((Convert go.int Uint32 (let: "$a0" := (![go.SliceType go.byte] "s") in
-     (FuncResolve go.len [go.SliceType go.byte] #()) "$a0")) =⟨go.uint32⟩ #(W32 20))).
+     (FuncResolve go.len [go.SliceType go.byte] #()) "$a0")) =⟨Uint32⟩ #(W32 20))).
 
 (* go: int_conversions.go:33:6 *)
 Definition testUint32Untypedⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
@@ -1042,7 +1042,7 @@ Definition testUint32Untypedⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCo
     exception_do (let: "x" := (GoAlloc Uint32 (GoZeroVal Uint32 #())) in
     let: "$r0" := #(W32 1230) in
     do:  ("x" <-[Uint32] "$r0");;;
-    return: ((![Uint32] "x") =⟨go.uint32⟩ #(W32 1230))).
+    return: ((![Uint32] "x") =⟨Uint32⟩ #(W32 1230))).
 
 (* go: interfaces.go:12:6 *)
 Definition measureAreaⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
@@ -1188,9 +1188,7 @@ Definition testTypeAssertionInterfaceⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : G
     let: "$r0" := (Convert NumStruct (go.InterfaceType []) (let: "$v0" := #(W64 3) in
     CompositeLiteral NumStruct (LiteralValue [KeyedElement None (ElementExpression go.int "$v0")]))) in
     do:  ("i" <-[go.InterfaceType []] "$r0");;;
-    return: ((TypeAssert NumStruct (![go.InterfaceType []] "i")) =⟨go.StructType [
-       (go.FieldDecl "Value"%go go.int)
-     ]⟩ (let: "$v0" := #(W64 3) in
+    return: ((TypeAssert NumStruct (![go.InterfaceType []] "i")) =⟨NumStruct⟩ (let: "$v0" := #(W64 3) in
      CompositeLiteral NumStruct (LiteralValue [KeyedElement None (ElementExpression go.int "$v0")])))).
 
 (* go: interfaces_complex.go:52:22 *)
@@ -1892,7 +1890,7 @@ Definition testInterfaceNilWithTypeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoG
     let: "notNil" := (GoAlloc go.any (GoZeroVal go.any #())) in
     let: "$r0" := (Convert (go.PointerType go.string) go.any (Convert go.untyped_nil (go.PointerType go.string) UntypedNil)) in
     do:  ("notNil" <-[go.any] "$r0");;;
-    return: ((((![go.any] "isNil") =⟨go.InterfaceType []⟩ (Convert go.untyped_nil (go.InterfaceType []) UntypedNil)) && ((![go.any] "notNil") ≠⟨go.InterfaceType []⟩ (Convert go.untyped_nil (go.InterfaceType []) UntypedNil))) && ((![go.any] "isNil") ≠⟨go.InterfaceType []⟩ (![go.any] "notNil")))).
+    return: ((((![go.any] "isNil") =⟨go.any⟩ (Convert go.untyped_nil go.any UntypedNil)) && ((![go.any] "notNil") ≠⟨go.any⟩ (Convert go.untyped_nil go.any UntypedNil))) && ((![go.any] "isNil") ≠⟨go.any⟩ (![go.any] "notNil")))).
 
 (* helpers
 
@@ -2666,20 +2664,11 @@ Definition testStructConstructionsⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGl
     do:  ("ok" <-[go.bool] "$r0");;;
     let: "$r0" := (GoAlloc TwoInts (GoZeroVal TwoInts #())) in
     do:  ("p1" <-[go.PointerType TwoInts] "$r0");;;
-    let: "$r0" := ((![go.bool] "ok") && ((![TwoInts] "p2") =⟨go.StructType [
-      (go.FieldDecl "x"%go go.uint64);
-      (go.FieldDecl "y"%go go.uint64)
-    ]⟩ (![TwoInts] "p3"))) in
+    let: "$r0" := ((![go.bool] "ok") && ((![TwoInts] "p2") =⟨TwoInts⟩ (![TwoInts] "p3"))) in
     do:  ("ok" <-[go.bool] "$r0");;;
-    let: "$r0" := ((![go.bool] "ok") && ((![TwoInts] "p3") =⟨go.StructType [
-      (go.FieldDecl "x"%go go.uint64);
-      (go.FieldDecl "y"%go go.uint64)
-    ]⟩ (![TwoInts] "p4"))) in
+    let: "$r0" := ((![go.bool] "ok") && ((![TwoInts] "p3") =⟨TwoInts⟩ (![TwoInts] "p4"))) in
     do:  ("ok" <-[go.bool] "$r0");;;
-    let: "$r0" := ((![go.bool] "ok") && ((![TwoInts] "p4") =⟨go.StructType [
-      (go.FieldDecl "x"%go go.uint64);
-      (go.FieldDecl "y"%go go.uint64)
-    ]⟩ (![TwoInts] (![go.PointerType TwoInts] "p1")))) in
+    let: "$r0" := ((![go.bool] "ok") && ((![TwoInts] "p4") =⟨TwoInts⟩ (![TwoInts] (![go.PointerType TwoInts] "p1")))) in
     do:  ("ok" <-[go.bool] "$r0");;;
     let: "$r0" := ((![go.bool] "ok") && ("p4" ≠⟨go.PointerType TwoInts⟩ (![go.PointerType TwoInts] "p1"))) in
     do:  ("ok" <-[go.bool] "$r0");;;
@@ -2841,7 +2830,7 @@ Definition TypesEqualⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
   λ: <>,
     exception_do (let: "t" := (GoAlloc (go.PointerType T) (GoZeroVal (go.PointerType T) #())) in
     let: "u" := (GoAlloc (go.PointerType U) (GoZeroVal (go.PointerType U) #())) in
-    return: ((Convert (go.PointerType T) go.any (![go.PointerType T] "t")) =⟨go.InterfaceType []⟩ (Convert (go.PointerType U) go.any (![go.PointerType U] "u")))).
+    return: ((Convert (go.PointerType T) go.any (![go.PointerType T] "t")) =⟨go.any⟩ (Convert (go.PointerType U) go.any (![go.PointerType U] "u")))).
 
 (* go: type_equality.go:9:6 *)
 Definition testPrimitiveTypesEqualⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=

@@ -651,7 +651,7 @@ func (ctx *Ctx) binExpr(e *ast.BinaryExpr) (expr glang.Expr) {
 		// and y is a uint32)
 		compType = xT
 	} else {
-		compType = ctx.typeJoin(e, xT, yT).Underlying()
+		compType = ctx.typeJoin(e, xT, yT)
 	}
 
 	op := gooseLangOps[e.Op]
