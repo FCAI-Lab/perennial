@@ -416,6 +416,15 @@ func (ctx *Ctx) namedTypePropClassDecl(spec *ast.TypeSpec) []glang.Decl {
 					}
 					fieldType = field.Type()
 				}
+
+				if types.IsInterface(fieldType.(*types.Pointer).Elem()) {
+					fieldType = fieldType.(*types.Pointer).Elem()
+					fieldExpr = glang.DerefExpr{
+						X:  fieldExpr,
+						Ty: ctx.glangType(field, fieldType),
+					}
+				}
+
 				impl = `(λ: "$r", MethodResolve ` + ctx.glangType(field, fieldType).Coq(true) + ` "` +
 					methodName + `" ` + fieldExpr.Coq(true) + ")"
 			}
