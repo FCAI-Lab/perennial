@@ -9,9 +9,15 @@ Module interfacerecursion.
 
 Definition A {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/interfacerecursion.A"%go [].
 
+#[global] Opaque A.
+
 Definition B {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/interfacerecursion.B"%go [].
 
+#[global] Opaque B.
+
 Definition c {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/interfacerecursion.c"%go [].
+
+#[global] Opaque c.
 
 (* go: x.go:14:13 *)
 Definition c__Fooⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=

@@ -13,6 +13,8 @@ Module awol.
 
 Definition Log {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/wal.Log"%go [].
 
+#[global] Opaque Log.
+
 (* 10 is completely arbitrary *)
 Definition MaxTxnWrites {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val := #(W64 10).
 
