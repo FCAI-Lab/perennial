@@ -13,7 +13,11 @@ Module logging2.
 
 Definition Log {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/logging2.Log"%go [].
 
+#[global] Opaque Log.
+
 Definition Txn {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/logging2.Txn"%go [].
+
+#[global] Opaque Txn.
 
 Definition LOGCOMMIT {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val := #(W64 0).
 

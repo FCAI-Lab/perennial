@@ -968,7 +968,8 @@ func (ctx *Ctx) indexExpr(e *ast.IndexExpr, multipleBindings bool) glang.Expr {
 
 	return glang.NewCallExpr(glang.VerbatimExpr("Index"),
 		ctx.glangType(e, ctx.typeOf(e.X)),
-		glang.TupleExpr{ctx.expr(e.X), ctx.expr(e.Index)})
+		glang.TupleExpr{ctx.expr(e.X),
+			ctx.exprIntoType(e.Index, types.Typ[types.Int])})
 }
 
 func (ctx *Ctx) indexListExpr(e *ast.IndexListExpr) glang.Expr {

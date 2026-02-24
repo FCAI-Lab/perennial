@@ -1,6 +1,6 @@
 module example.com/goose-demo/m
 
-go 1.22
+go 1.26
 
 require (
 	github.com/goose-lang/goose v0.6.1

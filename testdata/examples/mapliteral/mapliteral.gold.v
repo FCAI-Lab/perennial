@@ -9,6 +9,8 @@ Module example.
 
 Definition Nested {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/mapliteral.Nested"%go [].
 
+#[global] Opaque Nested.
+
 Definition f {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/mapliteral.f"%go.
 
 Definition mapliteral {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/mapliteral.mapliteral"%go.

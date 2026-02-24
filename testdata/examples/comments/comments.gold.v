@@ -9,6 +9,8 @@ Module comments.
 
 Definition Foo {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/comments.Foo"%go [].
 
+#[global] Opaque Foo.
+
 Definition ONE {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val := #(W64 1).
 
 Definition TWO {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val := #(W64 2).

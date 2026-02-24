@@ -35,6 +35,15 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) {
 			),
 			TypeParams: typeParams,
 		})
+		// This is a performance optimization for Rocq. TC Search for
+		// typeclasses involving this go.type will attempt to unify the actual
+		// TC goal with the pattern for each and every declared instance (i.e.
+		// TC search is linear in the number of instances), and having
+		// transparent `go.Named "some_long_string"` results in slow
+		// unification.
+		ctx.out.typeNamedDecls = append(ctx.out.typeNamedDecls,
+			glang.VerbatimDecl{Content: fmt.Sprintf("#[global] Opaque %s.", glang.ToIdent(typeName))},
+		)
 	}
 
 	switch ctx.filter.GetAction(spec.Name.Name) {

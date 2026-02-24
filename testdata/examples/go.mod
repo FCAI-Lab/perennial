@@ -1,6 +1,6 @@
 module github.com/goose-lang/goose/testdata/examples
 
-go 1.25
+go 1.26
 
 require (
 	github.com/goose-lang/primitive v0.2.2-0.20260212023729-cb7f52217e65

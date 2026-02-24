@@ -13,15 +13,27 @@ Module simpledb.
 
 Definition Table {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/simpledb.Table"%go [].
 
+#[global] Opaque Table.
+
 Definition Entry {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/simpledb.Entry"%go [].
+
+#[global] Opaque Entry.
 
 Definition lazyFileBuf {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/simpledb.lazyFileBuf"%go [].
 
+#[global] Opaque lazyFileBuf.
+
 Definition bufFile {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/simpledb.bufFile"%go [].
+
+#[global] Opaque bufFile.
 
 Definition tableWriter {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/simpledb.tableWriter"%go [].
 
+#[global] Opaque tableWriter.
+
 Definition Database {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "github.com/goose-lang/goose/testdata/examples/simpledb.Database"%go [].
+
+#[global] Opaque Database.
 
 Definition UseMarshal {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/simpledb.UseMarshal"%go.
 
