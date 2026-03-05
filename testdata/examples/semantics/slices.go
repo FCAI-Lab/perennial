@@ -96,3 +96,10 @@ func testSliceAppend() bool {
 	ok = ok && bytes[2] == byte(3)
 	return ok
 }
+
+func testSliceRef() bool {
+	var sl = make([]uint64, 5)
+	var ptr = &sl[0]
+	*ptr = 1
+	return (sl[0] == 1)
+}
