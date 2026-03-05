@@ -54,6 +54,7 @@ Module A.
 Section def.
 Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
 Definition t : Type := interface.t.
+#[global] Arguments t : clear implicits.
 End def.
 End A.
 
@@ -68,6 +69,7 @@ Module B.
 Section def.
 Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
 Definition t : Type := interface.t.
+#[global] Arguments t : clear implicits.
 End def.
 End B.
 
@@ -89,7 +91,6 @@ mk {
 #[global] Arguments mk : clear implicits.
 #[global] Arguments t : clear implicits.
 End def.
-
 End c.
 
 Definition c'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
