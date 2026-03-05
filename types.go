@@ -72,7 +72,7 @@ func (ctx *Ctx) typeDecl(spec *ast.TypeSpec) {
 			})
 		} else if _, ok := typ.(*types.Named); ok {
 			ctx.out.typeAliasDecls = append(ctx.out.typeAliasDecls, glang.AxiomDecl{
-				DeclName: typeName + "ⁱᵐᵖˡ",
+				DeclName: glang.ToIdent(typeName) + "ⁱᵐᵖˡ",
 				Type:     glang.VerbatimExpr(typeStr),
 			})
 		}
