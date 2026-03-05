@@ -384,6 +384,10 @@ func (suite *GoTestSuite) TestSliceAppend() {
 	suite.Equal(true, testSliceAppend())
 }
 
+func (suite *GoTestSuite) TestSliceRef() {
+	suite.Equal(true, testSliceRef())
+}
+
 func (suite *GoTestSuite) TestFooBarMutation() {
 	suite.Equal(true, testFooBarMutation())
 }

@@ -717,12 +717,6 @@ func (ctx *Ctx) unaryExpr(e *ast.UnaryExpr, multipleBindings bool) glang.Expr {
 		return glang.NotExpr{X: ctx.expr(e.X)}
 	}
 	if e.Op == token.AND {
-		if x, ok := e.X.(*ast.IndexExpr); ok {
-			// e is &a[b] where x is a.b
-			return glang.NewCallExpr(glang.VerbatimExpr("IndexRef"),
-				ctx.glangType(e, ctx.typeOf(x)),
-				glang.TupleExpr{ctx.expr(x.X), ctx.expr(x.Index)})
-		}
 		if cl, ok := e.X.(*ast.CompositeLit); ok {
 			// e is &T{...} (a composite literal)
 			sl := ctx.compositeLiteral(cl)
