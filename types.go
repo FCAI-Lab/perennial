@@ -200,11 +200,6 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 			fmt.Fprint(w, "|}.")
 
 			fmt.Fprint(w, "\n#[global] Arguments mk : clear implicits.")
-			fmt.Fprint(w, "\n#[global] Arguments t : clear implicits.")
-
-			fmt.Fprintf(w, "\nEnd def.\n")
-
-			fmt.Fprintf(w, "\nEnd %s.", glang.ToIdent(spec.Name.Name))
 		default:
 			fmt.Fprintf(w, "Definition t")
 
@@ -219,9 +214,10 @@ func (ctx *Ctx) namedRocqTypeDecl(spec *ast.TypeSpec) (decls []glang.Decl) {
 
 			rocqType := ctx.toGallinaType(spec, t)
 			fmt.Fprintf(w, "%s.", rocqType)
-			fmt.Fprint(w, "\nEnd def.")
-			fmt.Fprintf(w, "\nEnd %s.", glang.ToIdent(spec.Name.Name))
 		}
+		fmt.Fprint(w, "\n#[global] Arguments t : clear implicits.")
+		fmt.Fprint(w, "\nEnd def.")
+		fmt.Fprintf(w, "\nEnd %s.", glang.ToIdent(spec.Name.Name))
 	}
 
 	recordDecl := glang.VerbatimDecl{

@@ -97,3 +97,9 @@ func useAnyPointer() {
 	var x uint64
 	helpers.AnyPointer(&x)
 }
+
+type nonStructGeneric[T any] []T
+
+type useNonStructGeneric[T any] struct {
+	x nonStructGeneric[T]
+}

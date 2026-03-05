@@ -1055,7 +1055,6 @@ mk {
 #[global] Arguments mk : clear implicits.
 #[global] Arguments t : clear implicits.
 End def.
-
 End Table.
 
 Definition Table'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
@@ -1091,7 +1090,6 @@ mk {
 #[global] Arguments mk : clear implicits.
 #[global] Arguments t : clear implicits.
 End def.
-
 End Entry.
 
 Definition Entry'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
@@ -1127,7 +1125,6 @@ mk {
 #[global] Arguments mk : clear implicits.
 #[global] Arguments t : clear implicits.
 End def.
-
 End lazyFileBuf.
 
 Definition lazyFileBuf'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
@@ -1163,7 +1160,6 @@ mk {
 #[global] Arguments mk : clear implicits.
 #[global] Arguments t : clear implicits.
 End def.
-
 End bufFile.
 
 Definition bufFile'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
@@ -1201,7 +1197,6 @@ mk {
 #[global] Arguments mk : clear implicits.
 #[global] Arguments t : clear implicits.
 End def.
-
 End tableWriter.
 
 Definition tableWriter'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
@@ -1248,7 +1243,6 @@ mk {
 #[global] Arguments mk : clear implicits.
 #[global] Arguments t : clear implicits.
 End def.
-
 End Database.
 
 Definition Database'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
