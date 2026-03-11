@@ -2,7 +2,6 @@ package workq
 
 import (
 	"strings"
-	"sync"
 	"sync/atomic"
 )
 
@@ -17,9 +16,7 @@ func (w *Worker) run(
 	total *atomic.Int64,
 	remaining *atomic.Int64,
 	done chan struct{},
-	wg *sync.WaitGroup,
 ) {
-	defer wg.Done()
 	for {
 		select {
 		case <-done:
@@ -91,14 +88,12 @@ func wordCount(docs []string) int64 {
 	remaining.Store(int64(len(docs)))
 	done := make(chan struct{})
 
-	var wg sync.WaitGroup
 	for i, w := range workers {
-		wg.Add(1)
 		neighbor := workers[(i+1)%numWorkers]
-		go w.run(neighbor, &total, &remaining, done, &wg)
+		go w.run(neighbor, &total, &remaining, done)
 	}
 
-	wg.Wait()
+	<-done
 	return total.Load()
 }
 
