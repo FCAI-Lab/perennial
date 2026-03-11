@@ -2,6 +2,7 @@ package etcd_session
 
 import (
 	"errors"
+	"math/rand"
 	"sync"
 	"time"
 )
@@ -11,7 +12,9 @@ var mu sync.Mutex
 
 // Mock something that might take a while, and can fail
 func newSession() error {
-	// ...
+	if rand.Intn(2) == 0 {
+		return errors.New("session failed")
+	}
 	return nil
 }
 
