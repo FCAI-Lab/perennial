@@ -6,7 +6,6 @@ import (
 )
 
 type Worker struct {
-	id    int
 	queue chan string
 	steal chan chan *string // reply is a pointer: nil means nothing to steal
 }
@@ -72,7 +71,6 @@ func wordCount(docs []string) int64 {
 	workers := make([]*Worker, numWorkers)
 	for i := range workers {
 		workers[i] = &Worker{
-			id:    i,
 			queue: make(chan string, len(docs)),
 			steal: make(chan chan *string),
 		}
