@@ -2,9 +2,10 @@ package etcd_session
 
 import (
 	"errors"
-	"math/rand"
 	"sync"
 	"time"
+
+	"github.com/goose-lang/primitive"
 )
 
 var sessionc chan struct{} = make(chan struct{})
@@ -12,7 +13,7 @@ var mu sync.Mutex
 
 // Mock something that might take a while, and can fail
 func newSession() error {
-	if rand.Intn(2) == 0 {
+	if primitive.RandomUint64()%2 == 0 {
 		return errors.New("session failed")
 	}
 	return nil
