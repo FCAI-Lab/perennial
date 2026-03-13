@@ -1851,7 +1851,10 @@ func (ctx *Ctx) selectStmt(s *ast.SelectStmt, cont glang.Expr) (expr glang.Expr)
 					ElemType: ctx.glangType(s.Comm, chanElem(chanType)),
 					Chan:     glang.IdentExpr(fmt.Sprintf("$ch%d", i)),
 				},
-				Body: body,
+				Body: glang.FuncLit{
+					Args: []glang.Binder{{Name: "$recvVal"}},
+					Body: body,
+				},
 			})
 		}
 	}
