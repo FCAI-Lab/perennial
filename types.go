@@ -703,9 +703,9 @@ func (ctx *Ctx) namedTypeToGallina(l locatable, t *types.Named) string {
 	var baseName string
 	pkg := t.Obj().Pkg()
 	if pkg != nil {
-		baseName = pkg.Name() + "." + t.Obj().Name() + ".t"
+		baseName = pkg.Name() + "." + glang.ToIdent(t.Obj().Name()) + ".t"
 	} else {
-		baseName = t.Obj().Name() + ".t"
+		baseName = glang.ToIdent(t.Obj().Name()) + ".t"
 	}
 	// if TypeParams() is not nil, there are type parameters in the base named type
 	if t.TypeParams() != nil {
