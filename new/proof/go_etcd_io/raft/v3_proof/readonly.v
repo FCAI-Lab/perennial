@@ -596,36 +596,35 @@ Proof.
   - done.
 Qed.
 
-Definition own_AckedIndexer (i : interface.t_ok) (acks : gmap w64 w64) : iProp Σ :=
-  ∃ I,
-    "HI" ∷ I ∗
-    "#HAckedIndex" ∷ (∀ (voterID : w64),
+Definition own_AckedIndexer (i : interface.t_ok) (acks : gmap w64 w64) I : iProp Σ :=
+    "#HAckedIndex" ∷
+      (∀ (voterID : w64),
       {{{ I }}} #(methods i.(interface.ty) "AckedIndex" i.(interface.v)) #i
       {{{ RET (#(default (W64 0) (acks !! voterID)), #(bool_decide (is_Some (acks !! voterID))));
           I }}}).
 
-(* TODO: ghost lemma showing that a quorum of heartbeat responses for a single
+(* TODO now: ghost lemma showing that a quorum of heartbeat responses for a single
    hb_ctx means the stale set cannot be a quorum. *)
 
-Axiom wp_JointConfig__CommittedIndex : ∀ l acks (c : quorum.JointConfig.t)
-                                       voters_ref (voters : gmap w64 ()),
+Axiom wp_JointConfig__CommittedIndex :
+  ∀ l acks (c : quorum.JointConfig.t) voters_ref (voters : gmap w64 ()) I,
   {{{
       is_pkg_init quorum ∗
-      "Hl" ∷ own_AckedIndexer l acks ∗
+      "Hl" ∷ own_AckedIndexer l acks I ∗
+      "HI" ∷ I ∗
       "%Hc" ∷ ⌜ array.arr c = [voters_ref; map.nil] ⌝ ∗
-      "Hm0" ∷ voters_ref ↦$ voters ∗
+      "voters" ∷ voters_ref ↦$ voters ∗
       "%Hvoters_cfg" ∷ ⌜ dom voters = cfg ⌝
   }}}
     c @! quorum.JointConfig @! "CommittedIndex" #()
-  {{{ (c : w64), RET #c; "Hl" ∷ own_AckedIndexer l acks }}}.
-(* FIXME: need to get back ownership of the acks map somehow from this spec.
-  One option: expose the `I` predicate rather than abstracting it away with ∃? *)
+  {{{ (c : w64), RET #c; own_AckedIndexer l acks I ∗ I ∗
+                         ⌜ 0 ≤ sint.Z c ∧
+                         ∃ srvs, is_quorum srvs ∧
+                                 (∀ s, s ∈ srvs →
+                                       sint.Z c ≤ sint.Z (default (W64 0) (acks !! s))) ⌝
+  }}}.
 
-(* TODO: write axiom for CommittedIndex; given any "AckedIndexer" (which has a
-   pure gmap w64 w64 associated with it), the returned `c` is s.t. there
-   exists a quorum with acks at least `c` in the gmap. *)
-
-(* TODO: maintain that the stale sets for already-sent HBs are smaller than the
+(* TODO now: maintain that the stale sets for already-sent HBs are smaller than the
    new stale set created. I.e. a nested sequence of set inclusions for all the
    unconfirmedReads. *)
 
