@@ -2,7 +2,7 @@ From New Require Import code.context.
 From New Require Export generatedproof.context.
 From New Require Import proof.proof_prelude.
 From New.proof Require Import sync.atomic sync time errors.
-From New.proof Require Import chan_proof.closeable.
+From New.proof Require Import github_com.goose_lang.goose.model.channel.idiom.closeable.closeable.
 
 Require Import Perennial.Helpers.CountableTactics.
 
@@ -124,14 +124,13 @@ Proof.
   wp_apply (chan.wp_select_nonblocking_alt [True]%I with "[] [-]").
   2: iNamedAccu.
   { (* case: done channel closed*)
-    simpl. iSplit; last done.
+    simpl. iSplit; last done. iNamed 1.
     repeat iExists _. iSplitR; first done. iFrame "#".
     iSplitR; first admit. (* absorb is_chan into au? *)
     iApply (own_closeable_chan_nonblocking_receive with "[$]").
     iSplit.
-    2:{ iIntros. done. }
+    2:{ iIntros. iFrame. }
     iIntros "#Hclosed".
-    iNamed 1.
     wp_auto. wp_apply ("HErr" with "[$Hclosed]") as "% %HparentErr".
     wp_apply (wp_Cause with "[$]") as "% _".
     (* TODO spec for canceler. *)

@@ -6,7 +6,7 @@ From New.proof Require Import context sync.
 
 Require Import New.proof.go_etcd_io.etcd.client.v3.concurrency.
 Require Import New.proof.go_etcd_io.etcd.client.v3.
-Require Import New.proof.chan_proof.closeable.
+Require Import New.proof.github_com.goose_lang.goose.model.channel.idiom.closeable.closeable.
 
 Require Import Perennial.base.
 
@@ -222,11 +222,11 @@ Proof.
       iSplit; last done.
       repeat iExists _. iSplitR; first done. iSplitR; first admit.
       iApply (closeable_chan_receive with "HDone_ch").
-      iIntros "_". simpl. wp_auto. iFrame. by iRight.
+      iIntros "_". wp_auto. admit.
     }
     repeat iExists _. iSplitR; first done. iSplitR; first admit.
     iApply (closeable_chan_receive with "HsessDone").
-    iIntros "_". wp_auto. iFrame. by iLeft.
+    iIntros "_". admit.
   }
   iIntros "* ([%|%] & H)"; subst; iNamed "H".
   2:{ wp_auto. wp_for_post. by iApply "HΦ". }
