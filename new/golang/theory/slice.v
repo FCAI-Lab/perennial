@@ -705,7 +705,18 @@ Lemma own_slice_cap_split high s :
 Proof.
   iIntros "[Hcap %]".
   rewrite own_slice_unseal /own_slice_def own_slice_cap_unseal /own_slice_cap_def.
-  iDestruct "Hcap" as "[%Hwf [%a Ha]]".
+  iDestruct "Hcap" as "[(%Hnull & % & %)|[%Hwf [%a Ha]]]".
+  {
+    destruct s; simpl in *; subst.
+    assert (high = cap) by word. subst.
+    iExists []. iSplitL.
+    - iLeft. iPureIntro. rewrite /slice.slice /=.
+      rewrite Hnull. replace (word.sub cap cap) with (W64 0) by word. done.
+    - iLeft. iPureIntro. rewrite /slice.slice /=.
+      rewrite /slice_index_ref /= in Hnull |- *. rewrite Hnull.
+      replace (word.sub cap cap) with (W64 0) by word. rewrite go.array_index_ref_0.
+      done.
+  }
   destruct a as [vs_cap]. iDestruct (array_len with "Ha") as %Hlen.
   simpl in *.
   replace (sint.Z (word.sub s.(slice.cap) s.(slice.len)))
@@ -714,8 +725,8 @@ Proof.
   { word. }
   iExists (take (sint.nat (word.sub high s.(slice.len))) vs_cap).
   iSplitL "H1".
-  - iFrame "H1". iPureIntro. len.
-  - iSplit; first (iPureIntro; word).
+  - iRight. iFrame "H1". iPureIntro. len.
+  - iRight. iSplit; first (iPureIntro; word).
     iExists _. rewrite /slice_index_ref /= -!go.array_index_ref_add.
     iExactEq "H2". f_equal; word.
 Qed.
