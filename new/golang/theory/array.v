@@ -1,10 +1,12 @@
 From New.golang.defn Require Export array.
 From New.golang.theory Require Export predeclared.
 
+
 Section lemmas.
 Context `{ffi_sem: ffi_semantics} `{!ffi_interp ffi} `{!heapGS Σ}
   {sem_fn : GoSemanticsFunctions} {pre_sem : go.PreSemantics}.
 
+Local Set Default Proof Using "Type".
 Context `{!ZeroVal V}.
 Context `{!TypedPointsto (Σ:=Σ) V}.
 Context `{!IntoValTyped V t}.

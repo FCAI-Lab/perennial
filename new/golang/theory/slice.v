@@ -58,7 +58,7 @@ Qed.
 Lemma own_slice_cap_empty s :
   s.(slice.len) = s.(slice.cap) →
   0 ≤ sint.Z s.(slice.len) →
-  s.(slice.ptr) ↦ (array.mk 0 (@nil V))
+  array_index_ref V (sint.Z (slice.cap s)) (slice.ptr s) ↦ (array.mk 0 (@nil V))
   ⊢ own_slice_cap V s (DfracOwn 1).
 Proof.
   intros Hcap Hlen. unseal. iIntros "H". iRight.
@@ -66,7 +66,7 @@ Proof.
   iExists (array.mk _ []). rewrite /slice_index_ref /=.
   rewrite Hcap. replace (_ - _) with 0 by word.
   iFrame.
-Admitted.
+Qed.
 
 Lemma own_slice_len s dq vs :
   s ↦*{dq} vs -∗ ⌜length vs = sint.nat s.(slice.len) ∧ 0 ≤ sint.Z s.(slice.len)⌝.
@@ -367,8 +367,17 @@ Proof.
     subst.
     wp_apply (wp_ArbitraryInt). iIntros "% _".
     wp_auto. iApply "HΦ".
-    assert (len = W64 0) by word; subst.
-    simpl. admit. }
+    assert (len = W64 0) by word; subst. simpl.
+    iDestruct (own_slice_empty with "[]") as "$"; simpl.
+    { word. }
+    { word. }
+    { by iApply array_empty. }
+
+    iDestruct (own_slice_cap_empty with "[]") as "$"; simpl.
+    { word. }
+    { word. }
+    { iApply array_empty. rewrite go.array_index_ref_0. done. }
+    done. }
   iApply "HΦ".
   rewrite own_slice_unseal/ own_slice_def /=.
 
@@ -381,7 +390,7 @@ Proof.
   rewrite own_slice_cap_unseal /own_slice_cap_def /=.
   iSplitL; last done. iRight. iSplitR; first word.
   iFrame.
-Admitted.
+Qed.
 
 Lemma wp_slice_make2 `[!st ↓u go.SliceType t] `[!IntoValTyped V t] stk E (len : u64) :
   {{{ ⌜0 ≤ sint.Z len⌝ }}}
@@ -403,8 +412,83 @@ Lemma own_slice_split k s dq (vs: list V) low high :
   slice.slice s V low k ↦*{dq} take (sint.nat k - sint.nat low)%nat vs ∗
   slice.slice s V k high ↦*{dq} drop (sint.nat k - sint.nat low)%nat vs.
 Proof.
-  (* TODO: needs nil case handling + array_split requires IntoValTyped
-     which is not in scope here (pre-existing issue from checkpoint) *)
+  intros Hle.
+  rewrite -{1}(take_drop (sint.nat k - sint.nat low)%nat vs).
+  rewrite own_slice_unseal /own_slice_def /=.
+  rewrite /slice_index_ref /=. iSplit.
+  - iIntros "[%Heq |[H %]]".
+    {
+      destruct Heq as [Hn Hnil]. destruct s. simpl in *.
+      pose proof (f_equal slice.ptr Hn).
+      pose proof (f_equal slice.len Hn).
+      pose proof (f_equal slice.cap Hn).
+      simpl in *.
+      assert (high = low) by word.
+      assert (low = cap) by word.
+      assert (k = cap) by word. subst.
+      pose proof (app_nil_r_inv _ _ Hnil) as ->.
+      pose proof (app_nil_l_inv _ _ Hnil) as ->.
+      iSplitL.
+      - iLeft. done.
+      - iLeft. done.
+    }
+    iDestruct (array_len with "H") as %Hlen.
+    iDestruct (array_split (word.sub k low) with "H") as "[H1 H2]".
+    { word. }
+    iSplitL "H1".
+    + iRight. iSplitL; last by len. iExactEq "H1". f_equal. f_equal.
+      rewrite take_app_le. 2:{ revert Hlen. len. } rewrite take_take. f_equal. word.
+    + iRight. iSplitL; last by len. rewrite -go.array_index_ref_add.
+      iExactEq "H2".
+      replace (word.signed (word.sub high low) - word.signed (word.sub k low)) with
+        (word.signed (word.sub high k)) by word. f_equal.
+      * f_equal. word.
+      * f_equal. rewrite drop_app_ge.
+        2:{ revert Hlen. len. }
+        rewrite drop_drop. f_equal. revert Hlen. len.
+  - destruct s. simpl in *. iIntros "[[%Heq|[H1 %]] Hsl2]".
+    + destruct Heq as [Hn ->].
+      pose proof (f_equal slice.ptr Hn).
+      pose proof (f_equal slice.len Hn).
+      pose proof (f_equal slice.cap Hn).
+      simpl in *.
+      assert (low = k) by word.
+      assert (low = cap) by word.
+      subst.
+      iDestruct "Hsl2" as "[%Heq2|[H2 %]]".
+      * destruct Heq2 as [Hn2 ->]. iLeft. done.
+      * iDestruct (typed_pointsto_not_null with "H2") as %Hnotnull. done.
+    + iDestruct "Hsl2" as "[%Heq2|[H2 %]]".
+      * destruct Heq2 as [Hn ->].
+        pose proof (f_equal slice.ptr Hn).
+        pose proof (f_equal slice.len Hn).
+        pose proof (f_equal slice.cap Hn).
+        simpl in *.
+        assert (high = k) by word.
+        assert (k = cap) by word.
+        subst.
+        iDestruct (typed_pointsto_not_null with "H1") as %Hnotnull.
+        exfalso.
+        rewrite /slice_index_ref /= in H0.
+        (* TODO: add and use fact that if array_index_ref is non-nil at i, then it's non-nil at j. *)
+        admit.
+      *
+        iRight. iSplitL; last by len.
+        iDestruct (array_len with "H1") as %Hlen1.
+        iDestruct (array_len with "H1") as %Hlen2.
+        iApply (array_split (word.sub k low)).
+        { word. }
+        iSplitL "H1".
+        -- iExactEq "H1". f_equal. f_equal.
+           rewrite take_app_le. 2:{ revert Hlen1 Hlen2. len. } rewrite take_take. f_equal. word.
+        -- rewrite -go.array_index_ref_add.
+           replace (word.signed (word.sub high low) - word.signed (word.sub k low)) with
+             (word.signed (word.sub high k)) by word.
+           iExactEq "H2". f_equal.
+           ++ f_equal. word.
+           ++ f_equal. rewrite drop_app_ge.
+              2:{ revert Hlen1 Hlen2. len. }
+              rewrite drop_drop. f_equal. revert Hlen1 Hlen2. len.
 Admitted.
 
 Lemma own_slice_combine k s dq (vs1 vs2: list V) low high :
