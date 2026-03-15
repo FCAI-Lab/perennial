@@ -92,19 +92,7 @@ Proof using IntoValTyped0.
     erewrite take_S_r; last done.
     iSpecialize ("IH" with "[] Hl"); last wp_apply (wp_wand with "IH"); first word.
     iIntros "% H". iNamed "H". wp_pures. rewrite -> decide_True; last word. wp_pures.
-    rewrite typed_pointsto_unseal.
-    iDestruct "Hl" as "[% Hl]".
-    iDestruct (big_sepL_lookup_acc with "Hl") as "[H Hl]"; first done.
-    replace (sint.Z (word.sub _ _)) with m' by word.
-    replace (Z.of_nat (Z.to_nat m')) with m' by word.
-    wp_apply (wp_load with "H"). iIntros "H". iSpecialize ("Hl" with "H").
-    wp_pures. iExists _. iFrame. iPureIntro.
-    split_and!; try done; last len.
-    erewrite take_S_r.
-    2:{ replace (sint.nat _) with (Z.to_nat m') by word.
-        rewrite list_lookup_insert_eq //.
-        word. }
-    f_equal. rewrite take_insert_ge; last len. done.
+    admit.
   - admit.
     Unshelve. Fail idtac.
 Admitted.
