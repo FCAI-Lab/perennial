@@ -30,7 +30,8 @@ Notation "s ↦* dq vs" := (own_slice s vs dq)
 
 Definition own_slice_cap_def {V} `{!ZeroVal V} `{!TypedPointsto V}
   (s : slice.t) (dq : dfrac) : iProp Σ :=
-  ⌜ s = slice.nil ⌝ ∨
+  ⌜ slice_index_ref V (sint.Z s.(slice.len)) s = null ∧
+    0 ≤ sint.Z s.(slice.len) ∧ s.(slice.len) = s.(slice.cap) ⌝ ∨
   ⌜ 0 ≤ sint.Z s.(slice.len) ≤ sint.Z s.(slice.cap) ⌝ ∗
   (* The capacity buffer has arbitrary values, which is often desirable, but
   there are some niche cases where code could be aware of the contents of the
@@ -170,12 +171,12 @@ Proof.
         iSplitL "H1"; iRight; iSplit; try done; iExists a; iFrame.
     + iIntros "[[% | [% [%a1 H1]]] [% | [% [%a2 H2]]]]".
       * iLeft; done.
-      * subst.
+      * destruct H as [Hnil _].
         iDestruct (typed_pointsto_not_null with "H2") as %Hnn.
-        exfalso. apply Hnn. rewrite /slice_index_ref /= go.array_index_ref_0 //.
-      * subst.
+        exfalso. exact (Hnn Hnil).
+      * destruct H0 as [Hnil _].
         iDestruct (typed_pointsto_not_null with "H1") as %Hnn.
-        exfalso. apply Hnn. rewrite /slice_index_ref /= go.array_index_ref_0 //.
+        exfalso. exact (Hnn Hnil).
       * iRight.
         iCombine "H1 H2" gives %[=->].
         iCombine "H1 H2" as "H".
@@ -213,7 +214,7 @@ Lemma own_slice_cap_wf s dq :
   own_slice_cap V s dq -∗ ⌜0 ≤ sint.Z s.(slice.len) ≤ sint.Z s.(slice.cap)⌝.
 Proof.
   unseal. iIntros "[% | [% Hcap]]".
-  - subst. iPureIntro. simpl. word.
+  - subst. iPureIntro. simpl. destruct s; simpl in *. destruct H. subst. word.
   - word.
 Qed.
 (* NOTE: only for backwards compatibility; non-primed version is more precise
@@ -242,7 +243,7 @@ Qed.
 
 Lemma own_slice_cap_nil :
   ⊢ own_slice_cap V slice.nil (DfracOwn 1).
-Proof. unseal. iLeft. done. Qed.
+Proof. unseal. iLeft. simpl. rewrite /slice_index_ref go.array_index_ref_0 //. Qed.
 
 Lemma slice_to_full_slice s low high :
   slice.slice s V low high = slice.full_slice s V low high (slice.cap s).
@@ -533,9 +534,21 @@ Local Lemma own_slice_cap_same_end s s' dq :
   0 ≤ sint.Z (slice.len s) ∧ 0 ≤ sint.Z (slice.len s') →
   own_slice_cap V s dq ⊣⊢ own_slice_cap V s' dq.
 Proof.
-  (* TODO: nil case doesn't transfer between s and s' — may need additional
-     hypothesis or restructured cap definition *)
-  Admitted.
+  intros Hend Hcap Hwf. rewrite own_slice_cap_unseal /own_slice_cap_def.
+  iSplit.
+  - iIntros "H".
+    destruct s; simpl in *. rewrite Hend Hcap. iDestruct "H" as "[% | [% H]]".
+    + subst. simpl in Hend. destruct s'; simpl in *.
+      iLeft. rewrite /slice_index_ref /= in Hend. destruct H as (Hnull & ? & ?).
+      rewrite Hnull. iPureIntro. split_and!; try done; word.
+    + iRight. iFrame. word.
+  - iIntros "H".
+      destruct s; simpl in *. rewrite Hend Hcap. iDestruct "H" as "[% | [% H]]".
+    + subst. simpl in Hend. destruct s'; simpl in *.
+      iLeft. rewrite /slice_index_ref /= in Hend. destruct H as (Hnull & ? & ?).
+      rewrite Hnull. iPureIntro. split_and!; try done; word.
+    + iRight. iFrame. word.
+Qed.
 
 (* [own_slice_cap] only depends on where the end of the slice is *)
 Lemma own_slice_cap_slice_change_first s low low' high dq :
@@ -593,8 +606,75 @@ Lemma own_slice_slice_absorb_capacity s (vs : list V) (low high : w64) :
   own_slice_cap V s (DfracOwn 1) ⊢
   own_slice_cap V (slice.slice s V low high) (DfracOwn 1).
 Proof.
-  (* TODO: uses array_split which requires IntoValTyped (pre-existing checkpoint issue) *)
-Admitted.
+  iIntros (?) "[Hvs Hcap]".
+  iDestruct (own_slice_len with "Hvs") as %Hlen.
+  simpl in Hlen.
+  iDestruct (own_slice_wf with "Hvs") as %Hwf.
+  simpl in Hwf.
+  iDestruct (own_slice_cap_wf with "Hcap") as %Hwf'.
+  iApply (own_slice_cap_slice_change_first _ (W64 0)).
+  { word. }
+  rewrite own_slice_cap_unseal /own_slice_cap_def.
+  iDestruct "Hcap" as "[%Hcap_nil | [_ [%vs' Hvs']]]".
+  { (* cap nil: end-of-capacity pointer is null, len = cap *)
+    destruct Hcap_nil as (Hend_null & Hlen_pos & Hcap_eq).
+    rewrite own_slice_unseal /own_slice_def.
+    iDestruct "Hvs" as "[%Hvs_nil | [Hvs %Hvs_wf]]".
+    - (* Hvs also nil → high = s.len = s.cap, result cap is nil *)
+      destruct Hvs_nil as [Hvs_nil _].
+      rewrite /slice.slice /= /slice_index_ref /= in Hvs_nil.
+      pose proof (f_equal slice.ptr Hvs_nil) as Hptr.
+      pose proof (f_equal slice.len Hvs_nil).
+      pose proof (f_equal slice.cap Hvs_nil). simpl in *.
+      iLeft.
+      rewrite /slice.slice /= /slice_index_ref /= go.array_index_ref_0 !word.sub_0_r.
+      iPureIntro. split_and!; [exact Hptr | word | word].
+    - (* Hvs non-nil → use its pointsto as the result cap buffer *)
+      iRight.
+      rewrite /slice.slice /= /slice_index_ref /= go.array_index_ref_0 !word.sub_0_r.
+      iSplit; first (iPureIntro; word).
+      replace (sint.Z (slice.cap s) - sint.Z high)
+        with (sint.Z (slice.len s) - sint.Z high) by word.
+      iExists (array.mk _ vs). iExactEq "Hvs". f_equal.
+      + f_equal.
+        replace (sint.Z (word.sub (slice.len s) high)) with
+          (sint.Z (slice.len s) - sint.Z high) by word.
+        done.
+  }
+  (* non-nil cap: original proof *)
+  destruct vs' as [vs']. iDestruct (array_len with "Hvs'") as %Hlen'.
+  simpl in Hlen'.
+  simpl.
+  iRight. iSplit; [ word | ].
+  rewrite /slice.slice /= /slice_index_ref /=. rewrite -!go.array_index_ref_add.
+  rewrite !word.sub_0_r Z.add_0_l.
+  iExists (array.mk _ (vs ++ vs')).
+  iApply (array_split (word.sub (slice.len s) high)).
+  { simpl in *. word. }
+  simpl.
+  rewrite -> take_app_le, take_ge by (move: Hlen Hlen'; word).
+  rewrite own_slice_unseal /own_slice_def.
+  iDestruct "Hvs" as "[%Hvs_nil | [Hvs _]]".
+  { (* Hvs nil contradicts non-nil cap *)
+    destruct Hvs_nil as [Hvs_nil _].
+    rewrite /slice.slice /= /slice_index_ref /= in Hvs_nil.
+    pose proof (f_equal slice.ptr Hvs_nil) as Hptr.
+    pose proof (f_equal slice.len Hvs_nil).
+    pose proof (f_equal slice.cap Hvs_nil). simpl in *.
+
+    iExFalso. iDestruct (typed_pointsto_not_null with "Hvs'") as %Hnn.
+    exfalso. apply Hnn. rewrite /slice_index_ref /=.
+    replace (sint.Z (slice.len s)) with (sint.Z high) by word. exact Hptr. }
+  simpl.
+  iFrame "Hvs".
+  rewrite -> drop_app_ge, drop_eq_0 by (move: Hlen Hlen'; word).
+  rewrite -!go.array_index_ref_add.
+  replace (sint.Z s.(slice.cap) - sint.Z high - _)
+    with (word.signed (slice.cap s) - word.signed (slice.len s)) by word.
+  replace (word.signed high + word.signed (word.sub (slice.len s) high)) with
+    (word.signed (slice.len s)) by word.
+  iFrame "Hvs'".
+Qed.
 
 (* divide ownership of [s ↦* vs ∗ own_slice_cap V s] around a slice [slice_f s t
 low high], moving ownership between high and [slice.len s] into the capacity of the
