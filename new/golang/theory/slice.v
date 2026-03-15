@@ -8,6 +8,12 @@ Section defns_and_lemmas.
 Context `{ffi_sem: ffi_semantics} `{!ffi_interp ffi} `{!heapGS Σ}
   {sem_fn : GoSemanticsFunctions} {pre_sem : go.PreSemantics}.
 
+(* A nil slice has no backing array (its pointer is null), so it cannot satisfy
+   an array typed pointsto. Thus, own_slice is a disjunction: either the slice
+   is nil and the list is empty, or there is a backing array. own_slice is meant
+   to serve as precondition for slice-related built-in operations. This matches
+   Go's guarantee that nil slices are valid empty slices for all built-in
+   operations. *)
 Definition own_slice_def {V} `{!ZeroVal V} `{!TypedPointsto V}
   (s : slice.t) (vs : list V) (dq : dfrac)
   : iProp Σ :=
@@ -460,7 +466,7 @@ Proof.
       * iDestruct (typed_pointsto_not_null with "H2") as %Hnotnull. done.
     + iDestruct "Hsl2" as "[%Heq2|[H2 %]]".
       * destruct Heq2 as [Hn ->].
-        pose proof (f_equal slice.ptr Hn).
+        pose proof (f_equal slice.ptr Hn) as Hnull.
         pose proof (f_equal slice.len Hn).
         pose proof (f_equal slice.cap Hn).
         simpl in *.
@@ -469,11 +475,12 @@ Proof.
         subst.
         iDestruct (typed_pointsto_not_null with "H1") as %Hnotnull.
         exfalso.
-        rewrite /slice_index_ref /= in H0.
-        (* TODO: add and use fact that if array_index_ref is non-nil at i, then it's non-nil at j. *)
-        admit.
-      *
-        iRight. iSplitL; last by len.
+        rewrite /slice_index_ref /= in Hnull.
+        replace (sint.Z cap) with (sint.Z low + (sint.Z cap - sint.Z low)) in Hnull by word.
+        apply Hnotnull.
+        eapply go.array_index_ref_null_inv.
+        erewrite <- go.array_index_ref_add. done.
+      * iRight. iSplitL; last by len.
         iDestruct (array_len with "H1") as %Hlen1.
         iDestruct (array_len with "H1") as %Hlen2.
         iApply (array_split (word.sub k low)).
@@ -489,7 +496,7 @@ Proof.
            ++ f_equal. rewrite drop_app_ge.
               2:{ revert Hlen1 Hlen2. len. }
               rewrite drop_drop. f_equal. revert Hlen1 Hlen2. len.
-Admitted.
+Qed.
 
 Lemma own_slice_combine k s dq (vs1 vs2: list V) low high :
   length vs1 = (sint.nat k - sint.nat low)%nat ∧
