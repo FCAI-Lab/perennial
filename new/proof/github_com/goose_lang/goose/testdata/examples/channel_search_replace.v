@@ -3,16 +3,16 @@ From New.golang.theory Require Import chan.
 From New.proof.github_com.goose_lang.goose.model.channel
   Require Import idiom.base chan_au_base bag.
 From New.proof Require Import sync strings time tok_set.
-From New.generatedproof.github_com.goose_lang.goose.testdata.examples Require Import channel.
+From New.generatedproof.github_com.goose_lang.goose.testdata.examples.channel Require Import parallel_search_replace.
 
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : chan_spec_raw_examples.Assumptions}.
+Context {sem : go.Semantics} {package_sem : parallel_search_replace.Assumptions}.
 Collection W := sem + package_sem.
 Set Default Proof Using "W".
 
-#[global] Instance : IsPkgInit (iProp Σ) chan_spec_raw_examples := define_is_pkg_init True%I.
-#[global] Instance : GetIsPkgInitWf (iProp Σ) chan_spec_raw_examples := build_get_is_pkg_init_wf.
+#[global] Instance : IsPkgInit (iProp Σ) parallel_search_replace := define_is_pkg_init True%I.
+#[global] Instance : GetIsPkgInitWf (iProp Σ) parallel_search_replace := build_get_is_pkg_init_wf.
 
 Record SearchReplace_names :=
   {
@@ -35,9 +35,9 @@ Definition chanP wg (x y: w64) (s: slice.t) : iProp Σ :=
 Definition waitgroupN := nroot .@ "waitgroup".
 
 Lemma wp_worker (γs: chan_names) (ch: loc) (wg: loc) (x y: w64) :
-  {{{ is_pkg_init chan_spec_raw_examples ∗
+  {{{ is_pkg_init parallel_search_replace ∗
       "#Hchan" ∷ is_chan_bag γs ch (chanP wg x y) }}}
-    @! chan_spec_raw_examples.worker #ch #wg #x #y
+    @! parallel_search_replace.worker #ch #wg #x #y
   {{{ RET #(); True }}}.
 Proof.
   wp_start. iNamed "Hpre".
@@ -106,11 +106,11 @@ Proof.
 Qed.
 
 Lemma wp_SearchReplace (s: slice.t) (xs: list w64) (x y: w64) :
-  {{{ is_pkg_init chan_spec_raw_examples ∗ s ↦* xs ∗
+  {{{ is_pkg_init parallel_search_replace ∗ s ↦* xs ∗
       ⌜ length xs ≤ 2^63 - 1000 ⌝ ∗
       ⌜ length xs ≤ (2^31 - 1)*1000 ⌝
   }}}
-    @! chan_spec_raw_examples.SearchReplace #s #x #y
+    @! parallel_search_replace.SearchReplace #s #x #y
   {{{ RET #(); s ↦* (search_replace x y xs) }}}.
 Proof.
   (* The first overflow:

@@ -7,7 +7,7 @@ Set Default Proof Using "Type".
 
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : chan_spec_raw_examples.Assumptions}.
+Context {sem : go.Semantics} {package_sem : channel_examples.Assumptions}.
 Collection W := sem + package_sem.
 Set Default Proof Using "W".
 
@@ -91,8 +91,8 @@ Proof.
 Qed.
 
 Lemma wp_select_nb_full_buffer_no_panic :
-  {{{ is_pkg_init chan_spec_raw_examples }}}
-    @! chan_spec_raw_examples.select_nb_full_buffer_no_panic #()
+  {{{ is_pkg_init channel_examples }}}
+    @! channel_examples.select_nb_full_buffer_no_panic #()
   {{{ RET #(); True }}}.
 Proof.
   wp_start. wp_auto_lc 2.
@@ -136,8 +136,8 @@ Qed.
 (* Example 2: buffer space -> panic branch ready -> fails to verify  *)
 
 Lemma wp_select_nb_buffer_space_panic_fails :
-  {{{ is_pkg_init chan_spec_raw_examples }}}
-    @! chan_spec_raw_examples.select_nb_buffer_space_panic #()
+  {{{ is_pkg_init channel_examples }}}
+    @! channel_examples.select_nb_buffer_space_panic #()
   {{{ RET #(); True }}}.
   Proof.
   wp_start. wp_auto_lc 2.
@@ -171,8 +171,8 @@ Abort.
 
 (* Example 3: deadlock on blocking select send -> vacuously verifies  *)
 Lemma wp_select_nb_buffer_space_deadlock_vacuous :
-  {{{ is_pkg_init chan_spec_raw_examples }}}
-    @! chan_spec_raw_examples.select_nb_buffer_space_deadlock #()
+  {{{ is_pkg_init channel_examples }}}
+    @! channel_examples.select_nb_buffer_space_deadlock #()
   {{{ RET #(); True }}}.
   Proof.
   wp_start. wp_auto.
@@ -266,8 +266,8 @@ Qed.
 
 
 Lemma wp_select_nb_no_panic :
-  {{{ is_pkg_init chan_spec_raw_examples}}}
-    @! chan_spec_raw_examples.select_nb_no_panic #()
+  {{{ is_pkg_init channel_examples}}}
+    @! channel_examples.select_nb_no_panic #()
   {{{ RET #(); True }}}.
 Proof.
   wp_start. wp_auto_lc 2. wp_apply chan.wp_make1.
@@ -311,8 +311,8 @@ Proof.
 Qed.
 
 Lemma wp_select_no_double_close :
-  {{{ is_pkg_init chan_spec_raw_examples }}}
-    @! chan_spec_raw_examples.select_no_double_close #()
+  {{{ is_pkg_init channel_examples }}}
+    @! channel_examples.select_no_double_close #()
   {{{ RET #(); True }}}.
 Proof.
   wp_start. wp_auto.

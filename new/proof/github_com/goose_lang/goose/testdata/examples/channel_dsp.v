@@ -2,7 +2,7 @@ From New.proof.github_com.goose_lang.goose.testdata.examples Require Import chan
 From New.proof.github_com.goose_lang.goose.model.channel
   Require Import idiom.base dsp dsp_proofmode mpmc.
 From New.code Require Import github_com.goose_lang.goose.testdata.examples.channel.
-Import chan_spec_raw_examples.
+Import channel_examples.
 From New.golang Require Import theory.
 From iris.algebra Require Import gmultiset.
 
@@ -10,13 +10,13 @@ Set Default Proof Using "Type".
 
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : chan_spec_raw_examples.Assumptions}.
+Context {sem : go.Semantics} {package_sem : channel_examples.Assumptions}.
 Collection W := sem + package_sem.
 Set Default Proof Using "W".
 
-Instance stream_eq_dec : EqDecision chan_spec_raw_examples.streamold.t.
+Instance stream_eq_dec : EqDecision channel_examples.streamold.t.
 Proof. solve_decision. Qed.
-Instance stream_countable : Countable chan_spec_raw_examples.streamold.t.
+Instance stream_countable : Countable channel_examples.streamold.t.
 Proof.
   refine (inj_countable'
            (λ x, (streamold.req' x, streamold.res' x, streamold.f' x))
@@ -32,8 +32,8 @@ Definition ref_prot : iProto Σ interface.t :=
   <?> MSG (interface.mk_ok (go.StructType []) #()) {{ l ↦ w64_word_instance.(word.add) (W64 x) (W64 2) }} ;
   END.
 Lemma wp_DSPExample :
-  {{{ is_pkg_init chan_spec_raw_examples }}}
-    @! chan_spec_raw_examples.DSPExample #()
+  {{{ is_pkg_init channel_examples }}}
+    @! channel_examples.DSPExample #()
   {{{ RET #(W64 42); True }}}.
 Proof using dspG0 W.
   wp_start. wp_auto.
@@ -75,13 +75,13 @@ Instance service_prot_unfold Φpre Φpost :
 Proof. apply proto_unfold_eq, (fixpoint_unfold _). Qed.
 
 Lemma wp_Serve (f: func.t) Φpre Φpost  :
-  {{{ is_pkg_init chan_spec_raw_examples ∗
+  {{{ is_pkg_init channel_examples ∗
       "#Hf_spec" ∷ □ (∀ (strng: go_string),
           Φpre strng → WP #f #strng {{ λ v, ∃ (s': go_string), ⌜v = #s'⌝ ∗ Φpost strng s' }}) }}}
-    @! chan_spec_raw_examples.Serve #f
+    @! channel_examples.Serve #f
   {{{ stream γ , RET #stream;
-      (stream.(chan_spec_raw_examples.stream.req'),
-          stream.(chan_spec_raw_examples.stream.res'))  ↣{γ} service_prot Φpre Φpost }}}.
+      (stream.(channel_examples.stream.req'),
+          stream.(channel_examples.stream.res'))  ↣{γ} service_prot Φpre Φpost }}}.
 Proof.
   wp_start. iNamed "Hpre".
   wp_auto. wp_apply chan.wp_make1.
@@ -138,8 +138,8 @@ iApply "HΦ".
   Qed.
 
 Lemma wp_appWrld (s: go_string) :
-  {{{ is_pkg_init chan_spec_raw_examples }}}
-    @! chan_spec_raw_examples.appWrld #s
+  {{{ is_pkg_init channel_examples }}}
+    @! channel_examples.appWrld #s
   {{{ RET #(s ++ ", World!"%go); True }}}.
 Proof.
   wp_start.
@@ -148,8 +148,8 @@ Proof.
 Qed.
 
 Lemma wp_Client:
-  {{{ is_pkg_init chan_spec_raw_examples }}}
-    @! chan_spec_raw_examples.Client #()
+  {{{ is_pkg_init channel_examples }}}
+    @! channel_examples.Client #()
   {{{ RET #"Hello, World!"; True%I }}}.
 Proof using dspG0 W.
   wp_start.
@@ -199,10 +199,10 @@ Definition is_mapper_stream stream : iProp Σ :=
     (res_ch, req_ch) ↣{γ} iProto_dual (mapper_service_prot Φpre Φpost).
 
 Lemma wp_mkStream (f: func.t) Φpre Φpost :
-  {{{ is_pkg_init chan_spec_raw_examples ∗
+  {{{ is_pkg_init channel_examples ∗
       "#Hf_spec" ∷ □ (∀ (strng: go_string),
                         Φpre strng -∗ WP #f #strng {{ λ v, ∃ (s': go_string), ⌜v = #s'⌝ ∗ Φpost strng s' }}) }}}
-    @! chan_spec_raw_examples.mkStream #f
+    @! channel_examples.mkStream #f
   {{{ γ stream, RET #stream;
       is_mapper_stream stream ∗
       (stream.(streamold.req'), stream.(streamold.res')) ↣{γ} mapper_service_prot Φpre Φpost }}}.
@@ -228,8 +228,8 @@ Proof.
 Qed.
 
 Lemma wp_MapServer (my_stream: streamold.t) :
-  {{{ is_pkg_init chan_spec_raw_examples ∗ is_mapper_stream my_stream }}}
-    @! chan_spec_raw_examples.MapServer #my_stream
+  {{{ is_pkg_init channel_examples ∗ is_mapper_stream my_stream }}}
+    @! channel_examples.MapServer #my_stream
   {{{ RET #(); True }}}.
 Proof.
   wp_start.
@@ -267,8 +267,8 @@ Proof.
 Qed.
 
 Lemma wp_MapClient (my_stream: streamold.t) :
-  {{{ is_pkg_init chan_spec_raw_examples ∗ is_mapper_stream my_stream }}}
-    @! chan_spec_raw_examples.ClientOld #()
+  {{{ is_pkg_init channel_examples ∗ is_mapper_stream my_stream }}}
+    @! channel_examples.ClientOld #()
   {{{ RET #"Hello, World!"; True%I }}}.
 Proof.
   wp_start.
@@ -311,10 +311,10 @@ done.
 Qed.
 
 Lemma wp_Muxer (c: loc) γmpmc (n_prod n_cons: nat) :
-  {{{ is_pkg_init chan_spec_raw_examples ∗
+  {{{ is_pkg_init channel_examples ∗
       "#Hismpmc" ∷ is_mpmc γmpmc c n_prod n_cons is_mapper_stream (λ _, True) ∗
       "Hcons" ∷ mpmc_consumer γmpmc (∅ : gmultiset streamold.t) }}}
-    @! chan_spec_raw_examples.Muxer #c
+    @! channel_examples.Muxer #c
   {{{ RET #(); True%I }}}.
 Proof.
    wp_start. wp_auto_lc 3. iNamed "Hpre".
@@ -354,8 +354,8 @@ Proof.
 Qed.
 
 Lemma wp_makeGreeting :
-  {{{ is_pkg_init chan_spec_raw_examples }}}
-    @! chan_spec_raw_examples.makeGreeting #()
+  {{{ is_pkg_init channel_examples }}}
+    @! channel_examples.makeGreeting #()
   {{{ RET #"Hello, World!"; True%I }}}.
 Proof using contributionG0 dspG0 W.
   wp_start. wp_auto.

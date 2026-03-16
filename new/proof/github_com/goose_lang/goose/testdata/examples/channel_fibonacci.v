@@ -8,7 +8,7 @@ Set Default Proof Using "Type".
 
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : chan_spec_raw_examples.Assumptions}.
+Context {sem : go.Semantics} {package_sem : channel_examples.Assumptions}.
 Collection W := sem + package_sem.
 Set Default Proof Using "W".
 
@@ -47,12 +47,12 @@ Open Scope Z_scope.
 
 Lemma wp_fibonacci (n: w64) (c_ptr: loc) γ:
   0 < sint.Z n < 2^63 →
-  {{{ is_pkg_init chan_spec_raw_examples ∗
+  {{{ is_pkg_init channel_examples ∗
       is_spsc γ c_ptr (λ i v, ⌜v = fib (Z.to_nat i)⌝)
                   (λ sent, ⌜sent = fib_list  (sint.nat n)⌝) ∗
       spsc_producer γ ([] : list w64)
   }}}
-    @! chan_spec_raw_examples.fibonacci #n #c_ptr
+    @! channel_examples.fibonacci #n #c_ptr
   {{{ RET #(); True }}}.
 Proof.
   intros Hn. wp_start.
@@ -133,9 +133,9 @@ Proof.
 Qed.
 
 Lemma wp_fib_consumer:
-  {{{ is_pkg_init chan_spec_raw_examples
+  {{{ is_pkg_init channel_examples
   }}}
-   @! chan_spec_raw_examples.fib_consumer #()
+   @! channel_examples.fib_consumer #()
   {{{ sl, RET #(sl);
       sl ↦* (fib_list 10)
 

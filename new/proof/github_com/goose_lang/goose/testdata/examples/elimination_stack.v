@@ -4,18 +4,18 @@ From New.golang.theory Require Import chan.
 From New.proof.github_com.goose_lang.goose.model.channel
   Require Import chan_au_base idiom.base.
 From New.proof Require Import sync strings time.
-From New.generatedproof.github_com.goose_lang.goose.testdata.examples Require Import channel.
+From New.generatedproof.github_com.goose_lang.goose.testdata.examples.channel Require Import elimination_stack.
 From New.proof Require Export proof_prelude.
 
 Section locked_stack_proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : chan_spec_raw_examples.Assumptions}.
+Context {sem : go.Semantics} {package_sem : elimination_stack.Assumptions}.
 Collection W := sem + package_sem.
 Set Default Proof Using "W".
 
 (* FIXME: duplication *)
-#[global] Instance : IsPkgInit (iProp Σ) chan_spec_raw_examples := define_is_pkg_init True%I.
-#[global] Instance : GetIsPkgInitWf (iProp Σ) chan_spec_raw_examples := build_get_is_pkg_init_wf.
+#[global] Instance : IsPkgInit (iProp Σ) elimination_stack := define_is_pkg_init True%I.
+#[global] Instance : GetIsPkgInitWf (iProp Σ) elimination_stack := build_get_is_pkg_init_wf.
 
 Definition own_LockedStack γ (σ : list go_string) : iProp Σ :=
   ghost_var γ (1/2) σ.
@@ -23,9 +23,9 @@ Definition own_LockedStack γ (σ : list go_string) : iProp Σ :=
 #[local] Transparent own_LockedStack.
 
 Definition is_LockedStack s γ : iProp Σ :=
-  "#Hmu" ∷ (is_Mutex (s.[chan_spec_raw_examples.LockedStack.t, "mu"])
+  "#Hmu" ∷ (is_Mutex (s.[elimination_stack.LockedStack.t, "mu"])
               (∃ stack_sl (stack : list go_string),
-                  "stack" ∷ s.[chan_spec_raw_examples.LockedStack.t, "stack"] ↦ stack_sl ∗
+                  "stack" ∷ s.[elimination_stack.LockedStack.t, "stack"] ↦ stack_sl ∗
                   "Hsl" ∷ stack_sl ↦* stack ∗
                   "Hcap" ∷ own_slice_cap go_string stack_sl (DfracOwn 1) ∗
                   "Hauth" ∷ ghost_var γ (1/2) (reverse stack)
@@ -37,8 +37,8 @@ Definition is_LockedStack s γ : iProp Σ :=
 Proof. apply _. Qed.
 
 Lemma wp_NewLockedStack :
-  {{{ is_pkg_init chan_spec_raw_examples }}}
-    @! chan_spec_raw_examples.NewLockedStack #()
+  {{{ is_pkg_init elimination_stack }}}
+    @! elimination_stack.NewLockedStack #()
   {{{ s γ, RET #s; is_LockedStack s γ ∗ own_LockedStack γ [] }}}.
 Proof.
   wp_start. unshelve wp_apply wp_slice_make2; try tc_solve; first word.
@@ -52,9 +52,9 @@ Qed.
 
 Lemma wp_LockedStack__Push v γ s :
   ∀ Φ,
-  is_pkg_init chan_spec_raw_examples ∗ is_LockedStack s γ -∗
+  is_pkg_init elimination_stack ∗ is_LockedStack s γ -∗
   (|={⊤,∅}=> ∃ σ, own_LockedStack γ σ ∗ (own_LockedStack γ (v :: σ) ={∅,⊤}=∗ Φ #())) -∗
-  WP s @! (go.PointerType chan_spec_raw_examples.LockedStack) @! "Push" #v {{ Φ }}.
+  WP s @! (go.PointerType elimination_stack.LockedStack) @! "Push" #v {{ Φ }}.
 Proof.
   wp_start as "#His". wp_auto. iNamed "His".
   wp_apply (wp_Mutex__Lock with "[$Hmu]"). iIntros "[Hlocked Hi]".
@@ -75,14 +75,14 @@ Qed.
 
 Lemma wp_LockedStack__Pop γ s :
   ∀ Φ,
-  is_pkg_init chan_spec_raw_examples ∗ is_LockedStack s γ -∗
+  is_pkg_init elimination_stack ∗ is_LockedStack s γ -∗
   (|={⊤,∅}=> ∃ σ, own_LockedStack γ σ ∗
                  (match σ with
                   | [] => own_LockedStack γ [] ={∅,⊤}=∗ Φ (#"", #false)%V
                   | v :: σ => own_LockedStack γ σ ={∅,⊤}=∗ Φ (#v, #true)%V
                   end)
   ) -∗
-  WP s @! (go.PointerType chan_spec_raw_examples.LockedStack) @! "Pop" #() {{ Φ }}.
+  WP s @! (go.PointerType elimination_stack.LockedStack) @! "Pop" #() {{ Φ }}.
 Proof.
   wp_start as "#His". wp_auto. iNamed "His".
   wp_apply (wp_Mutex__Lock with "[$Hmu]"). iIntros "[Hlocked Hi]".
@@ -142,7 +142,7 @@ Record EliminationStack_names :=
   }.
 
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : chan_spec_raw_examples.Assumptions}.
+Context {sem : go.Semantics} {package_sem : elimination_stack.Assumptions}.
 Collection W := sem + package_sem.
 Set Default Proof Using "W".
 
@@ -190,8 +190,8 @@ Local Definition own_exchanger_inv γ N exstate : iProp Σ :=
 Definition is_EliminationStack s γ N : iProp Σ :=
   ∃ st,
     "#s" ∷ s ↦□ st ∗
-    "#Hbase" ∷ is_LockedStack st.(chan_spec_raw_examples.EliminationStack.base') γ.(ls_gn) ∗
-    "#Hch" ∷ is_chan st.(chan_spec_raw_examples.EliminationStack.exchanger') γ.(ch_gn) go_string ∗
+    "#Hbase" ∷ is_LockedStack st.(elimination_stack.EliminationStack.base') γ.(ls_gn) ∗
+    "#Hch" ∷ is_chan st.(elimination_stack.EliminationStack.exchanger') γ.(ch_gn) go_string ∗
     "#Hinv" ∷ inv (N.@"inv") (
         ∃ stack exstate,
           "Hls" ∷ own_LockedStack γ.(ls_gn) stack ∗
@@ -204,8 +204,8 @@ Definition is_EliminationStack s γ N : iProp Σ :=
 #[local] Transparent own_EliminationStack.
 
 Lemma wp_NewEliminationStack N :
-  {{{ is_pkg_init chan_spec_raw_examples }}}
-    @! chan_spec_raw_examples.NewEliminationStack #()
+  {{{ is_pkg_init elimination_stack }}}
+    @! elimination_stack.NewEliminationStack #()
   {{{ s γ, RET #s; is_EliminationStack s γ N ∗ ⟦[]⟧ }}}.
 Proof.
   wp_start. wp_apply wp_NewLockedStack as "%base %γbase (#Hbase & Hls)".
@@ -265,9 +265,9 @@ Transparent bag.is_chan_bag.
 
 Lemma wp_EliminationStack__Push v γ s N :
   ∀ Φ,
-  is_pkg_init chan_spec_raw_examples ∗ is_EliminationStack s γ N -∗
+  is_pkg_init elimination_stack ∗ is_EliminationStack s γ N -∗
   (|={⊤∖↑N,∅}=> ∃ σ, ⟦σ⟧ ∗ (⟦(v :: σ)⟧ ={∅,⊤∖↑N}=∗ Φ #())) -∗
-  WP s @! (go.PointerType chan_spec_raw_examples.EliminationStack) @! "Push" #v {{ Φ }}.
+  WP s @! (go.PointerType elimination_stack.EliminationStack) @! "Push" #v {{ Φ }}.
 Proof.
   wp_start as "#His". iNamed "His".
   iRename "s" into "s1". wp_auto.
@@ -361,13 +361,13 @@ Qed.
 
 Lemma wp_EliminationStack__Pop γ s N :
   ∀ Φ,
-  is_pkg_init chan_spec_raw_examples ∗ is_EliminationStack s γ N -∗
+  is_pkg_init elimination_stack ∗ is_EliminationStack s γ N -∗
   (|={⊤∖↑N,∅}=> ∃ σ, ⟦σ⟧ ∗
                  (match σ with
                   | [] => ⟦[]⟧ ={∅,⊤∖↑N}=∗ Φ (#"", #false)%V
                   | v :: σ => ⟦σ⟧ ={∅,⊤∖↑N}=∗ Φ (#v, #true)%V
                   end)) -∗
-  WP s @! (go.PointerType chan_spec_raw_examples.EliminationStack) @! "Pop" #() {{ Φ }}.
+  WP s @! (go.PointerType elimination_stack.EliminationStack) @! "Pop" #() {{ Φ }}.
 Proof.
   wp_start as "#His". iNamed "His".
   iRename "s" into "s1". wp_auto.

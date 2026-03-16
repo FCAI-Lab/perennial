@@ -7,8 +7,10 @@ Set Default Proof Using "Type".
 
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : chan_spec_raw_examples.Assumptions}.
+Context {sem : go.Semantics} {package_sem : channel_examples.Assumptions}.
 
-#[global] Instance : IsPkgInit (iProp Σ) chan_spec_raw_examples := define_is_pkg_init True%I.
-#[global] Instance : GetIsPkgInitWf (iProp Σ) chan_spec_raw_examples := build_get_is_pkg_init_wf.
+#[global] Instance : IsPkgInit (iProp Σ) pkg_id.lock := define_is_pkg_init True%I.
+#[global] Instance : GetIsPkgInitWf (iProp Σ) pkg_id.lock := build_get_is_pkg_init_wf.
+#[global] Instance : IsPkgInit (iProp Σ) channel_examples := define_is_pkg_init True%I.
+#[global] Instance : GetIsPkgInitWf (iProp Σ) channel_examples := build_get_is_pkg_init_wf.
 End proof.

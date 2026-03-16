@@ -6,13 +6,13 @@ From iris.base_logic Require Import ghost_map.
 From New.golang Require Import theory.
 From New.proof Require Import strings.
 From New.code Require Import github_com.goose_lang.goose.testdata.examples.channel.
-Import chan_spec_raw_examples.
+Import channel_examples.
 
 Set Default Proof Using "Type".
 
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : chan_spec_raw_examples.Assumptions}.
+Context {sem : go.Semantics} {package_sem : channel_examples.Assumptions}.
 Collection W := sem + package_sem.
 Set Default Proof Using "W".
 
@@ -22,14 +22,14 @@ Context `{!ghost_map.ghost_mapG Σ gname (go_string → iProp Σ)}.
 Context `{!inG Σ unitR}.
 
 Lemma wp_GetPrimary (q : go_string) :
-  {{{ is_pkg_init chan_spec_raw_examples }}}
-    @! chan_spec_raw_examples.GetPrimary #q
+  {{{ is_pkg_init channel_examples }}}
+    @! channel_examples.GetPrimary #q
   {{{ RET #(q ++ "_primary.html"%go); True }}}.
 Proof. wp_start. wp_auto. iApply "HΦ". done. Qed.
 
 Lemma wp_GetSecondary (q : go_string) :
-  {{{ is_pkg_init chan_spec_raw_examples }}}
-    @! chan_spec_raw_examples.GetSecondary #q
+  {{{ is_pkg_init channel_examples }}}
+    @! channel_examples.GetSecondary #q
   {{{ RET #(q ++ "_secondary.html"%go); True }}}.
 Proof. wp_start. wp_auto. iApply "HΦ". done. Qed.
 
@@ -37,13 +37,13 @@ Lemma wp_CancellableHedgedRequest (query : go_string)
     (hedgeThreshold : time.Duration.t)
     (errStr_ptr' : loc)
     (done_ch : chan.t) (γdone : chan_names) :
-  {{{ is_pkg_init chan_spec_raw_examples ∗
+  {{{ is_pkg_init channel_examples ∗
       own_closeable_chan done_ch γdone True closeable.Unknown ∗
       errStr_ptr' ↦ ""%go }}}
-    @! chan_spec_raw_examples.CancellableHedgedRequest
+    @! channel_examples.CancellableHedgedRequest
          #query #hedgeThreshold #errStr_ptr' #done_ch
   {{{ (v : go_string) (b : bool),
-      RET #(chan_spec_raw_examples.Result.mk v b);
+      RET #(channel_examples.Result.mk v b);
       (* Primary won. *)
       ⌜(v = query ++ "_primary.html"%go ∧ b = true) ∨
       (* Hedged request won. *)
@@ -143,16 +143,16 @@ End hedged_example.
 Section hello_world.
 
 Lemma wp_sys_hello_world :
-  {{{ is_pkg_init chan_spec_raw_examples }}}
-    @! chan_spec_raw_examples.sys_hello_world #()
+  {{{ is_pkg_init channel_examples }}}
+    @! channel_examples.sys_hello_world #()
   {{{ RET #("Hello, World!"); True }}}.
 Proof.
   wp_start. iApply "HΦ". done.
 Qed.
 
 Lemma wp_HelloWorldAsync :
-  {{{ is_pkg_init chan_spec_raw_examples  }}}
-    @! chan_spec_raw_examples.HelloWorldAsync #()
+  {{{ is_pkg_init channel_examples  }}}
+    @! channel_examples.HelloWorldAsync #()
   {{{ (ch: loc)  (γfut: chan_names), RET #ch;
        is_chan ch γfut go_string ∗
   is_chan_bag (V:=go_string) γfut ch (λ (v : go_string), ⌜v = "Hello, World!"%go⌝)
@@ -176,8 +176,8 @@ Proof.
 Qed.
 
 Lemma wp_HelloWorldSync :
-  {{{ is_pkg_init chan_spec_raw_examples }}}
-    @! chan_spec_raw_examples.HelloWorldSync #()
+  {{{ is_pkg_init channel_examples }}}
+    @! channel_examples.HelloWorldSync #()
   {{{ RET #("Hello, World!"); True }}}.
 Proof.
   wp_start. wp_apply wp_HelloWorldAsync.
@@ -196,9 +196,9 @@ Section cancellable.
 Lemma wp_HelloWorldCancellable
   (done_ch : chan.t) (err_ptr1: loc) (err_msg: go_string)
   (γdone: chan_names) :
-  {{{ is_pkg_init chan_spec_raw_examples ∗
+  {{{ is_pkg_init channel_examples ∗
         own_closeable_chan done_ch γdone (err_ptr1 ↦□ err_msg) closeable.Unknown }}}
-    @! chan_spec_raw_examples.HelloWorldCancellable #done_ch #err_ptr1
+    @! channel_examples.HelloWorldCancellable #done_ch #err_ptr1
     {{{
 (result: go_string), RET #result;
       ⌜result = err_msg ∨ result = "Hello, World!"%go⌝
@@ -231,9 +231,9 @@ Qed.
 
 
 Lemma wp_HelloWorldWithTimeout :
-  {{{ is_pkg_init chan_spec_raw_examples
+  {{{ is_pkg_init channel_examples
   }}}
-    @!  chan_spec_raw_examples.HelloWorldWithTimeout #()
+    @!  channel_examples.HelloWorldWithTimeout #()
   {{{ (result: go_string), RET #result;
       ⌜result = "Hello, World!"%go ∨
         result = "operation timed out"%go⌝
@@ -262,8 +262,8 @@ End cancellable.
 Section join.
 
 Lemma wp_simple_join :
-  {{{ is_pkg_init chan_spec_raw_examples ∗ is_pkg_init channel }}}
-    @! chan_spec_raw_examples.simple_join #()
+  {{{ is_pkg_init channel_examples ∗ is_pkg_init channel }}}
+    @! channel_examples.simple_join #()
   {{{  RET #("Hello, World!"); True }}}.
 Proof.
   wp_start. wp_auto_lc 3.
@@ -295,8 +295,8 @@ Proof.
 Qed.
 
 Lemma wp_simple_multi_join :
-  {{{ is_pkg_init chan_spec_raw_examples ∗ is_pkg_init channel }}}
-    @! chan_spec_raw_examples.simple_multi_join #()
+  {{{ is_pkg_init channel_examples ∗ is_pkg_init channel }}}
+    @! channel_examples.simple_multi_join #()
   {{{ RET #("Hello World"); True }}}.
 Proof.
   wp_start. wp_auto_lc 3.
@@ -346,8 +346,8 @@ End join.
 Section exchange_pointer_proof.
 
 Lemma wp_exchangePointer :
-  {{{ is_pkg_init chan_spec_raw_examples }}}
-    @! chan_spec_raw_examples.exchangePointer #()
+  {{{ is_pkg_init channel_examples }}}
+    @! channel_examples.exchangePointer #()
   {{{ RET #(); True }}}.
 Proof.
   wp_start. wp_auto. wp_apply chan.wp_make1.
@@ -364,8 +364,8 @@ End exchange_pointer_proof.
 Section broadcast_example_proof.
 
 Lemma wp_BroadcastExample :
-  {{{ is_pkg_init chan_spec_raw_examples }}}
-    @! chan_spec_raw_examples.BroadcastExample #()
+  {{{ is_pkg_init channel_examples }}}
+    @! channel_examples.BroadcastExample #()
   {{{ RET #(); True }}}.
 Proof.
   wp_start. wp_auto.

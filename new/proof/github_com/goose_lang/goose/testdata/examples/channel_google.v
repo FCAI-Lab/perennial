@@ -9,7 +9,7 @@ Set Default Proof Using "Type".
 
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : chan_spec_raw_examples.Assumptions}.
+Context {sem : go.Semantics} {package_sem : channel_examples.Assumptions}.
 Collection W := sem + package_sem.
 Set Default Proof Using "W".
 
@@ -23,20 +23,20 @@ Context `{!ghost_map.ghost_mapG Σ gname (go_string → iProp Σ)}.
 Context `{!inG Σ unitR}.
 
 Lemma wp_Web (q : go_string) :
-  {{{ is_pkg_init chan_spec_raw_examples }}}
-    @! chan_spec_raw_examples.Web #q
+  {{{ is_pkg_init channel_examples }}}
+    @! channel_examples.Web #q
   {{{ RET #(q ++ ".html"%go); True }}}.
 Proof. wp_start. wp_auto. iApply "HΦ". done. Qed.
 
 Lemma wp_Image (q : go_string) :
-  {{{ is_pkg_init chan_spec_raw_examples }}}
-    @! chan_spec_raw_examples.Image #q
+  {{{ is_pkg_init channel_examples }}}
+    @! channel_examples.Image #q
   {{{ RET #(q ++ ".png"%go); True }}}.
 Proof. wp_start. wp_auto. iApply "HΦ". done. Qed.
 
 Lemma wp_Video (q : go_string) :
-  {{{ is_pkg_init chan_spec_raw_examples }}}
-    @! chan_spec_raw_examples.Video #q
+  {{{ is_pkg_init channel_examples }}}
+    @! channel_examples.Video #q
   {{{ RET #(q ++ ".mp4"%go); True }}}.
 Proof. wp_start. wp_auto. iApply "HΦ". done. Qed.
 
@@ -169,8 +169,8 @@ Proof.
 Qed.
 
 Lemma wp_Google (q : go_string) :
-  {{{ is_pkg_init chan_spec_raw_examples }}}
-    @! chan_spec_raw_examples.Google #q
+  {{{ is_pkg_init channel_examples }}}
+    @! channel_examples.Google #q
   {{{ (sl : slice.t), RET #sl;
       ∃ xs, sl ↦* xs ∗ ⌜xs ≡ₚ google_expected q⌝ }}}.
 Proof using All.
