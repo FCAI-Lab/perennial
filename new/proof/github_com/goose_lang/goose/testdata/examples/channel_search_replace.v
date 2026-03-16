@@ -106,6 +106,28 @@ Proof.
     word.
 Qed.
 
+(* TODO: put this in slice.v *)
+Lemma own_slice_slice_empty index s (xs : list w64) :
+  0 ≤ sint.Z index ≤ sint.Z s.(slice.cap) →
+  s ↦* xs ⊢ □ slice.slice s w64 index index ↦* (@nil w64).
+Proof.
+  intros. rewrite own_slice_unseal.
+  iIntros "[[% %]|H]".
+  {
+    subst. simpl in *. iLeft. rewrite /slice.slice /=.
+    replace (index) with (W64 0) by word.
+    replace (word.sub _ _) with (W64 0) by done.
+    rewrite /slice_index_ref go.array_index_ref_0 //.
+  }
+  iRight.
+  iDestruct "H" as "[H %]".
+  iDestruct (typed_pointsto_not_null with "[$]") as "%".
+  iModIntro. simpl in *. iSplitL; last word.
+  replace (word.sub _ _) with (W64 0) by word.
+  iApply array_empty. intros Hn.
+  apply go.array_index_ref_null_inv in Hn. done.
+Qed.
+
 Lemma wp_SearchReplace (s: slice.t) (xs: list w64) (x y: w64) :
   {{{ is_pkg_init parallel_search_replace ∗ s ↦* xs ∗
       ⌜ length xs ≤ 2^63 - 1000 ⌝ ∗
@@ -161,9 +183,12 @@ Proof.
         "%Hnadded" ∷ ⌜ 0 ≤ workRange * sint.Z nadded ≤ sint.Z offset ∨ sint.nat offset = length xs⌝
     )%I with "[offset Hs Hwg]" as "HH".
   { iFrame. iExists _. rewrite drop_0 take_0.
-    rewrite -slice_slice_trivial. iFrame.
+    rewrite -slice_slice_trivial.
+    iDestruct (own_slice_slice_empty (W64 0) with "Hs") as "#?".
+    { word. }
+    iFrame.
     iDestruct (join.own_Adder_wand with "[] Hwg") as "$".
-    { iIntros "_". iApply own_slice_empty; simpl; word. }
+    { iIntros "_". iFrame "#". }
     word. }
   iPersist "s".
   wp_for. iNamed "HH". wp_auto. case_bool_decide.

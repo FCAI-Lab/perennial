@@ -27,14 +27,6 @@ Proof.
   wp_alloc _unused as "_". wp_auto. iFrame "∗#". done.
 Qed.
 
-Lemma noCopy_emp l dq :
-  ⊢ l ↦{dq} atomic.noCopy.mk : iProp Σ.
-Proof. rewrite typed_pointsto_unseal //=. Qed.
-
-Lemma align_emp l dq :
-  ⊢ l ↦{dq} atomic.align64.mk : iProp Σ.
-Proof. rewrite typed_pointsto_unseal //=. Qed.
-
 (* 64-bit structs have an extra field (align64) *)
 Definition own_Uint64 (u : loc) dq (v : w64) : iProp Σ :=
   u ↦{dq} atomic.Uint64.mk (zero_val _) (zero_val _) v.
@@ -92,8 +84,10 @@ Proof.
   wp_start as "_".
   iMod "HΦ" as (?) "[Haddr HΦ]".
   rewrite typed_pointsto_unseal /typed_pointsto_def /=.
+  iDestruct "Haddr" as ">[Haddr %]".
   wp_apply (wp_atomic_add with "Haddr"); first rewrite !go.into_val_unfold //=.
-  iFrame.
+  iFrame. iIntros "?". iMod ("HΦ" with "[-]"); last done.
+  by iFrame.
 Qed.
 
 Lemma wp_CompareAndSwapUint64 (addr : loc) (old : w64) (new : w64) :
@@ -152,12 +146,13 @@ Proof.
   iMod "HΦ". iModIntro.
   iDestruct "HΦ" as (?) "[Hown HΦ]".
   iNext.
+  iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
   iStructNamed "Hown". simpl.
   iExists _. iFrame.
   iIntros "Hv".
 
   iMod ("HΦ" with "[-]").
-  { iApply typed_pointsto_combine. iFrame. }
+  { iApply typed_pointsto_combine; first done. iFrame. }
   iModIntro.
   wp_auto. done.
 Qed.
@@ -174,12 +169,14 @@ Proof.
   iMod "HΦ". iModIntro.
   iDestruct "HΦ" as (?) "[Hown HΦ]".
 
-  iNext. iStructNamed "Hown". simpl.
+  iNext.
+  iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
+  iStructNamed "Hown". simpl.
   iExists _. iFrame.
   iIntros "Hv".
 
   iMod ("HΦ" with "[-]").
-  { iApply typed_pointsto_combine. iFrame. }
+  { iApply typed_pointsto_combine; first done. iFrame. }
   iModIntro.
   wp_auto. done.
 Qed.
@@ -198,12 +195,14 @@ Proof.
   iMod "HΦ". iModIntro.
   iDestruct "HΦ" as (?) "[Hown HΦ]".
 
-  iNext. iStructNamed "Hown". simpl.
+  iNext.
+  iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
+  iStructNamed "Hown". simpl.
   iExists _. iFrame.
   iIntros "Hv".
 
   iMod ("HΦ" with "[-]").
-  { iApply typed_pointsto_combine. iFrame. }
+  { iApply typed_pointsto_combine; first done. iFrame. }
   iModIntro.
   wp_auto. done.
 Qed.
@@ -222,6 +221,7 @@ Proof.
   iMod "HΦ". iModIntro. iNext.
   iDestruct "HΦ" as (??) "(Hown & -> & HΦ)".
 
+  iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
   iStructNamed "Hown". simpl.
   iExists _. iFrame.
   iSplitR.
@@ -229,7 +229,7 @@ Proof.
   iIntros "Hv".
 
   iMod ("HΦ" with "[-]").
-  { iApply typed_pointsto_combine. iFrame. }
+  { iApply typed_pointsto_combine; first done. iFrame. }
   iModIntro.
   wp_auto. done.
 Qed.
@@ -284,8 +284,10 @@ Qed.
     wp_start as "_".
     iMod "HΦ" as (?) "[Haddr HΦ]".
     rewrite typed_pointsto_unseal /typed_pointsto_def /=.
+    iDestruct "Haddr" as ">[Haddr %]".
     wp_apply (wp_atomic_add with "Haddr"); first rewrite !go.into_val_unfold //=.
-    iFrame.
+    iFrame. iIntros "?". iMod ("HΦ" with "[-]"); last done.
+    by iFrame.
   Qed.
 
   Lemma wp_CompareAndSwapInt64 (addr : loc) (old : w64) (new : w64) :
@@ -344,12 +346,13 @@ Qed.
     iMod "HΦ". iModIntro.
     iDestruct "HΦ" as (?) "[Hown HΦ]".
     iNext.
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
     iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -366,12 +369,14 @@ Qed.
     iMod "HΦ". iModIntro.
     iDestruct "HΦ" as (?) "[Hown HΦ]".
 
-    iNext. iStructNamed "Hown". simpl.
+    iNext.
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
+    iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -390,12 +395,14 @@ Qed.
     iMod "HΦ". iModIntro.
     iDestruct "HΦ" as (?) "[Hown HΦ]".
 
-    iNext. iStructNamed "Hown". simpl.
+    iNext.
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
+    iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -414,6 +421,7 @@ Qed.
     iMod "HΦ". iModIntro. iNext.
     iDestruct "HΦ" as (??) "(Hown & -> & HΦ)".
 
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
     iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iSplitR.
@@ -421,7 +429,7 @@ Qed.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -473,8 +481,10 @@ Qed.
     wp_start as "_".
     iMod "HΦ" as (?) "[Haddr HΦ]".
     rewrite typed_pointsto_unseal /typed_pointsto_def /=.
+    iDestruct "Haddr" as ">[Haddr %]".
     wp_apply (wp_atomic_add with "Haddr"); first rewrite !go.into_val_unfold //=.
-    iFrame.
+    iFrame. iIntros "?". iMod ("HΦ" with "[-]"); last done.
+    by iFrame.
   Qed.
 
   Lemma wp_CompareAndSwapUint32 (addr : loc) (old : w32) (new : w32) :
@@ -533,12 +543,13 @@ Qed.
     iMod "HΦ". iModIntro.
     iDestruct "HΦ" as (?) "[Hown HΦ]".
     iNext.
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
     iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -555,12 +566,14 @@ Qed.
     iMod "HΦ". iModIntro.
     iDestruct "HΦ" as (?) "[Hown HΦ]".
 
-    iNext. iStructNamed "Hown". simpl.
+    iNext.
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
+    iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -579,12 +592,14 @@ Qed.
     iMod "HΦ". iModIntro.
     iDestruct "HΦ" as (?) "[Hown HΦ]".
 
-    iNext. iStructNamed "Hown". simpl.
+    iNext.
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
+    iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -603,6 +618,7 @@ Qed.
     iMod "HΦ". iModIntro. iNext.
     iDestruct "HΦ" as (??) "(Hown & -> & HΦ)".
 
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
     iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iSplitR.
@@ -610,7 +626,7 @@ Qed.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -662,8 +678,10 @@ Qed.
     wp_start as "_".
     iMod "HΦ" as (?) "[Haddr HΦ]".
     rewrite typed_pointsto_unseal /typed_pointsto_def /=.
+    iDestruct "Haddr" as ">[Haddr %]".
     wp_apply (wp_atomic_add with "Haddr"); first rewrite !go.into_val_unfold //=.
-    iFrame.
+    iFrame. iIntros "?". iMod ("HΦ" with "[-]"); last done.
+    by iFrame.
   Qed.
 
   Lemma wp_CompareAndSwapInt32 (addr : loc) (old : w32) (new : w32) :
@@ -722,12 +740,13 @@ Qed.
     iMod "HΦ". iModIntro.
     iDestruct "HΦ" as (?) "[Hown HΦ]".
     iNext.
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
     iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -744,12 +763,14 @@ Qed.
     iMod "HΦ". iModIntro.
     iDestruct "HΦ" as (?) "[Hown HΦ]".
 
-    iNext. iStructNamed "Hown". simpl.
+    iNext.
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
+    iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -768,12 +789,14 @@ Qed.
     iMod "HΦ". iModIntro.
     iDestruct "HΦ" as (?) "[Hown HΦ]".
 
-    iNext. iStructNamed "Hown". simpl.
+    iNext.
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
+    iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -792,6 +815,7 @@ Qed.
     iMod "HΦ". iModIntro. iNext.
     iDestruct "HΦ" as (??) "(Hown & -> & HΦ)".
 
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
     iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iSplitR.
@@ -799,7 +823,7 @@ Qed.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -847,12 +871,13 @@ Proof.
   wp_apply (wp_LoadUint32 with "[$]").
   iMod "HΦ". iModIntro.
   iDestruct "HΦ" as (?) "[>Hown HΦ]".
+  iDestruct (typed_pointsto_not_null with "Hown") as %Hnot_null.
   iStructNamed "Hown". simpl.
   iExists _. iFrame.
   iIntros "!> Hv".
 
   iMod ("HΦ" with "[-]").
-  { iApply typed_pointsto_combine. iFrame. }
+  { iApply typed_pointsto_combine; first done. iFrame. }
   iModIntro.
   wp_auto.
   destruct v; auto.
@@ -882,12 +907,13 @@ Proof.
   iMod "HΦ". iModIntro.
   iDestruct "HΦ" as (?) "[>Hown HΦ]".
 
+  iDestruct (typed_pointsto_not_null with "Hown") as %Hnot_null.
   iStructNamed "Hown". simpl.
   iExists _. iFrame.
   iIntros "!> Hv".
 
   iMod ("HΦ" with "[-]").
-  { iApply typed_pointsto_combine. iFrame. }
+  { iApply typed_pointsto_combine; first done. iFrame. }
   iModIntro.
   wp_auto. done.
 Qed.
@@ -908,6 +934,7 @@ Proof.
   iMod "HΦ". iModIntro.
   iDestruct "HΦ" as (??) "(>Hown & >-> & HΦ)".
 
+  iDestruct (typed_pointsto_not_null with "Hown") as %Hnot_null.
   iStructNamed "Hown". simpl.
   iExists _. iFrame.
   iSplitR.
@@ -915,7 +942,7 @@ Proof.
   iIntros "!> Hv".
 
   iMod ("HΦ" with "[-]").
-  { iApply typed_pointsto_combine. iFrame. simpl.
+  { iApply typed_pointsto_combine; first done. iFrame. simpl.
     iSplitL; last done. rewrite /named. iExactEq "Hv". f_equal.
     destruct v, old; auto.
   }
@@ -1006,10 +1033,11 @@ Proof.
   wp_bind.
   wp_apply wp_LoadPointer.
   iMod "HΦ" as (?) "[Haddr HΦ]".
+  iDestruct (typed_pointsto_not_null with "Haddr") as %Hnot_null.
   iStructNamed "Haddr". simpl. iFrame.
   iModIntro. iModIntro. iIntros "Hv".
   iMod ("HΦ" with "[_0 _1 Hv]") as "HΦ".
-  { iApply typed_pointsto_combine. iFrame. }
+  { iApply typed_pointsto_combine; first done. iFrame. }
   iModIntro. wp_auto. wp_end.
 Qed.
 
@@ -1022,10 +1050,11 @@ Proof.
   wp_start as "_". wp_auto.
   wp_apply wp_SwapPointer.
   iMod "HΦ" as (?) "[Haddr HΦ]".
+  iDestruct (typed_pointsto_not_null with "Haddr") as %Hnot_null.
   iStructNamed "Haddr". simpl. iFrame.
   iModIntro. iNext. iIntros "Hv".
   iMod ("HΦ" with "[_0 _1 Hv]") as "HΦ".
-  { iApply typed_pointsto_combine. iFrame. }
+  { iApply typed_pointsto_combine; first done. iFrame. }
   iModIntro. wp_auto. wp_end.
 Qed.
 
@@ -1038,10 +1067,11 @@ Proof.
   wp_start as "_". wp_auto.
   wp_apply wp_StorePointer.
   iMod "HΦ" as (?) "[Haddr HΦ]".
+  iDestruct (typed_pointsto_not_null with "Haddr") as %Hnot_null.
   iStructNamed "Haddr". simpl. iFrame.
   iModIntro. iNext. iIntros "Hv".
   iMod ("HΦ" with "[_0 _1 Hv]") as "HΦ".
-  { iApply typed_pointsto_combine. iFrame. }
+  { iApply typed_pointsto_combine; first done. iFrame. }
   iModIntro.
   wp_pures.
   done.
@@ -1058,11 +1088,12 @@ Proof.
   wp_start as "_". wp_auto.
   wp_apply wp_CompareAndSwapPointer.
   iMod "HΦ" as (??) "(>Hown & >-> & HΦ)".
+  iDestruct (typed_pointsto_not_null with "Hown") as %Hnot_null.
   iStructNamed "Hown". simpl. iFrame.
   iModIntro. iNext. iSplitR.
   { by destruct decide. }
   iIntros "Hv". iMod ("HΦ" with "[_0 _1 Hv]") as "HΦ".
-  { iApply typed_pointsto_combine. iFrame. }
+  { iApply typed_pointsto_combine; first done. iFrame. }
   iModIntro. wp_auto. wp_end.
 Qed.
 

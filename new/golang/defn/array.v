@@ -91,6 +91,12 @@ Class ArraySemantics `{!GoSemanticsFunctions} :=
            (word.sub high low) (word.sub max low))
      else Panic "slice bounds out of range");
 
+  (* This requires that array_index_ref does not ever end up becoming null due
+     to a negative Z offset. Instead, negative offsets should be thought of as
+     clamped to 0. *)
+  array_index_ref_null_inv t i l :
+    array_index_ref t i l = null → l = null;
+
   array_index_ref_add t i j l :
     array_index_ref t (i + j) l = array_index_ref t j (array_index_ref t i l);
 

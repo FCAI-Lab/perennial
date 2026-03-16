@@ -44,10 +44,10 @@ Proof.
     iDestruct own_slice_nil as "$".
     iDestruct own_slice_cap_nil as "$".
   }
-  wp_apply wp_slice_literal as "% _".
+  wp_apply wp_slice_literal as "% Hsl".
   { iIntros. wp_auto. iFrame. }
-  wp_apply (wp_slice_append with "[$Hsl_b]") as "* (?&?&?)".
-  { iDestruct own_slice_empty as "$"; try done.
+  wp_apply (wp_slice_append with "[$Hsl_b Hsl]") as "* (?&?&?)".
+  { iFrame.
     iDestruct own_slice_cap_empty as "$"; try done. }
   wp_end.
 Qed.

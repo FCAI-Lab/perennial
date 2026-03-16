@@ -158,7 +158,7 @@ Proof.
     }
     done.
   }
-  wp_apply wp_slice_literal as "% _".
+  wp_apply wp_slice_literal as "% Hsl".
   { iIntros. wp_auto. iFrame. }
   iAssert (∃ (i: nat) (i_v: w64) sl,
               "i" ∷ i_ptr ↦ i_v ∗
@@ -167,11 +167,10 @@ Proof.
               "results"  ∷ results_ptr ↦ sl ∗
               "oslc"  ∷ theory.slice.own_slice_cap w64 sl (DfracOwn 1)
           )%I
-    with "[ i Hcons results]" as "IH".
+    with "[Hsl i Hcons results]" as "IH".
   {
     iExists 0%nat. iFrame.
     unfold fib_list.
-    iDestruct own_slice_empty as "$"; [done..|].
     iDestruct own_slice_cap_empty as "$"; done.
   }
 

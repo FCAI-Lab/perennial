@@ -7,20 +7,24 @@ Context `{ffi_sem: ffi_semantics} `{!ffi_interp ffi} `{!heapGS Σ}
 
 Ltac solve_wp_alloc :=
   iIntros "* _ HΦ";
-  rewrite typed_pointsto_unseal /=;
-  wp_pures; by wp_apply wp_alloc_untyped.
+  wp_pures; wp_apply wp_alloc_untyped; iIntros "* Hl";
+  iDestruct (heap_pointsto_non_null with "Hl") as %?;
+  iApply "HΦ"; rewrite typed_pointsto_unseal /typed_pointsto_wrap /=;
+  iFrame "Hl"; done.
 
 Ltac solve_wp_load :=
   iIntros "* Hl HΦ";
-  wp_pures; rewrite typed_pointsto_unseal /=;
+  wp_pures; rewrite typed_pointsto_unseal /typed_pointsto_wrap /=;
+  iDestruct "Hl" as "[Hl %]";
   wp_apply (_internal_wp_untyped_read with "Hl");
-  iIntros "Hl"; by iApply "HΦ".
+  iIntros "Hl"; iApply "HΦ"; iFrame "Hl"; done.
 
 Ltac solve_wp_store :=
   iIntros "* Hl HΦ";
-  wp_pures; rewrite typed_pointsto_unseal /=;
+  wp_pures; rewrite typed_pointsto_unseal /typed_pointsto_wrap /=;
+  iDestruct "Hl" as "[Hl %]";
   wp_apply (_internal_wp_untyped_store with "Hl");
-  iIntros "Hl"; by iApply "HΦ".
+  iIntros "Hl"; iApply "HΦ"; iFrame "Hl"; done.
 
 Ltac solve_into_val_typed :=
   pose proof (go.tagged_steps internal);

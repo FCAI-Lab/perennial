@@ -33,7 +33,9 @@ Definition own_lock (m: loc) : iProp Σ := m ↦{# 3/4} true.
 
 Lemma own_lock_exclusive (m : loc) : own_lock m -∗ own_lock m -∗ False.
 Proof.
-  iIntros "H1 H2". rewrite /own_lock typed_pointsto_unseal.
+  iIntros "H1 H2".
+  rewrite /own_lock typed_pointsto_unseal /typed_pointsto_wrap.
+  iDestruct "H1" as "[H1 _]". iDestruct "H2" as "[H2 _]".
   by iCombine "H1 H2" gives %[Hbad _].
 Qed.
 
