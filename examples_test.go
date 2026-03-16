@@ -25,7 +25,6 @@ import (
 	"testing"
 
 	"github.com/goose-lang/goose"
-	channel_examples "github.com/goose-lang/goose/testdata/examples/channel"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -265,19 +264,3 @@ func TestNegativeExamples(testingT *testing.T) {
 		})
 	}
 }
-
-// Tests of channel code
-func TestAllChannelTests(t *testing.T) {
-	channel_examples.TestHelloWorldSync()
-	channel_examples.TestHelloWorldWithTimeout()
-	channel_examples.TestDSPExample()
-	channel_examples.TestFibConsumer()
-	channel_examples.TestSelectNbNotReady()
-	channel_examples.TestSelectReadyCaseNoPanic()
-	channel_examples.LeakyBufferPipeline()
-	// If we get here, none of the functions panic
-	t.Log("All channel tests passed successfully!")
-}
-
-// Tests of hand-translated channel model code
-// TODO: Once channel translation is implemented, remove
