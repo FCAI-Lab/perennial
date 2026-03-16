@@ -153,7 +153,7 @@ Definition DSPExampleⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
     do:  (Fst (chan.receive go.any (![go.ChannelType go.sendrecv go.any] "signal")));;;
     return: (![go.int] (![go.PointerType go.int] "ptr"))).
 
-(* go: cv.go:14:6 *)
+(* go: cv_unverified.go:14:6 *)
 Definition NewCondⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "L",
     exception_do (let: "L" := (GoAlloc lock.Lock "L") in
@@ -162,7 +162,7 @@ Definition NewCondⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : v
 
 (* Wait blocks until signaled. Caller must hold c.L; will hold c.L on return.
 
-   go: cv.go:19:16 *)
+   go: cv_unverified.go:19:16 *)
 Definition Cond__Waitⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "c" <>,
     exception_do (let: "c" := (GoAlloc (go.PointerType Cond) "c") in
@@ -205,7 +205,7 @@ Definition Cond__Waitⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
 
 (* Signal wakes one waiter (FIFO). Caller must hold c.L.
 
-   go: cv.go:29:16 *)
+   go: cv_unverified.go:29:16 *)
 Definition Cond__Signalⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "c" <>,
     exception_do (let: "c" := (GoAlloc (go.PointerType Cond) "c") in
@@ -279,7 +279,7 @@ Definition Cond__Signalⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext
 
 (* Broadcast wakes all waiters. Caller must hold c.L.
 
-   go: cv.go:40:16 *)
+   go: cv_unverified.go:40:16 *)
 Definition Cond__Broadcastⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "c" <>,
     exception_do (let: "c" := (GoAlloc (go.PointerType Cond) "c") in
@@ -312,7 +312,7 @@ Definition Cond__Broadcastⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCont
     ]))] "$r0");;;
     return: #()).
 
-(* go: cv.go:47:16 *)
+(* go: cv_unverified.go:47:16 *)
 Definition Cond__WaitForⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "c" "d",
     exception_do (let: "c" := (GoAlloc (go.PointerType Cond) "c") in
@@ -465,7 +465,7 @@ Definition Cond__WaitForⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContex
     else do:  #());;;
     return: (![go.bool] "signaled")).
 
-(* go: cv.go:92:16 *)
+(* go: cv_unverified.go:92:16 *)
 Definition Cond__WaitUntilⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "c" "deadline",
     exception_do (let: "c" := (GoAlloc (go.PointerType Cond) "c") in
