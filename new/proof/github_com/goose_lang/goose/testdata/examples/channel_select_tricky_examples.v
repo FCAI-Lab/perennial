@@ -265,9 +265,9 @@ Proof.
 Qed.
 
 
-Lemma wp_select_nb_no_panic :
+Lemma wp_select_nb_not_ready :
   {{{ is_pkg_init channel_examples}}}
-    @! channel_examples.select_nb_no_panic #()
+    @! channel_examples.select_nb_not_ready #()
   {{{ RET #(); True }}}.
 Proof.
   wp_start. wp_auto_lc 2. wp_apply chan.wp_make1.
@@ -310,9 +310,9 @@ Proof.
   }
 Qed.
 
-Lemma wp_select_no_double_close :
+Lemma wp_select_nb_guaranteed_ready :
   {{{ is_pkg_init channel_examples }}}
-    @! channel_examples.select_no_double_close #()
+    @! channel_examples.select_nb_guaranteed_ready #()
   {{{ RET #(); True }}}.
 Proof.
   wp_start. wp_auto.
