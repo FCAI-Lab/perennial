@@ -52,20 +52,6 @@ Definition exchangePointer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_s
 
 Definition BroadcastExample {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/channel.BroadcastExample"%go.
 
-Definition select_ready_case_no_panic {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/channel.select_ready_case_no_panic"%go.
-
-Definition TestHelloWorldSync {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/channel.TestHelloWorldSync"%go.
-
-Definition TestHelloWorldWithTimeout {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/channel.TestHelloWorldWithTimeout"%go.
-
-Definition TestDSPExample {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/channel.TestDSPExample"%go.
-
-Definition TestFibConsumer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/channel.TestFibConsumer"%go.
-
-Definition TestSelectNbNotReady {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/channel.TestSelectNbNotReady"%go.
-
-Definition TestSelectReadyCaseNoPanic {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/channel.TestSelectReadyCaseNoPanic"%go.
-
 Definition fibonacci {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/channel.fibonacci"%go.
 
 Definition fib_consumer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/channel.fib_consumer"%go.
@@ -126,11 +112,7 @@ Definition select_nb_not_ready {ext : ffi_syntax} {go_gctx : GoGlobalContext} : 
 
 Definition select_nb_guaranteed_ready {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/channel.select_nb_guaranteed_ready"%go.
 
-Definition select_nb_full_buffer_no_panic {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/channel.select_nb_full_buffer_no_panic"%go.
-
-Definition select_nb_buffer_space_panic {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/channel.select_nb_buffer_space_panic"%go.
-
-Definition select_nb_buffer_space_deadlock {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/channel.select_nb_buffer_space_deadlock"%go.
+Definition select_nb_full_buffer_not_ready {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/channel.select_nb_full_buffer_not_ready"%go.
 
 (* prog3 from Actris 2.0 intro: https://arxiv.org/pdf/2010.15030
 
@@ -171,7 +153,7 @@ Definition DSPExampleⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
     do:  (Fst (chan.receive go.any (![go.ChannelType go.sendrecv go.any] "signal")));;;
     return: (![go.int] (![go.PointerType go.int] "ptr"))).
 
-(* go: cv.go:14:6 *)
+(* go: cv_unverified.go:14:6 *)
 Definition NewCondⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "L",
     exception_do (let: "L" := (GoAlloc lock.Lock "L") in
@@ -180,7 +162,7 @@ Definition NewCondⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : v
 
 (* Wait blocks until signaled. Caller must hold c.L; will hold c.L on return.
 
-   go: cv.go:19:16 *)
+   go: cv_unverified.go:19:16 *)
 Definition Cond__Waitⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "c" <>,
     exception_do (let: "c" := (GoAlloc (go.PointerType Cond) "c") in
@@ -223,7 +205,7 @@ Definition Cond__Waitⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
 
 (* Signal wakes one waiter (FIFO). Caller must hold c.L.
 
-   go: cv.go:29:16 *)
+   go: cv_unverified.go:29:16 *)
 Definition Cond__Signalⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "c" <>,
     exception_do (let: "c" := (GoAlloc (go.PointerType Cond) "c") in
@@ -297,7 +279,7 @@ Definition Cond__Signalⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext
 
 (* Broadcast wakes all waiters. Caller must hold c.L.
 
-   go: cv.go:40:16 *)
+   go: cv_unverified.go:40:16 *)
 Definition Cond__Broadcastⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "c" <>,
     exception_do (let: "c" := (GoAlloc (go.PointerType Cond) "c") in
@@ -330,7 +312,7 @@ Definition Cond__Broadcastⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCont
     ]))] "$r0");;;
     return: #()).
 
-(* go: cv.go:47:16 *)
+(* go: cv_unverified.go:47:16 *)
 Definition Cond__WaitForⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "c" "d",
     exception_do (let: "c" := (GoAlloc (go.PointerType Cond) "c") in
@@ -483,7 +465,7 @@ Definition Cond__WaitForⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContex
     else do:  #());;;
     return: (![go.bool] "signaled")).
 
-(* go: cv.go:92:16 *)
+(* go: cv_unverified.go:92:16 *)
 Definition Cond__WaitUntilⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "c" "deadline",
     exception_do (let: "c" := (GoAlloc (go.PointerType Cond) "c") in
@@ -809,146 +791,6 @@ Definition BroadcastExampleⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCon
       do:  (let: "$a0" := (Convert go.string (go.InterfaceType []) #"receiver 2 got wrong value"%go) in
       (FuncResolve go.panic [] #()) "$a0")
     else do:  #());;;
-    return: #()).
-
-(* Show that a guaranteed to be ready case makes default impossible
-
-   go: examples_unverified.go:6:6 *)
-Definition select_ready_case_no_panicⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
-  λ: <>,
-    exception_do (let: "ch" := (GoAlloc (go.ChannelType go.sendrecv (go.StructType [
-
-    ])) (GoZeroVal (go.ChannelType go.sendrecv (go.StructType [
-
-    ])) #())) in
-    let: "$r0" := ((FuncResolve go.make1 [go.ChannelType go.sendrecv (go.StructType [
-
-     ])] #()) #()) in
-    do:  ("ch" <-[go.ChannelType go.sendrecv (go.StructType [
-
-    ])] "$r0");;;
-    do:  (let: "$a0" := (![go.ChannelType go.sendrecv (go.StructType [
-
-    ])] "ch") in
-    (FuncResolve go.close [go.ChannelType go.sendrecv (go.StructType [
-
-     ])] #()) "$a0");;;
-    let: "$ch0" := (![go.ChannelType go.sendrecv (go.StructType [
-
-    ])] "ch") in
-    SelectStmt (SelectStmtClauses (Some (do:  (let: "$a0" := (Convert go.string (go.InterfaceType []) #"Shouldn't be possible!"%go) in
-    (FuncResolve go.panic [] #()) "$a0"))) [(CommClause (RecvCase (go.StructType [
-
-    ]) "$ch0") (λ: "$recvVal",
-      do:  #()
-      ))]);;;
-    return: #()).
-
-(* Various tests that should panic when failing, which also means verifying { True } e { True } is
-   sufficient since panic can't be verified.
-
-   go: examples_unverified.go:20:6 *)
-Definition TestHelloWorldSyncⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
-  λ: <>,
-    exception_do (let: "result" := (GoAlloc go.string (GoZeroVal go.string #())) in
-    let: "$r0" := ((FuncResolve HelloWorldSync [] #()) #()) in
-    do:  ("result" <-[go.string] "$r0");;;
-    (if: Convert go.untyped_bool go.bool ((![go.string] "result") ≠⟨go.string⟩ #"Hello, World!"%go)
-    then
-      do:  (let: "$a0" := (Convert go.string (go.InterfaceType []) #"incorrect output"%go) in
-      (FuncResolve go.panic [] #()) "$a0")
-    else do:  #());;;
-    return: #()).
-
-(* go: examples_unverified.go:27:6 *)
-Definition TestHelloWorldWithTimeoutⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
-  λ: <>,
-    exception_do (let: "result" := (GoAlloc go.string (GoZeroVal go.string #())) in
-    let: "$r0" := ((FuncResolve HelloWorldWithTimeout [] #()) #()) in
-    do:  ("result" <-[go.string] "$r0");;;
-    (if: Convert go.untyped_bool go.bool (((![go.string] "result") ≠⟨go.string⟩ #"operation timed out"%go) && ((![go.string] "result") ≠⟨go.string⟩ #"Hello, World!"%go))
-    then
-      do:  (let: "$a0" := (Convert go.string (go.InterfaceType []) #"incorrect output"%go) in
-      (FuncResolve go.panic [] #()) "$a0")
-    else do:  #());;;
-    return: #()).
-
-(* go: examples_unverified.go:34:6 *)
-Definition TestDSPExampleⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
-  λ: <>,
-    exception_do (let: "result" := (GoAlloc go.int (GoZeroVal go.int #())) in
-    let: "$r0" := ((FuncResolve DSPExample [] #()) #()) in
-    do:  ("result" <-[go.int] "$r0");;;
-    (if: Convert go.untyped_bool go.bool ((![go.int] "result") ≠⟨go.int⟩ #(W64 42))
-    then
-      do:  (let: "$a0" := (Convert go.string (go.InterfaceType []) #"incorrect output"%go) in
-      (FuncResolve go.panic [] #()) "$a0")
-    else do:  #());;;
-    return: #()).
-
-(* go: examples_unverified.go:41:6 *)
-Definition TestFibConsumerⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
-  λ: <>,
-    exception_do (let: "result" := (GoAlloc (go.SliceType go.int) (GoZeroVal (go.SliceType go.int) #())) in
-    let: "$r0" := ((FuncResolve fib_consumer [] #()) #()) in
-    do:  ("result" <-[go.SliceType go.int] "$r0");;;
-    let: "expected" := (GoAlloc (go.SliceType go.int) (GoZeroVal (go.SliceType go.int) #())) in
-    let: "$r0" := (let: "$v0" := #(W64 0) in
-    let: "$v1" := #(W64 1) in
-    let: "$v2" := #(W64 1) in
-    let: "$v3" := #(W64 2) in
-    let: "$v4" := #(W64 3) in
-    let: "$v5" := #(W64 5) in
-    let: "$v6" := #(W64 8) in
-    let: "$v7" := #(W64 13) in
-    let: "$v8" := #(W64 21) in
-    let: "$v9" := #(W64 34) in
-    CompositeLiteral (go.SliceType go.int) (LiteralValue [KeyedElement None (ElementExpression go.int "$v0"); KeyedElement None (ElementExpression go.int "$v1"); KeyedElement None (ElementExpression go.int "$v2"); KeyedElement None (ElementExpression go.int "$v3"); KeyedElement None (ElementExpression go.int "$v4"); KeyedElement None (ElementExpression go.int "$v5"); KeyedElement None (ElementExpression go.int "$v6"); KeyedElement None (ElementExpression go.int "$v7"); KeyedElement None (ElementExpression go.int "$v8"); KeyedElement None (ElementExpression go.int "$v9")])) in
-    do:  ("expected" <-[go.SliceType go.int] "$r0");;;
-    (if: Convert go.untyped_bool go.bool ((let: "$a0" := (![go.SliceType go.int] "result") in
-    (FuncResolve go.len [go.SliceType go.int] #()) "$a0") ≠⟨go.int⟩ (let: "$a0" := (![go.SliceType go.int] "expected") in
-    (FuncResolve go.len [go.SliceType go.int] #()) "$a0"))
-    then
-      do:  (let: "$a0" := (Convert go.string (go.InterfaceType []) #"incorrect output"%go) in
-      (FuncResolve go.panic [] #()) "$a0")
-    else do:  #());;;
-    let: "$range" := (![go.SliceType go.int] "expected") in
-    (let: "i" := (GoAlloc go.int (GoZeroVal go.int #())) in
-    slice.for_range go.int "$range" (λ: "$key" "$value",
-      do:  ("i" <-[go.int] "$key");;;
-      (if: Convert go.untyped_bool go.bool ((![go.int] (IndexRef (go.SliceType go.int) (![go.SliceType go.int] "result", ![go.int] "i"))) ≠⟨go.int⟩ (![go.int] (IndexRef (go.SliceType go.int) (![go.SliceType go.int] "expected", ![go.int] "i"))))
-      then
-        do:  (let: "$a0" := (Convert go.string (go.InterfaceType []) #"incorrect output"%go) in
-        (FuncResolve go.panic [] #()) "$a0")
-      else do:  #())));;;
-    return: #()).
-
-(* go: examples_unverified.go:56:6 *)
-Definition TestSelectNbNotReadyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
-  λ: <>,
-    exception_do (let: "iterations" := (GoAlloc go.int (GoZeroVal go.int #())) in
-    let: "$r0" := #(W64 10000) in
-    do:  ("iterations" <-[go.int] "$r0");;;
-    (let: "i" := (GoAlloc go.int (GoZeroVal go.int #())) in
-    let: "$r0" := #(W64 0) in
-    do:  ("i" <-[go.int] "$r0");;;
-    (for: (λ: <>, (![go.int] "i") <⟨go.int⟩ (![go.int] "iterations")); (λ: <>, do:  ("i" <-[go.int] ((![go.int] "i") +⟨go.int⟩ #(W64 1)))) := λ: <>,
-      do:  ((FuncResolve select_nb_not_ready [] #()) #());;;
-      do:  (let: "$a0" := (#(W64 1) *⟨time.Duration⟩ time.Microsecond) in
-      (FuncResolve time.Sleep [] #()) "$a0")));;;
-    return: #()).
-
-(* go: examples_unverified.go:65:6 *)
-Definition TestSelectReadyCaseNoPanicⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
-  λ: <>,
-    exception_do (let: "iterations" := (GoAlloc go.int (GoZeroVal go.int #())) in
-    let: "$r0" := #(W64 10000) in
-    do:  ("iterations" <-[go.int] "$r0");;;
-    (let: "i" := (GoAlloc go.int (GoZeroVal go.int #())) in
-    let: "$r0" := #(W64 0) in
-    do:  ("i" <-[go.int] "$r0");;;
-    (for: (λ: <>, (![go.int] "i") <⟨go.int⟩ (![go.int] "iterations")); (λ: <>, do:  ("i" <-[go.int] ((![go.int] "i") +⟨go.int⟩ #(W64 1)))) := λ: <>,
-      do:  ((FuncResolve select_ready_case_no_panic [] #()) #())));;;
     return: #()).
 
 (* https://go.dev/tour/concurrency/4
@@ -1610,7 +1452,7 @@ Definition CancellableMuxerⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCon
         return: (![go.string] (![go.PointerType go.string] "errMsg"))
         ))]))).
 
-(* Show that it isn't possible to have 2 nonblocking ops that match.
+(* Example with 2 nonblocking ops that should not match.
 
    go: select_tricky_examples.go:4:6 *)
 Definition select_nb_not_readyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
@@ -1666,11 +1508,10 @@ Definition select_nb_guaranteed_readyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : G
       ))]);;;
     return: #()).
 
-(* Show that a nonblocking select does not take a send case
-   when the buffered channel is already full.
+(* Non-blocking send cannot send on a full buffer
 
-   go: select_tricky_examples.go:33:6 *)
-Definition select_nb_full_buffer_no_panicⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+   go: select_tricky_examples.go:34:6 *)
+Definition select_nb_full_buffer_not_readyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (let: "ch" := (GoAlloc (go.ChannelType go.sendrecv go.int) (GoZeroVal (go.ChannelType go.sendrecv go.int) #())) in
     let: "$r0" := ((FuncResolve go.make2 [go.ChannelType go.sendrecv go.int] #()) #(W64 1)) in
@@ -1681,37 +1522,6 @@ Definition select_nb_full_buffer_no_panicⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx
     let: "$v0" := #(W64 0) in
     let: "$ch0" := (![go.ChannelType go.sendrecv go.int] "ch") in
     SelectStmt (SelectStmtClauses (Some (do:  #())) [(CommClause (SendCase go.int "$ch0" "$v0") (do:  (let: "$a0" := (Convert go.string (go.InterfaceType []) #"unreachable"%go) in
-    (FuncResolve go.panic [] #()) "$a0")))]);;;
-    return: #()).
-
-(* Unverifiable: Panic is irreducible
-
-   go: select_tricky_examples.go:52:6 *)
-Definition select_nb_buffer_space_panicⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
-  λ: <>,
-    exception_do (let: "ch" := (GoAlloc (go.ChannelType go.sendrecv go.int) (GoZeroVal (go.ChannelType go.sendrecv go.int) #())) in
-    let: "$r0" := ((FuncResolve go.make2 [go.ChannelType go.sendrecv go.int] #()) #(W64 1)) in
-    do:  ("ch" <-[go.ChannelType go.sendrecv go.int] "$r0");;;
-    let: "$v0" := #(W64 0) in
-    let: "$ch0" := (![go.ChannelType go.sendrecv go.int] "ch") in
-    SelectStmt (SelectStmtClauses (Some (do:  #())) [(CommClause (SendCase go.int "$ch0" "$v0") (do:  (let: "$a0" := (Convert go.string (go.InterfaceType []) #"bad"%go) in
-    (FuncResolve go.panic [] #()) "$a0")))]);;;
-    return: #()).
-
-(* Blocking select: vacuously verifiable due to deadlock
-
-   go: select_tricky_examples.go:67:6 *)
-Definition select_nb_buffer_space_deadlockⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
-  λ: <>,
-    exception_do (let: "ch" := (GoAlloc (go.ChannelType go.sendrecv go.int) (GoZeroVal (go.ChannelType go.sendrecv go.int) #())) in
-    let: "$r0" := ((FuncResolve go.make2 [go.ChannelType go.sendrecv go.int] #()) #(W64 1)) in
-    do:  ("ch" <-[go.ChannelType go.sendrecv go.int] "$r0");;;
-    do:  (let: "$chan" := (![go.ChannelType go.sendrecv go.int] "ch") in
-    let: "$v" := #(W64 0) in
-    chan.send go.int "$chan" "$v");;;
-    let: "$v0" := #(W64 0) in
-    let: "$ch0" := (![go.ChannelType go.sendrecv go.int] "ch") in
-    SelectStmt (SelectStmtClauses None [(CommClause (SendCase go.int "$ch0" "$v0") (do:  (let: "$a0" := (Convert go.string (go.InterfaceType []) #"unreachable"%go) in
     (FuncResolve go.panic [] #()) "$a0")))]);;;
     return: #()).
 
@@ -1932,13 +1742,6 @@ Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!G
   #[global] simple_multi_join_unfold :: FuncUnfold simple_multi_join [] (simple_multi_joinⁱᵐᵖˡ);
   #[global] exchangePointer_unfold :: FuncUnfold exchangePointer [] (exchangePointerⁱᵐᵖˡ);
   #[global] BroadcastExample_unfold :: FuncUnfold BroadcastExample [] (BroadcastExampleⁱᵐᵖˡ);
-  #[global] select_ready_case_no_panic_unfold :: FuncUnfold select_ready_case_no_panic [] (select_ready_case_no_panicⁱᵐᵖˡ);
-  #[global] TestHelloWorldSync_unfold :: FuncUnfold TestHelloWorldSync [] (TestHelloWorldSyncⁱᵐᵖˡ);
-  #[global] TestHelloWorldWithTimeout_unfold :: FuncUnfold TestHelloWorldWithTimeout [] (TestHelloWorldWithTimeoutⁱᵐᵖˡ);
-  #[global] TestDSPExample_unfold :: FuncUnfold TestDSPExample [] (TestDSPExampleⁱᵐᵖˡ);
-  #[global] TestFibConsumer_unfold :: FuncUnfold TestFibConsumer [] (TestFibConsumerⁱᵐᵖˡ);
-  #[global] TestSelectNbNotReady_unfold :: FuncUnfold TestSelectNbNotReady [] (TestSelectNbNotReadyⁱᵐᵖˡ);
-  #[global] TestSelectReadyCaseNoPanic_unfold :: FuncUnfold TestSelectReadyCaseNoPanic [] (TestSelectReadyCaseNoPanicⁱᵐᵖˡ);
   #[global] fibonacci_unfold :: FuncUnfold fibonacci [] (fibonacciⁱᵐᵖˡ);
   #[global] fib_consumer_unfold :: FuncUnfold fib_consumer [] (fib_consumerⁱᵐᵖˡ);
   #[global] Web_unfold :: FuncUnfold Web [] (Webⁱᵐᵖˡ);
@@ -1969,9 +1772,7 @@ Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!G
   #[global] CancellableMuxer_unfold :: FuncUnfold CancellableMuxer [] (CancellableMuxerⁱᵐᵖˡ);
   #[global] select_nb_not_ready_unfold :: FuncUnfold select_nb_not_ready [] (select_nb_not_readyⁱᵐᵖˡ);
   #[global] select_nb_guaranteed_ready_unfold :: FuncUnfold select_nb_guaranteed_ready [] (select_nb_guaranteed_readyⁱᵐᵖˡ);
-  #[global] select_nb_full_buffer_no_panic_unfold :: FuncUnfold select_nb_full_buffer_no_panic [] (select_nb_full_buffer_no_panicⁱᵐᵖˡ);
-  #[global] select_nb_buffer_space_panic_unfold :: FuncUnfold select_nb_buffer_space_panic [] (select_nb_buffer_space_panicⁱᵐᵖˡ);
-  #[global] select_nb_buffer_space_deadlock_unfold :: FuncUnfold select_nb_buffer_space_deadlock [] (select_nb_buffer_space_deadlockⁱᵐᵖˡ);
+  #[global] select_nb_full_buffer_not_ready_unfold :: FuncUnfold select_nb_full_buffer_not_ready [] (select_nb_full_buffer_not_readyⁱᵐᵖˡ);
   #[global] import_time_Assumption :: time.Assumptions;
   #[global] import_lock_Assumption :: lock.Assumptions;
   #[global] import_strings_Assumption :: strings.Assumptions;

@@ -1,6 +1,6 @@
 From New.proof.github_com.goose_lang.goose.testdata.examples Require Import channel_examples_init.
 From New.golang.theory.chan.idioms
-  Require Import base bag handshake broadcast join.
+  Require Import base bag handshake broadcast future.
 From New.proof Require Import strings time sync.
 From iris.base_logic Require Import ghost_map.
 From New.golang Require Import theory.
@@ -260,6 +260,9 @@ Qed.
 End cancellable.
 
 Section join.
+Context `{!ghost_map.ghost_mapG Σ gname (unit → iProp Σ)}.
+Context `{!inG Σ unitR}.
+Set Default Proof Using "All".
 
 Lemma wp_simple_join :
   {{{ is_pkg_init channel_examples ∗ is_pkg_init channel }}}
@@ -267,31 +270,29 @@ Lemma wp_simple_join :
   {{{  RET #("Hello, World!"); True }}}.
 Proof.
   wp_start. wp_auto_lc 3.
-      iRename select (£1) into "Hlc".
   wp_apply chan.wp_make2; first done.
-  iIntros (ch). iIntros (γ). iIntros "(#His_chan & _Hcap & Hownchan)".
+  iIntros (ch γ) "(#His_chan & _Hcap & Hownchan)".
   wp_auto.
   rewrite -fupd_wp.
   simpl.
-  iMod (join.own_join_alloc_buff ch γ 1 with "His_chan Hownchan") as (γjoin) "[#Hisjoin Hjoin]".
-  iMod ((join.join_alloc_worker γjoin ch
-           emp%I ( message_ptr ↦ "Hello, World!"%go) 0)%I with "[$][$Hisjoin] [$Hjoin]")
-    as "[Hjoin Hworker]".
+  iMod (start_future (V:=unit) (t:=go.StructType []) ch γ (chanstate.Buffered []) with "His_chan Hownchan")
+    as (γfut) "[#Hisfut HAwait]".
+  { right. done. }
+  iMod (future_alloc_promise (V:=unit) (t:=go.StructType []) γfut ch (fun _ : unit => (message_ptr ↦ "Hello, World!"%go))%I []
+        with "Hisfut HAwait") as "[Hpromise HAwait]".
   iModIntro. iPersist "ch".
-  wp_apply (wp_fork with "[Hworker message]").
+  wp_apply (wp_fork with "[Hpromise message]").
   {
     wp_auto.
-    wp_apply (join.wp_join_send with "[$Hisjoin $Hworker $message]").
-    { iFrame. }
+    wp_apply (wp_future_fulfill (V:=unit) (t:=go.StructType []) with "[$Hisfut $Hpromise $message]").
+    done.
   }
-  wp_apply (join.wp_join_receive with "[$]").
-  iIntros (v) "Hjoin".
+  wp_apply (wp_future_await (V:=unit) (t:=go.StructType []) with "[$Hisfut $HAwait]").
+  iIntros (v P pre post) "(%Hsplit & HP & _)".
+  destruct pre; simpl in Hsplit; [injection Hsplit as <- | exfalso; by destruct pre].
+  destruct post; [|done].
   wp_auto.
-  iMod (join.join_finish with "[$] [$] Hjoin") as "Hmsg".
-  iMod (lc_fupd_elim_later with "[$][$Hmsg]") as "[_ Hmsg]".
-  wp_auto.
-  iApply "HΦ".
-  done.
+  iApply "HΦ". done.
 Qed.
 
 Lemma wp_simple_multi_join :
@@ -300,45 +301,49 @@ Lemma wp_simple_multi_join :
   {{{ RET #("Hello World"); True }}}.
 Proof.
   wp_start. wp_auto_lc 3.
-  iRename select (£1) into "Hlc1".
   wp_apply chan.wp_make2; first done.
   iIntros (ch γ) "(#His_chan & _Hcap & Hownchan)".
   wp_auto.
   rewrite -fupd_wp.
   simpl.
-  iMod (join.own_join_alloc_buff ch γ 2 with "His_chan Hownchan") as (γjoin) "[#Hisjoin Hjoin]".
-  iRename select (£1) into "Hlc2".
-  iMod (join.join_alloc_worker γjoin ch emp (hello_ptr ↦ "Hello"%go) 0
-        with "[$Hlc2] [$Hisjoin] [$Hjoin]") as "[Hjoin Hworker1]".
-  iRename select (£1) into "Hlc3".
-  iMod (join.join_alloc_worker γjoin ch
-          (emp ∗ hello_ptr ↦ "Hello"%go) (world_ptr ↦ "World"%go) 1
-        with "[$Hlc3] [$Hisjoin] [$Hjoin]") as "[Hjoin Hworker2]".
+  iMod (start_future (V:=unit) (t:=go.StructType []) ch γ (chanstate.Buffered []) with "His_chan Hownchan")
+    as (γfut) "[#Hisfut HAwait]".
+  { right. done. }
+  iMod (future_alloc_promise (V:=unit) (t:=go.StructType []) γfut ch (fun _ : unit => (hello_ptr ↦ "Hello"%go))%I []
+        with "Hisfut HAwait") as "[Hpromise1 HAwait]".
+  iMod (future_alloc_promise (V:=unit) (t:=go.StructType []) γfut ch (fun _ : unit => (world_ptr ↦ "World"%go))%I
+          [(fun _ : unit => (hello_ptr ↦ "Hello"%go))%I]
+        with "Hisfut HAwait") as "[Hpromise2 HAwait]".
   iModIntro.
   iPersist "ch".
-  wp_apply (wp_fork with "[Hworker1 hello]").
+  wp_apply (wp_fork with "[Hpromise1 hello]").
   {
     wp_auto.
-    wp_apply (join.wp_join_send with "[$Hisjoin $Hworker1 $hello]").
-    { iFrame. }
+    wp_apply (wp_future_fulfill (V:=unit) (t:=go.StructType []) with "[$Hisfut $Hpromise1 $hello]").
+    done.
   }
-  wp_apply (wp_fork with "[Hworker2 world]").
+  wp_apply (wp_fork with "[Hpromise2 world]").
   {
     wp_auto.
-    wp_apply (join.wp_join_send with "[$Hisjoin $Hworker2 $world]").
-    { iFrame. }
+    wp_apply (wp_future_fulfill (V:=unit) (t:=go.StructType []) with "[$Hisfut $Hpromise2 $world]").
+    done.
   }
-  wp_apply (join.wp_join_receive with "[$Hjoin $Hisjoin]").
-  iIntros (v1) "Hjoin".
-  wp_auto_lc 3.
-  wp_apply (join.wp_join_receive with "[$Hjoin $Hisjoin]").
-  iIntros (v2) "Hjoin".
-  wp_auto_lc 1.
-  iRename select (£1) into "Hlc4".
-  iMod (join.join_finish with "[$Hlc4] [$Hisjoin] Hjoin") as "Hboth".
-  iMod (lc_fupd_elim_later with "[$] [$Hboth]") as "[[_ Hhello] Hworld]".
-  wp_auto.
-  iApply "HΦ". done.
+  wp_apply (wp_future_await (V:=unit) (t:=go.StructType []) with "[$Hisfut $HAwait]").
+  iIntros (v1 P1 pre1 post1) "(%Hsplit1 & HP1 & HAwait)".
+  (* Resolve which contract was fulfilled first *)
+  destruct pre1 as [|? pre1']; simpl in Hsplit1;
+    [ injection Hsplit1 as ? Hpost1; subst P1 post1; simpl in *
+    | destruct pre1' as [|? pre1'']; simpl in Hsplit1;
+      [ injection Hsplit1 as ? ? Hpost1; subst; simpl in *
+      | exfalso; by destruct pre1'' ]];
+  wp_auto_lc 3;
+  wp_apply (wp_future_await (V:=unit) (t:=go.StructType []) with "[$Hisfut $HAwait]");
+  iIntros (v2 P2 pre2 post2) "(%Hsplit2 & HP2 & _)";
+  (destruct pre2 as [|? pre2']; simpl in Hsplit2;
+    [ injection Hsplit2 as ? Hpost2; subst P2 post2; simpl in *
+    | exfalso; by destruct pre2' ]);
+  wp_auto;
+  iApply "HΦ"; done.
 Qed.
 
 End join.
