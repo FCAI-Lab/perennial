@@ -39,26 +39,9 @@ func (l Lock) TryLock() bool {
 	}
 }
 
-// Attempts to acquire the lock.
-// It blocks until it can send into the channel (acquire), or until done is closed.
-//
-// Returns true if the lock was acquired, false if done fired first.
-func (l Lock) LockIfNotCancelled(done <-chan struct{}) bool {
-	select {
-	case l.ch <- struct{}{}:
-		return true
-	case <-done:
-		return false
-	}
-}
-
 // LockWithTimeout attempts to acquire the lock, timing out after d.
 // Returns true if acquired, false if timed out.
 func (l Lock) LockWithTimeout(d time.Duration) bool {
-	if d <= 0 {
-		return false
-	}
-
 	select {
 	case l.ch <- struct{}{}:
 		return true

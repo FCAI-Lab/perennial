@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func TestLockWithTimeout_WrapsLockWithDeadline(t *testing.T) {
+func TestLockWithTimeout_TimesOut(t *testing.T) {
 	l := NewLock()
 	l.Lock()
 	defer l.Unlock()
@@ -14,6 +14,14 @@ func TestLockWithTimeout_WrapsLockWithDeadline(t *testing.T) {
 	ok := l.LockWithTimeout(30 * time.Millisecond)
 	if ok {
 		t.Fatalf("LockWithTimeout() = true while held; want false")
+	}
+}
+
+func TestLockWithTimeout_Success(t *testing.T) {
+	l := NewLock()
+	ok := l.LockWithTimeout(30 * time.Millisecond)
+	if !ok {
+		t.Fatalf("LockWithTimeout() failed")
 	}
 }
 
