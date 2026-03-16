@@ -8,4 +8,6 @@ From New.proof.github_com.goose_lang.goose.testdata.examples Require
   channel_select_tricky_examples
   elimination_stack
   lock
+  etcd_session
+  workq
   .
