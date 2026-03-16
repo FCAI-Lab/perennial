@@ -123,13 +123,14 @@ Proof.
   iDestruct "Hi" as (?) "[Hptsto Hs]".
   iMod "HΦ" as (?) "[Hs2 HΦ]".
   iCombine "Hs Hs2" gives %[_ ->].
-  rewrite typed_pointsto_unseal /typed_pointsto_def /=.
+  rewrite typed_pointsto_unseal /typed_pointsto_wrap /=.
+  iDestruct "Hptsto" as "[? %]".
   iApply (wp_atomic_add with "[$]"); first rewrite !go.into_val_unfold //.
   iNext. iIntros "Hptsto".
   iMod (ghost_var_update_2 with "[$] [$]") as "[? ?]".
   { apply Qp.half_half. }
   iMod ("HΦ" with "[$]").
-  iModIntro. iModIntro. iFrame.
+  iModIntro. iModIntro. iFrame. iSplitR; first done.
   wp_auto. iFrame.
 Qed.
 

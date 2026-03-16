@@ -65,14 +65,19 @@ Qed.
 Lemma own_slice_cap_empty s :
   s.(slice.len) = s.(slice.cap) →
   0 ≤ sint.Z s.(slice.len) →
-  array_index_ref V (sint.Z (slice.cap s)) (slice.ptr s) ↦ (array.mk 0 (@nil V))
   ⊢ own_slice_cap V s (DfracOwn 1).
 Proof.
-  intros Hcap Hlen. unseal. iIntros "H". iRight.
+  intros Hcap Hlen. unseal.
+  destruct (decide (slice_index_ref V (sint.Z (slice.len s)) s = null)).
+  { iLeft. done. }
+  iRight.
   iSplit; first (iPureIntro; word).
-  iExists (array.mk _ []). rewrite /slice_index_ref /=.
-  rewrite Hcap. replace (_ - _) with 0 by word.
-  iFrame.
+  iExists (array.mk _ []).
+  rewrite /slice_index_ref /=.
+  destruct s; simpl in *; subst.
+  replace (_ - _) with 0 by word.
+  iDestruct array_empty as "$".
+  done.
 Qed.
 
 Lemma own_slice_len s dq vs :
@@ -380,10 +385,9 @@ Proof.
     { word. }
     { by iApply array_empty. }
 
-    iDestruct (own_slice_cap_empty with "[]") as "$"; simpl.
+    iDestruct own_slice_cap_empty as "$"; simpl.
     { word. }
     { word. }
-    { iApply array_empty. rewrite go.array_index_ref_0. done. }
     done. }
   iApply "HΦ".
   rewrite own_slice_unseal/ own_slice_def /=.

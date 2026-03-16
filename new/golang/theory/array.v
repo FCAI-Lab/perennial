@@ -15,12 +15,12 @@ Program Global Instance typed_pointsto_array n :
   TypedPointsto (array.t V n) :=
   {|
     typed_pointsto_def := λ l v dq,
-      (⌜ l ≠ null ⌝ ∗ ⌜ Z.of_nat $ length (array.arr v) = n ⌝ ∗
+      (⌜ Z.of_nat $ length (array.arr v) = n ⌝ ∗
        [∗ list] i ↦ ve ∈ (array.arr v), array_index_ref V (Z.of_nat i) l ↦{dq} ve)%I;
   |}.
-Next Obligation.
+Final Obligation.
 Proof.
-  intros. iIntros "* [_ [%Hlen1 H1]] [_ [%Hlen2 H2]]".
+  intros. iIntros "* [%Hlen1 H1] [%Hlen2 H2]".
   destruct v1 as [vs1], v2 as [vs2]. simpl in *.
   assert (length vs1 = length vs2) as Hlen by lia.
   clear -Hlen IntoValTyped0 pre_sem.
@@ -39,12 +39,11 @@ Proof.
   iDestruct ("IH" $! _ vs2 with "[] H1 H2") as %H; auto.
   by simplify_eq.
 Qed.
-Final Obligation. Proof. iIntros "* [$ _]". Qed.
 
 Lemma array_len ptr dq n vs :
   ptr ↦{dq} (array.mk n vs) -∗ ⌜ n = Z.of_nat $ length vs ⌝.
 Proof.
-  rewrite typed_pointsto_unseal_eq /=. iIntros "[[_ [% _]] _] !%". done.
+  rewrite typed_pointsto_unseal_eq /=. iIntros "[[% _] _] !%". done.
 Qed.
 
 Lemma seqZ_succ start n :
@@ -100,7 +99,7 @@ Proof using IntoValTyped0.
 Admitted.
 
 Lemma array_empty ptr dq :
-  ⌜ ptr ≠ null ⌝ -∗ ptr ↦{dq} (array.mk 0 []).
+  ptr ≠ null → ⊢ ptr ↦{dq} (array.mk 0 []).
 Proof.
   rewrite typed_pointsto_unseal_eq /=. iIntros "%". by iFrame "%".
 Qed.
@@ -114,13 +113,14 @@ Lemma array_acc p (i : Z) dq n (a : array.t V n) (v: V) :
         p ↦{dq} (array.mk n $ <[(Z.to_nat i) := v']> $ array.arr a)).
 Proof.
   iIntros (Hpos Hlookup) "Harr".
+  iDestruct (typed_pointsto_not_null with "[$]") as %Hn.
   iDestruct (typed_pointsto_split with "Harr") as "Harr".
-  simpl. iDestruct "Harr" as "[% [% Harr]]".
+  simpl. iDestruct "Harr" as "[% Harr]".
   iDestruct (big_sepL_insert_acc _ _ (Z.to_nat i) with "Harr") as "[Hptsto Harr]".
   { done. }
   nat_cleanup. iFrame "Hptsto". iIntros (?) "Hptsto".
   iSpecialize ("Harr" with "Hptsto").
-  iApply typed_pointsto_combine. simpl. iFrame. rewrite length_insert. done.
+  iApply typed_pointsto_combine; first done. simpl. iFrame. rewrite length_insert. done.
 Qed.
 
 Lemma array_split (k : w64) l dq n (a : array.t V n) :

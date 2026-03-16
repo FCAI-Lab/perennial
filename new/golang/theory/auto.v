@@ -382,8 +382,9 @@ Ltac wp_end :=
 
 Ltac solve_pointsto_access_struct :=
   constructor;
-  iIntros "H"; iStructNamed "H"; iFrame; iIntros;
-  iApply typed_pointsto_combine; iFrame.
+  iIntros "H"; iDestruct (typed_pointsto_not_null with "H") as "%";
+  iStructNamed "H"; iFrame; iIntros;
+  iApply typed_pointsto_combine; [done|iFrame].
 
 Ltac solve_typed_pointsto_not_null_struct :=
   intros; iIntros "H"; repeat (iDestruct "H" as "[_ H]"); iExact "H".

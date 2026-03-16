@@ -87,12 +87,16 @@ Proof.
   rewrite /pointsto_block heap_array_to_list.
   rewrite own_slice_unseal /own_slice_def.
   rewrite typed_pointsto_unseal.
-  iIntros "((% & Ha) & %)". simpl.
+  iIntros "[% | H]".
+  { exfalso. destruct H. apply (f_equal length) in H0. simpl in *.
+    rewrite length_vec_to_list in H0. done. }
+  iDestruct "H" as "(((% & Ha) & %) & %)". simpl.
   rewrite big_sepL_fmap.
   iApply (big_sepL_impl with "Ha"); simpl.
   iModIntro.
   iIntros (i x) "% Hl".
   rewrite typed_pointsto_unseal /typed_pointsto_def /=.
+  iFrame. iDestruct "Hl" as "[? ?]". simpl.
   rewrite go.into_val_unfold /=.
   rewrite go.array_index_ref_add_loc_add.
   iFrame.
@@ -120,20 +124,32 @@ Proof.
   rewrite own_slice_unseal /own_slice_def. rewrite typed_pointsto_unseal.
   iIntros "Hb".
   rewrite big_sepL_fmap.
+  iRight.
+  iAssert (⌜ l ≠ null ⌝)%I with "[-]" as "%Hnot_null".
+  {
+    assert (length b ≠ O).
+    { rewrite length_vec_to_list //. }
+    destruct b; try done.
+    rewrite big_sepL_cons.
+    rewrite addr_plus_off_0.
+    iDestruct "Hb" as "[H _]".
+    iDestruct (heap_pointsto_non_null with "H") as "$".
+  }
   iDestruct (big_sepL_impl with "Hb []") as "$"; eauto.
   2: {
     iPureIntro. simpl.
     rewrite length_vec_to_list.
     assert (0 ≤ block_bytes < 2^63)%Z.
     { unfold block_bytes. lia. }
-    word.
+    split_and!; try done; word.
   }
   iModIntro.
-  iIntros (i x) "% Hl".
-  rewrite typed_pointsto_unseal /typed_pointsto_def /=.
+  iIntros (i x) "% Hl". clear Hnot_null.
+  iDestruct (heap_pointsto_non_null with "Hl") as %Hnot_null.
+  rewrite typed_pointsto_unseal /typed_pointsto_wrap /=.
   rewrite go.into_val_unfold /=.
   rewrite go.array_index_ref_add_loc_add.
-  iFrame.
+  iFrame. done.
 Qed.
 
 Lemma block_array_to_slice s dq (b: Block) :
@@ -143,16 +159,34 @@ Lemma block_array_to_slice s dq (b: Block) :
 Proof.
   intros.
   rewrite /pointsto_block heap_array_to_list.
-  rewrite own_slice_unseal /own_slice_def typed_pointsto_unseal.
+  rewrite own_slice_unseal /own_slice_def. rewrite typed_pointsto_unseal.
   iIntros "Hb".
   rewrite big_sepL_fmap.
-  iDestruct (big_sepL_impl with "Hb []") as "$"; [ | simpl; word ].
+  iRight.
+  iAssert (⌜ s.(slice.ptr) ≠ null ⌝)%I with "[-]" as "%Hnot_null".
+  {
+    assert (length b ≠ O).
+    { rewrite length_vec_to_list //. }
+    destruct b; try done.
+    rewrite big_sepL_cons.
+    rewrite addr_plus_off_0.
+    iDestruct "Hb" as "[H _]".
+    iDestruct (heap_pointsto_non_null with "H") as "$".
+  }
+  iDestruct (big_sepL_impl with "Hb []") as "$"; eauto.
+  2: {
+    iPureIntro. simpl.
+    assert (0 ≤ block_bytes < 2^63)%Z.
+    { unfold block_bytes. lia. }
+    split_and!; try done; word.
+  }
   iModIntro.
-  iIntros (i x) "% Hl".
-  rewrite typed_pointsto_unseal /typed_pointsto_def /=.
+  iIntros (i x) "% Hl". clear Hnot_null.
+  iDestruct (heap_pointsto_non_null with "Hl") as %Hnot_null.
+  rewrite typed_pointsto_unseal /typed_pointsto_wrap /=.
   rewrite go.into_val_unfold /=.
   rewrite go.array_index_ref_add_loc_add.
-  iFrame.
+  iFrame. done.
 Qed.
 
 Transparent disk.Read disk.Write.

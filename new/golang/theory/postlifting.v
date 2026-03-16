@@ -45,7 +45,6 @@ Class TypedPointsto (V : Type) :=
                             typed_pointsto_def l v1 dq1 -∗
                             typed_pointsto_def l v2 dq2 -∗
                             ⌜ v1 = v2 ⌝);
-  typed_pointsto_def_not_null l v dq : typed_pointsto_def l v dq -∗ ⌜ l ≠ null ⌝;
 }.
 
 Definition typed_pointsto_wrap {V} `{!TypedPointsto V} (l : loc) (v : V) (dq : dfrac) : iProp Σ :=
@@ -321,71 +320,56 @@ Context `{ffi_sem: ffi_semantics} `{!ffi_interp ffi} `{!heapGS Σ}
 
 Program Global Instance typed_pointsto_unit : TypedPointsto () :=
   {| typed_pointsto_def l v dq := (⌜ l ≠ null ⌝%I : iProp Σ) |}.
-Next Obligation. Proof. iIntros "* H1 H2". destruct v1, v2. done. Qed.
-Final Obligation. Proof. iIntros "* $". Qed.
-
-Ltac solve_typed_pointsto_not_null :=
-  iIntros "* H"; iApply (heap_pointsto_non_null with "H").
+Final Obligation. Proof. iIntros "* H1 H2". destruct v1, v2. done. Qed.
 
 Program Global Instance typed_pointsto_loc : TypedPointsto loc :=
   {| typed_pointsto_def l v dq := heap_pointsto l dq #v |}.
-Next Obligation. Proof. iIntros "* H1 H2". iCombine "H1 H2" gives %Heq. naive_solver. Qed.
-Final Obligation. Proof. solve_typed_pointsto_not_null. Qed.
+Final Obligation. Proof. iIntros "* H1 H2". iCombine "H1 H2" gives %Heq. naive_solver. Qed.
 
 Program Global Instance typed_pointsto_w64 : TypedPointsto w64 :=
   {| typed_pointsto_def l v dq := heap_pointsto l dq #v |}.
-Next Obligation. Proof. iIntros "* H1 H2". iCombine "H1 H2" gives %Heq. naive_solver. Qed.
-Final Obligation. Proof. solve_typed_pointsto_not_null. Qed.
+Final Obligation. Proof. iIntros "* H1 H2". iCombine "H1 H2" gives %Heq. naive_solver. Qed.
 
 Program Global Instance typed_pointsto_w32 : TypedPointsto w32 :=
   {| typed_pointsto_def l v dq := heap_pointsto l dq #v |}.
-Next Obligation. Proof. iIntros "* H1 H2". iCombine "H1 H2" gives %Heq. naive_solver. Qed.
-Final Obligation. Proof. solve_typed_pointsto_not_null. Qed.
+Final Obligation. Proof. iIntros "* H1 H2". iCombine "H1 H2" gives %Heq. naive_solver. Qed.
 
 Program Global Instance typed_pointsto_w16 : TypedPointsto w16 :=
   {| typed_pointsto_def l v dq := heap_pointsto l dq #v |}.
-Next Obligation. Proof. iIntros "* H1 H2". iCombine "H1 H2" gives %Heq. naive_solver. Qed.
-Final Obligation. Proof. solve_typed_pointsto_not_null. Qed.
+Final Obligation. Proof. iIntros "* H1 H2". iCombine "H1 H2" gives %Heq. naive_solver. Qed.
 
 Program Global Instance typed_pointsto_w8 : TypedPointsto w8 :=
   {| typed_pointsto_def l v dq := heap_pointsto l dq #v |}.
-Next Obligation. Proof. iIntros "* H1 H2". iCombine "H1 H2" gives %Heq. naive_solver. Qed.
-Final Obligation. Proof. solve_typed_pointsto_not_null. Qed.
+Final Obligation. Proof. iIntros "* H1 H2". iCombine "H1 H2" gives %Heq. naive_solver. Qed.
 
 Program Global Instance typed_pointsto_bool : TypedPointsto bool :=
   {| typed_pointsto_def l v dq := heap_pointsto l dq #v |}.
-Next Obligation. Proof. iIntros "* H1 H2". iCombine "H1 H2" gives %Heq. naive_solver. Qed.
-Final Obligation. Proof. solve_typed_pointsto_not_null. Qed.
+Final Obligation. Proof. iIntros "* H1 H2". iCombine "H1 H2" gives %Heq. naive_solver. Qed.
 
 Program Global Instance typed_pointsto_string : TypedPointsto go_string :=
   {| typed_pointsto_def l v dq := heap_pointsto l dq #v |}.
-Next Obligation. Proof. iIntros "* H1 H2". iCombine "H1 H2" gives %Heq. naive_solver. Qed.
-Final Obligation. Proof. solve_typed_pointsto_not_null. Qed.
+Final Obligation. Proof. iIntros "* H1 H2". iCombine "H1 H2" gives %Heq. naive_solver. Qed.
 
 Program Global Instance typed_pointsto_slice : TypedPointsto slice.t :=
   {| typed_pointsto_def l v dq := heap_pointsto l dq #v |}.
-Next Obligation. Proof. iIntros "* H1 H2". iCombine "H1 H2" gives %Heq. naive_solver. Qed.
-Final Obligation. Proof. solve_typed_pointsto_not_null. Qed.
+Final Obligation. Proof. iIntros "* H1 H2". iCombine "H1 H2" gives %Heq. naive_solver. Qed.
 
 Program Global Instance typed_pointsto_interface : TypedPointsto interface.t :=
   {| typed_pointsto_def l v dq := heap_pointsto l dq #v |}.
-Next Obligation. Proof. iIntros "* H1 H2". iCombine "H1 H2" gives %Heq. naive_solver. Qed.
-Final Obligation. Proof. solve_typed_pointsto_not_null. Qed.
+Final Obligation. Proof. iIntros "* H1 H2". iCombine "H1 H2" gives %Heq. naive_solver. Qed.
 
 Program Global Instance typed_pointsto_func : TypedPointsto func.t :=
   {| typed_pointsto_def l v dq := heap_pointsto l dq #v |}.
-Next Obligation.
+Final Obligation.
 Proof.
   iIntros "* H1 H2". iCombine "H1 H2" gives %Heq.
   iPureIntro. rewrite !go.into_val_unfold /= in Heq.
   destruct v1, v2. naive_solver.
 Qed.
-Final Obligation. Proof. solve_typed_pointsto_not_null. Qed.
 
 Program Global Instance typed_pointsto_proph_id : TypedPointsto proph_id :=
   {| typed_pointsto_def l v dq := heap_pointsto l dq #v |}.
-Next Obligation. Proof. iIntros "* H1 H2". iCombine "H1 H2" gives %Heq. naive_solver. Qed.
-Final Obligation. Proof. solve_typed_pointsto_not_null. Qed.
+Final Obligation. Proof. iIntros "* H1 H2". iCombine "H1 H2" gives %Heq. naive_solver. Qed.
 
 Existing Class go.is_primitive.
 #[local] Hint Extern 1 (go.is_primitive ?t) => constructor : typeclass_instances.
@@ -440,10 +424,9 @@ Lemma typed_pointsto_split `{!TypedPointsto V} l (v : V) dq :
 Proof. rewrite typed_pointsto_unseal /typed_pointsto_wrap. iIntros "[$ _]". Qed.
 
 Lemma typed_pointsto_combine `{!TypedPointsto V} l (v : V) dq :
-  typed_pointsto_def l v dq ⊢@{iProp Σ} l ↦{dq} v.
+  l ≠ null → typed_pointsto_def l v dq ⊢@{iProp Σ} l ↦{dq} v.
 Proof.
-  rewrite typed_pointsto_unseal /typed_pointsto_wrap. iIntros "H".
-  iDestruct (typed_pointsto_def_not_null with "H") as %?.
+  rewrite typed_pointsto_unseal /typed_pointsto_wrap. iIntros "% H".
   iFrame "H". done.
 Qed.
 
