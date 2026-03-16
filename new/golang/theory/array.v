@@ -129,6 +129,27 @@ Lemma array_split (k : w64) l dq n (a : array.t V n) :
   l ↦{dq} (array.mk (sint.Z k) $ take (sint.nat k) $ array.arr a) ∗
   array_index_ref V (sint.Z k) l ↦{dq} (array.mk (n - sint.Z k) $ drop (sint.nat k) $ array.arr a).
 Proof.
-Admitted.
+  intros Hle. rewrite typed_pointsto_unseal /=. destruct a as [arr]. simpl.
+  rewrite -{1}(take_drop (sint.nat k) arr). rewrite /typed_pointsto_wrap.
+  rewrite /typed_pointsto_def /=.
+  setoid_rewrite <- go.array_index_ref_add. len.
+  iSplit.
+  - iIntros "((% & H) & %)". subst. rewrite -!assoc. iSplitR; first len.
+    rewrite big_sepL_app. iDestruct "H" as "[H1 H2]".
+    iFrame. iSplitR; first done. iSplitR; first len.
+    rewrite comm. iSplitR.
+    { iPureIntro. intros Hn. apply go.array_index_ref_null_inv in Hn. done. }
+    rewrite -{1}(take_drop (sint.nat k) arr).
+    iFrame. iApply (big_sepL_impl with "H2").
+    iIntros "!# * % H". iExactEq "H". f_equal.
+    f_equal. len.
+  - iIntros "([[% H1] %] & [[% H2] %])".
+    iSplitL; last done.
+    iSplitR; first word.
+    rewrite big_sepL_app. iFrame.
+    iApply (big_sepL_impl with "H2").
+    iIntros "!# * % H". iExactEq "H". f_equal.
+    f_equal. len.
+Qed.
 
 End lemmas.

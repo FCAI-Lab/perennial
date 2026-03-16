@@ -29,32 +29,31 @@ Section goose_lang.
   Global Hint Mode AtomicWps + - - : typeclass_instances.
 
   Ltac solve_cmpxchg_fail :=
-    iIntros "* %Hne % Hl HΦ";
-    rewrite typed_pointsto_unseal /typed_pointsto_wrap /=;
-    iDestruct "Hl" as "[Hl >%]";
-    iApply (lifting.wp_cmpxchg_fail with "[$Hl]"); [naive_solver|done|];
-    iIntros "Hl"; iApply "HΦ"; iFrame "Hl"; done.
+    iIntros "* %Hne % Hl HΦ"; rewrite typed_pointsto_unseal /typed_pointsto_wrap /=;
+    iDestruct "Hl" as "[Hl >%]"; iApply (lifting.wp_cmpxchg_fail with "[$Hl]"); [naive_solver|];
+    iIntros "!> Hl"; iApply "HΦ"; iFrame "Hl"; done.
+
 
   Ltac solve_cmpxchg_suc :=
     iIntros "* %Heq % Hl HΦ"; subst;
     rewrite typed_pointsto_unseal /typed_pointsto_wrap /=;
     iDestruct "Hl" as "[Hl >%]";
     iApply (lifting.wp_cmpxchg_suc with "[$Hl]"); [done|];
-    iIntros "Hl"; iApply "HΦ"; iFrame "Hl"; done.
+    iIntros "!> Hl"; iApply "HΦ"; iFrame "Hl"; done.
 
   Ltac solve_wp_atomic_load :=
     iIntros "* Hl HΦ";
     rewrite typed_pointsto_unseal /typed_pointsto_wrap /=;
     iDestruct "Hl" as "[Hl >%]";
-    iApply (lifting.wp_load with "[$Hl]"); [done|];
-    iIntros "Hl"; iApply "HΦ"; iFrame "Hl"; done.
+    iApply (lifting.wp_load with "[$Hl]");
+    iIntros "!> Hl"; iApply "HΦ"; iFrame "Hl"; done.
 
   Ltac solve_wp_atomic_swap :=
     iIntros "* Hl HΦ";
     rewrite typed_pointsto_unseal /typed_pointsto_wrap /=;
     iDestruct "Hl" as "[Hl %]";
-    iApply (lifting.wp_atomic_swap with "[$Hl]"); [done|];
-    iIntros "Hl"; iApply "HΦ"; iFrame "Hl"; done.
+    iApply (lifting.wp_atomic_swap with "[$Hl]");
+    iIntros "!> Hl"; iApply "HΦ"; iFrame "Hl"; done.
 
   Ltac solve_atomic_wps :=
     split;
@@ -62,17 +61,17 @@ Section goose_lang.
 
   (* TODO: fix solve_atomic_wps tactics for typed_pointsto not_null *)
   #[global] Instance atomic_wps_uint64 : AtomicWps w64.
-  Proof. Admitted.
+  Proof. solve_atomic_wps. Qed.
   #[global] Instance atomic_wps_uint32 : AtomicWps w32.
-  Proof. Admitted.
+  Proof. solve_atomic_wps. Qed.
   #[global] Instance atomic_wps_uint16 : AtomicWps w16.
-  Proof. Admitted.
+  Proof. solve_atomic_wps. Qed.
   #[global] Instance atomic_wps_uint8 : AtomicWps w8.
-  Proof. Admitted.
+  Proof. solve_atomic_wps. Qed.
   #[global] Instance atomic_wps_bool : AtomicWps bool.
-  Proof. Admitted.
+  Proof. solve_atomic_wps. Qed.
   #[global] Instance atomic_wps_loc : AtomicWps loc.
-  Proof. Admitted.
+  Proof. solve_atomic_wps. Qed.
 
 End goose_lang.
 
