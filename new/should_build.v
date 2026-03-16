@@ -25,7 +25,7 @@ From New.proof.github_com.goose_lang.primitive Require Import disk.
 
 (* testdata. *)
 From New.proof.github_com.goose_lang.goose.testdata.examples Require
-  channel lock channel_search_replace elimination_stack.
+  channel_examples.
 From New.proof.github_com.goose_lang.goose.testdata.examples Require
   unittest semantics.
 From New.proof.github_com.goose_lang.goose.testdata.examples.unittest Require
