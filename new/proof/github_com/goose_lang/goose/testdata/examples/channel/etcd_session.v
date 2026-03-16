@@ -59,7 +59,7 @@ Proof.
 Qed.
 
 Lemma wp_newSession :
-  {{{ is_pkg_init etcd_session }}}
+  {{{ True }}}
     @! etcd_session.newSession #()
   {{{ (err : error.t), RET #err; True }}}.
 Proof.

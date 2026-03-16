@@ -28,7 +28,7 @@ Set Default Proof Using "W".
 
 #[local]
 Lemma wp_Time__sec (t : loc) (tv : time.Time.t) :
-  {{{ is_pkg_init time ∗ t ↦ tv }}}
+  {{{ t ↦ tv }}}
     t @! (go.PointerType time.Time) @! "sec" #()
   {{{ (x : w64), RET #x; t ↦ tv }}}.
 Proof.
@@ -37,7 +37,7 @@ Qed.
 
 #[local]
 Lemma wp_Time__unixSec (t : loc) (tv : time.Time.t) :
-  {{{ is_pkg_init time ∗ t ↦ tv }}}
+  {{{ t ↦ tv }}}
     t @! (go.PointerType time.Time) @! "unixSec" #()
   {{{ (x : w64), RET #x; t ↦ tv }}}.
 Proof.
@@ -46,7 +46,7 @@ Qed.
 
 #[local]
 Lemma wp_Time__nsec (t : loc) (tv : time.Time.t) :
-  {{{ is_pkg_init time ∗ t ↦ tv }}}
+  {{{ t ↦ tv }}}
     t @! (go.PointerType time.Time) @! "nsec" #()
   {{{ (x : w32), RET #x; True }}}.
 Proof.
@@ -54,7 +54,7 @@ Proof.
 Qed.
 
 Lemma wp_Time__UnixNano' (t : time.Time.t) :
-  {{{ is_pkg_init time }}}
+  {{{ True }}}
     t @! time.Time @! "UnixNano" #()
   {{{ (x : w64), RET #x; True }}}.
 Proof.
@@ -63,7 +63,7 @@ Proof.
 Qed.
 
 Lemma wp_Time__UnixNano l (t : time.Time.t) :
-  {{{ is_pkg_init time ∗ l ↦ t }}}
+  {{{ l ↦ t }}}
     l @! (go.PointerType time.Time) @! "UnixNano" #()
   {{{ (x : w64), RET #x; l ↦ t }}}.
 Proof.
@@ -71,17 +71,17 @@ Proof.
 Qed.
 
 Axiom wp_Now :
-  {{{ is_pkg_init time }}}
+  {{{ True }}}
     @! time.Now #()
   {{{ (t : time.Time.t), RET #t; True }}}.
 
 Axiom wp_Until : ∀ (deadline : time.Time.t) ,
-  {{{ is_pkg_init time }}}
+  {{{ True }}}
     @! time.Until #deadline
   {{{ (x : w64), RET #x; True }}}.
 
 Axiom wp_Time__Add : ∀ (t : time.Time.t) (d : time.Duration.t),
-  {{{ is_pkg_init time }}}
+  {{{ True }}}
     t @! time.Time @! "Add" #d
   {{{ (t : time.Time.t), RET #t; True }}}.
 
@@ -96,7 +96,7 @@ Proof.
 Qed.
 
 Lemma wp_After (d : time.Duration.t) :
-  {{{ is_pkg_init time }}}
+  {{{ True }}}
     @! time.After #d
   {{{ (ch: loc) γ, RET #ch; is_chan_bag γ ch (λ (t: time.Time.t), True)%I }}}.
 Proof.
@@ -118,7 +118,7 @@ Proof.
 Qed.
 
 Lemma wp_Sleep (d : time.Duration.t) :
-  {{{ is_pkg_init time }}}
+  {{{ True }}}
     @! time.Sleep #d
   {{{ RET #(); True }}}.
 Proof. wp_start. by iApply "HΦ". Qed.
