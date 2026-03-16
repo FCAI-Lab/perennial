@@ -4,7 +4,6 @@ go 1.26
 
 require (
 	github.com/fatih/color v1.18.0
-	github.com/goose-lang/goose/testdata/examples v0.0.0-20251125172247-d9c56ef4f4e1
 	github.com/goose-lang/primitive v0.2.1
 	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/pkg/errors v0.9.1

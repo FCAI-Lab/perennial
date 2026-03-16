@@ -4,6 +4,7 @@ github.com/felixge/fgprof v0.9.3/go.mod h1:RdbpDgzqYVh/T9fPELJyV7EYJuHB55UTEULNu
 github.com/google/pprof v0.0.0-20230309165930-d61513b1440d h1:um9/pc7tKMINFfP1eE7Wv6PRGXlcCSJkVajF7KJw3uQ=
 github.com/google/pprof v0.0.0-20230309165930-d61513b1440d/go.mod h1:79YE0hCXdHag9sBkw2o+N/YnZtTkXi0UT9Nnixa5eYk=
 github.com/goose-lang/goose v0.6.1/go.mod h1:d/fwDpBnwyXI97lXIlmMgABHObvZ66WnN9J9x6y5Ofk=
+github.com/goose-lang/goose/testdata/examples v0.0.0-20251125172247-d9c56ef4f4e1/go.mod h1:UcQmN/A/zKdJsQuIKriLL+zDFoxhHVIimfC+szdqQo0=
 github.com/goose-lang/primitive v0.1.0/go.mod h1:sDE72zVH81ASwPXc1m9OgSfaaY0aZHu4Ty19FgONpOc=
 github.com/goose-lang/std v0.3.2/go.mod h1:0IoDUCIC80Msc7h/SqpbZY1ytjhV39rgKnyHG/tjdis=
 github.com/goose-lang/std v0.4.1/go.mod h1:bnKHDHwU0lHf99eMI5PVM77UweRyu6qgM/h43qGBRto=
