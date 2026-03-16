@@ -1,9 +1,9 @@
 From New.proof Require Import proof_prelude.
-From New.proof.github_com.goose_lang.goose.model.channel
+From New.golang.theory.chan.au_spec
      Require Export chan_au_send chan_au_new chan_au_recv chan_au_base chan_init.
-From New.proof.github_com.goose_lang.goose.model.channel Require Export dsp_ghost_theory.
+From New.golang.theory.chan.idioms.dsp Require Export dsp_ghost_theory.
 From iris.proofmode Require Import coq_tactics reduction spec_patterns proofmode.
-From New.proof.github_com.goose_lang.goose.model.channel
+From New.golang.theory.chan.idioms.dsp
      Require Export dsp.
 
 (** * Tactics for proving contractiveness of protocols *)

@@ -1,5 +1,5 @@
 Require Import New.proof.proof_prelude.
-From New.proof.github_com.goose_lang.goose.model.channel Require Export idiom.base.
+From New.golang.theory.chan.idioms Require Export base.
 From New.golang.theory Require Import chan.
 
 Section handshake.

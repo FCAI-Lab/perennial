@@ -1,11 +1,11 @@
 From New.proof Require Import proof_prelude.
 
-From New.proof Require Import sync.atomic strings fmt sync time
-  github_com.goose_lang.goose.model.channel.idiom.closeable.closeable.
+From New.proof Require Import sync.atomic strings fmt sync time.
+From New.golang.theory.chan.idioms Require Import broadcast.
 From New.generatedproof.github_com.goose_lang.goose.testdata.examples.channel
   Require Import etcd_session.
 
-From New.proof.github_com.goose_lang.goose.model.channel Require Import idioms.
+From New.golang.theory.chan.idioms Require Import idioms.
 Import bag.
 
 Section wps.
@@ -18,7 +18,7 @@ Definition is_inv : iProp Σ :=
   "#Hmu" ∷ is_Mutex (global_addr etcd_session.mu) (
       ∃ ch γch,
         "sessionc" ∷ (global_addr etcd_session.sessionc) ↦{#1/2} ch ∗
-        "#Hsessionc" ∷ own_closeable_chan ch γch True closeable.Unknown ∗
+        "#Hsessionc" ∷ own_broadcast_chan ch γch True broadcast.Unknown ∗
         "#Hsessionc_is" ∷ is_chan ch γch unit
     )
 .
@@ -50,8 +50,8 @@ Proof.
   iApply wp_fupd.
   wp_apply chan.wp_make1 as "* (#? & % & ?)".
   iEval (rewrite is_pkg_init_unfold /=). iFrame "∗#".
-  iMod (alloc_closeable_chan with "[$] [$]") as "Hown".
-  iDestruct (own_closeable_chan_Unknown with "[$]") as "#?".
+  iMod (alloc_broadcast_chan with "[$] [$]") as "Hown".
+  iDestruct (own_broadcast_chan_Unknown with "[$]") as "#?".
   iDestruct "sessionc" as "[H ?]".
   iMod (init_Mutex with "[$] [H]") as "#$".
   { iFrame "∗#". }
@@ -77,12 +77,12 @@ Proof. wp_start. wp_end. Qed.
 Lemma wp_monitorSession ch γch :
   {{{ is_pkg_init etcd_session ∗
       "sessionc" ∷ (global_addr etcd_session.sessionc) ↦{#1/2} (ch : chan.t) ∗
-      "Hsessionc" ∷ own_closeable_chan ch γch True closeable.Open ∗
+      "Hsessionc" ∷ own_broadcast_chan ch γch True broadcast.Pending ∗
       "#Hsessionc_is" ∷ is_chan ch γch unit
 (* TODO now: reduce the frequency with which [is_chan] has to be manually written. Do this by:
    1) putting is_chan inside the `recv_au`, `send_au`, etc. so it isn't a
    separate precond on the send/recv/select WPs.
-   2) in the case of the closeable spec, put is_chan inside `own_closeable_chan`
+   2) in the case of the broadcast spec, put is_chan inside `own_broadcast_chan`
    3) commit changes with a concise commit message.
  *)
   }}}
@@ -93,9 +93,9 @@ Proof.
   iAssert (
       ∃ ch γch cst,
         "sessionc" ∷ global_addr etcd_session.sessionc ↦{#1 / 2} ch ∗
-        "Hsessionc" ∷ (own_closeable_chan ch γch True cst) ∗
+        "Hsessionc" ∷ (own_broadcast_chan ch γch True cst) ∗
         "#Hsessionc_is" ∷ is_chan ch γch unit ∗
-        "%Hcst" ∷ ⌜ cst ≠ closeable.Unknown ⌝
+        "%Hcst" ∷ ⌜ cst ≠ broadcast.Unknown ⌝
     )%I with "[sessionc Hsessionc]" as "HH".
   { iFrame "∗#". done. }
   iClear "Hsessionc_is".
@@ -115,22 +115,22 @@ Proof.
                  ⌜ v = execute_val ⌝ ∗
                  ∃ ch γch,
                    "sessionc" ∷ global_addr etcd_session.sessionc ↦ ch ∗
-                   "Hsessionc" ∷ own_closeable_chan ch γch True closeable.Open ∗
+                   "Hsessionc" ∷ own_broadcast_chan ch γch True broadcast.Pending ∗
                    "#Hsessionc_is" ∷ is_chan ch γch unit
               )%I with "[sessionc Hsessionc]").
   {
-    - wp_apply (chan.wp_select_nonblocking_alt [⌜ cst = closeable.Open ⌝%I] with "[] [-]").
+    - wp_apply (chan.wp_select_nonblocking_alt [⌜ cst = broadcast.Pending ⌝%I] with "[] [-]").
       2:{ iNamedAccu. }
       { rewrite big_sepL2_cons. iSplit.
         + iNamed 1. repeat iExists _; iSplitR; first done.
           iFrame "Hsessionc_is".
-          iApply (own_closeable_chan_nonblocking_receive with "[$]").
+          iApply (own_broadcast_chan_nonblocking_receive with "[$]").
           iSplit.
           { destruct cst; try done.
             iIntros "#Hclosed". wp_auto. iApply wp_fupd.
             wp_apply chan.wp_make1 as "* (#? & % & ?)".
-            iMod (alloc_closeable_chan with "[$] [$]") as "Hown".
-            iDestruct (own_closeable_chan_Unknown with "[$]") as "#?".
+            iMod (alloc_broadcast_chan with "[$] [$]") as "Hown".
+            iDestruct (own_broadcast_chan_Unknown with "[$]") as "#?".
             iSplitR; first done. iFrame "∗#%". done. }
           destruct cst; try done. iIntros. iFrame. done.
         + rewrite big_sepL2_nil //. }
@@ -142,7 +142,7 @@ Proof.
   iIntros "% [% @]". subst. wp_auto.
   iDestruct "sessionc" as "[sessionc sessionc_inv]".
   iCombineNamed "*_inv" as "Hinv".
-  iDestruct (own_closeable_chan_Unknown with "[$]") as "#?".
+  iDestruct (own_broadcast_chan_Unknown with "[$]") as "#?".
   wp_apply (wp_Mutex__Unlock with "[$Hlocked Hinv]").
   { iFrame "#". iNamed "Hinv". iFrame "∗#". }
   wp_apply wp_newSession as "% _". destruct err.
@@ -150,7 +150,7 @@ Proof.
   - wp_auto. wp_apply (wp_Mutex__Lock with "[]"); first iFrame "#".
     iIntros "[Hlocked H]". iNamedSuffix "H" "_inv2". wp_auto.
     iCombine "sessionc sessionc_inv2" gives %Heq. subst.
-    wp_apply (wp_closeable_chan_close with "[$Hsessionc]").
+    wp_apply (wp_broadcast_chan_close with "[$Hsessionc]").
     { done. }
     iIntros "#?". wp_auto.
     iCombineNamed "*_inv2" as "Hinv".
@@ -187,7 +187,7 @@ Proof.
   rewrite big_andL_cons. iSplit.
   { repeat iExists _; iSplitR; first done.
     iFrame "#".
-    iApply (closeable_chan_receive with "[$]").
+    iApply (broadcast_chan_receive with "[$]").
     iIntros "[_ #?]". wp_auto. wp_end. }
   rewrite big_andL_cons. iSplit.
   { repeat iExists _; iSplitR; first done.

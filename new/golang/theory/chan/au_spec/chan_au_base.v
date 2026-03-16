@@ -1,4 +1,4 @@
-From New.proof.github_com.goose_lang.goose.model.channel Require Import chan_init.
+From New.golang.theory.chan.au_spec Require Import chan_init.
 From New.proof Require Import proof_prelude.
 From New.golang.theory Require Import lock.
 Require Export New.code.github_com.goose_lang.goose.model.channel.

@@ -1,13 +1,11 @@
 From New.proof Require Import proof_prelude.
 
-From New.proof Require Import sync.atomic strings fmt
-  github_com.goose_lang.goose.model.channel.idiom.closeable.closeable.
+From New.proof Require Import sync.atomic strings fmt.
 From New.generatedproof.github_com.goose_lang.goose.testdata.examples.channel
   Require Import workq.
 
-From New.proof.github_com.goose_lang.goose.model.channel Require Import idioms.
-Import bag.
-From New.proof Require Import github_com.goose_lang.goose.model.channel.idiom.closeable.closeable.
+From New.golang.theory.chan.idioms Require Import bag.
+From New.golang.theory.chan.idioms Require Import broadcast.
 
 Local Lemma map_seq_size {A : Type} (start : nat) (xs : list A) :
   size (map_seq start xs : gmap nat A) = length xs.
@@ -190,7 +188,7 @@ Definition is_coordinator γ (sh : workq.shared.t) : iProp Σ :=
   let remaining := sh.(workq.shared.remaining') in
   let done := sh.(workq.shared.done') in
   ∃ γdone,
-  "#Hdone" ∷ own_closeable_chan done γdone (is_tasks_done γ sh) closeable.Unknown ∗
+  "#Hdone" ∷ own_broadcast_chan done γdone (is_tasks_done γ sh) broadcast.Unknown ∗
   "#Hdone_is" ∷ is_chan done γdone unit ∗
   "#Hi" ∷ inv nroot (
       ∃ remaining_docs (remainingv : w64),
@@ -198,7 +196,7 @@ Definition is_coordinator γ (sh : workq.shared.t) : iProp Σ :=
                else
                  ∃ totalv,
                    "Htotal" ∷ own_Int64 total (DfracOwn 1) totalv ∗
-                   "Hdone" ∷ own_closeable_chan done γdone (is_tasks_done γ sh) closeable.Open ∗
+                   "Hdone" ∷ own_broadcast_chan done γdone (is_tasks_done γ sh) broadcast.Pending ∗
                    "%Htotal" ∷ ⌜ sint.nat totalv =
                    sum_list (imap (λ i doc, match (remaining_docs !! i) with
                                             | Some (Some _) => O
@@ -332,7 +330,7 @@ Proof.
     iModIntro. wp_auto. wp_if_destruct.
     2:{ exfalso. done. }
     iPersist "Htotaldone".
-    wp_apply (wp_closeable_chan_close with "[Hdonedone]").
+    wp_apply (wp_broadcast_chan_close with "[Hdonedone]").
     { iFrame. iModIntro.
       rewrite /is_tasks_done.
       iExactEq "Htotaldone".
@@ -410,7 +408,7 @@ Proof.
       iNamedSuffix "Hcoord" "coord".
       repeat iExists _. iSplitR; first done. iFrame "#".
       iApply blocking_rcv_implies_nonblocking. (* TODO: rename lemma to use `recv`. *)
-      iApply (closeable_chan_receive with "[$]").
+      iApply (broadcast_chan_receive with "[$]").
       iIntros "[#H●_done Hclosed]".
       wp_auto. wp_for_post.
       wp_end.
@@ -476,7 +474,7 @@ Proof.
     { (* done. *)
       iNamedSuffix "Hcoord" "coord".
       repeat iExists _. iSplitR; first done. iFrame "#".
-      iApply (closeable_chan_receive with "[$]").
+      iApply (broadcast_chan_receive with "[$]").
       iIntros "[#H●_done Hclosed]".
       wp_auto. wp_for_post.
       wp_end.
@@ -671,8 +669,8 @@ Proof.
   iAssert (|={⊤}=> is_coordinator γ sh)%I
             with "[Hdone H● total remaining]" as ">#Hcoord".
   {
-    iMod (alloc_closeable_chan with "[$] [$]") as "Hopen".
-    iDestruct (own_closeable_chan_Unknown with "Hopen") as "#$".
+    iMod (alloc_broadcast_chan with "[$] [$]") as "Hopen".
+    iDestruct (own_broadcast_chan_Unknown with "Hopen") as "#$".
     iFrame "#".
     iMod (inv_alloc with "[-]") as "$"; last done.
     iFrame. iSplitL "Hopen total".
@@ -734,7 +732,7 @@ Proof.
   }
   iNamedSuffix "Hcoord" "coord".
   wp_apply (chan.wp_receive with "[$]") as "_".
-  iApply (closeable_chan_receive with "[$]").
+  iApply (broadcast_chan_receive with "[$]").
   iIntros "[#Htotal #Hclosed]".
   wp_auto. wp_apply wp_Int64__Load.
   iApply fupd_mask_intro; [solve_ndisj|iIntros "Hmask"].

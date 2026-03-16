@@ -1,7 +1,8 @@
 Require Export New.proof.go_etcd_io.raft.v3_proof.base.
-From New.proof.github_com.goose_lang.goose.model.channel.idiom.closeable Require Import closeable.
-From New.proof.github_com.goose_lang.goose.model.channel
-  Require Import logatom.chan_au_base idiom.bag.bag.
+From New.golang.theory.chan.idioms Require Import broadcast.
+From New.golang.theory.chan.au_spec
+  Require Import chan_au_base.
+From New.golang.theory.chan.idioms Require Import bag.
 
 Module node.
 Axiom t : Type.
@@ -63,7 +64,7 @@ Local Definition is_node_inner γraft (n : raft.node.t) : iProp Σ :=
   "#Hpropc" ∷ is_chan_bag γp n.(raft.node.propc') (λ (_ : error.t), True%I) ∗
   "#Hadvancec_is" ∷ is_chan n.(raft.node.advancec') γa unit ∗
   "#Hadvancec" ∷ inv nroot (∃ s, own_chan γa unit s) ∗
-  "#Hdone" ∷ own_closeable_chan n.(raft.node.done') γd True closeable.Unknown.
+  "#Hdone" ∷ own_broadcast_chan n.(raft.node.done') γd True broadcast.Unknown.
 
 Definition is_node γraft (n : loc) : iProp Σ :=
   ∃ nd,
@@ -95,7 +96,7 @@ Proof.
     admit. (* just prove the send atomic update then trivial postcondition *)
   - iNamed "Hinner". repeat iExists _.
     iSplitR; first done. iSplitR; first admit.
-    iApply (closeable_chan_receive with "[$]").
+    iApply (broadcast_chan_receive with "[$]").
     iIntros "[_ _]". admit.
 Admitted.
 
@@ -128,11 +129,11 @@ Proof.
       repeat iExists _. iSplitR; first done. iSplitR; first admit.
       instantiate (1:=ctx_desc.(Context_desc.Done_gn)).
       iClear "Hinner".
-      iApply (closeable_chan_receive with "HDone_ch").
+      iApply (broadcast_chan_receive with "HDone_ch").
       iIntros "[_ #HDone_closed]". admit.
     - (* case: raft is done *)
       repeat iExists _. iSplitR; first done. iSplitR; first admit.
-      iApply (closeable_chan_receive with "[$]").
+      iApply (broadcast_chan_receive with "[$]").
       iIntros "[_ #HDone_closed]". admit.
   }
   repeat iExists _.

@@ -1,8 +1,8 @@
 From Perennial.Helpers Require Import List.
 From New.golang.defn Require Export chan.
-From New.proof.github_com.goose_lang.goose.model.channel
+From New.golang.theory.chan.au_spec
   Require Export chan_au_base.
-From New.proof.github_com.goose_lang.goose.model.channel
+From New.golang.theory.chan.au_spec
   Require Import chan_init chan_au_send chan_au_new chan_au_recv.
 From iris.base_logic Require Export lib.ghost_var.
 From New.golang.theory Require Export pre.

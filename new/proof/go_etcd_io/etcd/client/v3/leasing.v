@@ -6,7 +6,7 @@ From New.proof Require Import context sync.
 
 Require Import New.proof.go_etcd_io.etcd.client.v3.concurrency.
 Require Import New.proof.go_etcd_io.etcd.client.v3.
-Require Import New.proof.github_com.goose_lang.goose.model.channel.idiom.closeable.closeable.
+Require Import New.golang.theory.chan.idioms.broadcast.
 
 Require Import Perennial.base.
 
@@ -125,7 +125,7 @@ Implicit Types γ : leasingKV_names.
 Definition own_leaseKey (lk : leasing.leaseKey.t) γ (key : go_string) : iProp Σ :=
   "Hwaitc" ∷ (⌜ lk.(leasing.leaseKey.waitc') = chan.nil ⌝ ∨
                                                  ∃ γlk,
-              own_closeable_chan lk.(leasing.leaseKey.waitc') γlk True closeable.Unknown) ∗
+              own_broadcast_chan lk.(leasing.leaseKey.waitc') γlk True broadcast.Unknown) ∗
   "_" ∷ True
   (* TODO: repr predicate for RangeResponse *)
 .
@@ -150,7 +150,7 @@ Definition is_entries_ready γ := dghost_var γ.(entries_ready_gn) DfracDiscarde
 Local Definition own_leasingKV_locked lkv (γ : leasingKV_names) q : iProp Σ :=
   ∃ (sessionc : chan.t) (session : loc) γsession,
     "sessionc" ∷ lkv.[leasing.leasingKV.t, "sessionc"] ↦{#q/2} sessionc ∗
-    "#Hsessionc" ∷ own_closeable_chan sessionc γsession (is_entries_ready γ) closeable.Unknown ∗
+    "#Hsessionc" ∷ own_broadcast_chan sessionc γsession (is_entries_ready γ) broadcast.Unknown ∗
     "session" ∷ lkv.[leasing.leasingKV.t, "session"] ↦{#q/2} session ∗
     "#Hsession" ∷ (if decide (session = null) then True else ∃ lease, is_Session session γ.(etcd_gn) lease) ∗
     "Hleases" ∷ own_leaseCache_locked (lkv.[leasing.leasingKV.t, "leases"]) γ q.
@@ -161,7 +161,7 @@ Local Definition own_leasingKV_monitorSession lkv γ : iProp Σ :=
   "session" ∷ lkv.[leasing.leasingKV.t, "session"] ↦{#(1/2)} session ∗
   "#Hsession" ∷ (if decide (session = null) then True else ∃ lease, is_Session session γ.(etcd_gn) lease) ∗
   "sessionc" ∷ lkv.[leasing.leasingKV.t, "sessionc"] ↦{#(1/2)} sessionc ∗
-  "Hsessionc" ∷ own_closeable_chan sessionc γsessionc (is_entries_ready γ) (if open then closeable.Open else closeable.Closed).
+  "Hsessionc" ∷ own_broadcast_chan sessionc γsessionc (is_entries_ready γ) (if open then broadcast.Pending else broadcast.Done).
 
 (* Almost persistent. *)
 Definition own_leasingKV (lkv : loc) γ : iProp Σ :=
@@ -221,11 +221,11 @@ Proof.
       rewrite big_andL_cons. rewrite big_andL_nil.
       iSplit; last done.
       repeat iExists _. iSplitR; first done. iSplitR; first admit.
-      iApply (closeable_chan_receive with "HDone_ch").
+      iApply (broadcast_chan_receive with "HDone_ch").
       iIntros "_". wp_auto. admit.
     }
     repeat iExists _. iSplitR; first done. iSplitR; first admit.
-    iApply (closeable_chan_receive with "HsessDone").
+    iApply (broadcast_chan_receive with "HsessDone").
     iIntros "_". admit.
   }
   iIntros "* ([%|%] & H)"; subst; iNamed "H".
@@ -243,7 +243,7 @@ Proof.
                  ∃ sessionc γsessionc,
                    ⌜ v = execute_val ⌝ ∗
                    "sessionc" ∷ _.[_, _] ↦ sessionc ∗
-                   "Hsessionc" ∷ own_closeable_chan sessionc γsessionc (is_entries_ready γ) closeable.Open ∗
+                   "Hsessionc" ∷ own_broadcast_chan sessionc γsessionc (is_entries_ready γ) broadcast.Pending ∗
                    "lkv" ∷ lkv_ptr ↦ lkv
               )%I
               with "[Hsessionc sessionc lkv]"
@@ -254,12 +254,12 @@ Abort.
 (*     2:{ iNamedAccu. } *)
 (*     { rewrite big_sepL2_singleton. *)
 (*       repeat iExists _. iSplitR; first done. iSplitR; first admit. *)
-(*       iApply (own_closeable_chan_nonblocking_receive with "[$]"). *)
+(*       iApply (own_broadcast_chan_nonblocking_receive with "[$]"). *)
 (*       destruct open. *)
 (*       - iSplit; first done. iIntros. done. *)
 (*       - iSplit; last done. iIntros "Hclosed @". simpl. wp_auto. *)
 (*         wp_apply chan.wp_make1. iIntros "* (? & % & Hch)". *)
-(*         iMod (alloc_closeable_chan with "[$] [$]") as "H"; [done.. | ]. *)
+(*         iMod (alloc_broadcast_chan with "[$] [$]") as "H"; [done.. | ]. *)
 (*         wp_auto. iFrame. done. *)
 (*     } *)
 (*     { iIntros "@ [% _]". subst. wp_auto. iFrame. done. } *)
@@ -270,7 +270,7 @@ Abort.
 (*   iNamedSuffix "Hleases_lock" "_leases". *)
 (*   iIntros "* entries_new_leases". *)
 (*   wp_auto. *)
-(*   iDestruct (own_closeable_chan_Unknown with "[$]") as "#?". *)
+(*   iDestruct (own_broadcast_chan_Unknown with "[$]") as "#?". *)
 (*   iDestruct "sessionc" as "[sessionc sessionc_lock]". *)
 
 (*   iAssert (|==> "#Hentries_ready" ∷ ghost_var γ.(entries_ready_gn) DfracDiscarded true)%I *)
@@ -306,7 +306,7 @@ Abort.
 (*     iCombine "session_lock session" as "session". *)
 (*     iCombine "sessionc_lock sessionc" gives %[_ Heq]. subst. *)
 (*     wp_auto. *)
-(*     wp_apply (wp_closeable_chan_close with "[$Hsessionc]"). *)
+(*     wp_apply (wp_broadcast_chan_close with "[$Hsessionc]"). *)
 (*     { iFrame "#". } *)
 (*     iIntros "#Hclosed". *)
 (*     wp_auto. *)
@@ -364,7 +364,7 @@ Abort.
 (*   rewrite big_andL_cons. *)
 (*   iSplit. *)
 (*   { repeat iExists _. *)
-(*     iApply closeable_chan_receive. *)
+(*     iApply broadcast_chan_receive. *)
 (*     { iExactEq "HDone_ch". *)
 (*       f_equal. *)
 (*       admit. (* FIXME: another duplicate [inG] problem *) } *)
@@ -443,7 +443,7 @@ Abort.
 (*   iSplit. *)
 (*   { *)
 (*     repeat iExists _. *)
-(*     iApply closeable_chan_receive. { iFrame "#". } *)
+(*     iApply broadcast_chan_receive. { iFrame "#". } *)
 (*     iIntros "#[Hready Hclosed]". *)
 (*     wp_auto. iApply "HΦ". rewrite (decide_True (P:=interface.nil = _)) //. *)
 (*     iFrame "∗#%". *)
@@ -451,7 +451,7 @@ Abort.
 (*   iSplit. *)
 (*   { *)
 (*     repeat iExists _. *)
-(*     iApply (closeable_chan_receive *)
+(*     iApply (broadcast_chan_receive *)
 (*              with "[$HDone_ch_lkv]"). (* FIXME: multiple [inG]s *) *)
 (*     iIntros "[_ #Hclosed]". wp_auto. wp_apply ("HErr_lkv" with "[$Hclosed]"). *)
 (*     iIntros "* %Herr". wp_auto. iApply "HΦ". *)
@@ -459,7 +459,7 @@ Abort.
 (*   } *)
 (*   { *)
 (*     repeat iExists _. *)
-(*     iApply (closeable_chan_receive *)
+(*     iApply (broadcast_chan_receive *)
 (*              with "[$HDone_ch]"). (* FIXME: multiple [inG]s *) *)
 (*     iIntros "[_ #Hclosed]". wp_auto. wp_apply ("HErr" with "[$Hclosed]"). *)
 (*     iIntros "* %Herr". wp_auto. iApply "HΦ". *)
@@ -542,7 +542,7 @@ Abort.
 (*   {{{ is_pkg_init leasing ∗ "Hown" ∷ own_leaseCache lc γ ∗ "#Hready" ∷ is_entries_ready γ }}} *)
 (*     lc @ (ptrT.id leasing.leaseCache.id) @ "Lock" #key *)
 (*   {{{ wc (rev : w64), RET (#wc, #rev); *)
-(*       own_leaseCache lc γ ∗ (if decide (wc = null) then True else own_closeable_chan wc True closeable.Open) *)
+(*       own_leaseCache lc γ ∗ (if decide (wc = null) then True else own_broadcast_chan wc True broadcast.Pending) *)
 (*   }}}. *)
 (* Proof. *)
 (*   wp_start. wp_apply wp_with_defer as "%defer defer". simpl subst. *)
@@ -563,14 +563,14 @@ Abort.
 (*   } *)
 (*   { (* li is not nil *) *)
 (*     unshelve wp_apply (wp_chan_make (V:=unit)) as "* Hch"; try tc_solve. *)
-(*     iMod (alloc_closeable_chan True with "Hch") as "Hch"; [done..|]. *)
+(*     iMod (alloc_broadcast_chan True with "Hch") as "Hch"; [done..|]. *)
 (*     wp_auto. destruct lookup as [lk_ptr|] eqn:Hlookup in n. *)
 (*     2:{ by exfalso. } *)
 (*     rewrite Hlookup. *)
 (*     iDestruct (big_sepM_lookup_acc with "Hentries_own") as "[(% & lk & @) Hentries_close]". *)
 (*     { done. } *)
 (*     wp_auto. simpl. *)
-(*     iDestruct (own_closeable_chan_Unknown with "Hch") as "#Hch_unknown". *)
+(*     iDestruct (own_broadcast_chan_Unknown with "Hch") as "#Hch_unknown". *)
 (*     iDestruct ("Hentries_close" with "[lk]") as "Hentries_own". *)
 (*     { iFrame "∗#". } *)
 (*     iCombineNamed "*_own" as "Hown". *)
@@ -676,8 +676,8 @@ Abort.
 (*   iNamed "H". *)
 (*   iDestruct "Hsessionc" as "[sessionc sessionc_monitor]". *)
 (*   iMod (ghost_var_alloc false) as (γready) "Hentries_ready". *)
-(*   iMod (alloc_closeable_chan with "[$]") as "Hopen_monitor"; [done.. | ]. *)
-(*   iDestruct (own_closeable_chan_Unknown with "[$]") as "#?". *)
+(*   iMod (alloc_broadcast_chan with "[$]") as "Hopen_monitor"; [done.. | ]. *)
+(*   iDestruct (own_broadcast_chan_Unknown with "[$]") as "#?". *)
 
 (*   iMod (init_RWMutex *)
 (*           (own_leasingKV_locked lkv {| etcd_gn := γetcd; entries_ready_gn := γready |} ) *)

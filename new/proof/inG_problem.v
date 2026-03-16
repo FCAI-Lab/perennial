@@ -24,7 +24,7 @@ End A.
    This includes [fact], which converts a prop from the lower-level library A
    into a higher-level prop defined here in library B.
 
-  This is like taking an [is_closeable_chan] and putting it inside of
+  This is like taking an [is_broadcast_chan] and putting it inside of
  *)
 Section B.
 Class B := { B_a :: A }.
