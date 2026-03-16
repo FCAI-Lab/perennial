@@ -9,6 +9,8 @@ Set Default Proof Using "W".
 #[global] Instance : IsPkgInit (iProp Σ) errors := define_is_pkg_init True%I.
 #[global] Instance : GetIsPkgInitWf (iProp Σ) errors := build_get_is_pkg_init_wf.
 
+(* proven first because it is used during package initialization (to create
+global error variables) *)
 Lemma wp_New (msg : go_string) :
   {{{ True }}}
     @! errors.New #msg
@@ -16,6 +18,12 @@ Lemma wp_New (msg : go_string) :
 Proof.
   wp_start. wp_auto. wp_alloc x as "Hx". wp_auto. wp_end.
 Qed.
+
+Lemma wp_errorType_init :
+  {{{ True }}}
+    errors.errorType'init #()
+  {{{ RET #(); True }}}.
+Proof. Admitted.
 
 Lemma wp_initialize' get_is_pkg_init :
   get_is_pkg_init_prop errors get_is_pkg_init →
@@ -27,7 +35,11 @@ Proof.
   wp_apply (wp_package_init with "[$Hown] HΦ").
   { destruct Hinit as (-> & ?); done. }
   iIntros "Hown". wp_auto.
-Admitted.
+  repeat wp_apply wp_GlobalAlloc as "?".
+  wp_apply wp_New as "% _".
+  wp_apply wp_errorType_init.
+  iEval (rewrite is_pkg_init_unfold /=). iFrame "∗#". done.
+Qed.
 
 Definition is_unwrappable (err : error.t) : iProp Σ :=
   □(match err with
