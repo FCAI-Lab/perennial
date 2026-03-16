@@ -11,6 +11,131 @@ Context {sem : go.Semantics} {package_sem : channel_examples.Assumptions}.
 Collection W := sem + package_sem.
 Set Default Proof Using "W".
 
+(** Invariant: channel must be Idle, all other states are False *)
+Definition is_select_nb_only (γ : chan_names) (ch : loc) : iProp Σ :=
+  "#Hch" ∷ is_chan ch γ unit ∗
+  "#Hinv" ∷ inv nroot (
+      ∃ s,
+        "Hoc" ∷ own_chan γ unit s ∗
+        "%" ∷ ⌜ (match s with
+                | chanstate.Idle => True
+                | _ => False
+                end) ⌝
+  ).
+
+Lemma start_select_nb_only (ch : loc) (γ : chan_names) :
+  is_chan ch γ unit -∗
+  own_chan γ unit chanstate.Idle ={⊤}=∗
+  is_select_nb_only γ ch.
+Proof.
+  iIntros "#Hch Hoc".
+  iMod (inv_alloc nroot with "[Hoc]") as "$".
+  { iNext. iFrame. }
+  iFrame "#". done.
+Qed.
+
+(** Nonblocking send AU - vacuous since we ban all send preconditions *)
+Lemma select_nb_only_send_au γ ch (v : unit) :
+  ∀ Φ Φnotready,
+  is_select_nb_only γ ch -∗
+  Φnotready -∗
+  nonblocking_send_au γ v Φ Φnotready.
+Proof.
+  iIntros (Φ Φnotready) "#Hnb Hnotready".
+  iNamed "Hnb". iSplit. all: try done.
+  iInv "Hinv" as ">Hinv_open" "Hinv_close". iNamed "Hinv_open".
+  destruct s; try done.
+  iApply fupd_mask_intro; [solve_ndisj|iIntros "Hmask"].
+  iFrame.
+Qed.
+
+
+(** Nonblocking receive AU - vacuous since we ban all receive preconditions *)
+Lemma select_nb_only_rcv_au γ ch :
+   ∀ (Φ: unit → bool → iProp Σ) (Φnotready: iProp Σ),
+  is_select_nb_only γ ch -∗
+  Φnotready -∗
+  nonblocking_recv_au γ unit (λ (v:unit) (ok:bool), Φ v ok) Φnotready.
+Proof.
+  iIntros (Φ Φnotready) "#Hnb Hnotready".
+  iNamed "Hnb".
+  iSplit. all: try done.
+  iInv "Hinv" as ">Hinv_open" "Hinv_close".
+  iNamed "Hinv_open". destruct s; try done.
+  iApply fupd_mask_intro; [solve_ndisj|iIntros "Hmask"].
+  iFrame.
+Qed.
+
+
+(* Example 1 *)
+Lemma wp_select_nb_not_ready :
+  {{{ is_pkg_init channel_examples}}}
+    @! channel_examples.select_nb_not_ready #()
+  {{{ RET #(); True }}}.
+Proof.
+  wp_start. wp_auto_lc 2. wp_apply chan.wp_make1.
+  iIntros (ch γ) "(#His_chan & _Hcap & Hownchan)".
+  do 2 (iRename select (£1) into "Hlc1").
+  wp_auto_lc 2.
+  iRename select (£1) into "Hlc2".
+  iPersist "ch".
+  do 2 (iRename select (£1) into "Hlc4").
+  iMod (start_select_nb_only ch with "[$His_chan] [$Hownchan]") as "#Hnb".
+  wp_apply (wp_fork with "[Hnb]").
+  {
+  wp_auto_lc 4.
+  wp_apply chan.wp_select_nonblocking.
+  simpl. iSplitL.
+  - (* Prove the receive case - will be vacuous *)
+    iSplitL. all: try done.
+    repeat iExists _; iSplitR; first done.
+    (* extract is_chan *)
+    iPoseProof "Hnb" as "[$ _]".
+    (* Now use our select_nb_only_rcv_au lemma *)
+    iRename select (£1) into "Hlc1".
+    iApply (select_nb_only_rcv_au with " [$Hnb]");first done.
+  - (* Prove the default case *)
+    wp_auto.
+    done.
+  }
+  {
+  wp_apply chan.wp_select_nonblocking. simpl.
+  iFrame.
+  iSplitL "Hlc1 Hlc4".
+  - (* Prove the receive case - will be vacuous *)
+    iSplitL; last done.
+    repeat iExists _; iSplitR; first done. iFrame "#". iClear "His_chan".
+    iApply (select_nb_only_send_au with "[$Hnb] []"); first done.
+  - (* Prove the default case *)
+    wp_auto.
+    iApply "HΦ".
+    done.
+  }
+Qed.
+
+(**  Example 2 *)
+Lemma wp_select_nb_guaranteed_ready :
+  {{{ is_pkg_init channel_examples }}}
+    @! channel_examples.select_nb_guaranteed_ready #()
+  {{{ RET #(); True }}}.
+Proof.
+  wp_start. wp_auto.
+  wp_apply chan.wp_make1.
+  iIntros "* (#His_ch & %Hcap & Hch)". simpl.
+  wp_auto.
+  wp_apply (chan.wp_close with "[$]").
+  iIntros "_". iApply fupd_mask_intro; first solve_ndisj.
+  iIntros "Hmask". iFrame. iNext. iIntros "Hch". iMod "Hmask" as "_". iModIntro.
+  wp_auto.
+  wp_apply (chan.wp_select_nonblocking_alt [False%I] with "[Hch] [-]");
+    [|iNamedAccu|].
+  - simpl. iSplitL; last done. iIntros "HP". repeat iExists _; iSplitR; first done. iFrame "#".
+    iApply fupd_mask_intro; first solve_ndisj. iIntros "Hmask".
+    iFrame. iIntros "!> Hch". iMod "Hmask" as "_". iModIntro.
+    iNamed "HP". wp_auto. by iApply "HΦ".
+  - iNamed 1. simpl. iIntros ([[]]).
+Qed.
+
 (* Invariant for the "full buffer" situation                                  *)
 Definition is_select_nb_full1 (γ : chan_names) (ch : loc) : iProp Σ :=
   "#Hch"  ∷ is_chan ch γ w64 ∗
@@ -90,9 +215,10 @@ Proof.
   done.
 Qed.
 
-Lemma wp_select_nb_full_buffer_no_panic :
+(* Example 3 *)
+Lemma wp_select_nb_full_buffer_not_ready :
   {{{ is_pkg_init channel_examples }}}
-    @! channel_examples.select_nb_full_buffer_no_panic #()
+    @! channel_examples.select_nb_full_buffer_not_ready #()
   {{{ RET #(); True }}}.
 Proof.
   wp_start. wp_auto_lc 2.
@@ -131,205 +257,6 @@ wp_auto.
     Unshelve.
     + apply sem.
     + apply _.
-Qed.
-
-(* Example 2: buffer space -> panic branch ready -> fails to verify  *)
-
-Lemma wp_select_nb_buffer_space_panic_fails :
-  {{{ is_pkg_init channel_examples }}}
-    @! channel_examples.select_nb_buffer_space_panic #()
-  {{{ RET #(); True }}}.
-  Proof.
-  wp_start. wp_auto_lc 2.
-  wp_apply (chan.wp_make2); first done.
-  iIntros (ch γ) "(#His_chan & %Hcap & Hown)".
-
-  wp_auto.
-  wp_apply chan.wp_select_nonblocking.
-  simpl.
-
-  (* Split (case package) and default. *)
-  iSplit.
-  - iSplit; last done.
-    iExists w64, ch, γ, _, _, _,_.
-    iSplit; [iPureIntro; first done;reflexivity|].
-    iSplit; [iFrame "#"; done|].
-    unfold nonblocking_send_au.
-    iSplit; last done.
-    iApply fupd_mask_intro; [solve_ndisj|].
-    iIntros "Hmask". iNext.
-    iExists (chanstate.Buffered []).
-    iFrame "Hown".
-    simpl.
-    iIntros "Hoc".
-    iMod "Hmask".
-    iModIntro. wp_auto.
-    (* Branch fails here *)
-    admit.
-  - wp_auto. iApply "HΦ". done.
-Abort.
-
-(* Example 3: deadlock on blocking select send -> vacuously verifies  *)
-Lemma wp_select_nb_buffer_space_deadlock_vacuous :
-  {{{ is_pkg_init channel_examples }}}
-    @! channel_examples.select_nb_buffer_space_deadlock #()
-  {{{ RET #(); True }}}.
-  Proof.
-  wp_start. wp_auto.
-  wp_apply (chan.wp_make2); first done.
-  iIntros (ch γ) "(#His_chan & %Hcap & Hown)".
-  wp_auto.
-  wp_apply (chan.wp_send ch (W64 0) γ with "[$His_chan]").
-
-  (* First send: fill the buffer. We verify it by giving a SendAU that
-     updates Buffered [] -> Buffered [0], then continues. *)
-  iIntros "Hlc". simpl.
-
-  iApply ((SendAU_from_empty_buffer_to (ch) (γ)
-         ) with "Hown").
-
-         iIntros "Hoc". wp_auto.
-  wp_apply chan.wp_select_blocking.
-  simpl.
-  iSplitL "Hoc".
-  - iExists w64,ch, γ, (W64 0), _, _, _.
-    iSplit.
-    { iPureIntro. split;first done;done. }
-    iSplitL "".
-    { iFrame "#". }
-
-  iApply (SendAU_full_cap1_vacuous (ch) (γ)
-              (W64 0) (W64 0)).
-              { done. }
-
-              done.
-              - done.
-              Unshelve.
-              { apply sem.  }
-              { apply _. }
-Qed.
-
-(** Invariant: channel must be Idle, all other states are False *)
-Definition is_select_nb_only (γ : chan_names) (ch : loc) : iProp Σ :=
-  "#Hch" ∷ is_chan ch γ unit ∗
-  "#Hinv" ∷ inv nroot (
-      ∃ s,
-        "Hoc" ∷ own_chan γ unit s ∗
-        "%" ∷ ⌜ (match s with
-                | chanstate.Idle => True
-                | _ => False
-                end) ⌝
-  ).
-
-Lemma start_select_nb_only (ch : loc) (γ : chan_names) :
-  is_chan ch γ unit -∗
-  own_chan γ unit chanstate.Idle ={⊤}=∗
-  is_select_nb_only γ ch.
-Proof.
-  iIntros "#Hch Hoc".
-  iMod (inv_alloc nroot with "[Hoc]") as "$".
-  { iNext. iFrame. }
-  iFrame "#". done.
-Qed.
-
-(** Nonblocking send AU - vacuous since we ban all send preconditions *)
-Lemma select_nb_only_send_au γ ch (v : unit) :
-  ∀ Φ Φnotready,
-  is_select_nb_only γ ch -∗
-  Φnotready -∗
-  nonblocking_send_au γ v Φ Φnotready.
-Proof.
-  iIntros (Φ Φnotready) "#Hnb Hnotready".
-  iNamed "Hnb". iSplit. all: try done.
-  iInv "Hinv" as ">Hinv_open" "Hinv_close". iNamed "Hinv_open".
-  destruct s; try done.
-  iApply fupd_mask_intro; [solve_ndisj|iIntros "Hmask"].
-  iFrame.
-Qed.
-
-
-(** Nonblocking receive AU - vacuous since we ban all receive preconditions *)
-Lemma select_nb_only_rcv_au γ ch :
-   ∀ (Φ: unit → bool → iProp Σ) (Φnotready: iProp Σ),
-  is_select_nb_only γ ch -∗
-  Φnotready -∗
-  nonblocking_recv_au γ unit (λ (v:unit) (ok:bool), Φ v ok) Φnotready.
-Proof.
-  iIntros (Φ Φnotready) "#Hnb Hnotready".
-  iNamed "Hnb".
-  iSplit. all: try done.
-  iInv "Hinv" as ">Hinv_open" "Hinv_close".
-  iNamed "Hinv_open". destruct s; try done.
-  iApply fupd_mask_intro; [solve_ndisj|iIntros "Hmask"].
-  iFrame.
-Qed.
-
-
-Lemma wp_select_nb_not_ready :
-  {{{ is_pkg_init channel_examples}}}
-    @! channel_examples.select_nb_not_ready #()
-  {{{ RET #(); True }}}.
-Proof.
-  wp_start. wp_auto_lc 2. wp_apply chan.wp_make1.
-  iIntros (ch γ) "(#His_chan & _Hcap & Hownchan)".
-  do 2 (iRename select (£1) into "Hlc1").
-  wp_auto_lc 2.
-  iRename select (£1) into "Hlc2".
-  iPersist "ch".
-  do 2 (iRename select (£1) into "Hlc4").
-  iMod (start_select_nb_only ch with "[$His_chan] [$Hownchan]") as "#Hnb".
-  wp_apply (wp_fork with "[Hnb]").
-  {
-  wp_auto_lc 4.
-  wp_apply chan.wp_select_nonblocking.
-  simpl. iSplitL.
-  - (* Prove the receive case - will be vacuous *)
-    iSplitL. all: try done.
-    repeat iExists _; iSplitR; first done.
-    (* extract is_chan *)
-    iPoseProof "Hnb" as "[$ _]".
-    (* Now use our select_nb_only_rcv_au lemma *)
-    iRename select (£1) into "Hlc1".
-    iApply (select_nb_only_rcv_au with " [$Hnb]");first done.
-  - (* Prove the default case *)
-    wp_auto.
-    done.
-  }
-  {
-  wp_apply chan.wp_select_nonblocking. simpl.
-  iFrame.
-  iSplitL "Hlc1 Hlc4".
-  - (* Prove the receive case - will be vacuous *)
-    iSplitL; last done.
-    repeat iExists _; iSplitR; first done. iFrame "#". iClear "His_chan".
-    iApply (select_nb_only_send_au with "[$Hnb] []"); first done.
-  - (* Prove the default case *)
-    wp_auto.
-    iApply "HΦ".
-    done.
-  }
-Qed.
-
-Lemma wp_select_nb_guaranteed_ready :
-  {{{ is_pkg_init channel_examples }}}
-    @! channel_examples.select_nb_guaranteed_ready #()
-  {{{ RET #(); True }}}.
-Proof.
-  wp_start. wp_auto.
-  wp_apply chan.wp_make1.
-  iIntros "* (#His_ch & %Hcap & Hch)". simpl.
-  wp_auto.
-  wp_apply (chan.wp_close with "[$]").
-  iIntros "_". iApply fupd_mask_intro; first solve_ndisj.
-  iIntros "Hmask". iFrame. iNext. iIntros "Hch". iMod "Hmask" as "_". iModIntro.
-  wp_auto.
-  wp_apply (chan.wp_select_nonblocking_alt [False%I] with "[Hch] [-]");
-    [|iNamedAccu|].
-  - simpl. iSplitL; last done. iIntros "HP". repeat iExists _; iSplitR; first done. iFrame "#".
-    iApply fupd_mask_intro; first solve_ndisj. iIntros "Hmask".
-    iFrame. iIntros "!> Hch". iMod "Hmask" as "_". iModIntro.
-    iNamed "HP". wp_auto. by iApply "HΦ".
-  - iNamed 1. simpl. iIntros ([[]]).
 Qed.
 
 End proof.

@@ -126,11 +126,7 @@ Definition select_nb_not_ready {ext : ffi_syntax} {go_gctx : GoGlobalContext} : 
 
 Definition select_nb_guaranteed_ready {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/channel.select_nb_guaranteed_ready"%go.
 
-Definition select_nb_full_buffer_no_panic {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/channel.select_nb_full_buffer_no_panic"%go.
-
-Definition select_nb_buffer_space_panic {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/channel.select_nb_buffer_space_panic"%go.
-
-Definition select_nb_buffer_space_deadlock {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/channel.select_nb_buffer_space_deadlock"%go.
+Definition select_nb_full_buffer_not_ready {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/goose-lang/goose/testdata/examples/channel.select_nb_full_buffer_not_ready"%go.
 
 (* prog3 from Actris 2.0 intro: https://arxiv.org/pdf/2010.15030
 
@@ -1610,7 +1606,7 @@ Definition CancellableMuxerⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCon
         return: (![go.string] (![go.PointerType go.string] "errMsg"))
         ))]))).
 
-(* Show that it isn't possible to have 2 nonblocking ops that match.
+(* Example with 2 nonblocking ops that should not match.
 
    go: select_tricky_examples.go:4:6 *)
 Definition select_nb_not_readyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
@@ -1666,11 +1662,10 @@ Definition select_nb_guaranteed_readyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : G
       ))]);;;
     return: #()).
 
-(* Show that a nonblocking select does not take a send case
-   when the buffered channel is already full.
+(* Non-blocking send cannot send on a full buffer
 
-   go: select_tricky_examples.go:33:6 *)
-Definition select_nb_full_buffer_no_panicⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+   go: select_tricky_examples.go:34:6 *)
+Definition select_nb_full_buffer_not_readyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (let: "ch" := (GoAlloc (go.ChannelType go.sendrecv go.int) (GoZeroVal (go.ChannelType go.sendrecv go.int) #())) in
     let: "$r0" := ((FuncResolve go.make2 [go.ChannelType go.sendrecv go.int] #()) #(W64 1)) in
@@ -1681,37 +1676,6 @@ Definition select_nb_full_buffer_no_panicⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx
     let: "$v0" := #(W64 0) in
     let: "$ch0" := (![go.ChannelType go.sendrecv go.int] "ch") in
     SelectStmt (SelectStmtClauses (Some (do:  #())) [(CommClause (SendCase go.int "$ch0" "$v0") (do:  (let: "$a0" := (Convert go.string (go.InterfaceType []) #"unreachable"%go) in
-    (FuncResolve go.panic [] #()) "$a0")))]);;;
-    return: #()).
-
-(* Unverifiable: Panic is irreducible
-
-   go: select_tricky_examples.go:52:6 *)
-Definition select_nb_buffer_space_panicⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
-  λ: <>,
-    exception_do (let: "ch" := (GoAlloc (go.ChannelType go.sendrecv go.int) (GoZeroVal (go.ChannelType go.sendrecv go.int) #())) in
-    let: "$r0" := ((FuncResolve go.make2 [go.ChannelType go.sendrecv go.int] #()) #(W64 1)) in
-    do:  ("ch" <-[go.ChannelType go.sendrecv go.int] "$r0");;;
-    let: "$v0" := #(W64 0) in
-    let: "$ch0" := (![go.ChannelType go.sendrecv go.int] "ch") in
-    SelectStmt (SelectStmtClauses (Some (do:  #())) [(CommClause (SendCase go.int "$ch0" "$v0") (do:  (let: "$a0" := (Convert go.string (go.InterfaceType []) #"bad"%go) in
-    (FuncResolve go.panic [] #()) "$a0")))]);;;
-    return: #()).
-
-(* Blocking select: vacuously verifiable due to deadlock
-
-   go: select_tricky_examples.go:67:6 *)
-Definition select_nb_buffer_space_deadlockⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
-  λ: <>,
-    exception_do (let: "ch" := (GoAlloc (go.ChannelType go.sendrecv go.int) (GoZeroVal (go.ChannelType go.sendrecv go.int) #())) in
-    let: "$r0" := ((FuncResolve go.make2 [go.ChannelType go.sendrecv go.int] #()) #(W64 1)) in
-    do:  ("ch" <-[go.ChannelType go.sendrecv go.int] "$r0");;;
-    do:  (let: "$chan" := (![go.ChannelType go.sendrecv go.int] "ch") in
-    let: "$v" := #(W64 0) in
-    chan.send go.int "$chan" "$v");;;
-    let: "$v0" := #(W64 0) in
-    let: "$ch0" := (![go.ChannelType go.sendrecv go.int] "ch") in
-    SelectStmt (SelectStmtClauses None [(CommClause (SendCase go.int "$ch0" "$v0") (do:  (let: "$a0" := (Convert go.string (go.InterfaceType []) #"unreachable"%go) in
     (FuncResolve go.panic [] #()) "$a0")))]);;;
     return: #()).
 
@@ -1969,9 +1933,7 @@ Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!G
   #[global] CancellableMuxer_unfold :: FuncUnfold CancellableMuxer [] (CancellableMuxerⁱᵐᵖˡ);
   #[global] select_nb_not_ready_unfold :: FuncUnfold select_nb_not_ready [] (select_nb_not_readyⁱᵐᵖˡ);
   #[global] select_nb_guaranteed_ready_unfold :: FuncUnfold select_nb_guaranteed_ready [] (select_nb_guaranteed_readyⁱᵐᵖˡ);
-  #[global] select_nb_full_buffer_no_panic_unfold :: FuncUnfold select_nb_full_buffer_no_panic [] (select_nb_full_buffer_no_panicⁱᵐᵖˡ);
-  #[global] select_nb_buffer_space_panic_unfold :: FuncUnfold select_nb_buffer_space_panic [] (select_nb_buffer_space_panicⁱᵐᵖˡ);
-  #[global] select_nb_buffer_space_deadlock_unfold :: FuncUnfold select_nb_buffer_space_deadlock [] (select_nb_buffer_space_deadlockⁱᵐᵖˡ);
+  #[global] select_nb_full_buffer_not_ready_unfold :: FuncUnfold select_nb_full_buffer_not_ready [] (select_nb_full_buffer_not_readyⁱᵐᵖˡ);
   #[global] import_time_Assumption :: time.Assumptions;
   #[global] import_lock_Assumption :: lock.Assumptions;
   #[global] import_strings_Assumption :: strings.Assumptions;
