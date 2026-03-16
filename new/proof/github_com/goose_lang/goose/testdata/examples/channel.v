@@ -2,7 +2,6 @@ From New.proof.github_com.goose_lang.goose.testdata.examples Require Import chan
 From New.golang.theory.chan.idioms
   Require Import base bag handshake broadcast future.
 From New.proof Require Import strings time sync.
-From iris.base_logic Require Import ghost_map.
 From New.golang Require Import theory.
 From New.proof Require Import strings.
 From New.code Require Import github_com.goose_lang.goose.testdata.examples.channel.
@@ -17,9 +16,6 @@ Collection W := sem + package_sem.
 Set Default Proof Using "W".
 
 Section hedged_example.
-Context `{!chan_idiomG Σ go_string}.
-Context `{!ghost_map.ghost_mapG Σ gname (go_string → iProp Σ)}.
-Context `{!inG Σ unitR}.
 
 Lemma wp_GetPrimary (q : go_string) :
   {{{ is_pkg_init channel_examples }}}
@@ -260,8 +256,6 @@ Qed.
 End cancellable.
 
 Section join.
-Context `{!ghost_map.ghost_mapG Σ gname (unit → iProp Σ)}.
-Context `{!inG Σ unitR}.
 Set Default Proof Using "All".
 
 Lemma wp_simple_join :

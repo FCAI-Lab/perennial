@@ -2,8 +2,6 @@ Require Import New.proof.proof_prelude.
 From New.golang.theory Require Import chan.
 From New.golang.theory.chan.idioms Require Export base.
 From New.golang.theory Require Import chan.
-(* TODO: use New.ghost.all instead *)
-From iris.base_logic Require Import ghost_map.
 
 
 (** Future Channel
@@ -60,24 +58,24 @@ From iris.base_logic Require Import ghost_map.
 Section future.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics}.
-Context `{!inG Σ unitR}.
+Context `{!allG Σ}.
 
 Context `[!ZeroVal V] `[!TypedPointsto V] `[!IntoValTyped V t].
-Context `{!ghost_mapG Σ gname (V → iProp Σ)}.
 Set Default Proof Using "All".
 
 
 Record future_names := {
   chan_name : chan_names;
-  contracts_name : gname
+  pending_set_name : gname
 }.
 
 (** [Fulfill γ contract] is a token representing a registered contract.
     The holder commits to eventually sending a value [v] satisfying [contract v].
-    Internally, it holds half of a ghost map fragment. *)
+    Internally, it holds half of a saved predicate and an auth_set fragment. *)
 Definition Fulfill (γ : future_names) (contract : V → iProp Σ) : iProp Σ :=
   ∃ (gn : gname),
-    gn ↪[γ.(contracts_name)]{#1/2} contract.
+    saved_pred_own gn (DfracOwn (1/2)) contract ∗
+    auth_set_frag γ.(pending_set_name) gn.
 
 (** [Fulfilled γ v] bundles a [Fulfill] with evidence that the contract is
     satisfied. This is what gets transferred through the channel. *)
@@ -88,15 +86,15 @@ Definition Fulfilled (γ : future_names) (v: V) : iProp Σ :=
 (** [Await γ pending] is the consumer's tracking state.
     [pending] is the list of contracts not yet matched to a received value.
 
-    Internally, a ghost map tracks which ghost names correspond to pending
-    contracts. The map's values (up to permutation) equal [pending]. *)
+    Internally, an auth_set tracks which ghost names are pending, and
+    saved predicates associate each ghost name with its contract. *)
 Definition Await (γ : future_names)
     (pending : list (V → iProp Σ)) : iProp Σ :=
   ∃ (pending_map : gmap gname (V → iProp Σ)),
-    ghost_map_auth γ.(contracts_name) 1 pending_map ∗
+    auth_set_auth γ.(pending_set_name) (dom pending_map) ∗
     ⌜(map_to_list pending_map).*2 ≡ₚ pending⌝ ∗
     [∗ map] gn ↦ P ∈ pending_map,
-      gn ↪[γ.(contracts_name)]{#1/2} P.
+      saved_pred_own gn (DfracOwn (1/2)) P.
 
 (** [is_future γ ch] is the persistent channel invariant. The channel
     carries [Fulfilled] tokens — values bundled with their contract evidence. *)
@@ -123,13 +121,14 @@ Proof.
 
   have Hperm_pairs :
       map_to_list (<[k:=v]> m) ≡ₚ (k, v) :: map_to_list m.
-  { 
+  {
     exact (map_to_list_insert (K:=K) (M:=gmap K) (A:=A) m k v Hlookup).
   }
 
   have Hperm_vals :
       map snd (map_to_list (<[k:=v]> m)) ≡ₚ map snd ((k,v) :: map_to_list m) :=
     Permutation_map snd Hperm_pairs.
+
     done.
 
 Qed.
@@ -170,10 +169,10 @@ s = chanstate.Idle ∨ s = chanstate.Buffered [] ->
 Proof.
   intros Hs.
   iIntros "#Hch Hoc".
-  iMod (ghost_map_alloc_empty) as (γcontracts) "Hmap_auth".
+  iMod (auth_set_init (A:=gname)) as (γpending) "Hset_auth".
   set (γmf := {|
     chan_name := γ;
-    contracts_name := γcontracts
+    pending_set_name := γpending
   |}).
   iMod (inv_alloc nroot _ (
     ∃ s',
@@ -194,7 +193,8 @@ Proof.
   iSplitL "".
   { iFrame "#". }
   iExists ∅.
-  iFrame. iSplitL "". { iPureIntro. rewrite map_to_list_empty. done. }
+  rewrite dom_empty_L. iFrame.
+  iSplitL "". { iPureIntro. rewrite map_to_list_empty. done. }
   simpl. done.
 Qed.
 
@@ -206,22 +206,23 @@ Lemma future_alloc_promise γ ch (contract : V → iProp Σ)
   Proof .
   iIntros "#Hmf HAwait".
   iDestruct "HAwait" as (pending_map) "(Hauth & %Hperm & Hfrags)".
-  iMod (own_alloc_cofinite () (dom pending_map)) as (gn) "[%Hfresh _]".
+  iMod (saved_pred_alloc_cofinite contract (dom pending_map) (DfracOwn 1))
+    as (gn) "[%Hfresh Hpred]".
   { done. }
-  apply not_elem_of_dom in Hfresh.
-  iMod (ghost_map_insert gn contract with "Hauth") as "[Hauth Hfrag]".
+  iDestruct "Hpred" as "[Hpred1 Hpred2]".
+  iMod (auth_set_alloc gn with "Hauth") as "[Hauth Hfrag]".
   { done. }
-  iDestruct "Hfrag" as "[Hfrag1 Hfrag2]".
   iModIntro.
-  iSplitL "Hfrag1".
+  iSplitL "Hpred1 Hfrag".
   { iExists gn. iFrame. }
   iExists (<[gn := contract]> pending_map).
-  iFrame "Hauth".
-  iSplitR "Hfrags Hfrag2".
+  rewrite dom_insert_L. iFrame "Hauth".
+  iSplitR "Hfrags Hpred2".
   - iPureIntro.
-    etrans; first apply map_to_list_snd_insert; first done.
-    rewrite Hperm. apply Permutation_cons_append.
-  - iApply big_sepM_insert; first done.
+    etrans; first apply map_to_list_snd_insert.
+    + apply not_elem_of_dom. done.
+    + rewrite Hperm. apply Permutation_cons_append.
+  - iApply big_sepM_insert; first (apply not_elem_of_dom; done).
     iFrame.
 Qed.
 
@@ -295,14 +296,14 @@ Qed.
 
 (** The core receive lemma. Each receive:
     1. Pulls a [Fulfilled γ v] from the channel invariant
-    2. Uses ghost map agreement to identify which contract was fulfilled
+    2. Uses saved predicate agreement to identify which contract was fulfilled
     3. Removes the matched contract from [pending]
     4. Returns [P v] directly to the caller *)
 Lemma future_await_au γ ch
     (pending : list (V → iProp Σ)) :
   ∀ (Φ: V → bool → iProp Σ),
   is_future γ ch -∗
-  £1 ∗ £1 ∗ Await γ pending -∗
+  £1 ∗ £1 ∗ £1 ∗ Await γ pending -∗
   ▷ (∀ (v : V) (P : V → iProp Σ) (pre post : list (V → iProp Σ)),
       ⌜pending = pre ++ P :: post⌝ -∗
       P v -∗
@@ -310,37 +311,43 @@ Lemma future_await_au γ ch
       Φ v true) -∗
   recv_au γ.(chan_name) V (λ (v:V) (ok:bool), Φ v ok).
 Proof.
-  iIntros (Φ) "#Hmf (Hlc1 & Hlc2 & HAwait) Hau".
+  iIntros (Φ) "#Hmf (Hlc1 & Hlc2 & Hlc3 & HAwait) Hau".
   rewrite /is_future.
   iDestruct "Hmf" as "[#isHch #Hinv]".
 
   iAssert (
     ∀ (v_rcv : V),
+      £1 -∗
       Fulfilled γ v_rcv -∗
       Await γ pending -∗
-      |==> ∃ (P : V → iProp Σ) (pre post : list (V → iProp Σ)),
+      |={⊤}=> ∃ (P : V → iProp Σ) (pre post : list (V → iProp Σ)),
         ⌜pending = pre ++ P :: post⌝ ∗ P v_rcv ∗ Await γ (pre ++ post)
   )%I as "Hmatch".
   {
-    iIntros (v_rcv) "HFulfilled HAwait".
+    iIntros (v_rcv) "Hlc HFulfilled HAwait".
     iDestruct "HFulfilled" as (contract_f) "[HFulfill Hcontract_v]".
-    iDestruct "HFulfill" as (gn_f) "Hfrag_f".
+    iDestruct "HFulfill" as (gn_f) "[Hpred_f Hfrag_f]".
     iDestruct "HAwait" as (pending_map) "(Hauth & %Hperm & Hfrags)".
-    iDestruct (ghost_map_lookup with "Hauth Hfrag_f") as %Hlookup.
+    iDestruct (auth_set_elem with "Hauth Hfrag_f") as %Hin.
+    assert (∃ P, pending_map !! gn_f = Some P) as [P Hlookup].
+    { apply elem_of_dom. done. }
     iDestruct (big_sepM_delete _ _ gn_f with "Hfrags")
-      as "[Hfrag_p Hfrags_rest]"; first done.
-    iCombine "Hfrag_f Hfrag_p" as "Hfrag_full".
-    iMod (ghost_map_delete with "Hauth Hfrag_full") as "Hauth".
+      as "[Hpred_p Hfrags_rest]"; first done.
+    iDestruct (saved_pred_agree gn_f _ _ contract_f P v_rcv
+      with "Hpred_f Hpred_p") as "Hag".
+    iMod (lc_fupd_elim_later with "Hlc Hag") as "Hag".
+    iRewrite "Hag" in "Hcontract_v".
+    iMod (auth_set_dealloc with "[$Hauth $Hfrag_f]") as "Hauth".
     pose proof (map_to_list_snd_delete _ _ _ Hlookup) as Hmap_perm.
-    assert (pending ≡ₚ contract_f :: (map_to_list (delete gn_f pending_map)).*2) as Hcons.
+    assert (pending ≡ₚ P :: (map_to_list (delete gn_f pending_map)).*2) as Hcons.
     { rewrite -Hmap_perm. done. }
     apply Permutation_cons_split in Hcons
       as (pre & post & Hsplit & Hrest_perm).
-    iModIntro. iExists contract_f, pre, post.
+    iModIntro. iExists P, pre, post.
     iFrame "Hcontract_v".
     iSplitR; first done.
     iExists (delete gn_f pending_map).
-    iFrame "Hauth Hfrags_rest". iPureIntro.
+    rewrite dom_delete_L. iFrame "Hauth Hfrags_rest". iPureIntro.
     by symmetry.
   }
 
@@ -358,7 +365,7 @@ Proof.
       iMod "Hmask".
       iMod ("Hinv_close" with "[Hoc HFulfilleds]") as "_".
       { iNext. iExists (chanstate.Buffered msgs'). iFrame. }
-      iMod ("Hmatch" with "HFulfilled_v HAwait")
+      iMod ("Hmatch" with "Hlc3 HFulfilled_v HAwait")
         as (P pre post) "(%Hsplit & HP & HAwait')".
       iModIntro.
       iApply ("Hau" with "[%] HP HAwait'"). done.
@@ -374,21 +381,21 @@ Proof.
     iApply fupd_mask_intro; [solve_ndisj|iIntros "Hmask2"].
     iNext. iExists s. iFrame "Hch".
     destruct s; try done.
-    + 
+    +
       iIntros "Hoc".
       iMod "Hmask2".
       iMod ("Hinv_close2" with "[Hoc]") as "_".
       { iNext. iExists chanstate.Idle. iFrame. }
-      iMod ("Hmatch" with "Hinv_open2 HAwait")
+      iMod ("Hmatch" with "Hlc3 Hinv_open2 HAwait")
         as (P pre post) "(%Hsplit & HP & HAwait')".
       iModIntro.
       iApply ("Hau" with "[%] HP HAwait'"). done.
-  - 
+  -
     iIntros "Hoc".
     iMod "Hmask".
     iMod ("Hinv_close" with "[Hoc]") as "_".
     { iNext. iFrame. }
-    iMod ("Hmatch" with "Hinv_open HAwait")
+    iMod ("Hmatch" with "Hlc3 Hinv_open HAwait")
       as (P pre post) "(%Hsplit & HP & HAwait')".
     iModIntro.
     iApply ("Hau" with "[%] HP HAwait'"). done.
@@ -407,7 +414,7 @@ Proof.
   iDestruct "Hmf" as "[#Hch #Hinv]".
   iApply (chan.wp_receive ch γ.(chan_name) with "[$Hch]").
   iIntros "(Hlc1 & Hlc2 & Hlc3 & Hlc4)".
-  iApply (future_await_au with "[$Hch $Hinv] [$Hlc1 $Hlc2 $HAwait]").
+  iApply (future_await_au with "[$Hch $Hinv] [$Hlc1 $Hlc2 $Hlc3 $HAwait]").
   iNext. iIntros (v P pre post) "%Hsplit HP HAwait".
   iApply ("HΦ" $! v P pre post).
   iFrame. done.

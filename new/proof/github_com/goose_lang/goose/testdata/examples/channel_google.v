@@ -2,8 +2,6 @@ From New.proof.github_com.goose_lang.goose.testdata.examples Require Import chan
 From New.golang.theory.chan.idioms
   Require Import base bag future.
 From New.code Require Import github_com.goose_lang.goose.testdata.examples.channel.
-(* TODO: use New.ghost.all instead *)
-From iris.base_logic Require Import ghost_map.
 From New.golang Require Import theory.
 
 Set Default Proof Using "Type".
@@ -17,11 +15,6 @@ Set Default Proof Using "W".
 Open Scope Z_scope.
 
 Section google_example.
-
-Context `{!chan_idiomG Σ go_string}.
-Context `{!ghost_map.ghost_mapG Σ gname (go_string → iProp Σ)}.
-#[local] Existing Instance H.
-Context `{!inG Σ unitR}.
 
 Lemma wp_Web (q : go_string) :
   {{{ True }}}
@@ -92,10 +85,10 @@ Proof.
     rewrite /pure_contract_of in Heqv. subst v. unfold value_of in Heqv.
     symmetry in Heqv.
     assert (q ++ ".html"%go ≠ q ++ ".png"%go) by set_solver.
-    assert ((q ++ ".html"%go = q ++ ".html"%go)) by done.
+    assert (q ++ ".html"%go = q ++ ".html"%go) as Htrivial by done.
     assert (q ++ ".html"%go = q ++ ".png"%go).
     {
-      rewrite Heqv in H1. done.
+      rewrite Heqv in Htrivial. done.
     }
     congruence.
   }
@@ -182,8 +175,7 @@ Proof using All.
   iMod (start_future
           (V:=go_string)
           (t:=go.string)
-          (ghost_mapG0:=H)
-          c γch (chanstate.Buffered [])
+                    c γch (chanstate.Buffered [])
         with "[$Hchan] [$Hown]") as (γmf) "(#Hmf & HAwait)".
   { right. done. }
   wp_auto.
@@ -200,8 +192,7 @@ Proof using All.
     wp_apply (wp_future_fulfill
                 (V:=go_string)
                 (t:=go.string)
-                (ghost_mapG0:=H)
-                γmf c (value_of q KWeb)
+                                γmf c (value_of q KWeb)
               with "[$Hmf $Hprom_web]");done.
   }
 
@@ -212,8 +203,7 @@ Proof using All.
     wp_apply (wp_future_fulfill
                 (V:=go_string)
                 (t:=go.string)
-                (ghost_mapG0:=H)
-                γmf c (value_of q KImg)
+                                γmf c (value_of q KImg)
               with "[$Hmf $Hprom_img]");done.
   }
 
@@ -224,8 +214,7 @@ Proof using All.
     wp_apply (wp_future_fulfill
                 (V:=go_string)
                 (t:=go.string)
-                (ghost_mapG0:=H)
-                γmf c (value_of q KVid)
+                                γmf c (value_of q KVid)
               with "[$Hmf $Hprom_vid]");done.
   }
 
@@ -263,8 +252,7 @@ Proof using All.
   - wp_apply (wp_future_await
                 (V:=go_string)
                 (t:=go.string)
-                (ghost_mapG0:=H)
-                γmf c (map (contract_of q) remk)
+                                γmf c (map (contract_of q) remk)
               with "[$Hmf $HAwait]").
     iIntros (v P pre post) "(%HsplitP & HPv & HAwait')".
     have HPmem : P ∈ map (contract_of q) remk

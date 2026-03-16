@@ -3,7 +3,6 @@ From New.golang.theory.chan.idioms
   Require Import base bag future.
 From New.code Require Import github_com.goose_lang.goose.testdata.examples.channel.
 Import channel_examples.
-From iris.base_logic Require Import ghost_map.
 From New.golang Require Import theory.
 
 Set Default Proof Using "Type".
@@ -15,9 +14,6 @@ Collection W := sem + package_sem.
 Set Default Proof Using "W".
 
 Section higher_order_example.
-
-Context `{!ghost_map.ghost_mapG Σ gname (go_string → iProp Σ)}.
-Context `{!inG Σ unitR}.
 
 Definition do_request (r: request.t) γfut (Q: go_string → iProp Σ) : iProp Σ :=
   "Hf" ∷ WP #r.(request.f') #() {{ λ v, ∃ (s: go_string), ⌜v = #s⌝ ∗ Q s }} ∗
@@ -32,13 +28,13 @@ Lemma wp_mkRequest {f: func.t} (Q: go_string → iProp Σ) :
   {{{ is_pkg_init channel_examples ∗ WP #f #() {{ λ v, ∃ (s: go_string), ⌜v = #s⌝ ∗ Q s }} }}}
     @! channel_examples.mkRequest #f
   {{{ γfut (r: request.t), RET #r; do_request r γfut Q ∗ await_request r γfut Q }}}.
-  Proof using H ext ffi ffi_interp0 ffi_semantics0 hG inG0 package_sem sem Σ.
+  Proof using All.
   wp_start as "Hf".
   wp_auto.
   wp_apply chan.wp_make2; first done.
   iIntros (ch γ) "(His & _Hcap & Hown)".
   simpl.
-  iMod (start_future (V:=go_string)  (t:=go.string) (ghost_mapG0:=H)   ch γ (chanstate.Buffered []) with "[$His] [$Hown]") as (γfuture) "(#Hfut & HAwait)".
+  iMod (start_future (V:=go_string)  (t:=go.string) ch γ (chanstate.Buffered []) with "[$His] [$Hown]") as (γfuture) "(#Hfut & HAwait)".
   { right. done. }
   iMod (future_alloc_promise (V:=go_string) (t:=go.string) γfuture ch Q [] with "Hfut HAwait") as "(Hpromise & HAwait)".
   wp_auto.
@@ -50,7 +46,7 @@ Qed.
   {{{ await_request r γfut Q }}}
     chan.receive go.string #r.(channel_examples.request.result')
   {{{ (s: go_string), RET (#s, #true); Q s }}}.
-  Proof using H ext ffi ffi_interp0 ffi_semantics0 hG inG0 package_sem sem Σ.
+  Proof using All.
 
   wp_start as "Hawait". iNamed "Hawait".
   wp_apply (wp_future_await with "[$Hfut $HAwait]").
@@ -74,7 +70,7 @@ Lemma wp_ho_worker γ ch :
   {{{ is_pkg_init channel_examples ∗ is_request_chan γ ch }}}
     @! channel_examples.ho_worker #ch
   {{{ RET #(); True }}}.
-  Proof using H ext ffi ffi_interp0 ffi_semantics0 hG inG0 package_sem sem Σ.
+  Proof using All.
   wp_start as "#His".
   rewrite /is_request_chan.
   wp_auto.
@@ -100,7 +96,7 @@ Lemma wp_HigherOrderExample :
   {{{ is_pkg_init channel_examples }}}
     @! channel_examples.HigherOrderExample #()
   {{{ (s:slice.t), RET #s; s ↦* ["hello world"%go; "HELLO"%go; "world"%go] }}}.
-  Proof using H ext ffi ffi_interp0 ffi_semantics0 hG inG0 package_sem sem Σ.
+  Proof using All.
   wp_start.
   wp_auto.
   wp_apply chan.wp_make1.
