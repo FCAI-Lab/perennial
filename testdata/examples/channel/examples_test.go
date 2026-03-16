@@ -10,7 +10,7 @@ func TestAll(t *testing.T) {
 	TestHelloWorldWithTimeout()
 	TestDSPExample()
 	TestFibConsumer()
-	TestSelectNbNoPanic()
+	TestSelectNbNotReady()
 	TestSelectReadyCaseNoPanic()
 }
 

@@ -272,7 +272,7 @@ func TestAllChannelTests(t *testing.T) {
 	channel_examples.TestHelloWorldWithTimeout()
 	channel_examples.TestDSPExample()
 	channel_examples.TestFibConsumer()
-	channel_examples.TestSelectNbNoPanic()
+	channel_examples.TestSelectNbNotReady()
 	channel_examples.TestSelectReadyCaseNoPanic()
 	channel_examples.LeakyBufferPipeline()
 	// If we get here, none of the functions panic

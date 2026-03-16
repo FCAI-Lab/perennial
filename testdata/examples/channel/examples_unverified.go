@@ -53,10 +53,10 @@ func TestFibConsumer() {
 	}
 }
 
-func TestSelectNbNoPanic() {
+func TestSelectNbNotReady() {
 	iterations := 10000
 	for i := 0; i < iterations; i++ {
-		select_nb_no_panic()
+		select_nb_not_ready()
 		// Small sleep to let the goroutine finish
 		time.Sleep(1 * time.Microsecond)
 	}
