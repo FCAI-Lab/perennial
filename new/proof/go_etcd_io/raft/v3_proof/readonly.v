@@ -571,6 +571,23 @@ Proof.
   iFrame "Hacks".
   iFrame "Hacks_wits".
   iFrame "%". simpl.
+  (* FIXME *)
+  eassert (
+  (Frame false
+     (own_heartbeat_auth γ term
+        (word.add (word.add ro.(raft.readOnly.confirmedReads')
+                                 (W64 (length unconfirmedReads)))
+           (W64 1)))
+     ("Hhb●"
+        ∷ own_heartbeat_auth γ term
+        (w64_word_instance.(word.add)
+                             ro.(raft.readOnly.confirmedReads')
+                                  (W64 (length ?[l]))))
+     ?[Q2])).
+  {
+    tc_solve.
+  }
+
   iFrame.
   iFrame "Hoption".
   Opaque own_heartbeat_auth.
