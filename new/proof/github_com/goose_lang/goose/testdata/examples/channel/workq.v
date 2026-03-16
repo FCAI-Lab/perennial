@@ -197,19 +197,17 @@ Definition is_coordinator γ (sh : workq.shared.t) : iProp Σ :=
                  ∃ totalv,
                    "Htotal" ∷ own_Int64 total (DfracOwn 1) totalv ∗
                    "Hdone" ∷ own_broadcast_chan done γdone (is_tasks_done γ sh) broadcast.Pending ∗
-                   "%Htotal" ∷ ⌜ sint.nat totalv =
-                   sum_list (imap (λ i doc, match (remaining_docs !! i) with
+                   "%Htotal" ∷ ⌜ totalv =
+                   W64 (sum_list (imap (λ i doc, match (remaining_docs !! i) with
                                             | Some (Some _) => O
                                             | _ => word_count doc
-                                            end) γ.(docs)) ⌝ ∗
-                   "%Htotal_nonneg" ∷ ⌜ (0 ≤ sint.Z totalv)%Z ⌝
+                                            end) γ.(docs))) ⌝
           ) ∗
 
          "Hremaining" ∷ own_Int64 remaining (DfracOwn 1) remainingv ∗
          "H●" ∷ own_task_auth γ remaining_docs ∗
          "%Hremaining_size" ∷ ⌜ sint.nat remainingv = size remaining_docs ⌝ ∗
-         "%Hdocs_agree" ∷ ⌜ map_Forall (λ (i : nat) (v : option go_string), match v with Some doc => γ.(docs) !! i = Some doc | None => True end) remaining_docs ⌝ ∗
-         "%Hoverflow" ∷ ⌜ (Z.of_nat (sum_list (word_count <$> γ.(docs))) < 2^63)%Z ⌝
+         "%Hdocs_agree" ∷ ⌜ map_Forall (λ (i : nat) (v : option go_string), match v with Some doc => γ.(docs) !! i = Some doc | None => True end) remaining_docs ⌝
         ).
 
 Definition is_Worker γ (w : loc) : iProp Σ :=
@@ -267,37 +265,17 @@ Proof.
     iPureIntro.
     split_and!.
     - destruct Hlen as [Hlen ?].
-      replace (sint.nat _) with
-        (sint.nat totalv + length ss)%nat.
-      2:{
-        assert (γ.(docs) !! i = Some doc) as Hdoc_i'.
-        { eapply map_Forall_lookup_1 in Hdocs_agreeinv; [|exact Hlookup]. simpl in Hdocs_agreeinv. done. }
-        pose proof (imap_sum_le word_count γ.(docs) (<[i:=None]> remaining_docs)) as Hle.
-        rewrite (imap_sum_insert_none word_count _ _ _ _ Hlookup) in Hle;
-          [| eapply lookup_lt_Some; eauto | done].
-        rewrite -Htotalinv -H in Hle.
-        rewrite Hlen.
-        word. }
       assert (γ.(docs) !! i = Some doc) as Hdoc_i.
       { eapply map_Forall_lookup_1 in Hdocs_agreeinv; [|exact Hlookup]. simpl in Hdocs_agreeinv. done. }
-      rewrite Htotalinv. rewrite H.
+      rewrite Htotalinv.
       rewrite (imap_sum_insert_none word_count _ _ _ _ Hlookup).
-      { lia. }
+      { word. }
       { eapply lookup_lt_Some. eauto. }
       { done. }
-      (* TODO: pure fact *)
-    - (* 0 ≤ sint.Z (word.add totalv sl.len) *)
-      assert (γ.(docs) !! i = Some doc) as Hdoc_i'.
-      { eapply map_Forall_lookup_1 in Hdocs_agreeinv; [|exact Hlookup]. simpl in Hdocs_agreeinv. done. }
-      pose proof (imap_sum_le word_count γ.(docs) (<[i:=None]> remaining_docs)) as Hle'.
-      rewrite (imap_sum_insert_none word_count _ _ _ _ Hlookup) in Hle';
-        [| eapply lookup_lt_Some; eauto | done].
-      rewrite -Htotalinv in Hle'. word.
     - rewrite map_size_insert_Some //.
     - apply map_Forall_insert_2; [done|].
       eapply map_Forall_impl; [apply Hdocs_agreeinv|].
       intros k v Hv. destruct v; done.
-    - done.
   }
   iModIntro.
   wp_auto.
@@ -336,7 +314,7 @@ Proof.
       iExactEq "Htotaldone".
       f_equal.
       (* remaining_docs0 is a singleton {[i := None]}, so no entry is Some (Some _) *)
-      rewrite (imap_sum_no_some_some word_count) in Htotaldone.
+      rewrite (imap_sum_no_some_some word_count).
       2:{ intros j Hj d Habs.
           (* remaining_docs0 has size 1 (from e : remainingv0 + (-1) = 0) *)
           assert (size remaining_docs0 = 1)%nat as Hsize1.
@@ -373,7 +351,6 @@ Proof.
       rewrite decide_False //.
       iFrame. iPureIntro. split_and!.
       - rewrite (imap_sum_delete_none word_count _ _ _ H0). done.
-      - done.
       - rewrite map_size_delete_Some //.
         word.
       - apply map_Forall_delete. done.
@@ -513,8 +490,7 @@ Proof.
 Qed.
 
 Lemma wp_wordCount docs_sl docs :
-  {{{ is_pkg_init workq ∗ "Hdocs" ∷ docs_sl ↦* docs ∗
-      "%Hoverflow" ∷ ⌜ (Z.of_nat (sum_list (word_count <$> docs)) < 2^63)%Z ⌝ }}}
+  {{{ is_pkg_init workq ∗ "Hdocs" ∷ docs_sl ↦* docs }}}
     @! workq.wordCount #docs_sl
   {{{ RET #(W64 (sum_list (word_count <$> docs))); True }}}.
 Proof.
@@ -675,12 +651,11 @@ Proof.
     iMod (inv_alloc with "[-]") as "$"; last done.
     iFrame. iSplitL "Hopen total".
     { destruct decide; iFrame; try done.
-      iPureIntro. split.
-      { rewrite (imap_sum_all_some word_count); first done.
-        intros j Hj. rewrite lookup_map_seq_0 list_lookup_fmap.
-        apply lookup_lt_is_Some_2 in Hj. destruct Hj as [d Hd].
-        rewrite Hd /=. eauto. }
-      { word. } }
+      iPureIntro.
+      rewrite (imap_sum_all_some word_count); first done.
+      intros j Hj. rewrite lookup_map_seq_0 list_lookup_fmap.
+      apply lookup_lt_is_Some_2 in Hj. destruct Hj as [d Hd].
+      rewrite Hd /=. eauto. }
     iPureIntro.
     split_and!.
     - rewrite map_seq_size length_fmap. done.
@@ -688,7 +663,6 @@ Proof.
       rewrite list_lookup_fmap in Hj.
       destruct (docs !! j) eqn:E; simpl in Hj; [|done].
       injection Hj as Hj. subst. done.
-    - done.
   }
 
   rename i_ptr into j_ptr. iRename "i" into "j".
