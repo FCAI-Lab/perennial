@@ -40,6 +40,7 @@ Proof using W.
     iIntros (sl) ("Hsl"). wp_auto.
     wp_alloc ch as "Hch".
     wp_auto.
+    iDestruct (typed_pointsto_not_null with "Hch") as "%Hnot_null".
     iStructNamedPrefix "Hch" "H".
     iMod (ghost_var_alloc (chanstate.Buffered []))
       as (state_gname) "[Hstate_auth Hstate_frag]".
@@ -78,7 +79,6 @@ Proof using W.
     iFrame "#". simpl.
     rewrite decide_False; [ | word ].
     unfold is_chan. iFrame "∗#". iPureIntro.
-    assert (ch ≠ chan.nil) by admit. (* FIXME: non-nilness. *)
     split; first done. unfold chan_cap_valid. simpl; word.
   }
   {
@@ -91,6 +91,7 @@ Proof using W.
     iIntros (sl) ("Hsl"). wp_auto.
     wp_alloc ch as "Hch".
     wp_auto.
+    iDestruct (typed_pointsto_not_null with "Hch") as "%Hnot_null".
     iStructNamedPrefix "Hch" "H". simpl.
     iMod (ghost_var_alloc chanstate.Idle)
       as (state_gname) "[Hstate_auth Hstate_frag]".
@@ -123,9 +124,9 @@ Proof using W.
     }
     iModIntro.  iApply ("HΦ" $! _ γ).
     unfold is_chan. iFrame "∗#". simpl.
-    iFrame "∗#". assert (ch ≠ chan.nil) by admit. (* FIXME: non-nilness. *)
+    iFrame "∗#".
     iPureIntro. rewrite /chan_cap_valid //.
   }
-Admitted.
+Qed.
 
 End new_spec.
