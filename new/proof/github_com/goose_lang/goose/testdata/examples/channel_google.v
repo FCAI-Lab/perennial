@@ -2,6 +2,7 @@ From New.proof.github_com.goose_lang.goose.testdata.examples Require Import chan
 From New.golang.theory.chan.idioms
   Require Import base bag future.
 From New.code Require Import github_com.goose_lang.goose.testdata.examples.channel.
+(* TODO: use New.ghost.all instead *)
 From iris.base_logic Require Import ghost_map.
 From New.golang Require Import theory.
 
@@ -23,19 +24,19 @@ Context `{!ghost_map.ghost_mapG Σ gname (go_string → iProp Σ)}.
 Context `{!inG Σ unitR}.
 
 Lemma wp_Web (q : go_string) :
-  {{{ is_pkg_init channel_examples }}}
+  {{{ True }}}
     @! channel_examples.Web #q
   {{{ RET #(q ++ ".html"%go); True }}}.
 Proof. wp_start. wp_auto. iApply "HΦ". done. Qed.
 
 Lemma wp_Image (q : go_string) :
-  {{{ is_pkg_init channel_examples }}}
+  {{{ True }}}
     @! channel_examples.Image #q
   {{{ RET #(q ++ ".png"%go); True }}}.
 Proof. wp_start. wp_auto. iApply "HΦ". done. Qed.
 
 Lemma wp_Video (q : go_string) :
-  {{{ is_pkg_init channel_examples }}}
+  {{{ True }}}
     @! channel_examples.Video #q
   {{{ RET #(q ++ ".mp4"%go); True }}}.
 Proof. wp_start. wp_auto. iApply "HΦ". done. Qed.
@@ -169,7 +170,7 @@ Proof.
 Qed.
 
 Lemma wp_Google (q : go_string) :
-  {{{ is_pkg_init channel_examples }}}
+  {{{ True }}}
     @! channel_examples.Google #q
   {{{ (sl : slice.t), RET #sl;
       ∃ xs, sl ↦* xs ∗ ⌜xs ≡ₚ google_expected q⌝ }}}.

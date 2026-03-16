@@ -2,6 +2,7 @@ Require Import New.proof.proof_prelude.
 From New.golang.theory Require Import chan.
 From New.golang.theory.chan.idioms Require Export base.
 From New.golang.theory Require Import chan.
+(* TODO: use New.ghost.all instead *)
 From iris.base_logic Require Import ghost_map.
 
 
