@@ -1,11 +1,11 @@
 From New.proof Require Import proof_prelude.
 
-From New.proof Require Import sync.atomic strings fmt sync time
-  github_com.goose_lang.goose.model.channel.idiom.closeable.closeable.
+From New.proof Require Import sync.atomic strings fmt sync time.
+From New.golang.theory.chan.idioms Require Import closeable.
 From New.generatedproof.github_com.goose_lang.goose.testdata.examples.channel
   Require Import etcd_session.
 
-From New.proof.github_com.goose_lang.goose.model.channel Require Import idioms.
+From New.golang.theory.chan.idioms Require Import idioms.
 Import bag.
 
 Section wps.

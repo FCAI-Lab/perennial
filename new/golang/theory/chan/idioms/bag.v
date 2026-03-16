@@ -1,5 +1,5 @@
 Require Import New.proof.proof_prelude.
-From New.proof.github_com.goose_lang.goose.model.channel Require Import
+From New.golang.theory.chan.au_spec Require Import
   chan_au_base.
 Require Import New.golang.theory.
 

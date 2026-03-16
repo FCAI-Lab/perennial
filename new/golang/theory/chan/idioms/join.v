@@ -1,6 +1,6 @@
 Require Import New.proof.proof_prelude.
 From New.golang.theory Require Import chan.
-From New.proof.github_com.goose_lang.goose.model.channel.idiom Require Export base.
+From New.golang.theory.chan.idioms Require Export base.
 
 Module join.
 

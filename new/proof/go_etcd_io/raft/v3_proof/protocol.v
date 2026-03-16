@@ -1,7 +1,8 @@
 Require Export New.proof.go_etcd_io.raft.v3_proof.base.
-From New.proof.github_com.goose_lang.goose.model.channel.idiom.closeable Require Import closeable.
-From New.proof.github_com.goose_lang.goose.model.channel
-  Require Import logatom.chan_au_base idiom.bag.bag.
+From New.golang.theory.chan.idioms Require Import closeable.
+From New.golang.theory.chan.au_spec
+  Require Import chan_au_base.
+From New.golang.theory.chan.idioms Require Import bag.
 
 Module node.
 Axiom t : Type.

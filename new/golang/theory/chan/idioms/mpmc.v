@@ -1,6 +1,6 @@
 Require Import New.proof.proof_prelude.
-From New.proof.github_com.goose_lang.goose.model.channel Require Import idiom.base.
-From New.proof.github_com.goose_lang.goose.model.channel Require Export contrib.
+From New.golang.theory.chan.idioms Require Import base.
+From New.golang.theory.chan.idioms Require Export contrib.
 From New.golang.theory Require Import chan.
 From iris.algebra Require Import gmultiset big_op.
 From iris.algebra Require Export csum.

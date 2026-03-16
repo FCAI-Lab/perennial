@@ -4,8 +4,8 @@ From New.proof Require Import sync.atomic strings fmt.
 From New.generatedproof.github_com.goose_lang.goose.testdata.examples.channel
   Require Import workq.
 
-From New.proof Require Import github_com.goose_lang.goose.model.channel.idiom.bag.bag.
-From New.proof Require Import github_com.goose_lang.goose.model.channel.idiom.closeable.closeable.
+From New.golang.theory.chan.idioms Require Import bag.
+From New.golang.theory.chan.idioms Require Import closeable.
 
 Local Lemma map_seq_size {A : Type} (start : nat) (xs : list A) :
   size (map_seq start xs : gmap nat A) = length xs.

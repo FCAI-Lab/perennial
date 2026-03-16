@@ -1,6 +1,6 @@
 From New.proof.github_com.goose_lang.goose.testdata.examples Require Import channel_examples_init.
-From New.proof.github_com.goose_lang.goose.model.channel
-  Require Import idiom.base spsc.
+From New.golang.theory.chan.idioms
+  Require Import base spsc.
 From New.code Require Import github_com.goose_lang.goose.testdata.examples.channel.
 From New.golang Require Import theory.
 

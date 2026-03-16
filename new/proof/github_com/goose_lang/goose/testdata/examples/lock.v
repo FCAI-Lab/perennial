@@ -1,9 +1,8 @@
 From New.proof Require Export proof_prelude.
 From New.golang.theory Require Import chan.
 From New.proof Require Import strings.
-From New.proof.github_com.goose_lang.goose.model.channel Require Import
-  idiom.base lock bag.
-From New.proof Require Import github_com.goose_lang.goose.model.channel.idiom.closeable.closeable.
+From New.golang.theory.chan.idioms Require Import
+  base lock bag closeable.
 From New.proof Require Import time.
 From New.generatedproof.github_com.goose_lang.goose.testdata.examples.channel Require Import lock.
 Import New.code.github_com.goose_lang.goose.testdata.examples.channel.lock.lock.

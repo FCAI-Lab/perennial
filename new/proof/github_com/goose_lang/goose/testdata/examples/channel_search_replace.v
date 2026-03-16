@@ -1,7 +1,8 @@
 From New.proof Require Export proof_prelude.
 From New.golang.theory Require Import chan.
-From New.proof.github_com.goose_lang.goose.model.channel
-  Require Import idiom.base chan_au_base bag.
+From New.golang.theory.chan.au_spec
+  Require Import chan_au_base.
+From New.golang.theory.chan.idioms Require Import base bag.
 From New.proof Require Import sync strings time tok_set.
 From New.generatedproof.github_com.goose_lang.goose.testdata.examples.channel Require Import parallel_search_replace.
 

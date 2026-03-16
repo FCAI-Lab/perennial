@@ -1,6 +1,6 @@
 From New.proof.github_com.goose_lang.goose.testdata.examples Require Import channel_examples_init.
-From New.proof.github_com.goose_lang.goose.model.channel
-  Require Import idiom.base bag future.
+From New.golang.theory.chan.idioms
+  Require Import base bag future.
 From New.code Require Import github_com.goose_lang.goose.testdata.examples.channel.
 From iris.base_logic Require Import ghost_map.
 From New.golang Require Import theory.

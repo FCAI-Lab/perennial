@@ -1,6 +1,7 @@
 From New.proof.github_com.goose_lang.goose.testdata.examples Require Import channel_examples_init.
-From New.proof.github_com.goose_lang.goose.model.channel
-  Require Import idiom.base dsp dsp_proofmode mpmc.
+From New.golang.theory.chan.idioms
+  Require Import base mpmc.
+From New.golang.theory.chan.idioms.dsp Require Import dsp dsp_proofmode.
 From New.code Require Import github_com.goose_lang.goose.testdata.examples.channel.
 Import channel_examples.
 From New.golang Require Import theory.

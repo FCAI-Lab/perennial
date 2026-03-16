@@ -14,7 +14,7 @@ From New.proof.crypto Require Import ed25519.
 From New.proof.encoding Require Import binary.
 From New.proof.internal Require Import race synctest.
 From New.proof.math Require Import bits.
-From New.proof.github_com.goose_lang.goose.model.channel.idiom Require idioms.
+From New.golang.theory.chan.idioms Require idioms.
 
 From New.generatedproof Require math.rand testing.
 

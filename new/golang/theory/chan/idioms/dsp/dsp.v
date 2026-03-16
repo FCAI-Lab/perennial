@@ -1,8 +1,8 @@
 Require Import New.proof.proof_prelude.
-From New.proof.github_com.goose_lang.goose.model.channel
+From New.golang.theory.chan.au_spec
      Require Export chan_au_base.
 From New.golang.theory Require Import chan.
-From New.proof.github_com.goose_lang.goose.model.channel
+From New.golang.theory.chan.idioms.dsp
      Require Export dsp_ghost_theory.
 From New.ghost Require Import token.
 

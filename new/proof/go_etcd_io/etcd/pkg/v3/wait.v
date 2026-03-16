@@ -1,8 +1,9 @@
 Require Export New.generatedproof.go_etcd_io.etcd.pkg.v3.wait.
 Require Export New.proof.proof_prelude.
 From New.proof Require Import log sync.
-From New.proof.github_com.goose_lang.goose.model.channel
-  Require Import logatom.chan_au_base idiom.bag.bag.
+From New.golang.theory.chan.au_spec
+  Require Import chan_au_base.
+From New.golang.theory.chan.idioms Require Import bag.
 
 Section wps.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.

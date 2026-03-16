@@ -1,8 +1,9 @@
 (* TODO: there should be a directory for this Go package. *)
 
 From New.golang.theory Require Import chan.
-From New.proof.github_com.goose_lang.goose.model.channel
-  Require Import chan_au_base idiom.base.
+From New.golang.theory.chan.au_spec
+  Require Import chan_au_base.
+From New.golang.theory.chan.idioms Require Import base.
 From New.proof Require Import sync strings time.
 From New.generatedproof.github_com.goose_lang.goose.testdata.examples.channel Require Import elimination_stack.
 From New.proof Require Export proof_prelude.
