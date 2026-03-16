@@ -1,4 +1,4 @@
-package chan_spec_raw_examples
+package channel_examples
 
 type stream struct {
 	req chan string

@@ -1,13 +1,17 @@
-package chan_spec_raw_examples
+package channel_examples
 
-import "time"
+import (
+	"time"
+
+	"github.com/goose-lang/goose/testdata/examples/channel/lock"
+)
 
 type Cond struct {
-	L       Lock
+	L       lock.Lock
 	waiters []chan struct{} // protected by L
 }
 
-func NewCond(L Lock) *Cond {
+func NewCond(L lock.Lock) *Cond {
 	return &Cond{L: L}
 }
 

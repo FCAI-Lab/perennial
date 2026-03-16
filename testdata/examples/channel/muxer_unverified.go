@@ -1,4 +1,4 @@
-package chan_spec_raw_examples
+package channel_examples
 
 func CancellableMapServer(s streamold, done chan struct{}) {
 	for {

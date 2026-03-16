@@ -25,7 +25,7 @@ import (
 	"testing"
 
 	"github.com/goose-lang/goose"
-	chan_spec_raw_examples "github.com/goose-lang/goose/testdata/examples/channel"
+	channel_examples "github.com/goose-lang/goose/testdata/examples/channel"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -268,13 +268,13 @@ func TestNegativeExamples(testingT *testing.T) {
 
 // Tests of channel code
 func TestAllChannelTests(t *testing.T) {
-	chan_spec_raw_examples.TestHelloWorldSync()
-	chan_spec_raw_examples.TestHelloWorldWithTimeout()
-	chan_spec_raw_examples.TestDSPExample()
-	chan_spec_raw_examples.TestFibConsumer()
-	chan_spec_raw_examples.TestSelectNbNoPanic()
-	chan_spec_raw_examples.TestSelectReadyCaseNoPanic()
-	chan_spec_raw_examples.LeakyBufferPipeline()
+	channel_examples.TestHelloWorldSync()
+	channel_examples.TestHelloWorldWithTimeout()
+	channel_examples.TestDSPExample()
+	channel_examples.TestFibConsumer()
+	channel_examples.TestSelectNbNoPanic()
+	channel_examples.TestSelectReadyCaseNoPanic()
+	channel_examples.LeakyBufferPipeline()
 	// If we get here, none of the functions panic
 	t.Log("All channel tests passed successfully!")
 }

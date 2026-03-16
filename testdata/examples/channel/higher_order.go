@@ -1,4 +1,4 @@
-package chan_spec_raw_examples
+package channel_examples
 
 type request struct {
 	f      func() string

@@ -1,4 +1,4 @@
-package chan_spec_raw_examples
+package lock
 
 import (
 	"time"

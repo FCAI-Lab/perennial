@@ -1,4 +1,4 @@
-package chan_spec_raw_examples
+package parallel_search_replace
 
 import (
 	"testing"

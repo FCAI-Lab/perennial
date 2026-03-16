@@ -1,4 +1,4 @@
-package chan_spec_raw_examples
+package elimination_stack
 
 import (
 	"fmt"

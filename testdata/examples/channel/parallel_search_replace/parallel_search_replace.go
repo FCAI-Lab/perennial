@@ -1,4 +1,4 @@
-package chan_spec_raw_examples
+package parallel_search_replace
 
 // Extracted from Gobra at
 // https://github.com/viperproject/gobra/blob/b573af1cfd79d624489a5f5846d9cc0b8eb83e17/src/test/resources/regressions/examples/evaluation/parallel_search_replace.gobra/

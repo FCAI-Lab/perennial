@@ -1,12 +1,14 @@
-package chan_spec_raw_examples
+package channel_examples
 
 import (
 	"testing"
 	"time"
+
+	"github.com/goose-lang/goose/testdata/examples/channel/lock"
 )
 
 func TestWait_BlocksUntilSignal(t *testing.T) {
-	l := NewLock()
+	l := lock.NewLock()
 	cv := NewCond(l)
 
 	got := make(chan bool, 1)
@@ -41,7 +43,7 @@ func TestWait_BlocksUntilSignal(t *testing.T) {
 }
 
 func TestSignal_NoWaiters_NoPanic(t *testing.T) {
-	l := NewLock()
+	l := lock.NewLock()
 	cv := NewCond(l)
 
 	l.Lock()
@@ -50,7 +52,7 @@ func TestSignal_NoWaiters_NoPanic(t *testing.T) {
 }
 
 func TestBroadcast_NoWaiters_NoPanic(t *testing.T) {
-	l := NewLock()
+	l := lock.NewLock()
 	cv := NewCond(l)
 
 	l.Lock()
@@ -59,7 +61,7 @@ func TestBroadcast_NoWaiters_NoPanic(t *testing.T) {
 }
 
 func TestWaitFor_TimesOut(t *testing.T) {
-	l := NewLock()
+	l := lock.NewLock()
 	cv := NewCond(l)
 
 	l.Lock()
@@ -81,7 +83,7 @@ func TestWaitFor_TimesOut(t *testing.T) {
 }
 
 func TestWaitFor_SignalWins(t *testing.T) {
-	l := NewLock()
+	l := lock.NewLock()
 	cv := NewCond(l)
 
 	done := make(chan struct{}, 1)
@@ -110,7 +112,7 @@ func TestWaitFor_SignalWins(t *testing.T) {
 }
 
 func TestWaitUntil_DeadlineInPast_ReturnsFalseImmediately(t *testing.T) {
-	l := NewLock()
+	l := lock.NewLock()
 	cv := NewCond(l)
 
 	l.Lock()
@@ -128,7 +130,7 @@ func TestWaitUntil_DeadlineInPast_ReturnsFalseImmediately(t *testing.T) {
 }
 
 func TestWaitUntil_TimesOutAroundDeadline(t *testing.T) {
-	l := NewLock()
+	l := lock.NewLock()
 	cv := NewCond(l)
 
 	l.Lock()
@@ -150,7 +152,7 @@ func TestWaitUntil_TimesOutAroundDeadline(t *testing.T) {
 }
 
 func TestWaitFor_TimeoutRemovesStaleWaiter_SignalWakesNext(t *testing.T) {
-	l := NewLock()
+	l := lock.NewLock()
 	cv := NewCond(l)
 
 	// 1) First waiter times out and must remove itself from the queue.
@@ -197,7 +199,7 @@ func TestWaitFor_TimeoutRemovesStaleWaiter_SignalWakesNext(t *testing.T) {
 }
 
 func TestBroadcast_WakesAll(t *testing.T) {
-	l := NewLock()
+	l := lock.NewLock()
 	cv := NewCond(l)
 
 	const n = 5
