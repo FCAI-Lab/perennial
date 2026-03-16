@@ -3,7 +3,7 @@ Require Import New.generatedproof.go_etcd_io.etcd.client.v3.concurrency.
 Require Import New.proof.proof_prelude.
 Require Import New.proof.go_etcd_io.etcd.client.v3.
 From New.proof Require Import context sync time math errors fmt.
-From New.golang.theory.chan.idioms Require Import closeable.
+From New.golang.theory.chan.idioms Require Import broadcast.
 
 Ltac2 Set wp_apply_auto_default := Ltac2.Init.false.
 
@@ -40,7 +40,7 @@ Definition is_Session (s : loc) γ (lease : clientv3.LeaseID.t) : iProp Σ :=
   "#donec" ∷ s.[concurrency.Session.t, "donec"] ↦□ donec ∗
   (* One can keep calling receive, and the only thing they might get back is a
      "closed" value. *)
-  "#Hdonec" ∷ own_closeable_chan donec γdonec True closeable.Unknown.
+  "#Hdonec" ∷ own_broadcast_chan donec γdonec True broadcast.Unknown.
 
 #[global] Opaque is_Session.
 #[local] Transparent is_Session.
@@ -104,8 +104,8 @@ Proof.
   wp_alloc s as "Hs".
   wp_auto.
   iPersist "cancel donec keepAlive".
-  iMod (alloc_closeable_chan True with "[$] [$]") as "Hdonec_open".
-  iDestruct (own_closeable_chan_Unknown with "[$]") as "#?".
+  iMod (alloc_broadcast_chan True with "[$] [$]") as "Hdonec_open".
+  iDestruct (own_broadcast_chan_Unknown with "[$]") as "#?".
   rewrite -wp_fupd.
   wp_apply (wp_fork with "[Hdonec_open Hcancel]").
   {
@@ -119,7 +119,7 @@ Proof.
     wp_if_destruct.
     { wp_for_post. iFrame. }
     wp_for_post.
-    wp_apply (wp_closeable_chan_close with "[$Hdonec_open]") as "_".
+    wp_apply (wp_broadcast_chan_close with "[$Hdonec_open]") as "_".
     { iFrame "#". done. }
     wp_auto. wp_apply "Hcancel". wp_auto.
     done.
@@ -143,7 +143,7 @@ Qed.
 Lemma wp_Session__Done s γ lease :
   {{{ is_pkg_init concurrency ∗ is_Session s γ lease }}}
     s @! (go.PointerType concurrency.Session) @! "Done" #()
-  {{{ ch γch, RET #ch; own_closeable_chan ch γch True closeable.Unknown }}}.
+  {{{ ch γch, RET #ch; own_broadcast_chan ch γch True broadcast.Unknown }}}.
 Proof.
   wp_start. iNamed "Hpre". wp_auto. wp_end.
 Qed.

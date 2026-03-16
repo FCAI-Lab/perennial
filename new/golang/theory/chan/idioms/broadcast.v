@@ -3,23 +3,23 @@ Require Import New.golang.theory.
 Require Import New.proof.proof_prelude.
 
 (** A pattern for channel usage: a channel that never has anything sent, and is
-    only closed at some point. Closing transfers a persistent proposition to
-    readers. *)
+    only closed at some point. Closing broadcasts a persistent proposition to
+    all readers. *)
 
-Record closeable_internal_names :=
-  { closed_gn : gname }.
+Record broadcast_internal_names :=
+  { done_gn : gname }.
 
-Module closeable.
-Inductive t := Open | Closed | Unknown.
-End closeable.
-Import closeable.
+Module broadcast.
+Inductive t := Pending | Done | Unknown.
+End broadcast.
+Import broadcast.
 
 Section proof.
 
 Context `{hG: heapGS Σ, !ffi_semantics _ _} `{!go.Semantics}.
 
 (* Note: could make the namespace be user-chosen *)
-#[local] Definition is_closeable_chan_internal (ch : chan.t) γ γch (Q : iProp Σ) : iProp Σ :=
+#[local] Definition is_broadcast_chan_internal (ch : chan.t) γ γch (Q : iProp Σ) : iProp Σ :=
   "#His_ch" ∷ is_chan ch γ unit ∗
   "#Hinv" ∷ inv nroot (
       ∃ (st : chanstate.t unit),
@@ -27,31 +27,31 @@ Context `{hG: heapGS Σ, !ffi_semantics _ _} `{!go.Semantics}.
         "Hs" ∷ (match st with
                 | chanstate.Idle
                 | chanstate.RcvPending =>
-                    own γch.(closed_gn) (to_dfrac_agree (DfracOwn (1/2)) false)
+                    own γch.(done_gn) (to_dfrac_agree (DfracOwn (1/2)) false)
                 | chanstate.Closed [] =>
-                    □ Q ∗ own γch.(closed_gn) (to_dfrac_agree DfracDiscarded true)
+                    □ Q ∗ own γch.(done_gn) (to_dfrac_agree DfracDiscarded true)
                 | _ => False
                 end)
     ).
 
-Definition own_closeable_chan (ch : chan.t) γ (Q : iProp Σ) (closed : closeable.t) : iProp Σ :=
+Definition own_broadcast_chan (ch : chan.t) γ (Q : iProp Σ) (st : broadcast.t) : iProp Σ :=
   ∃ γch,
-  "#Hinv" ∷ is_closeable_chan_internal ch γ γch Q ∗
-  "Hown" ∷ (match closed with
-            | Open => own γch.(closed_gn) (to_dfrac_agree (DfracOwn (1/2)) false)
-            | Closed => own γch.(closed_gn) (to_dfrac_agree DfracDiscarded true)
+  "#Hinv" ∷ is_broadcast_chan_internal ch γ γch Q ∗
+  "Hown" ∷ (match st with
+            | Pending => own γch.(done_gn) (to_dfrac_agree (DfracOwn (1/2)) false)
+            | Done => own γch.(done_gn) (to_dfrac_agree DfracDiscarded true)
             | Unknown => True
             end).
 
-#[global] Opaque own_closeable_chan.
-#[local] Transparent own_closeable_chan.
-#[global] Instance own_closeable_chan_Unknown_pers ch γch P :
-  Persistent (own_closeable_chan ch γch P Unknown) := _.
-#[global] Instance own_closeable_chan_Closed_pers ch γch P :
-  Persistent (own_closeable_chan ch γch P Closed) := _.
+#[global] Opaque own_broadcast_chan.
+#[local] Transparent own_broadcast_chan.
+#[global] Instance own_broadcast_chan_Unknown_pers ch γch P :
+  Persistent (own_broadcast_chan ch γch P Unknown) := _.
+#[global] Instance own_broadcast_chan_Done_pers ch γch P :
+  Persistent (own_broadcast_chan ch γch P Done) := _.
 
-Lemma closeable_chan_closed ch γ Q :
-  £ 1 -∗ own_closeable_chan ch γ Q Closed ={⊤}=∗
+Lemma broadcast_chan_done ch γ Q :
+  £ 1 -∗ own_broadcast_chan ch γ Q Done ={⊤}=∗
   Q.
 Proof.
   iIntros "Hlc". iNamed 1. iNamed "Hinv". iInv "Hinv" as "Hi" "Hclose".
@@ -64,9 +64,9 @@ Proof.
     iModIntro. iFrame "#".
 Qed.
 
-Lemma closeable_chan_receive ch γ Q Φ cl :
-  own_closeable_chan ch γ Q cl -∗
-  (□Q ∗ own_closeable_chan ch γ Q Closed -∗ Φ () false) -∗
+Lemma broadcast_chan_receive ch γ Q Φ cl :
+  own_broadcast_chan ch γ Q cl -∗
+  (□Q ∗ own_broadcast_chan ch γ Q Done -∗ Φ () false) -∗
   recv_au γ unit Φ.
 Proof.
   iNamed 1. iIntros "HΦ".  iNamed "Hinv".
@@ -87,14 +87,14 @@ Proof.
     iApply "HΦ". iModIntro. iFrame "∗#".
 Qed.
 
-Lemma own_closeable_chan_nonblocking_receive ch γ Q Φ Φnotready cl :
-  own_closeable_chan ch γ Q cl -∗
+Lemma own_broadcast_chan_nonblocking_receive ch γ Q Φ Φnotready cl :
+  own_broadcast_chan ch γ Q cl -∗
   (match cl with
-   | Unknown | Closed => (own_closeable_chan ch γ Q Closed -∗ Φ () false)
+   | Unknown | Done => (own_broadcast_chan ch γ Q Done -∗ Φ () false)
    | _ => True
    end ∧
    match cl with
-   | Unknown | Open => (own_closeable_chan ch γ Q cl -∗ Φnotready)
+   | Unknown | Pending => (own_broadcast_chan ch γ Q cl -∗ Φnotready)
    | _ => True
    end)
   -∗
@@ -122,10 +122,10 @@ Proof.
       iMod "Hmask" as "_". iMod ("Hclose" with "[-]"); last done. iFrame "∗#".
 Qed.
 
-Lemma closeable_close_au ch γch Q Φ :
-  own_closeable_chan ch γch Q Open -∗
+Lemma broadcast_close_au ch γch Q Φ :
+  own_broadcast_chan ch γch Q Pending -∗
   □ Q -∗
-  ▷ (own_closeable_chan ch γch Q Closed -∗ Φ) -∗
+  ▷ (own_broadcast_chan ch γch Q Done -∗ Φ) -∗
   close_au γch unit Φ.
 Proof.
   iNamed 1. iIntros "#HQ HΦ". iNamed "Hinv".
@@ -142,23 +142,23 @@ Proof.
     iCombine "Hown Hs" gives %Hbad%dfrac_agree_op_valid. exfalso. naive_solver.
 Qed.
 
-Lemma wp_closeable_chan_close `[!ty ↓u go.ChannelType dir (go.StructType [])] ch γch Q :
-  {{{ own_closeable_chan ch γch Q Open ∗ □ Q }}}
+Lemma wp_broadcast_chan_close `[!ty ↓u go.ChannelType dir (go.StructType [])] ch γch Q :
+  {{{ own_broadcast_chan ch γch Q Pending ∗ □ Q }}}
   #(functions go.close [ty]) #ch
-  {{{ RET #(); own_closeable_chan ch γch Q Closed }}}.
+  {{{ RET #(); own_broadcast_chan ch γch Q Done }}}.
 Proof.
   wp_start_folded as "[Hown #HQ]".
   iAssert (is_chan ch γch unit) as "#His".
   { iNamed "Hown". iNamed "Hinv". iFrame "#". }
   wp_apply (chan.wp_close with "His"). iIntros "Hlcs".
-  iApply (closeable_close_au with "Hown HQ [HΦ]").
+  iApply (broadcast_close_au with "Hown HQ [HΦ]").
   iNext. iIntros "Hclosed". by iApply "HΦ".
 Qed.
 
-Lemma alloc_closeable_chan {E} Q γ ch :
+Lemma alloc_broadcast_chan {E} Q γ ch :
   is_chan ch γ unit -∗
   own_chan γ unit chanstate.Idle ={E}=∗
-  own_closeable_chan ch γ Q Open.
+  own_broadcast_chan ch γ Q Pending.
 Proof.
   iIntros "#? Hch".
   iMod (own_alloc
@@ -166,20 +166,20 @@ Proof.
        ) as (tok_gn) "Htok".
   { rewrite -dfrac_agree_op //. }
   iDestruct "Htok" as "[Htok Htok2]".
-  iAssert (|={E}=> is_closeable_chan_internal ch γ ltac:(econstructor) Q)%I with "[-Htok]" as ">#H".
+  iAssert (|={E}=> is_broadcast_chan_internal ch γ ltac:(econstructor) Q)%I with "[-Htok]" as ">#H".
   2:{ iFrame "∗#". simpl. iFrame. done. }
   simpl. iFrame.
   iMod (inv_alloc with "[-]") as "$"; last done.
   iFrame. iFrame.
 Qed.
 
-Lemma own_closeable_chan_Unknown ch γ Q cl :
-  own_closeable_chan ch γ Q cl -∗
-  own_closeable_chan ch γ Q Unknown.
+Lemma own_broadcast_chan_Unknown ch γ Q cl :
+  own_broadcast_chan ch γ Q cl -∗
+  own_broadcast_chan ch γ Q Unknown.
 Proof. iNamed 1. iFrame "#". Qed.
 
-Lemma own_closeable_chan_is_chan ch γ Q cl :
-  own_closeable_chan ch γ Q cl -∗
+Lemma own_broadcast_chan_is_chan ch γ Q cl :
+  own_broadcast_chan ch γ Q cl -∗
   is_chan ch γ unit.
 Proof. iNamed 1. iNamed "Hinv". iFrame "#". Qed.
 

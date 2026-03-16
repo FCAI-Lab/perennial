@@ -1,6 +1,6 @@
 From New.golang.theory.chan.idioms Require
   bag
-  closeable
+  broadcast
   future
   handshake
   lock

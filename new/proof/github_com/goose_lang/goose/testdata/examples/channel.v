@@ -1,6 +1,6 @@
 From New.proof.github_com.goose_lang.goose.testdata.examples Require Import channel_examples_init.
 From New.golang.theory.chan.idioms
-  Require Import base bag handshake closeable join.
+  Require Import base bag handshake broadcast join.
 From New.proof Require Import strings time sync.
 From iris.base_logic Require Import ghost_map.
 From New.golang Require Import theory.
@@ -38,7 +38,7 @@ Lemma wp_CancellableHedgedRequest (query : go_string)
     (errStr_ptr' : loc)
     (done_ch : chan.t) (γdone : chan_names) :
   {{{ is_pkg_init channel_examples ∗
-      own_closeable_chan done_ch γdone True closeable.Unknown ∗
+      own_broadcast_chan done_ch γdone True broadcast.Unknown ∗
       errStr_ptr' ↦ ""%go }}}
     @! channel_examples.CancellableHedgedRequest
          #query #hedgeThreshold #errStr_ptr' #done_ch
@@ -52,8 +52,8 @@ Lemma wp_CancellableHedgedRequest (query : go_string)
          "cancelled" into errStr_ptr' and we return the zero Result.  *)
       (errStr_ptr' ↦ "cancelled"%go ∗ ⌜v = ""%go ∧ b = false⌝) }}}.
 Proof.
-  wp_start as "(#Hdone_closeable & HerrStr)".
-  iDestruct (own_closeable_chan_is_chan with "Hdone_closeable") as "#Hdone_chan".
+  wp_start as "(#Hdone_broadcast & HerrStr)".
+  iDestruct (own_broadcast_chan_is_chan with "Hdone_broadcast") as "#Hdone_chan".
   wp_auto.
   wp_apply chan.wp_make2; first done.
   iIntros (c γc) "(#Hc_is_chan & _ & Hc_own)".
@@ -123,7 +123,7 @@ Proof.
       iSplitR ""; last done.
       iExists _, done_ch, γdone. repeat iExists _. iSplitL ""; first done.
       iFrame "#".
-      iApply (closeable_chan_receive with "Hdone_closeable [HΦ errStr HerrStr]").
+      iApply (broadcast_chan_receive with "Hdone_broadcast [HΦ errStr HerrStr]").
       { iIntros "[_ _]". wp_auto.
         iApply "HΦ". iRight. iFrame. iPureIntro. done. }
     }
@@ -132,7 +132,7 @@ Proof.
     iSplitR ""; last done.
     iExists _, done_ch, γdone. repeat iExists _. iSplitL ""; first done.
     iFrame "#".
-    iApply (closeable_chan_receive with "Hdone_closeable [HΦ errStr HerrStr]").
+    iApply (broadcast_chan_receive with "Hdone_broadcast [HΦ errStr HerrStr]").
     { iIntros "[_ _]". wp_auto.
       iApply "HΦ". iRight. iFrame. iPureIntro. done. }
   }
@@ -197,15 +197,15 @@ Lemma wp_HelloWorldCancellable
   (done_ch : chan.t) (err_ptr1: loc) (err_msg: go_string)
   (γdone: chan_names) :
   {{{ is_pkg_init channel_examples ∗
-        own_closeable_chan done_ch γdone (err_ptr1 ↦□ err_msg) closeable.Unknown }}}
+        own_broadcast_chan done_ch γdone (err_ptr1 ↦□ err_msg) broadcast.Unknown }}}
     @! channel_examples.HelloWorldCancellable #done_ch #err_ptr1
     {{{
 (result: go_string), RET #result;
       ⌜result = err_msg ∨ result = "Hello, World!"%go⌝
     }}}.
 Proof.
-  wp_start as "#Hdone_closeable".
-  iDestruct (own_closeable_chan_is_chan with "Hdone_closeable") as "#Hdone_chan".
+  wp_start as "#Hdone_broadcast".
+  iDestruct (own_broadcast_chan_is_chan with "Hdone_broadcast") as "#Hdone_chan".
   wp_apply wp_alloc.
   iIntros (l). iIntros "Herr".
   wp_auto_lc 4. wp_apply wp_HelloWorldAsync.
@@ -222,7 +222,7 @@ Proof.
     {
       iSplitL; last done. repeat iExists _; iSplitR; first done.
       iFrame "#".
-      iApply (closeable_chan_receive with "Hdone_closeable [HΦ Herr]").
+      iApply (broadcast_chan_receive with "Hdone_broadcast [HΦ Herr]").
       {
         iIntros "[#HerrPtr _]". wp_auto. iApply "HΦ". iLeft. done.
       }
@@ -243,16 +243,16 @@ Proof.
   iIntros (ch γ) "(#Hchan & _Hcap & Hoc)".
   rewrite -wp_fupd.
   wp_auto. iPersist "done".
-  iMod (alloc_closeable_chan (errMsg_ptr ↦□ "operation timed out"%go) γ ch with "Hchan Hoc") as "Hown".
-  iDestruct (own_closeable_chan_Unknown with "Hown") as "#Hdone_closeable".
+  iMod (alloc_broadcast_chan (errMsg_ptr ↦□ "operation timed out"%go) γ ch with "Hchan Hoc") as "Hown".
+  iDestruct (own_broadcast_chan_Unknown with "Hown") as "#Hdone_broadcast".
   wp_apply (wp_fork with "[Hown errMsg done]").
   { wp_auto. wp_apply wp_Sleep.
     iPersist "errMsg".
-    wp_apply (wp_closeable_chan_close (ty:=go.ChannelType go.sendrecv (go.StructType [])) with "[$Hown $errMsg]").
+    wp_apply (wp_broadcast_chan_close (ty:=go.ChannelType go.sendrecv (go.StructType [])) with "[$Hown $errMsg]").
     iIntros "_". wp_auto. done.
   }
 
-  wp_apply (wp_HelloWorldCancellable with "[$Hdone_closeable]").
+  wp_apply (wp_HelloWorldCancellable with "[$Hdone_broadcast]").
   iIntros (result) "%Hres". wp_auto. iApply "HΦ".
   iPureIntro. destruct Hres; auto.
 Qed.
@@ -381,15 +381,15 @@ Proof.
   iMod (start_bag (λ v, ⌜v = W64 10⌝)%I with "Hr2_is_chan Hr2_own")
     as "#Hbag2".
   { done. }
-  iMod (alloc_closeable_chan (sharedValue_ptr ↦□ W64 2)%I γdone done_ch with "Hdone_is_chan Hdone_own") as "Hown_done".
-  iDestruct (own_closeable_chan_Unknown with "Hown_done") as "#Hdone_closeable".
+  iMod (alloc_broadcast_chan (sharedValue_ptr ↦□ W64 2)%I γdone done_ch with "Hdone_is_chan Hdone_own") as "Hown_done".
+  iDestruct (own_broadcast_chan_Unknown with "Hown_done") as "#Hdone_broadcast".
   iPersist "done result1 result2".
   wp_apply (wp_fork with "[result1 result2 done]").
   {
     rename done_ch into done_ch_1. wp_auto_lc 1.
     wp_apply (chan.wp_receive done_ch_1 γdone with "Hdone_is_chan").
     iIntros "(?&?&?&?)".
-    iApply (closeable_chan_receive with "Hdone_closeable").
+    iApply (broadcast_chan_receive with "Hdone_broadcast").
     iIntros "[#HShared _]". wp_auto.
     wp_apply (wp_bag_send with "[$Hbag1]"); word.
   }
@@ -399,12 +399,12 @@ Proof.
     wp_auto_lc 1.
     wp_apply (chan.wp_receive done_ch_1 γdone with "Hdone_is_chan").
     iIntros "(?&?&?&?)".
-    iApply (closeable_chan_receive with "Hdone_closeable").
+    iApply (broadcast_chan_receive with "Hdone_broadcast").
     iIntros "[#HShared _]". wp_auto.
     wp_apply (wp_bag_send with "[$Hbag2]"); word.
   }
   iPersist "sharedValue".
-  wp_apply (wp_closeable_chan_close (ty:=go.ChannelType go.sendrecv (go.StructType [])) with "[$Hown_done $sharedValue]").
+  wp_apply (wp_broadcast_chan_close (ty:=go.ChannelType go.sendrecv (go.StructType [])) with "[$Hown_done $sharedValue]").
   iIntros "_". wp_auto.
   wp_apply (wp_bag_receive with "Hbag1").
   iIntros (v1) "%Hv1". subst v1. wp_auto.

@@ -2,7 +2,7 @@ From New Require Import code.context.
 From New Require Export generatedproof.context.
 From New Require Import proof.proof_prelude.
 From New.proof Require Import sync.atomic sync time errors.
-From New.golang.theory.chan.idioms Require Import closeable.
+From New.golang.theory.chan.idioms Require Import broadcast.
 
 Require Import Perennial.Helpers.CountableTactics.
 
@@ -31,8 +31,8 @@ Section wps.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
 Context {sem : go.Semantics} {package_sem : context.Assumptions}.
 (* XXX: not putting this in contextG because higher-level code might also have
-   its own closeable_chan, and this would conflict with that. *)
-Context `{!closeable_chanG Σ}.
+   its own broadcast_chan, and this would conflict with that. *)
+Context `{!broadcast_chanG Σ}.
 
 Definition is_init : iProp Σ :=
   "Hgoroutines" ∷
@@ -59,16 +59,16 @@ Definition is_Context (c : interface.t_ok) (s : Context_desc.t) : iProp Σ :=
     {{{ RET #s.(Done); True }}} ∗
   "#HErr" ∷
     (∀ cl,
-    {{{ own_closeable_chan s.(Done) s.(Done_gn) s.(PDone) cl }}}
+    {{{ own_broadcast_chan s.(Done) s.(Done_gn) s.(PDone) cl }}}
       #(methods c.(interface.ty) "Err" c.(interface.v)) #()
     {{{ err, RET #err;
         match cl with
-        | closeable.Closed => ⌜ err ≠ interface.nil ⌝
-        | _ => if decide (err = interface.nil) then own_closeable_chan s.(Done) s.(Done_gn) s.(PDone) cl
-              else own_closeable_chan s.(Done) s.(Done_gn) s.(PDone) closeable.Closed
+        | broadcast.Done => ⌜ err ≠ interface.nil ⌝
+        | _ => if decide (err = interface.nil) then own_broadcast_chan s.(Done) s.(Done_gn) s.(PDone) cl
+              else own_broadcast_chan s.(Done) s.(Done_gn) s.(PDone) broadcast.Done
         end
     }}}) ∗
-  "#HDone_ch" ∷ own_closeable_chan s.(Done) s.(Done_gn) s.(PDone) closeable.Unknown.
+  "#HDone_ch" ∷ own_broadcast_chan s.(Done) s.(Done_gn) s.(PDone) broadcast.Unknown.
 #[global] Typeclasses Opaque is_Context.
 #[global] Opaque is_Context.
 
@@ -127,7 +127,7 @@ Proof.
     simpl. iSplit; last done. iNamed 1.
     repeat iExists _. iSplitR; first done. iFrame "#".
     iSplitR; first admit. (* absorb is_chan into au? *)
-    iApply (own_closeable_chan_nonblocking_receive with "[$]").
+    iApply (own_broadcast_chan_nonblocking_receive with "[$]").
     iSplit.
     2:{ iIntros. iFrame. }
     iIntros "#Hclosed".
