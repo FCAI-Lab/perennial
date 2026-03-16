@@ -4,7 +4,6 @@ From New.golang.theory.chan.idioms Require
   future
   handshake
   lock
-  join
   mpmc
   spsc.
 From New.golang.theory.chan.idioms.dsp Require dsp.
