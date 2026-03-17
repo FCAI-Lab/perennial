@@ -514,21 +514,6 @@ Definition own_readOnly γ (r : loc) (term : w64) : iProp Σ :=
                (∃ Φ, is_read_req_ctx γ read_req_ctx Φ ∗
                      is_read_index γ index Φ))
       ) ∗
-    (* "#HunconfirmedReads" ∷ □( *)
-    (*     ∀ i r, ⌜ unconfirmedReads !! i = Some r ⌝ → *)
-    (*            (∃ read_req_ctx stale_ids index, *)
-    (*                let hb_ctx := *)
-    (*                  (u64_le (word.add ro.(raft.readOnly.confirmedReads') (W64 $ Z.of_nat (S i)))) in *)
-    (*                "#readIndexRequest" ∷ is_readIndexRequest γ r read_req_ctx index ∗ *)
-    (*                "#Hhb" ∷ is_heartbeat_ctx_stale γ term hb_ctx stale_ids ∗ *)
-    (*                "%Hstale_cumul" ∷ ⌜ stale_ids ⊆ stale_cumul ⌝ ∗ *)
-    (*                "#Hstale_or_safe" ∷ *)
-    (*                  (⌜ is_quorum stale_ids ⌝ ∨ *)
-    (*                     (∃ Φ, is_read_req_ctx γ read_req_ctx Φ ∗ *)
-    (*                           is_read_index γ index Φ)) *)
-    (*            ) *)
-    (*   ) ∗ *)
-    (* "#Hstale_cumul" ∷ □(∀ id, ⌜ id ∈ stale_cumul ⌝ → ∃ term', is_term_lb γ id term' ∗ ⌜ sint.nat term < sint.nat term' ⌝) ∗ *)
     "Hhb●" ∷ own_heartbeat_auth γ term
       (word.add ro.(raft.readOnly.confirmedReads') (W64 $ length unconfirmedReads)).
 
@@ -707,44 +692,25 @@ Proof.
   - iApply "Hacks_wits". done.
 Admitted.
 
-Lemma wp_readOnly_AckedIndex γ r term (voterId : w64) :
-  {{{ is_pkg_init raft ∗
-      "Hown" ∷ own_readOnly γ r term
-  }}}
-    r @! (go.PointerType raft.readOnly) @! "AckedIndex" #voterId
-  {{{ (returnedIndex : w64) (found : bool), RET (#returnedIndex, #found);
-      own_readOnly γ r term ∗
-      if found then is_heartbeat_ack γ voterId term (u64_le returnedIndex) else True
-  }}}.
-Proof.
-  wp_start as "@". iNamed "Hown". wp_auto.
-  wp_apply (wp_map_lookup2 with "Hacks") as "Hacks".
-  wp_end. iSplitL.
-  { iFrame "∗#%". }
-  destruct lookup eqn:Hlookup; simpl.
-  - iApply "Hacks_wits". done.
-  - done.
-Qed.
-
 Definition own_AckedIndexer (i : interface.t_ok) (acks : gmap w64 w64) I : iProp Σ :=
-    "#HAckedIndex" ∷
-      (∀ (voterID : w64),
-      {{{ I }}} #(methods i.(interface.ty) "AckedIndex" i.(interface.v)) #i
-      {{{ RET (#(default (W64 0) (acks !! voterID)), #(bool_decide (is_Some (acks !! voterID))));
-          I }}}).
+  "HI" ∷ I ∗
+  "#HAckedIndex" ∷
+    (∀ (voterID : w64),
+    {{{ I }}} #(methods i.(interface.ty) "AckedIndex" i.(interface.v)) #voterID
+    {{{ RET (#(default (W64 0) (acks !! voterID)), #(bool_decide (is_Some (acks !! voterID))));
+        I }}}).
 
 Axiom wp_JointConfig__CommittedIndex :
   ∀ l acks (c : quorum.JointConfig.t) voters_ref (voters : gmap w64 ()) I,
   {{{
       is_pkg_init quorum ∗
       "Hl" ∷ own_AckedIndexer l acks I ∗
-      "HI" ∷ I ∗
       "%Hc" ∷ ⌜ array.arr c = [voters_ref; map.nil] ⌝ ∗
       "voters" ∷ voters_ref ↦$ voters ∗
       "%Hvoters_cfg" ∷ ⌜ dom voters = cfg ⌝
   }}}
-    c @! quorum.JointConfig @! "CommittedIndex" #()
-  {{{ (c : w64), RET #c; own_AckedIndexer l acks I ∗ I ∗
+    c @! quorum.JointConfig @! "CommittedIndex" #(interface.ok l)
+  {{{ (c : w64), RET #c; own_AckedIndexer l acks I ∗
                          ⌜ 0 ≤ sint.Z c ∧
                          ∃ srvs, is_quorum srvs ∧
                                  (∀ s, s ∈ srvs →
@@ -773,7 +739,51 @@ Lemma wp_readOnly_maybeAdvance γ r term (c : quorum.JointConfig.t) m0 (voters :
   }}}.
 Proof.
   wp_start as "@". iNamed "Hown". wp_auto.
-Qed.
+  wp_bind. wp_method_call. wp_auto.
+  wp_bind.
+  wp_apply (wp_JointConfig__CommittedIndex with "[Hacks r Hm0]").
+  {
+    iSplitL "Hacks r".
+    2:{ iSplitR; first done. iFrame. done. }
+    rewrite /own_AckedIndexer.
+    iSplitL; first iNamedAccu.
+    iIntros "%".
+    simpl. wp_start as "@".
+    instantiate (1:=acks).
+    rename ro_ptr into ro_ptr'.
+    wp_auto. wp_apply (wp_map_lookup2 with "[$]") as "?".
+    wp_end.
+  }
+  iIntros "%newConfirmedReads (Hown & %Hconfirm)".
+  iNamed "Hown". iNamed "HI". iClear "HAckedIndex".
+  wp_auto. wp_if_destruct.
+  { wp_end. iDestruct own_slice_nil as "$". iFrame "∗#%".
+    iSplitR; first admit. (* FIXME: retain m ↦$ voters *)
+    iIntros "!# * %". exfalso. done. }
+  rewrite -> decide_True.
+  2:{ admit. (* FIXME: require that cfg is non-empty; from that, prove that this
+                confirmedIndex was previously proposed, and thus that the
+                slice's length contains (confirmIndex - confirmedReads). *) }
+  wp_auto.
+  rewrite -> decide_True.
+  2:{ admit. (* same as above *) }
+  wp_auto.
+  iApply "HΦ".
+  (* TODO: slice unconfirmedReads *)
+  iDestruct (own_slice_slice with "unconfirmedReads") as "[$ unconfirmedReads]".
+  { instantiate (1:=ro.(raft.readOnly.unconfirmedReads').(slice.len)).
+    admit. (* same as above *) }
+  iSplitL.
+  {
+    iFrame "r". simpl. iFrame "Hacks". iExists [], [].
+    iFrame "#%".
+    admit. (* TODO: reestablish invariant. *)
+  }
+  iSplitR; first admit. (* maintain voters ownership. *)
+
+  admit. (* TODO: use Hconfirm to prove that position newConfirmedReads contains
+            a quorum of acknowledgement. Then, everything before will be confirmed. *)
+Admitted.
 
 Definition MsgReadIndex := W32 15.
 Lemma wp_raft__sendMsgReadIndexresponse γ r rf m :
