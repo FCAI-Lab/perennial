@@ -488,7 +488,7 @@ Definition own_heartbeat_auth γ (term : w64) (highest_index : w64) : iProp Σ :
   ∃ per_term_gn (used : gmap go_string gname),
     term ↪[γ.(heartbeat_gn)]□ per_term_gn ∗
     ghost_map_auth per_term_gn 1 used ∗
-    ⌜ ∀ k, k ∈ dom used → 0 ≤ sint.Z (le_to_u64 k) ≤ sint.Z highest_index ⌝.
+    ⌜ ∀ k, k ∈ dom used → k = [] ∨ length k = 8%nat ∧ 0 ≤ sint.Z (le_to_u64 k) ≤ sint.Z highest_index ⌝.
 
 Definition own_readOnly γ (r : loc) (term : w64) : iProp Σ :=
   ∃ (ro : raft.readOnly.t) (acks : gmap w64 w64) (unconfirmedReads : list loc)
@@ -534,15 +534,26 @@ Proof.
     apply elem_of_dom_2 in Hlookup.
     specialize (Hused ltac:(done)).
     rewrite u64_le_to_word in Hused.
+    destruct Hused as [Hused|Hused].
+    { apply (f_equal length) in Hused. rewrite u64_le_length in Hused. done. }
     word.
   }
   iFrame "∗#%". iPureIntro.
   intros k. rewrite dom_insert. rewrite elem_of_union.
   intros [Helem|].
-  2:{ specialize (Hused k ltac:(done)). word. }
+  2:{ specialize (Hused k ltac:(done)). destruct Hused as [|]; first by left. right. word. }
+  right.
   rewrite elem_of_singleton in Helem. subst.
-  rewrite u64_le_to_word. word.
+  rewrite u64_le_to_word u64_le_length. word.
 Qed.
+
+Lemma own_heartbeat_auth_agree stale_ids γ term ctx highest_index :
+  ctx ≠ [] →
+  is_heartbeat_ctx γ term ctx stale_ids -∗
+  own_heartbeat_auth γ term highest_index -∗
+  ⌜ length ctx = 8%nat ∧ 0 ≤ sint.Z (le_to_u64 ctx) ≤ sint.Z highest_index ⌝.
+Proof.
+Admitted.
 
 Lemma wp_readOnly_addRequest γ r term (commitIndex : w64) req read_req_ctx log dq Ψ :
   {{{ is_pkg_init raft ∗
@@ -654,11 +665,11 @@ Proof.
     rewrite foldl_snoc. set_solver. }
 Admitted. (* NOTE: admit for overflow of incrementing value. *)
 
-Lemma wp_readOnly_recvAck γ r term (from : w64) (ctx_sl : slice.t) (v : w64) :
+Lemma wp_readOnly_recvAck γ r term (from : w64) (ctx_sl : slice.t) ctx (v : w64) :
   {{{ is_pkg_init raft ∗
       "Hown" ∷ own_readOnly γ r term ∗
-      "Hctx" ∷ ctx_sl ↦* (u64_le v) ∗
-      "#Hack" ∷ is_heartbeat_ack γ from term (u64_le v)
+      "Hctx" ∷ ctx_sl ↦* ctx ∗
+      "#Hack" ∷ is_heartbeat_ack γ from term ctx
   }}}
     r @! (go.PointerType raft.readOnly) @! "recvAck" #from #ctx_sl
   {{{ RET #(); own_readOnly γ r term }}}.
@@ -666,16 +677,21 @@ Proof.
   wp_start as "@". iNamed "Hown".
   wp_auto.
   wp_if_destruct.
-  { admit. } (* TODO handle empty byte slices *)
+  { wp_end. iFrame "∗#%". }
   wp_apply (wp_map_lookup1 with "Hacks") as "Hacks".
   wp_method_call. wp_auto.
   iAssert (global_addr binary.LittleEndian ↦□ binary.littleEndian.mk)%I with "[]" as "#H".
   { admit. } (* TODO add spec for the global variable assuming only is_pkg_init for binary. *)
   wp_auto.
+  iDestruct (own_slice_len with "Hctx") as %Hctx_len.
+  iDestruct "Hack" as "(% & #Hhb_ctx & %)".
+  iDestruct (own_heartbeat_auth_agree with "[$] [$]") as "%Hagree".
+  { destruct ctx; try done. simpl in *. word. }
+  destruct Hagree as (Hlen & Hbounds).
   wp_apply (wp_littleEndian_Uint64 with "[Hctx]") as "Hctx".
   2:{ erewrite app_nil_r. iFrame. }
-  { rewrite u64_le_length. done. }
-  rewrite u64_le_to_word.
+  { done. }
+  (* rewrite u64_le_to_word. *)
   wp_apply wp_max2_uint64.
   wp_apply (wp_map_insert with "Hacks") as "Hacks".
   iApply "HΦ".
@@ -684,11 +700,12 @@ Proof.
   rewrite lookup_insert in Hlookup.
   destruct decide in Hlookup; subst.
   - simplify_eq. destruct lookup eqn:Hlookup.
-    + simpl. destruct decide.
+    + simpl.
+      destruct decide.
       * iApply "Hacks_wits". done.
-      * iFrame "#".
+      * rewrite le_to_u64_le //. iFrame "#". done.
     + simpl. rewrite -> decide_False; last word.
-      iFrame "#".
+      rewrite le_to_u64_le //. iFrame "#%".
   - iApply "Hacks_wits". done.
 Admitted.
 
@@ -711,24 +728,26 @@ Axiom wp_JointConfig__CommittedIndex :
   }}}
     c @! quorum.JointConfig @! "CommittedIndex" #(interface.ok l)
   {{{ (c : w64), RET #c; own_AckedIndexer l acks I ∗
+                         voters_ref ↦$ voters ∗
                          ⌜ 0 ≤ sint.Z c ∧
                          ∃ srvs, is_quorum srvs ∧
                                  (∀ s, s ∈ srvs →
                                        sint.Z c ≤ sint.Z (default (W64 0) (acks !! s))) ⌝
   }}}.
 
-Lemma wp_readOnly_maybeAdvance γ r term (c : quorum.JointConfig.t) m0 (voters : gmap w64 ()) :
+Lemma wp_readOnly_maybeAdvance γ r term (c : quorum.JointConfig.t) voters_ref
+  (voters : gmap w64 ()) :
   {{{ is_pkg_init raft ∗
       "Hown" ∷ own_readOnly γ r term ∗
       (* The config c is simple (not joint): first component is voters, second is empty. *)
-      "%Hc" ∷ ⌜ array.arr c = [m0; map.nil] ⌝ ∗
-      "Hm0" ∷ m0 ↦$ voters ∗
+      "%Hc" ∷ ⌜ array.arr c = [voters_ref; map.nil] ⌝ ∗
+      "voters" ∷ voters_ref ↦$ voters ∗
       "%Hvoters_cfg" ∷ ⌜ dom voters = cfg ⌝
   }}}
     r @! (go.PointerType raft.readOnly) @! "maybeAdvance" #c
   {{{ (rs : slice.t) (reads : list loc), RET #rs;
       own_readOnly γ r term ∗
-      m0 ↦$ voters ∗
+      voters_ref ↦$ voters ∗
       rs ↦* reads ∗
       (* Every returned read request has a valid read index witness. *)
       □(∀ i rp, ⌜ reads !! i = Some rp ⌝ →
@@ -741,7 +760,7 @@ Proof.
   wp_start as "@". iNamed "Hown". wp_auto.
   wp_bind. wp_method_call. wp_auto.
   wp_bind.
-  wp_apply (wp_JointConfig__CommittedIndex with "[Hacks r Hm0]").
+  wp_apply (wp_JointConfig__CommittedIndex with "[Hacks r voters]").
   {
     iSplitL "Hacks r".
     2:{ iSplitR; first done. iFrame. done. }
@@ -754,32 +773,41 @@ Proof.
     wp_auto. wp_apply (wp_map_lookup2 with "[$]") as "?".
     wp_end.
   }
-  iIntros "%newConfirmedReads (Hown & %Hconfirm)".
+  iIntros "%newConfirmedReads (Hown & voters & %Hconfirm)".
   iNamed "Hown". iNamed "HI". iClear "HAckedIndex".
   wp_auto. wp_if_destruct.
   { wp_end. iDestruct own_slice_nil as "$". iFrame "∗#%".
-    iSplitR; first admit. (* FIXME: retain m ↦$ voters *)
     iIntros "!# * %". exfalso. done. }
+
+  iAssert (⌜
+      0 ≤ sint.Z newConfirmedReads ≤
+        sint.Z (word.add ro.(raft.readOnly.confirmedReads') (W64 (length unconfirmedReads)))
+    ⌝)%I with "[-]" as "%Hin_bounds".
+  {
+    admit.
+  }
+
+  iDestruct (own_slice_wf with "unconfirmedReads") as "%Hwf".
+  iDestruct (own_slice_len with "unconfirmedReads") as "%Hlen".
   rewrite -> decide_True.
-  2:{ admit. (* FIXME: require that cfg is non-empty; from that, prove that this
-                confirmedIndex was previously proposed, and thus that the
-                slice's length contains (confirmIndex - confirmedReads). *) }
+  2:{ word. }
   wp_auto.
   rewrite -> decide_True.
-  2:{ admit. (* same as above *) }
+  2:{ word. }
   wp_auto.
   iApply "HΦ".
+  iFrame "voters".
   (* TODO: slice unconfirmedReads *)
   iDestruct (own_slice_slice with "unconfirmedReads") as "[$ unconfirmedReads]".
   { instantiate (1:=ro.(raft.readOnly.unconfirmedReads').(slice.len)).
-    admit. (* same as above *) }
+    word. }
   iSplitL.
   {
     iFrame "r". simpl. iFrame "Hacks". iExists [], [].
     iFrame "#%".
     admit. (* TODO: reestablish invariant. *)
   }
-  iSplitR; first admit. (* maintain voters ownership. *)
+  iFrame.
 
   admit. (* TODO: use Hconfirm to prove that position newConfirmedReads contains
             a quorum of acknowledgement. Then, everything before will be confirmed. *)
