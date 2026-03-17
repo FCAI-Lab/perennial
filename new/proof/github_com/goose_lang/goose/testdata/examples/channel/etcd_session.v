@@ -142,6 +142,10 @@ Proof.
   iIntros "% [% @]". subst. wp_auto.
   iDestruct "sessionc" as "[sessionc sessionc_inv]".
   iCombineNamed "*_inv" as "Hinv".
+  (* subtlety here: because we are deriving a persistent own_broadcast_chan(ch,
+  broadcast.Pending), the function can retain Hsessionc asserting that the
+  channel is specifically Pending; this is needed after the Unlock to safely
+  close. *)
   iDestruct (own_broadcast_chan_Unknown with "[$]") as "#?".
   wp_apply (wp_Mutex__Unlock with "[$Hlocked Hinv]").
   { iFrame "#". iNamed "Hinv". iFrame "∗#". }
