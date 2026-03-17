@@ -252,8 +252,8 @@ Definition is_raft_commit_inv γ : iProp Σ := (*  *)
         (* Witnesses that reads were linearized on every index starting at their
            respective starting index. *)
         "#Hread_wits" ∷ □(∀ start_index Φ (Hindex : (start_index, Φ) ∈ readsΦ)
-                            index (Hindex : sint.nat start_index ≤ sint.nat index ≤ length log),
-                            Φ (take (sint.nat index) log))
+                            index (Hindex : uint.nat start_index ≤ uint.nat index ≤ length log),
+                            Φ (take (uint.nat index) log))
     ).
 
 (* A read index witness: given any committed log at least as long as [index],
@@ -261,13 +261,13 @@ Definition is_raft_commit_inv γ : iProp Σ := (*  *)
    Needs £ 2: one credit to open the invariant (strip ▷), one to strip the ▷
    from saved_pred_agree. *)
 Definition is_read_index γ index Φ : iProp Σ :=
-  □ (∀ log (Hin : sint.nat index ≤ length log) (Hno_overflow : length log < 2^63),
+  □ (∀ log (Hin : uint.nat index ≤ length log) (Hno_overflow : length log < 2^64),
        £ 2 -∗ is_commit γ log ={⊤}=∗ Φ log).
 
 Lemma is_in_reads_to_valid γ i j Φ :
   "#Hinv" ∷ is_raft_commit_inv γ ∗
   "#Hr" ∷ is_in_reads γ j Φ ∗
-  "%Hj" ∷ ⌜ sint.nat j ≤ sint.nat i ⌝ -∗
+  "%Hj" ∷ ⌜ uint.nat j ≤ uint.nat i ⌝ -∗
   is_read_index γ i Φ.
 Proof.
   iNamed 1. rewrite /is_read_index.
@@ -281,7 +281,7 @@ Proof.
   { by eapply list_elem_of_lookup_2. }
   iSpecialize ("Hwit" $! (W64 (length log_wit)) with "[%]").
   { apply prefix_length in Hle. word. }
-  replace (sint.nat (W64 (length log_wit))) with (length log_wit) by word.
+  replace (uint.nat (W64 (length log_wit))) with (length log_wit) by word.
   rewrite -prefix_to_take //.
   iMod (lc_fupd_elim_later with "[$] HΦ") as "#HΦ'".
   iMod ("Hclose" with "[-]").
@@ -294,7 +294,7 @@ Qed.
    the committed index from term `term`. *)
 Lemma try_read γ term log Φ :
   "Hlc" ∷ £ 1 ∗
-  "%Hno_overflow" ∷ ⌜ length log < 2^63 ⌝ ∗
+  "%Hno_overflow" ∷ ⌜ length log < 2^64 ⌝ ∗
   "#Hinv" ∷ is_raft_commit_inv γ ∗
   "Hcom" ∷ own_committed_in_term γ term log ∗
   "#Hau" ∷ □(|={⊤∖↑N,∅}=> ∃ log, own_commit γ log ∗ (own_commit γ log ={∅,⊤∖↑N}=∗ □ Φ log))
@@ -488,7 +488,7 @@ Definition own_heartbeat_auth γ (term : w64) (highest_index : w64) : iProp Σ :
   ∃ per_term_gn (used : gmap go_string gname),
     term ↪[γ.(heartbeat_gn)]□ per_term_gn ∗
     ghost_map_auth per_term_gn 1 used ∗
-    ⌜ ∀ k, k ∈ dom used → k = [] ∨ length k = 8%nat ∧ 0 ≤ sint.Z (le_to_u64 k) ≤ sint.Z highest_index ⌝.
+    ⌜ ∀ k, k ∈ dom used → k = [] ∨ length k = 8%nat ∧ uint.Z (le_to_u64 k) ≤ uint.Z highest_index ⌝.
 
 Definition own_readOnly γ (r : loc) (term : w64) : iProp Σ :=
   ∃ (ro : raft.readOnly.t) (acks : gmap w64 w64) (unconfirmedReads : list loc)
@@ -518,7 +518,7 @@ Definition own_readOnly γ (r : loc) (term : w64) : iProp Σ :=
       (word.add ro.(raft.readOnly.confirmedReads') (W64 $ length unconfirmedReads)).
 
 Lemma own_heartbeat_auth_new stale_ids γ term highest_index :
-  0 ≤ sint.Z highest_index < (2^63-1) →
+  uint.Z highest_index < (2^64-1) →
   own_heartbeat_auth γ term highest_index ==∗
   own_heartbeat_auth γ term (word.add highest_index (W64 1)) ∗
   is_heartbeat_ctx γ term (u64_le (word.add highest_index (W64 1))) stale_ids.
@@ -560,7 +560,7 @@ Lemma wp_readOnly_addRequest γ r term (commitIndex : w64) req read_req_ctx log 
       "#Hinv" ∷ is_raft_commit_inv γ ∗
       "Hown" ∷ own_readOnly γ r term ∗
       "Hcom" ∷ own_committed_in_term γ term log ∗
-      "%HcommitIndex" ∷ ⌜ sint.nat commitIndex = length log ⌝ ∗
+      "%HcommitIndex" ∷ ⌜ uint.nat commitIndex = length log ⌝ ∗
       "Hctx" ∷ req.(raftpb.Message.Context') ↦*{dq} read_req_ctx ∗
       "#Hread_ctx" ∷ is_read_req_ctx γ read_req_ctx Ψ
   }}}
@@ -658,7 +658,7 @@ Proof.
   iDestruct "Hmaybe_read" as "[Hread|%]".
   { iRight.
     rewrite /is_read_index.
-    replace (sint.nat (W64 (length log))) with (sint.nat commitIndex) by word.
+    replace (uint.nat (W64 (length log))) with (uint.nat commitIndex) by word.
     iFrame "#". }
   { iLeft. iPureIntro. subst stale_ids''.
     eapply quorums_subseteq; try eassumption.
@@ -858,9 +858,56 @@ Proof.
     iApply to_named. iExactEq "Hhb●". f_equal.
     by len.
   }
-  iIntros "!# %i %r_ptr %Hin".
-  admit. (* TODO: use Hconfirm to prove that position newConfirmedReads contains
-            a quorum of acknowledgement. Then, everything before will be confirmed. *)
+  iIntros "!# %i %r_ptr %Hlookup".
+  rewrite lookup_take_Some in Hlookup.
+  destruct Hlookup as (Hlookup & Hi).
+  iDestruct (big_sepL2_lookup_1_some with "HunconfirmedReads") as "%Hlookup2".
+  { done. }
+  destruct Hlookup2 as ([[]] & Hlookup2).
+  iDestruct (big_sepL2_lookup with "HunconfirmedReads") as "H"; try eassumption.
+  simpl. iNamedSuffix "H" "_sepL".
+  iDestruct "Hstale_or_safe_sepL" as "[%Hstale_quorum|H]".
+  2:{ iFrame "readIndexRequest_sepL". iDestruct "H" as "(% & $ & $)". }
+  iExFalso.
+  rename g into stale_q.
+  destruct Hconfirm as (? & ack_q & Hack_quorum & Hq_le).
+  iDestruct "Hhb_sepL" as "(? & _)".
+  destruct (quorums_intersect _ _ Hack_quorum Hstale_quorum) as (x & Hx_ack & Hx_stale).
+  pose proof (Hq_le x ltac:(done)) as Hle.
+  destruct lookup as [j|] eqn:Hacks_lookup in Hle; simpl in *.
+  2:{ word. }
+  iDestruct ("Hacks_wits" with "[//]") as "Hack".
+  iDestruct "Hack" as "(% & Hack & %Hnot_stale)".
+
+  iAssert (⌜ stale_q ⊆ srvs ⌝)%I with "[-]" as "%Hcontains".
+  2:{ iPureIntro. set_solver. }
+  assert (uint.Z j ≤
+            uint.Z (word.add ro.(raft.readOnly.confirmedReads') (W64 $ length unconfirmedReads))).
+  { admit. } (* TODO: maintain this in invariant for simplicity. *)
+  list_elem unconfirmedReads (uint.Z (word.sub j ro.(raft.readOnly.confirmedReads')) - 1) as ur.
+
+  clear Hlookup.
+  iDestruct (big_sepL2_lookup_1_some with "HunconfirmedReads") as "%Hur_lookup2".
+  { done. }
+  destruct Hur_lookup2 as (? & ?).
+  iDestruct (big_sepL2_lookup with "HunconfirmedReads") as "H"; try eassumption.
+  destruct x0 as [[]]. simpl in *.
+  iNamedSuffix "H" "_sepL2".
+  iDestruct "Hhb_sepL2" as "(#Hhb_ctx & _)".
+  iDestruct (is_heartbeat_ctx_agree with "Hack [Hhb_ctx]") as %Heq.
+  { iExactEq "Hhb_ctx". f_equal. f_equal. word. }
+  subst g. exfalso.
+  destruct (decide (i =
+                    Z.to_nat (uint.Z (w64_word_instance.(word.sub) j ro.(raft.readOnly.confirmedReads')) - 1)
+           )).
+  { subst. simplify_eq. set_solver. }
+  erewrite <- (take_drop_middle (take _ read_reqs.*2) i) in Hstale_contains_sepL2.
+  2:{
+    rewrite lookup_take_lt.
+    2:{ word. }
+    rewrite list_lookup_fmap. erewrite Hlookup2. done. }
+  rewrite !union_list_app in Hstale_contains_sepL2.
+  set_solver.
 Admitted.
 
 Definition MsgReadIndex := W32 15.
