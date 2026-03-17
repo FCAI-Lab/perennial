@@ -112,19 +112,30 @@ Axiom is_committed_in_term_pers : ∀ γ term log, Persistent (is_committed_in_t
 Global Existing Instance is_committed_in_term_pers.
 
 Definition is_quorum (quorum : gset w64) : Prop :=
-  quorum ⊆ cfg ∧ size cfg < 2 * size quorum.
+  size cfg < 2 * size (quorum ∩ cfg).
 
 Lemma quorums_intersect (q1 q2 : gset w64) :
   is_quorum q1 → is_quorum q2 → ∃ x, x ∈ q1 ∧ x ∈ q2.
 Proof.
-  intros [Hsub1 Hsize1] [Hsub2 Hsize2].
+  intros Hsize1 Hsize2.
   destruct (decide (q1 ∩ q2 = ∅)) as [Hempty|Hne].
   2:{ apply set_choose_L in Hne as [x Hx]. exists x. set_solver. }
   exfalso.
-  have Hunion : q1 ∪ q2 ⊆ cfg by set_solver.
-  have Hdisj : q1 ## q2 by set_solver.
+  have Hunion : (q1 ∩ cfg) ∪ (q2 ∩ cfg) ⊆ cfg by set_solver.
+  have Hdisj : (q1 ∩ cfg) ## (q2 ∩ cfg) by set_solver.
   apply subseteq_size in Hunion.
   rewrite size_union in Hunion; [|done].
+  unfold is_quorum in *.
+  lia.
+Qed.
+
+Lemma quorums_subseteq (q1 q2 : gset w64) :
+  q1 ⊆ q2 → is_quorum q1 → is_quorum q2.
+Proof.
+  intros Hsub Hsize.
+  unfold is_quorum in *.
+  assert (Hs : q1 ∩ cfg ⊆ q2 ∩ cfg) by set_solver.
+  pose proof (subseteq_size _ _ Hs) as ?.
   lia.
 Qed.
 
@@ -423,6 +434,23 @@ Definition is_MsgReadIndexResp γ read_req_ctx index : iProp Σ :=
   ∃ Φ, is_read_req_ctx γ read_req_ctx Φ ∗
        is_read_index γ index Φ.
 
+(** If a quorum of servers acked a heartbeat context, and the stale set for that
+    context were also a quorum, they would intersect — but each acking server is
+    provably NOT in the stale set.  Contradiction. *)
+Lemma heartbeat_ack_quorum_not_stale γ term ctx stale_ids ack_srvs :
+  is_quorum ack_srvs →
+  is_quorum stale_ids →
+  is_heartbeat_ctx γ term ctx stale_ids -∗
+  □(∀ id, ⌜ id ∈ ack_srvs ⌝ → is_heartbeat_ack γ id term ctx) -∗
+  False.
+Proof.
+  iIntros (Hack_quorum Hstale_quorum) "#Hctx #Hacks".
+  destruct (quorums_intersect _ _ Hack_quorum Hstale_quorum) as (x & Hx_ack & Hx_stale).
+  iDestruct ("Hacks" $! x with "[%//]") as "#Hack_x".
+  iDestruct (heartbeat_ack_not_stale with "Hctx Hack_x") as %Hnot.
+  exfalso. exact (Hnot Hx_stale).
+Qed.
+
 End global_proof.
 
 Section wps.
@@ -464,7 +492,7 @@ Definition own_heartbeat_auth γ (term : w64) (highest_index : w64) : iProp Σ :
 
 Definition own_readOnly γ (r : loc) (term : w64) : iProp Σ :=
   ∃ (ro : raft.readOnly.t) (acks : gmap w64 w64) (unconfirmedReads : list loc)
-    (cumul_stale : gset w64),
+    read_reqs,
     "r" ∷ r ↦ ro ∗
     "Hacks" ∷ ro.(raft.readOnly.acks') ↦$ acks ∗
     "#Hacks_wits" ∷ □(∀ voterId ackedIdx,
@@ -473,27 +501,34 @@ Definition own_readOnly γ (r : loc) (term : w64) : iProp Σ :=
     "%Hoption" ∷ ⌜ ro.(raft.readOnly.option') = W64 0 ⌝ ∗ (* equals ReadOnlySafe *)
     "unconfirmedReads" ∷ ro.(raft.readOnly.unconfirmedReads') ↦* unconfirmedReads ∗
     "unconfirmedReads_cap" ∷ own_slice_cap loc ro.(raft.readOnly.unconfirmedReads') (DfracOwn 1) ∗
-    (* Persistent witnesses that all servers in the cumulative stale set have
-       moved past the leader's term. *)
-    "#Hcumul_wits" ∷ □(∀ id, ⌜ id ∈ cumul_stale ⌝ →
-        ∃ term', is_term_lb γ id term' ∗ ⌜ sint.nat term < sint.nat term' ⌝) ∗
     "#HunconfirmedReads" ∷ □(
-        ∀ i r, ⌜ unconfirmedReads !! i = Some r ⌝ →
-               (∃ read_req_ctx stale_ids index,
-                   let hb_ctx :=
-                     (u64_le (word.add ro.(raft.readOnly.confirmedReads') (W64 $ Z.of_nat (S i)))) in
-                   "#readIndexRequest" ∷ is_readIndexRequest γ r read_req_ctx index ∗
-                   "#Hhb" ∷ is_heartbeat_ctx_stale γ term hb_ctx stale_ids ∗
-                   (* Each entry's stale set is a subset of the cumulative stale set.
-                      Since each new heartbeat context is created with cumul_stale as
-                      its stale set, and cumul_stale only grows, this gives a nested
-                      chain: stale_ids_0 ⊆ stale_ids_1 ⊆ ... ⊆ cumul_stale. *)
-                   "%Hstale_nested" ∷ ⌜ stale_ids ⊆ cumul_stale ⌝ ∗
-                   "#Hstale_or_safe" ∷
-                     (⌜ is_quorum stale_ids ⌝ ∨ (∃ Φ, is_read_req_ctx γ read_req_ctx Φ ∗
-                                                      is_read_index γ index Φ))
-               )
+        [∗ list] i ↦ r; '(read_req_ctx, index, stale_ids) ∈ unconfirmedReads; read_reqs,
+          "#readIndexRequest" ∷ is_readIndexRequest γ r read_req_ctx index ∗
+            let hb_ctx :=
+              (u64_le (word.add ro.(raft.readOnly.confirmedReads') (W64 $ Z.of_nat (S i)))) in
+          "#Hhb" ∷ is_heartbeat_ctx_stale γ term hb_ctx stale_ids ∗
+          "%Hstale_contains" ∷
+            (⌜ foldl union ∅ (take i read_reqs.*2) ⊆ stale_ids ⌝) ∗
+          "#Hstale_or_safe" ∷
+            (⌜ is_quorum stale_ids ⌝ ∨
+               (∃ Φ, is_read_req_ctx γ read_req_ctx Φ ∗
+                     is_read_index γ index Φ))
       ) ∗
+    (* "#HunconfirmedReads" ∷ □( *)
+    (*     ∀ i r, ⌜ unconfirmedReads !! i = Some r ⌝ → *)
+    (*            (∃ read_req_ctx stale_ids index, *)
+    (*                let hb_ctx := *)
+    (*                  (u64_le (word.add ro.(raft.readOnly.confirmedReads') (W64 $ Z.of_nat (S i)))) in *)
+    (*                "#readIndexRequest" ∷ is_readIndexRequest γ r read_req_ctx index ∗ *)
+    (*                "#Hhb" ∷ is_heartbeat_ctx_stale γ term hb_ctx stale_ids ∗ *)
+    (*                "%Hstale_cumul" ∷ ⌜ stale_ids ⊆ stale_cumul ⌝ ∗ *)
+    (*                "#Hstale_or_safe" ∷ *)
+    (*                  (⌜ is_quorum stale_ids ⌝ ∨ *)
+    (*                     (∃ Φ, is_read_req_ctx γ read_req_ctx Φ ∗ *)
+    (*                           is_read_index γ index Φ)) *)
+    (*            ) *)
+    (*   ) ∗ *)
+    (* "#Hstale_cumul" ∷ □(∀ id, ⌜ id ∈ stale_cumul ⌝ → ∃ term', is_term_lb γ id term' ∗ ⌜ sint.nat term < sint.nat term' ⌝) ∗ *)
     "Hhb●" ∷ own_heartbeat_auth γ term
       (word.add ro.(raft.readOnly.confirmedReads') (W64 $ length unconfirmedReads)).
 
@@ -551,87 +586,87 @@ Proof.
   iSelect (£ 1)%I (fun H => iRename H into "Hlc").
   iMod (try_read with "[Hcom Hlc]") as (stale_ids') "(#Hstale & Hcom & #Hmaybe_read)".
   { iNamed "Hread_ctx". iFrame "∗#". word. }
-  (* Create the new heartbeat context with the fresh stale set from try_read.
-     Update the cumulative stale set to include the new stale IDs. *)
-  set (cumul_stale' := cumul_stale ∪ stale_ids').
-  iMod (own_heartbeat_auth_new stale_ids' with "Hhb●") as "[Hhb● #Hhb]".
+  set (stale_ids'':=foldl union ∅ (read_reqs.*2 ++ [stale_ids'])).
+  iMod (own_heartbeat_auth_new stale_ids'' with "Hhb●") as "[Hhb● #Hhb]".
   { admit. } (* TODO: overflow of incrementing value. *)
   iPersist "req".
   iPersist "Hctx".
-  (* New cumulative stale witnesses: combine old and fresh. *)
-  iAssert (□(∀ id, ⌜ id ∈ cumul_stale' ⌝ →
-      ∃ term', is_term_lb γ id term' ∗ ⌜ sint.nat term < sint.nat term' ⌝))%I
-    as "#Hcumul_wits'".
-  { iIntros "!# %id %Hin".
-    apply elem_of_union in Hin as [Hin|Hin].
-    - iApply "Hcumul_wits". done.
-    - iApply "Hstale". done. }
   iApply "HΦ". iFrame "r".
   iModIntro. repeat iExists _.
+  instantiate (1:=unconfirmedReads ++ [req_ptr]).
+  instantiate (1:=read_reqs++[(_,_,_)]).
   iFrame "Hacks".
   iFrame "Hacks_wits".
   iFrame "%". simpl.
-  (* FIXME *)
-  eassert (
-  (Frame false
-     (own_heartbeat_auth γ term
-        (word.add (word.add ro.(raft.readOnly.confirmedReads')
-                                 (W64 (length unconfirmedReads)))
-           (W64 1)))
-     ("Hhb●"
-        ∷ own_heartbeat_auth γ term
-        (w64_word_instance.(word.add)
-                             ro.(raft.readOnly.confirmedReads')
-                                  (W64 (length ?[l]))))
-     ?[Q2])).
-  {
-    tc_solve.
-  }
-
+  rewrite length_app /=.
   iFrame.
-  iFrame "Hoption".
-  Opaque own_heartbeat_auth.
-  iFrame "Hhb●".
-  Opaque own_
-  Set Typelasses Debug.
-  iFrame. simpl.
-  rewrite length_app.
-  iExists cumul_stale'.
+  rewrite big_sepL2_app_same_length.
+  2:{ by len. }
+  simpl.
+  replace (w64_word_instance.(word.add)
+                (w64_word_instance.(word.add) ro.(raft.readOnly.confirmedReads')
+                   (W64 (length unconfirmedReads)))
+                (W64 1)) with
+    (w64_word_instance.(word.add) ro.(raft.readOnly.confirmedReads')
+       (W64 (length unconfirmedReads + 1)%nat)).
+  2:{ word. }
+  iFrame. iModIntro.
+  iSplit.
+  {
+    iApply (big_sepL2_impl with "HunconfirmedReads").
+    iIntros "!# % %l %x %Hlookup1 %Hlookup2".
+    destruct x as [[read_req_ctx' index] stale_ids].
+    iNamedSuffix 1 "_sepL". iFrame "#". iPureIntro.
+    rewrite fmap_app take_app_le.
+    2:{ len. apply lookup_lt_Some in Hlookup2. lia. }
+    done.
+  }
+  ereplace (S (?[x] + 0)) with (?x + 1)%nat by word.
+  iFrame "#". iFrame "Hctx".
+  iDestruct (big_sepL2_length with "HunconfirmedReads") as "%Hlen".
   iSplitR; first done.
-  iFrame "# ∗ %".
-  iSplitR "Hhb●".
-  {
-    iFrame.
-    iIntros "!# !# * %Hlookup".
-    rewrite lookup_app in Hlookup.
-    destruct (unconfirmedReads !! i) eqn:Hlookup_old.
-    { simplify_eq.
-      iDestruct ("HunconfirmedReads" $! i r0 with "[%//]")
-        as (read_req_ctx' stale_ids_old index') "(#? & #? & %Hnest_old & #?)".
-      repeat iExists _. iFrame "#%".
-      iPureIntro. (* old stale_ids ⊆ cumul_stale ⊆ cumul_stale' *)
-      set_solver. }
-    rewrite list_lookup_singleton_Some in Hlookup.
-    destruct Hlookup as [Hi ?]. subst.
-    iFrame "req Hctx". iFrame "#". simpl.
-    iExists _; iSplitR; first done.
-    iSplit.
-    - iExactEq "Hhb". f_equal. f_equal.
-      apply lookup_ge_None_1 in Hlookup_old.
-      word.
-    - iSplit.
-      { iPureIntro. subst cumul_stale'. set_solver. }
-      iDestruct "Hmaybe_read" as "[Hread|%]".
-      2:{ by iLeft. }
-      iRight.
-      rewrite /is_read_index.
-      replace (sint.nat (W64 (length log))) with (sint.nat commitIndex) by word.
-      iFrame "#".
+  iSplitR.
+  { (* This is a kinda messy proof. Need to get is_term_lb witnesses for
+       everything that's in the union of the old servers. Can only get this by
+       pulling out entries from the HunconfirmedReads big_sepL2, unless this is
+       the first entry. *)
+    iIntros "!# * %Hin". subst stale_ids''.
+    rewrite foldl_snoc /= in Hin.
+    rewrite elem_of_union in Hin. destruct Hin as [Hin|Hin].
+    2:{ iApply "Hstale". iPureIntro. set_solver. }
+    destruct read_reqs using rev_ind.
+    { simpl in *. done. }
+    clear IHread_reqs.
+    destruct x as [[]].
+    destruct unconfirmedReads using rev_ind.
+    { exfalso. rewrite length_app /= in Hlen. lia. }
+    clear IHunconfirmedReads.
+    rewrite big_sepL2_app_same_length; last by len.
+    simpl.
+    iDestruct "HunconfirmedReads" as "[_ [H _]]".
+    iNamedSuffix "H" "_sepL".
+    iDestruct "Hhb_sepL" as "[? Hs]".
+    iApply "Hs". iPureIntro.
+    eapply elem_of_weaken; try eassumption.
+    rewrite Nat.add_0_r in Hstale_contains_sepL.
+    rewrite fmap_app take_app_le in Hstale_contains_sepL.
+    2:{ rewrite !length_app /= in Hlen. by len. }
+    rewrite take_ge in Hstale_contains_sepL.
+    2:{ rewrite !length_app /= in Hlen. by len. }
+    rewrite fmap_app foldl_snoc. set_solver.
   }
-  {
-    rewrite /=. iModIntro. rewrite /named.
-    iExactEq "Hhb●". f_equal. word.
-  }
+  iSplitR.
+  { iPureIntro. simpl. subst stale_ids''.
+    rewrite Nat.add_0_r. rewrite fmap_app. rewrite take_app_le; last by len.
+    rewrite take_ge; last by len. rewrite foldl_snoc. set_solver. }
+  iDestruct "Hmaybe_read" as "[Hread|%]".
+  { iRight.
+    rewrite /is_read_index.
+    replace (sint.nat (W64 (length log))) with (sint.nat commitIndex) by word.
+    iFrame "#". }
+  { iLeft. iPureIntro. subst stale_ids''.
+    eapply quorums_subseteq; try eassumption.
+    rewrite foldl_snoc. set_solver. }
 Admitted. (* NOTE: admit for overflow of incrementing value. *)
 
 Lemma wp_readOnly_recvAck γ r term (from : w64) (ctx_sl : slice.t) (v : w64) :
@@ -698,23 +733,6 @@ Definition own_AckedIndexer (i : interface.t_ok) (acks : gmap w64 w64) I : iProp
       {{{ RET (#(default (W64 0) (acks !! voterID)), #(bool_decide (is_Some (acks !! voterID))));
           I }}}).
 
-(** If a quorum of servers acked a heartbeat context, and the stale set for that
-    context were also a quorum, they would intersect — but each acking server is
-    provably NOT in the stale set.  Contradiction. *)
-Lemma heartbeat_ack_quorum_not_stale γ term ctx stale_ids ack_srvs :
-  is_quorum ack_srvs →
-  is_quorum stale_ids →
-  is_heartbeat_ctx γ term ctx stale_ids -∗
-  □(∀ id, ⌜ id ∈ ack_srvs ⌝ → is_heartbeat_ack γ id term ctx) -∗
-  False.
-Proof.
-  iIntros (Hack_quorum Hstale_quorum) "#Hctx #Hacks".
-  destruct (quorums_intersect _ _ Hack_quorum Hstale_quorum) as (x & Hx_ack & Hx_stale).
-  iDestruct ("Hacks" $! x with "[%//]") as "#Hack_x".
-  iDestruct (heartbeat_ack_not_stale with "Hctx Hack_x") as %Hnot.
-  exfalso. exact (Hnot Hx_stale).
-Qed.
-
 Axiom wp_JointConfig__CommittedIndex :
   ∀ l acks (c : quorum.JointConfig.t) voters_ref (voters : gmap w64 ()) I,
   {{{
@@ -732,35 +750,6 @@ Axiom wp_JointConfig__CommittedIndex :
                                  (∀ s, s ∈ srvs →
                                        sint.Z c ≤ sint.Z (default (W64 0) (acks !! s))) ⌝
   }}}.
-
-(** Nesting of stale sets for unconfirmedReads.
-    Each heartbeat context is created with stale set = cumul_stale at the time
-    of creation. Since cumul_stale only grows (union with fresh stale IDs from
-    try_read), the stale sets form a nested chain:
-      stale_ids_0 ⊆ stale_ids_1 ⊆ ... ⊆ cumul_stale.
-    This is tracked by [Hstale_nested] in [own_readOnly].
-
-    Key use in [maybeAdvance]: CommittedIndex returns a quorum Q with
-    ∀ s ∈ Q, c ≤ acks[s].  Each s has is_heartbeat_ack for (u64_le acks[s]),
-    so s ∉ stale_set(u64_le acks[s]).  Since stale_set(hb_ctx_i) ⊆
-    stale_set(u64_le acks[s]) (by nesting, because hb_ctx_i ≤ acks[s]),
-    s ∉ stale_set(hb_ctx_i).  Hence Q witnesses that stale_set(hb_ctx_i) is
-    not a quorum (by [heartbeat_ack_quorum_not_stale]), so the [Hstale_or_safe]
-    disjunction must be the safe case, giving us [is_read_index]. *)
-
-(** Transfer lemma: an ack for a later heartbeat context (higher index) implies
-    non-membership in any earlier context's stale set, given nesting. *)
-Lemma heartbeat_ack_transfer γ from term ctx_early ctx_late stale_early stale_late :
-  stale_early ⊆ stale_late →
-  is_heartbeat_ctx γ term ctx_late stale_late -∗
-  is_heartbeat_ack γ from term ctx_late -∗
-  is_heartbeat_ctx γ term ctx_early stale_early -∗
-  ⌜ from ∉ stale_early ⌝.
-Proof.
-  iIntros (Hsub) "#Hctx_late #Hack #Hctx_early".
-  iDestruct (heartbeat_ack_not_stale with "Hctx_late Hack") as %Hnot_late.
-  iPureIntro. set_solver.
-Qed.
 
 Lemma wp_readOnly_maybeAdvance γ r term (c : quorum.JointConfig.t) m0 (voters : gmap w64 ()) :
   {{{ is_pkg_init raft ∗
