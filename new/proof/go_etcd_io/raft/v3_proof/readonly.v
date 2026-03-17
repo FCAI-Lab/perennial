@@ -755,6 +755,7 @@ Qed.
 
 Lemma wp_readOnly_maybeAdvance γ r term (c : quorum.JointConfig.t) voters_ref
   (voters : gmap w64 ()) :
+  0 < size cfg →
   {{{ is_pkg_init raft ∗
       "Hown" ∷ own_readOnly γ r term ∗
       (* The config c is simple (not joint): first component is voters, second is empty. *)
@@ -775,7 +776,7 @@ Lemma wp_readOnly_maybeAdvance γ r term (c : quorum.JointConfig.t) voters_ref
                   is_read_index γ index Φ)
   }}}.
 Proof.
-  wp_start as "@". iNamed "Hown". wp_auto.
+  intros Hsize. wp_start as "@". iNamed "Hown". wp_auto.
   wp_bind. wp_method_call. wp_auto.
   wp_bind.
   wp_apply (wp_JointConfig__CommittedIndex with "[Hacks r voters]").
@@ -802,7 +803,6 @@ Proof.
       uint.Z (word.add ro.(raft.readOnly.confirmedReads') (W64 (length unconfirmedReads)))
     ⌝)%I with "[-]" as "%Hin_bounds".
   {
-    assert (Hsize : 0 < size cfg) by admit. (* FIXME: assumption *)
     destruct Hconfirm as (? & q & Hquorum & Hquorum_le).
     assert (0 < size (q ∩ cfg))%nat as Hq_size.
     { clear -Hquorum Hsize. unfold is_quorum in *. lia. }
@@ -829,6 +829,19 @@ Proof.
   wp_auto.
   iApply "HΦ".
   iFrame "voters".
+  iAssert
+    (⌜ ∀ voter j,
+       acks !! voter = Some j →
+       uint.Z j ≤ uint.Z (word.add ro.(raft.readOnly.confirmedReads') (W64 $ length unconfirmedReads))
+         ⌝)%I with "[-]" as "%Hack_bounds".
+  {
+    iIntros (voter j Hin).
+    iDestruct ("Hacks_wits" with "[//]") as "Hack".
+    iDestruct "Hack" as "(% & Hack & _)".
+    iDestruct (own_heartbeat_auth_agree with "[$] [$]") as %Hagree.
+    { intros Heq. apply (f_equal length) in Heq. rewrite u64_le_length // in Heq. }
+    iPureIntro. rewrite u64_le_to_word in Hagree. word.
+  }
   iDestruct (own_slice_slice with "unconfirmedReads") as "[$ unconfirmedReads]".
   { instantiate (1:=ro.(raft.readOnly.unconfirmedReads').(slice.len)).
     word. }
@@ -882,9 +895,7 @@ Proof.
 
   iAssert (⌜ stale_q ⊆ srvs ⌝)%I with "[-]" as "%Hcontains".
   2:{ iPureIntro. set_solver. }
-  assert (uint.Z j ≤
-            uint.Z (word.add ro.(raft.readOnly.confirmedReads') (W64 $ length unconfirmedReads))).
-  { admit. } (* TODO: maintain this in invariant for simplicity. *)
+  specialize (Hack_bounds _ _ ltac:(done)).
   list_elem unconfirmedReads (uint.Z (word.sub j ro.(raft.readOnly.confirmedReads')) - 1) as ur.
 
   clear Hlookup.
@@ -909,7 +920,7 @@ Proof.
     rewrite list_lookup_fmap. erewrite Hlookup2. done. }
   rewrite !union_list_app in Hstale_contains_sepL2.
   set_solver.
-Admitted.
+Qed.
 
 Definition MsgReadIndex := W32 15.
 Lemma wp_raft__sendMsgReadIndexresponse γ r rf m :
