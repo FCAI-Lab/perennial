@@ -684,16 +684,12 @@ Proof.
   wp_if_destruct.
   { wp_end. iFrame "∗#%". }
   wp_apply (wp_map_lookup1 with "Hacks") as "Hacks".
-  wp_method_call. wp_auto.
-  iAssert (global_addr binary.LittleEndian ↦□ binary.littleEndian.mk)%I with "[]" as "#H".
-  { admit. } (* TODO add spec for the global variable assuming only is_pkg_init for binary. *)
-  wp_auto.
   iDestruct (own_slice_len with "Hctx") as %Hctx_len.
   iDestruct "Hack" as "(% & #Hhb_ctx & %)".
   iDestruct (own_heartbeat_auth_agree with "[$] [$]") as "%Hagree".
   { destruct ctx; try done. simpl in *. word. }
   destruct Hagree as (Hlen & Hbounds).
-  wp_apply (wp_littleEndian_Uint64 with "[Hctx]") as "Hctx".
+  wp_apply (wp_LittleEndian_Uint64 with "[Hctx]") as "Hctx".
   2:{ erewrite app_nil_r. iFrame. }
   { done. }
   (* rewrite u64_le_to_word. *)
@@ -712,7 +708,7 @@ Proof.
     + simpl. rewrite -> decide_False; last word.
       rewrite le_to_u64_le //. iFrame "#%".
   - iApply "Hacks_wits". done.
-Admitted.
+Qed.
 
 Definition own_AckedIndexer (i : interface.t_ok) (acks : gmap w64 w64) I : iProp Σ :=
   "HI" ∷ I ∗
