@@ -811,18 +811,25 @@ Proof.
   wp_auto.
   iApply "HΦ".
   iFrame "voters".
-  (* TODO: slice unconfirmedReads *)
   iDestruct (own_slice_slice with "unconfirmedReads") as "[$ unconfirmedReads]".
   { instantiate (1:=ro.(raft.readOnly.unconfirmedReads').(slice.len)).
     word. }
   iSplitL.
   {
-    iFrame "r". simpl. iFrame "Hacks". iExists [], [].
+    iFrame "r". simpl. iFrame "Hacks". iExists _, _.
+    iDestruct "unconfirmedReads" as "(H & _)".
+    iFrame "H".
     iFrame "#%".
-    admit. (* TODO: reestablish invariant. *)
+    iDestruct (own_slice_cap_slice with "unconfirmedReads_cap") as "$".
+    { word. }
+    rewrite subslice_to_end.
+    2:{ word. }
+    iSplitR.
+    { admit. (* TODO: prove new big_sepL2 on smaller list but with different confirmedReads *) }
+    iApply to_named. iExactEq "Hhb●". f_equal.
+    by len.
   }
-  iFrame.
-
+  iIntros "!# %i %r_ptr %Hin".
   admit. (* TODO: use Hconfirm to prove that position newConfirmedReads contains
             a quorum of acknowledgement. Then, everything before will be confirmed. *)
 Admitted.
