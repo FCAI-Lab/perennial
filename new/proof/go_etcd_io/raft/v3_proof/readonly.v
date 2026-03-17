@@ -735,6 +735,23 @@ Axiom wp_JointConfig__CommittedIndex :
                                        sint.Z c ≤ sint.Z (default (W64 0) (acks !! s))) ⌝
   }}}.
 
+Lemma big_sepL2_drop :
+  ∀ {PROP : bi} {A B : Type},
+    BiAffine PROP
+    → ∀ (Φ : nat → A → B → PROP) (l1 : list A) (l2 : list B) (n : nat),
+        ([∗ list] k↦x;y ∈ l1;l2, Φ k x y) ⊢ [∗ list] k↦x;y ∈ drop n l1; drop n l2, Φ (n + k)%nat x y.
+Proof using.
+  clear. intros.
+  iIntros "H".
+  iDestruct (big_sepL2_length with "H") as "%Hlen".
+  iDestruct (big_sepL2_to_sepL_1 with "H") as "H".
+  iApply big_sepL2_to_sepL_1'.
+  { len. }
+  iDestruct (big_sepL_drop with "H") as "H".
+  iApply (big_sepL_impl with "H").
+  iIntros "!# * %Hin (% & % & $)". rewrite lookup_drop //.
+Qed.
+
 Lemma wp_readOnly_maybeAdvance γ r term (c : quorum.JointConfig.t) voters_ref
   (voters : gmap w64 ()) :
   {{{ is_pkg_init raft ∗
@@ -825,7 +842,18 @@ Proof.
     rewrite subslice_to_end.
     2:{ word. }
     iSplitR.
-    { admit. (* TODO: prove new big_sepL2 on smaller list but with different confirmedReads *) }
+    {
+      iModIntro. iDestruct (big_sepL2_drop with "HunconfirmedReads") as "H".
+      iApply (big_sepL2_impl with "H").
+      iClear "H". iIntros "!# * %Hlookup1 %Hlookup2 H".
+      destruct x2 as [[]].
+      iNamedSuffix "H" "_sepL".
+      iFrame "#%".
+      iSplit.
+      { iApply to_named. iExactEq "Hhb_sepL". f_equal. f_equal. word. }
+      iPureIntro.
+      admit. (* TODO: reason about smaller union *)
+    }
     iApply to_named. iExactEq "Hhb●". f_equal.
     by len.
   }
