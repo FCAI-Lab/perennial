@@ -784,7 +784,21 @@ Proof.
         sint.Z (word.add ro.(raft.readOnly.confirmedReads') (W64 (length unconfirmedReads)))
     ⌝)%I with "[-]" as "%Hin_bounds".
   {
-    admit.
+    assert (Hsize : 0 < size cfg) by admit. (* FIXME: assumption *)
+    destruct Hconfirm as (? & q & Hquorum & Hquorum_le).
+    assert (0 < size (q ∩ cfg))%nat as Hq_size.
+    { clear -Hquorum Hsize. unfold is_quorum in *. lia. }
+    apply size_pos_elem_of in Hq_size as [s Hin_q].
+    specialize (Hquorum_le s ltac:(set_solver)).
+    destruct lookup eqn:Hlookup in Hquorum_le.
+    2:{ exfalso. simpl in *. word. }
+    iDestruct ("Hacks_wits" with "[% //]") as "Hack".
+    iDestruct "Hack" as "(% & Hhb_ctx & %)".
+    iDestruct (own_heartbeat_auth_agree with "[$] [$]") as "%Hagree".
+    { intros Heq. apply (f_equal length) in Heq. rewrite u64_le_length // in Heq. }
+    destruct Hagree as (_ & Hbounds).
+    rewrite u64_le_to_word in Hbounds.
+    simpl in *. word.
   }
 
   iDestruct (own_slice_wf with "unconfirmedReads") as "%Hwf".
