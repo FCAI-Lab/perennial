@@ -551,9 +551,14 @@ Lemma own_heartbeat_auth_agree stale_ids γ term ctx highest_index :
   ctx ≠ [] →
   is_heartbeat_ctx γ term ctx stale_ids -∗
   own_heartbeat_auth γ term highest_index -∗
-  ⌜ length ctx = 8%nat ∧ 0 ≤ sint.Z (le_to_u64 ctx) ≤ sint.Z highest_index ⌝.
+  ⌜ length ctx = 8%nat ∧ uint.Z (le_to_u64 ctx) ≤ uint.Z highest_index ⌝.
 Proof.
-Admitted.
+  iIntros "%Hctx (% & % & #Hp & #H◯ & _) (% & % & #Hp2 & H● & %Hin)".
+  iCombine "Hp Hp2" gives %[_ Heq]. subst.
+  iCombine "H● H◯" gives %Hl. iPureIntro.
+  apply elem_of_dom_2 in Hl. specialize (Hin ctx Hl).
+  naive_solver.
+Qed.
 
 Lemma wp_readOnly_addRequest γ r term (commitIndex : w64) req read_req_ctx log dq Ψ :
   {{{ is_pkg_init raft ∗
@@ -797,8 +802,8 @@ Proof.
     iIntros "!# * %". exfalso. done. }
 
   iAssert (⌜
-      0 ≤ sint.Z newConfirmedReads ≤
-        sint.Z (word.add ro.(raft.readOnly.confirmedReads') (W64 (length unconfirmedReads)))
+      uint.Z newConfirmedReads ≤
+      uint.Z (word.add ro.(raft.readOnly.confirmedReads') (W64 (length unconfirmedReads)))
     ⌝)%I with "[-]" as "%Hin_bounds".
   {
     assert (Hsize : 0 < size cfg) by admit. (* FIXME: assumption *)
