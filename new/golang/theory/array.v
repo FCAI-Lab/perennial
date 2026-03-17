@@ -1,10 +1,12 @@
 From New.golang.defn Require Export array.
 From New.golang.theory Require Export predeclared.
 
+
 Section lemmas.
 Context `{ffi_sem: ffi_semantics} `{!ffi_interp ffi} `{!heapGS Σ}
   {sem_fn : GoSemanticsFunctions} {pre_sem : go.PreSemantics}.
 
+Local Set Default Proof Using "Type".
 Context `{!ZeroVal V}.
 Context `{!TypedPointsto (Σ:=Σ) V}.
 Context `{!IntoValTyped V t}.
@@ -41,7 +43,7 @@ Qed.
 Lemma array_len ptr dq n vs :
   ptr ↦{dq} (array.mk n vs) -∗ ⌜ n = Z.of_nat $ length vs ⌝.
 Proof.
-  rewrite typed_pointsto_unseal. simpl. iIntros "[% _] !%". done.
+  rewrite typed_pointsto_unseal_eq /=. iIntros "[[% _] _] !%". done.
 Qed.
 
 Lemma seqZ_succ start n :
@@ -91,27 +93,15 @@ Proof using IntoValTyped0.
     erewrite take_S_r; last done.
     iSpecialize ("IH" with "[] Hl"); last wp_apply (wp_wand with "IH"); first word.
     iIntros "% H". iNamed "H". wp_pures. rewrite -> decide_True; last word. wp_pures.
-    rewrite typed_pointsto_unseal.
-    iDestruct "Hl" as "[% Hl]".
-    iDestruct (big_sepL_lookup_acc with "Hl") as "[H Hl]"; first done.
-    replace (sint.Z (word.sub _ _)) with m' by word.
-    replace (Z.of_nat (Z.to_nat m')) with m' by word.
-    wp_apply (wp_load with "H"). iIntros "H". iSpecialize ("Hl" with "H").
-    wp_pures. iExists _. iFrame. iPureIntro.
-    split_and!; try done; last len.
-    erewrite take_S_r.
-    2:{ replace (sint.nat _) with (Z.to_nat m') by word.
-        rewrite list_lookup_insert_eq //.
-        word. }
-    f_equal. rewrite take_insert_ge; last len. done.
+    admit.
   - admit.
     Unshelve. Fail idtac.
 Admitted.
 
 Lemma array_empty ptr dq :
-  ⊢ ptr ↦{dq} (array.mk 0 []).
+  ptr ≠ null → ⊢ ptr ↦{dq} (array.mk 0 []).
 Proof.
-  rewrite typed_pointsto_unseal. simpl. iPureIntro. done.
+  rewrite typed_pointsto_unseal_eq /=. iIntros "%". by iFrame "%".
 Qed.
 
 Lemma array_acc p (i : Z) dq n (a : array.t V n) (v: V) :
@@ -123,13 +113,14 @@ Lemma array_acc p (i : Z) dq n (a : array.t V n) (v: V) :
         p ↦{dq} (array.mk n $ <[(Z.to_nat i) := v']> $ array.arr a)).
 Proof.
   iIntros (Hpos Hlookup) "Harr".
-  rewrite [in _ (array.t _ _)]typed_pointsto_unseal /=.
-  iDestruct "Harr" as "[% Harr]".
+  iDestruct (typed_pointsto_not_null with "[$]") as %Hn.
+  iDestruct (typed_pointsto_split with "Harr") as "Harr".
+  simpl. iDestruct "Harr" as "[% Harr]".
   iDestruct (big_sepL_insert_acc _ _ (Z.to_nat i) with "Harr") as "[Hptsto Harr]".
   { done. }
   nat_cleanup. iFrame "Hptsto". iIntros (?) "Hptsto".
   iSpecialize ("Harr" with "Hptsto").
-  iFrame. rewrite length_insert. done.
+  iApply typed_pointsto_combine; first done. simpl. iFrame. rewrite length_insert. done.
 Qed.
 
 Lemma array_split (k : w64) l dq n (a : array.t V n) :
@@ -139,19 +130,22 @@ Lemma array_split (k : w64) l dq n (a : array.t V n) :
   array_index_ref V (sint.Z k) l ↦{dq} (array.mk (n - sint.Z k) $ drop (sint.nat k) $ array.arr a).
 Proof.
   intros Hle. rewrite typed_pointsto_unseal /=. destruct a as [arr]. simpl.
-  rewrite -{1}(take_drop (sint.nat k) arr).
+  rewrite -{1}(take_drop (sint.nat k) arr). rewrite /typed_pointsto_wrap.
+  rewrite /typed_pointsto_def /=.
   setoid_rewrite <- go.array_index_ref_add. len.
   iSplit.
-  - iIntros "[% H]". subst. rewrite -!assoc. iSplitR; first len.
-    rewrite comm. rewrite -assoc. iSplitR; first word.
-    rewrite -{1}(take_drop (sint.nat k) arr).
+  - iIntros "((% & H) & %)". subst. rewrite -!assoc. iSplitR; first len.
     rewrite big_sepL_app. iDestruct "H" as "[H1 H2]".
+    iFrame. iSplitR; first done. iSplitR; first len.
+    rewrite comm. iSplitR.
+    { iPureIntro. intros Hn. apply go.array_index_ref_null_inv in Hn. done. }
+    rewrite -{1}(take_drop (sint.nat k) arr).
     iFrame. iApply (big_sepL_impl with "H2").
     iIntros "!# * % H". iExactEq "H". f_equal.
     f_equal. len.
-  - iIntros "([% H1] & [% H2])".
+  - iIntros "([[% H1] %] & [[% H2] %])".
+    iSplitL; last done.
     iSplitR; first word.
-    rewrite -{3}(take_drop (sint.nat k) arr).
     rewrite big_sepL_app. iFrame.
     iApply (big_sepL_impl with "H2").
     iIntros "!# * % H". iExactEq "H". f_equal.

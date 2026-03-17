@@ -350,27 +350,24 @@ Lemma wp_ifJoinDemo (arg1 arg2: bool) :
 Proof.
   wp_start.
   wp_auto.
-  wp_apply wp_slice_literal as "% _"; [iIntros; by wp_auto | ].
+  wp_apply wp_slice_literal as "% Hz"; [iIntros; by wp_auto | ].
   iPersist "arg2".
   wp_if_join (λ v, ⌜v = execute_val⌝ ∗
                    ∃ (sl: slice.t) (xs: list w64),
                      "arr" ∷ arr_ptr ↦ sl ∗
                      "Hsl" ∷ sl ↦* xs ∗
                      "Hsl_cap" ∷ own_slice_cap w64 sl (DfracOwn 1))%I
-         with "[arr]".
+         with "[arr Hz]".
   { wp_apply wp_slice_literal as "% Hsl"; first (iIntros; by wp_auto).
-    wp_apply (wp_slice_append with "[Hsl]") as "%sl1 (Hsl & Hsl_cap & _)".
+    wp_apply (wp_slice_append with "[Hsl Hz]") as "%sl1 (Hsl & Hsl_cap & _)".
     {
       iFrame. simpl in *.
-      iDestruct (own_slice_empty) as "$"; simpl; [by len..|].
       iDestruct (own_slice_cap_empty) as "$"; simpl; try by len.
     }
     iSplit; [ done | ].
     iFrame. }
   { iSplit; [ done | ].
     iFrame.
-    iExists [].
-    iDestruct (own_slice_empty) as "$"; simpl; [by len..|].
     iDestruct (own_slice_cap_empty) as "$"; simpl; by len. }
   iIntros (v) "[% @]". subst.
   wp_auto. wp_if_destruct.

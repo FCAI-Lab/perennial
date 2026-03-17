@@ -1,18 +1,19 @@
 From New.proof Require Export proof_prelude.
 From New.golang.theory Require Import chan.
-From New.proof.github_com.goose_lang.goose.model.channel
-  Require Import idiom.base chan_au_base handoff.
+From New.golang.theory.chan.au_spec
+  Require Import chan_au_base.
+From New.golang.theory.chan.idioms Require Import base bag.
 From New.proof Require Import sync strings time tok_set.
-From New.generatedproof.github_com.goose_lang.goose.testdata.examples Require Import channel.
+From New.generatedproof.github_com.goose_lang.goose.testdata.examples.channel Require Import parallel_search_replace.
 
 Section proof.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics} {package_sem : chan_spec_raw_examples.Assumptions}.
+Context {sem : go.Semantics} {package_sem : parallel_search_replace.Assumptions}.
 Collection W := sem + package_sem.
 Set Default Proof Using "W".
 
-#[global] Instance : IsPkgInit (iProp Σ) chan_spec_raw_examples := define_is_pkg_init True%I.
-#[global] Instance : GetIsPkgInitWf (iProp Σ) chan_spec_raw_examples := build_get_is_pkg_init_wf.
+#[global] Instance : IsPkgInit (iProp Σ) parallel_search_replace := define_is_pkg_init True%I.
+#[global] Instance : GetIsPkgInitWf (iProp Σ) parallel_search_replace := build_get_is_pkg_init_wf.
 
 Record SearchReplace_names :=
   {
@@ -34,15 +35,15 @@ Definition chanP wg (x y: w64) (s: slice.t) : iProp Σ :=
 
 Definition waitgroupN := nroot .@ "waitgroup".
 
-Lemma wp_worker (γs: handoff_names) (ch: loc) (wg: loc) (x y: w64) :
-  {{{ is_pkg_init chan_spec_raw_examples ∗
-      "#Hchan" ∷ is_chan_handoff γs ch (chanP wg x y) }}}
-    @! chan_spec_raw_examples.worker #ch #wg #x #y
+Lemma wp_worker (γs: chan_names) (ch: loc) (wg: loc) (x y: w64) :
+  {{{ is_pkg_init parallel_search_replace ∗
+      "#Hchan" ∷ is_chan_bag γs ch (chanP wg x y) }}}
+    @! parallel_search_replace.worker #ch #wg #x #y
   {{{ RET #(); True }}}.
 Proof.
   wp_start. iNamed "Hpre".
   wp_auto.
-  wp_apply (wp_handoff_receive with "[$Hchan]").
+  wp_apply (wp_bag_receive with "[$Hchan]").
   iIntros (s) "Hrcv".
   wp_auto. iPersist "y x".
   iAssert (∃ s,
@@ -68,7 +69,7 @@ Proof.
     { rewrite take_ge; last word. rewrite drop_ge; last word.
       rewrite app_nil_r. iFrame. }
     wp_for_post.
-    wp_apply (wp_handoff_receive with "[$Hchan]").
+    wp_apply (wp_bag_receive with "[$Hchan]").
     iIntros (s') "Hrcv".
     wp_auto. iFrame.
   - rewrite -> decide_True; last done. wp_auto.
@@ -105,12 +106,34 @@ Proof.
     word.
 Qed.
 
+(* TODO: put this in slice.v *)
+Lemma own_slice_slice_empty index s (xs : list w64) :
+  0 ≤ sint.Z index ≤ sint.Z s.(slice.cap) →
+  s ↦* xs ⊢ □ slice.slice s w64 index index ↦* (@nil w64).
+Proof.
+  intros. rewrite own_slice_unseal.
+  iIntros "[[% %]|H]".
+  {
+    subst. simpl in *. iLeft. rewrite /slice.slice /=.
+    replace (index) with (W64 0) by word.
+    replace (word.sub _ _) with (W64 0) by done.
+    rewrite /slice_index_ref go.array_index_ref_0 //.
+  }
+  iRight.
+  iDestruct "H" as "[H %]".
+  iDestruct (typed_pointsto_not_null with "[$]") as "%".
+  iModIntro. simpl in *. iSplitL; last word.
+  replace (word.sub _ _) with (W64 0) by word.
+  iApply array_empty. intros Hn.
+  apply go.array_index_ref_null_inv in Hn. done.
+Qed.
+
 Lemma wp_SearchReplace (s: slice.t) (xs: list w64) (x y: w64) :
-  {{{ is_pkg_init chan_spec_raw_examples ∗ s ↦* xs ∗
+  {{{ is_pkg_init parallel_search_replace ∗ s ↦* xs ∗
       ⌜ length xs ≤ 2^63 - 1000 ⌝ ∗
       ⌜ length xs ≤ (2^31 - 1)*1000 ⌝
   }}}
-    @! chan_spec_raw_examples.SearchReplace #s #x #y
+    @! parallel_search_replace.SearchReplace #s #x #y
   {{{ RET #(); s ↦* (search_replace x y xs) }}}.
 Proof.
   (* The first overflow:
@@ -138,13 +161,14 @@ Proof.
   iIntros (ch γch_names) "(#His_chan & Hcap & Hoc)". simpl. wp_auto.
   iMod (init_WaitGroup with "wg") as (?) "H".
   iMod (join.init with "H") as "Hwg".
-  iMod (start_handoff_buffered _ _ (chanP wg_ptr x y) with "[$His_chan] [$Hoc]") as (γch) "#Hchan".
+  iMod (start_bag (chanP wg_ptr x y) with "[$His_chan] [$Hoc]") as "#Hchan".
+  { done. }
   iAssert (∃ (i : w64), "i" ∷ i_ptr ↦ i)%I with "[$i]" as "HH".
   wp_for. iNamed "HH". wp_auto.
   wp_if_destruct.
   2:{
     wp_apply wp_fork.
-      { wp_apply wp_worker; last done. iDestruct "Hchan" as "[%H Hsimp]". iFrame "#". }
+      { wp_apply wp_worker; last done. iFrame "#". }
       wp_for_post. iFrame.
   }
 
@@ -159,9 +183,12 @@ Proof.
         "%Hnadded" ∷ ⌜ 0 ≤ workRange * sint.Z nadded ≤ sint.Z offset ∨ sint.nat offset = length xs⌝
     )%I with "[offset Hs Hwg]" as "HH".
   { iFrame. iExists _. rewrite drop_0 take_0.
-    rewrite -slice_slice_trivial. iFrame.
+    rewrite -slice_slice_trivial.
+    iDestruct (own_slice_slice_empty (W64 0) with "Hs") as "#?".
+    { word. }
+    iFrame.
     iDestruct (join.own_Adder_wand with "[] Hwg") as "$".
-    { iIntros "_". iApply own_slice_empty; simpl; word. }
+    { iIntros "_". iFrame "#". }
     word. }
   iPersist "s".
   wp_for. iNamed "HH". wp_auto. case_bool_decide.
@@ -191,10 +218,8 @@ Proof.
   iDestruct (own_slice_split (W64 nextOffset) with "Hs") as "[Hsection Hs]".
   { subst nextOffset. word. }
   rewrite drop_drop.
-  wp_apply (wp_handoff_send with "[Hdone Hsection]").
-  { iFrame "#". iDestruct "Hchan" as "[%H' Hsimp]". iSplitL "Hsimp". { iFrame "#". }
-    iFrame.
-    }
+  wp_apply (wp_bag_send with "[$Hchan Hdone Hsection]").
+  { iExists _. iFrame. }
   wp_for_post.
   iFrame. iExists _.
   iSplitL "Hs".

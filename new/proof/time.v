@@ -1,7 +1,8 @@
 From New.proof Require Import proof_prelude.
 From New.generatedproof Require Export time.
-From New.proof.github_com.goose_lang.goose.model.channel
-  Require Import logatom.chan_au_base idiom.handoff.handoff.
+From New.golang.theory.chan.au_spec
+  Require Import chan_au_base.
+From New.golang.theory.chan.idioms Require Import bag.
 
 Section wps.
 Context `{hG: heapGS Σ, !ffi_semantics _ _}.
@@ -27,7 +28,7 @@ Set Default Proof Using "W".
 
 #[local]
 Lemma wp_Time__sec (t : loc) (tv : time.Time.t) :
-  {{{ is_pkg_init time ∗ t ↦ tv }}}
+  {{{ t ↦ tv }}}
     t @! (go.PointerType time.Time) @! "sec" #()
   {{{ (x : w64), RET #x; t ↦ tv }}}.
 Proof.
@@ -36,7 +37,7 @@ Qed.
 
 #[local]
 Lemma wp_Time__unixSec (t : loc) (tv : time.Time.t) :
-  {{{ is_pkg_init time ∗ t ↦ tv }}}
+  {{{ t ↦ tv }}}
     t @! (go.PointerType time.Time) @! "unixSec" #()
   {{{ (x : w64), RET #x; t ↦ tv }}}.
 Proof.
@@ -45,7 +46,7 @@ Qed.
 
 #[local]
 Lemma wp_Time__nsec (t : loc) (tv : time.Time.t) :
-  {{{ is_pkg_init time ∗ t ↦ tv }}}
+  {{{ t ↦ tv }}}
     t @! (go.PointerType time.Time) @! "nsec" #()
   {{{ (x : w32), RET #x; True }}}.
 Proof.
@@ -53,7 +54,7 @@ Proof.
 Qed.
 
 Lemma wp_Time__UnixNano' (t : time.Time.t) :
-  {{{ is_pkg_init time }}}
+  {{{ True }}}
     t @! time.Time @! "UnixNano" #()
   {{{ (x : w64), RET #x; True }}}.
 Proof.
@@ -62,7 +63,7 @@ Proof.
 Qed.
 
 Lemma wp_Time__UnixNano l (t : time.Time.t) :
-  {{{ is_pkg_init time ∗ l ↦ t }}}
+  {{{ l ↦ t }}}
     l @! (go.PointerType time.Time) @! "UnixNano" #()
   {{{ (x : w64), RET #x; l ↦ t }}}.
 Proof.
@@ -70,17 +71,17 @@ Proof.
 Qed.
 
 Axiom wp_Now :
-  {{{ is_pkg_init time }}}
+  {{{ True }}}
     @! time.Now #()
   {{{ (t : time.Time.t), RET #t; True }}}.
 
 Axiom wp_Until : ∀ (deadline : time.Time.t) ,
-  {{{ is_pkg_init time }}}
+  {{{ True }}}
     @! time.Until #deadline
   {{{ (x : w64), RET #x; True }}}.
 
 Axiom wp_Time__Add : ∀ (t : time.Time.t) (d : time.Duration.t),
-  {{{ is_pkg_init time }}}
+  {{{ True }}}
     t @! time.Time @! "Add" #d
   {{{ (t : time.Time.t), RET #t; True }}}.
 
@@ -95,29 +96,29 @@ Proof.
 Qed.
 
 Lemma wp_After (d : time.Duration.t) :
-  {{{ is_pkg_init time }}}
+  {{{ True }}}
     @! time.After #d
-  {{{ (ch: loc) γ, RET #ch; is_chan_handoff γ ch (λ (t: time.Time.t), True)%I }}}.
+  {{{ (ch: loc) γ, RET #ch; is_chan_bag γ ch (λ (t: time.Time.t), True)%I }}}.
 Proof.
   wp_start. change (go.Named "time.Time"%go []) with time.Time.
   wp_apply chan.wp_make2; first word.
   iIntros (ch γ) "(His & Hcap & Hown)".
   simpl.
-  iMod (start_handoff _ _ (λ t, True)%I
-          with "[$His] [$Hown]") as (γhandoff) "[_ #Hch]".
+  iMod (start_bag (λ t, True)%I with "[$His] [$Hown]") as "#Hch".
+  { done. }
   wp_auto.
   wp_apply wp_fork.
   {
     wp_apply wp_arbitraryTime.
     iIntros (t) "_".
-    wp_apply (wp_handoff_send with "[$Hch]"). done.
+    wp_apply (wp_bag_send with "[$Hch]"). done.
   }
   iApply "HΦ".
   iFrame "#".
 Qed.
 
 Lemma wp_Sleep (d : time.Duration.t) :
-  {{{ is_pkg_init time }}}
+  {{{ True }}}
     @! time.Sleep #d
   {{{ RET #(); True }}}.
 Proof. wp_start. by iApply "HΦ". Qed.

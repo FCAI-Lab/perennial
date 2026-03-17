@@ -29,25 +29,37 @@ Section goose_lang.
   Global Hint Mode AtomicWps + - - : typeclass_instances.
 
   Ltac solve_cmpxchg_fail :=
-    iIntros "* %Hne % Hl HΦ"; rewrite typed_pointsto_unseal /=;
-      iApply (lifting.wp_cmpxchg_fail with "[$]"); [naive_solver|done].
+    iIntros "* %Hne % Hl HΦ"; rewrite typed_pointsto_unseal /typed_pointsto_wrap /=;
+    iDestruct "Hl" as "[Hl >%]"; iApply (lifting.wp_cmpxchg_fail with "[$Hl]"); [naive_solver|];
+    iIntros "!> Hl"; iApply "HΦ"; iFrame "Hl"; done.
+
 
   Ltac solve_cmpxchg_suc :=
-    iIntros "* %Heq % Hl HΦ"; subst; rewrite typed_pointsto_unseal /=;
-      iApply (lifting.wp_cmpxchg_suc with "[$]"); done.
+    iIntros "* %Heq % Hl HΦ"; subst;
+    rewrite typed_pointsto_unseal /typed_pointsto_wrap /=;
+    iDestruct "Hl" as "[Hl >%]";
+    iApply (lifting.wp_cmpxchg_suc with "[$Hl]"); [done|];
+    iIntros "!> Hl"; iApply "HΦ"; iFrame "Hl"; done.
 
   Ltac solve_wp_atomic_load :=
-    iIntros "* Hl HΦ"; rewrite typed_pointsto_unseal /=;
-    iApply (lifting.wp_load with "[$]"); done.
+    iIntros "* Hl HΦ";
+    rewrite typed_pointsto_unseal /typed_pointsto_wrap /=;
+    iDestruct "Hl" as "[Hl >%]";
+    iApply (lifting.wp_load with "[$Hl]");
+    iIntros "!> Hl"; iApply "HΦ"; iFrame "Hl"; done.
 
   Ltac solve_wp_atomic_swap :=
-    iIntros "* Hl HΦ"; rewrite typed_pointsto_unseal /=;
-    iApply (lifting.wp_atomic_swap with "[$]"); done.
+    iIntros "* Hl HΦ";
+    rewrite typed_pointsto_unseal /typed_pointsto_wrap /=;
+    iDestruct "Hl" as "[Hl %]";
+    iApply (lifting.wp_atomic_swap with "[$Hl]");
+    iIntros "!> Hl"; iApply "HΦ"; iFrame "Hl"; done.
 
   Ltac solve_atomic_wps :=
     split;
     [solve_cmpxchg_fail | solve_cmpxchg_suc | solve_wp_atomic_load | solve_wp_atomic_swap ].
 
+  (* TODO: fix solve_atomic_wps tactics for typed_pointsto not_null *)
   #[global] Instance atomic_wps_uint64 : AtomicWps w64.
   Proof. solve_atomic_wps. Qed.
   #[global] Instance atomic_wps_uint32 : AtomicWps w32.

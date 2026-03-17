@@ -27,14 +27,6 @@ Proof.
   wp_alloc _unused as "_". wp_auto. iFrame "∗#". done.
 Qed.
 
-Lemma noCopy_emp l dq :
-  ⊢ l ↦{dq} atomic.noCopy.mk : iProp Σ.
-Proof. rewrite typed_pointsto_unseal //=. Qed.
-
-Lemma align_emp l dq :
-  ⊢ l ↦{dq} atomic.align64.mk : iProp Σ.
-Proof. rewrite typed_pointsto_unseal //=. Qed.
-
 (* 64-bit structs have an extra field (align64) *)
 Definition own_Uint64 (u : loc) dq (v : w64) : iProp Σ :=
   u ↦{dq} atomic.Uint64.mk (zero_val _) (zero_val _) v.
@@ -92,8 +84,10 @@ Proof.
   wp_start as "_".
   iMod "HΦ" as (?) "[Haddr HΦ]".
   rewrite typed_pointsto_unseal /typed_pointsto_def /=.
+  iDestruct "Haddr" as ">[Haddr %]".
   wp_apply (wp_atomic_add with "Haddr"); first rewrite !go.into_val_unfold //=.
-  iFrame.
+  iFrame. iIntros "?". iMod ("HΦ" with "[-]"); last done.
+  by iFrame.
 Qed.
 
 Lemma wp_CompareAndSwapUint64 (addr : loc) (old : w64) (new : w64) :
@@ -121,6 +115,12 @@ Qed.
 #[global] Opaque own_Uint64.
 #[local] Transparent own_Uint64.
 Global Instance own_Uint64_timeless a b c : Timeless (own_Uint64 a b c) := _.
+Global Instance own_Uint64_dfractional u v :
+  DFractional (λ q, own_Uint64 u q v).
+Proof. apply _. Qed.
+Global Instance own_Uint64_as_dfractional u v q :
+  AsDFractional (own_Uint64 u q v) (λ q, own_Uint64 u q v) q.
+Proof. apply _. Qed.
 Global Instance own_Uint64_fractional u v :
   Fractional (λ q, own_Uint64 u (DfracOwn q) v).
 Proof. apply fractional_of_dfractional. apply _. Qed.
@@ -146,12 +146,13 @@ Proof.
   iMod "HΦ". iModIntro.
   iDestruct "HΦ" as (?) "[Hown HΦ]".
   iNext.
+  iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
   iStructNamed "Hown". simpl.
   iExists _. iFrame.
   iIntros "Hv".
 
   iMod ("HΦ" with "[-]").
-  { iApply typed_pointsto_combine. iFrame. }
+  { iApply typed_pointsto_combine; first done. iFrame. }
   iModIntro.
   wp_auto. done.
 Qed.
@@ -168,12 +169,14 @@ Proof.
   iMod "HΦ". iModIntro.
   iDestruct "HΦ" as (?) "[Hown HΦ]".
 
-  iNext. iStructNamed "Hown". simpl.
+  iNext.
+  iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
+  iStructNamed "Hown". simpl.
   iExists _. iFrame.
   iIntros "Hv".
 
   iMod ("HΦ" with "[-]").
-  { iApply typed_pointsto_combine. iFrame. }
+  { iApply typed_pointsto_combine; first done. iFrame. }
   iModIntro.
   wp_auto. done.
 Qed.
@@ -192,12 +195,14 @@ Proof.
   iMod "HΦ". iModIntro.
   iDestruct "HΦ" as (?) "[Hown HΦ]".
 
-  iNext. iStructNamed "Hown". simpl.
+  iNext.
+  iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
+  iStructNamed "Hown". simpl.
   iExists _. iFrame.
   iIntros "Hv".
 
   iMod ("HΦ" with "[-]").
-  { iApply typed_pointsto_combine. iFrame. }
+  { iApply typed_pointsto_combine; first done. iFrame. }
   iModIntro.
   wp_auto. done.
 Qed.
@@ -216,6 +221,7 @@ Proof.
   iMod "HΦ". iModIntro. iNext.
   iDestruct "HΦ" as (??) "(Hown & -> & HΦ)".
 
+  iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
   iStructNamed "Hown". simpl.
   iExists _. iFrame.
   iSplitR.
@@ -223,7 +229,7 @@ Proof.
   iIntros "Hv".
 
   iMod ("HΦ" with "[-]").
-  { iApply typed_pointsto_combine. iFrame. }
+  { iApply typed_pointsto_combine; first done. iFrame. }
   iModIntro.
   wp_auto. done.
 Qed.
@@ -278,8 +284,10 @@ Qed.
     wp_start as "_".
     iMod "HΦ" as (?) "[Haddr HΦ]".
     rewrite typed_pointsto_unseal /typed_pointsto_def /=.
+    iDestruct "Haddr" as ">[Haddr %]".
     wp_apply (wp_atomic_add with "Haddr"); first rewrite !go.into_val_unfold //=.
-    iFrame.
+    iFrame. iIntros "?". iMod ("HΦ" with "[-]"); last done.
+    by iFrame.
   Qed.
 
   Lemma wp_CompareAndSwapInt64 (addr : loc) (old : w64) (new : w64) :
@@ -307,6 +315,12 @@ Qed.
   #[global] Opaque own_Int64.
   #[local] Transparent own_Int64.
   Global Instance own_Int64_timeless a b c : Timeless (own_Int64 a b c) := _.
+  Global Instance own_Int64_dfractional u v :
+    DFractional (λ q, own_Int64 u q v).
+  Proof. apply _. Qed.
+  Global Instance own_Int64_as_dfractional u v q :
+    AsDFractional (own_Int64 u q v) (λ q, own_Int64 u q v) q.
+  Proof. apply _. Qed.
   Global Instance own_Int64_fractional u v :
     Fractional (λ q, own_Int64 u (DfracOwn q) v).
   Proof. apply fractional_of_dfractional. apply _. Qed.
@@ -332,12 +346,13 @@ Qed.
     iMod "HΦ". iModIntro.
     iDestruct "HΦ" as (?) "[Hown HΦ]".
     iNext.
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
     iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -354,12 +369,14 @@ Qed.
     iMod "HΦ". iModIntro.
     iDestruct "HΦ" as (?) "[Hown HΦ]".
 
-    iNext. iStructNamed "Hown". simpl.
+    iNext.
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
+    iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -378,12 +395,14 @@ Qed.
     iMod "HΦ". iModIntro.
     iDestruct "HΦ" as (?) "[Hown HΦ]".
 
-    iNext. iStructNamed "Hown". simpl.
+    iNext.
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
+    iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -402,6 +421,7 @@ Qed.
     iMod "HΦ". iModIntro. iNext.
     iDestruct "HΦ" as (??) "(Hown & -> & HΦ)".
 
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
     iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iSplitR.
@@ -409,7 +429,7 @@ Qed.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -461,8 +481,10 @@ Qed.
     wp_start as "_".
     iMod "HΦ" as (?) "[Haddr HΦ]".
     rewrite typed_pointsto_unseal /typed_pointsto_def /=.
+    iDestruct "Haddr" as ">[Haddr %]".
     wp_apply (wp_atomic_add with "Haddr"); first rewrite !go.into_val_unfold //=.
-    iFrame.
+    iFrame. iIntros "?". iMod ("HΦ" with "[-]"); last done.
+    by iFrame.
   Qed.
 
   Lemma wp_CompareAndSwapUint32 (addr : loc) (old : w32) (new : w32) :
@@ -490,6 +512,12 @@ Qed.
   #[global] Opaque own_Uint32.
   #[local] Transparent own_Uint32.
   Global Instance own_Uint32_timeless a b c : Timeless (own_Uint32 a b c) := _.
+  Global Instance own_Uint32_dfractional u v :
+    DFractional (λ q, own_Uint32 u q v).
+  Proof. apply _. Qed.
+  Global Instance own_Uint32_as_dfractional u v q :
+    AsDFractional (own_Uint32 u q v) (λ q, own_Uint32 u q v) q.
+  Proof. apply _. Qed.
   Global Instance own_Uint32_fractional u v :
     Fractional (λ q, own_Uint32 u (DfracOwn q) v).
   Proof. apply fractional_of_dfractional. apply _. Qed.
@@ -515,12 +543,13 @@ Qed.
     iMod "HΦ". iModIntro.
     iDestruct "HΦ" as (?) "[Hown HΦ]".
     iNext.
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
     iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -537,12 +566,14 @@ Qed.
     iMod "HΦ". iModIntro.
     iDestruct "HΦ" as (?) "[Hown HΦ]".
 
-    iNext. iStructNamed "Hown". simpl.
+    iNext.
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
+    iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -561,12 +592,14 @@ Qed.
     iMod "HΦ". iModIntro.
     iDestruct "HΦ" as (?) "[Hown HΦ]".
 
-    iNext. iStructNamed "Hown". simpl.
+    iNext.
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
+    iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -585,6 +618,7 @@ Qed.
     iMod "HΦ". iModIntro. iNext.
     iDestruct "HΦ" as (??) "(Hown & -> & HΦ)".
 
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
     iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iSplitR.
@@ -592,7 +626,7 @@ Qed.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -644,8 +678,10 @@ Qed.
     wp_start as "_".
     iMod "HΦ" as (?) "[Haddr HΦ]".
     rewrite typed_pointsto_unseal /typed_pointsto_def /=.
+    iDestruct "Haddr" as ">[Haddr %]".
     wp_apply (wp_atomic_add with "Haddr"); first rewrite !go.into_val_unfold //=.
-    iFrame.
+    iFrame. iIntros "?". iMod ("HΦ" with "[-]"); last done.
+    by iFrame.
   Qed.
 
   Lemma wp_CompareAndSwapInt32 (addr : loc) (old : w32) (new : w32) :
@@ -673,6 +709,12 @@ Qed.
   #[global] Opaque own_Int32.
   #[local] Transparent own_Int32.
   Global Instance own_Int32_timeless a b c : Timeless (own_Int32 a b c) := _.
+  Global Instance own_Int32_dfractional u v :
+    DFractional (λ q, own_Int32 u q v).
+  Proof. apply _. Qed.
+  Global Instance own_Int32_as_dfractional u v q :
+    AsDFractional (own_Int32 u q v) (λ q, own_Int32 u q v) q.
+  Proof. apply _. Qed.
   Global Instance own_Int32_fractional u v :
     Fractional (λ q, own_Int32 u (DfracOwn q) v).
   Proof. apply fractional_of_dfractional. apply _. Qed.
@@ -698,12 +740,13 @@ Qed.
     iMod "HΦ". iModIntro.
     iDestruct "HΦ" as (?) "[Hown HΦ]".
     iNext.
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
     iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -720,12 +763,14 @@ Qed.
     iMod "HΦ". iModIntro.
     iDestruct "HΦ" as (?) "[Hown HΦ]".
 
-    iNext. iStructNamed "Hown". simpl.
+    iNext.
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
+    iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -744,12 +789,14 @@ Qed.
     iMod "HΦ". iModIntro.
     iDestruct "HΦ" as (?) "[Hown HΦ]".
 
-    iNext. iStructNamed "Hown". simpl.
+    iNext.
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
+    iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -768,6 +815,7 @@ Qed.
     iMod "HΦ". iModIntro. iNext.
     iDestruct "HΦ" as (??) "(Hown & -> & HΦ)".
 
+    iDestruct (typed_pointsto_not_null with "Hown") as "%Hnot_null".
     iStructNamed "Hown". simpl.
     iExists _. iFrame.
     iSplitR.
@@ -775,7 +823,7 @@ Qed.
     iIntros "Hv".
 
     iMod ("HΦ" with "[-]").
-    { iApply typed_pointsto_combine. iFrame. }
+    { iApply typed_pointsto_combine; first done. iFrame. }
     iModIntro.
     wp_auto. done.
   Qed.
@@ -823,12 +871,13 @@ Proof.
   wp_apply (wp_LoadUint32 with "[$]").
   iMod "HΦ". iModIntro.
   iDestruct "HΦ" as (?) "[>Hown HΦ]".
+  iDestruct (typed_pointsto_not_null with "Hown") as %Hnot_null.
   iStructNamed "Hown". simpl.
   iExists _. iFrame.
   iIntros "!> Hv".
 
   iMod ("HΦ" with "[-]").
-  { iApply typed_pointsto_combine. iFrame. }
+  { iApply typed_pointsto_combine; first done. iFrame. }
   iModIntro.
   wp_auto.
   destruct v; auto.
@@ -858,12 +907,13 @@ Proof.
   iMod "HΦ". iModIntro.
   iDestruct "HΦ" as (?) "[>Hown HΦ]".
 
+  iDestruct (typed_pointsto_not_null with "Hown") as %Hnot_null.
   iStructNamed "Hown". simpl.
   iExists _. iFrame.
   iIntros "!> Hv".
 
   iMod ("HΦ" with "[-]").
-  { iApply typed_pointsto_combine. iFrame. }
+  { iApply typed_pointsto_combine; first done. iFrame. }
   iModIntro.
   wp_auto. done.
 Qed.
@@ -884,6 +934,7 @@ Proof.
   iMod "HΦ". iModIntro.
   iDestruct "HΦ" as (??) "(>Hown & >-> & HΦ)".
 
+  iDestruct (typed_pointsto_not_null with "Hown") as %Hnot_null.
   iStructNamed "Hown". simpl.
   iExists _. iFrame.
   iSplitR.
@@ -891,7 +942,7 @@ Proof.
   iIntros "!> Hv".
 
   iMod ("HΦ" with "[-]").
-  { iApply typed_pointsto_combine. iFrame. simpl.
+  { iApply typed_pointsto_combine; first done. iFrame. simpl.
     iSplitL; last done. rewrite /named. iExactEq "Hv". f_equal.
     destruct v, old; auto.
   }
@@ -982,10 +1033,11 @@ Proof.
   wp_bind.
   wp_apply wp_LoadPointer.
   iMod "HΦ" as (?) "[Haddr HΦ]".
+  iDestruct (typed_pointsto_not_null with "Haddr") as %Hnot_null.
   iStructNamed "Haddr". simpl. iFrame.
   iModIntro. iModIntro. iIntros "Hv".
   iMod ("HΦ" with "[_0 _1 Hv]") as "HΦ".
-  { iApply typed_pointsto_combine. iFrame. }
+  { iApply typed_pointsto_combine; first done. iFrame. }
   iModIntro. wp_auto. wp_end.
 Qed.
 
@@ -998,10 +1050,11 @@ Proof.
   wp_start as "_". wp_auto.
   wp_apply wp_SwapPointer.
   iMod "HΦ" as (?) "[Haddr HΦ]".
+  iDestruct (typed_pointsto_not_null with "Haddr") as %Hnot_null.
   iStructNamed "Haddr". simpl. iFrame.
   iModIntro. iNext. iIntros "Hv".
   iMod ("HΦ" with "[_0 _1 Hv]") as "HΦ".
-  { iApply typed_pointsto_combine. iFrame. }
+  { iApply typed_pointsto_combine; first done. iFrame. }
   iModIntro. wp_auto. wp_end.
 Qed.
 
@@ -1014,10 +1067,11 @@ Proof.
   wp_start as "_". wp_auto.
   wp_apply wp_StorePointer.
   iMod "HΦ" as (?) "[Haddr HΦ]".
+  iDestruct (typed_pointsto_not_null with "Haddr") as %Hnot_null.
   iStructNamed "Haddr". simpl. iFrame.
   iModIntro. iNext. iIntros "Hv".
   iMod ("HΦ" with "[_0 _1 Hv]") as "HΦ".
-  { iApply typed_pointsto_combine. iFrame. }
+  { iApply typed_pointsto_combine; first done. iFrame. }
   iModIntro.
   wp_pures.
   done.
@@ -1034,11 +1088,12 @@ Proof.
   wp_start as "_". wp_auto.
   wp_apply wp_CompareAndSwapPointer.
   iMod "HΦ" as (??) "(>Hown & >-> & HΦ)".
+  iDestruct (typed_pointsto_not_null with "Hown") as %Hnot_null.
   iStructNamed "Hown". simpl. iFrame.
   iModIntro. iNext. iSplitR.
   { by destruct decide. }
   iIntros "Hv". iMod ("HΦ" with "[_0 _1 Hv]") as "HΦ".
-  { iApply typed_pointsto_combine. iFrame. }
+  { iApply typed_pointsto_combine; first done. iFrame. }
   iModIntro. wp_auto. wp_end.
 Qed.
 
