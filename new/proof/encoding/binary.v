@@ -188,4 +188,28 @@ Proof using W.
   rewrite (word64_byte_extract _ 7) //.
 Qed.
 
+Lemma wp_LittleEndian_PutUint64 b space rem v :
+  length space = 8%nat →
+  {{{ is_pkg_init binary ∗ b ↦* (space ++ rem) }}}
+    (global_addr binary.LittleEndian) @! (go.PointerType binary.littleEndian) @! "PutUint64" #b #v
+  {{{ RET #(); b ↦* (u64_le v ++ rem) }}}.
+Proof using W.
+  intros ?. wp_start.
+  iDestruct (is_pkg_init_access with "[$]") as "H".
+  simpl. iNamed "H". wp_auto.
+  by wp_apply (wp_littleEndian_PutUint64 with "[$]").
+Qed.
+
+Lemma wp_LittleEndian_Uint64 b bs dq rem :
+  length bs = 8%nat →
+  {{{ is_pkg_init binary ∗ b ↦*{dq} (bs ++ rem) }}}
+    (global_addr binary.LittleEndian) @! (go.PointerType binary.littleEndian) @! "Uint64" #b
+  {{{ RET #(le_to_u64 bs); b ↦*{dq} (bs ++ rem) }}}.
+Proof using W.
+  intros ?. wp_start.
+  iDestruct (is_pkg_init_access with "[$]") as "H".
+  simpl. iNamed "H". wp_auto.
+  by wp_apply (wp_littleEndian_Uint64 with "[$]").
+Qed.
+
 End wps.
