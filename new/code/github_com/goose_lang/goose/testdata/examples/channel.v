@@ -119,12 +119,12 @@ Definition select_nb_full_buffer_not_ready {ext : ffi_syntax} {go_gctx : GoGloba
    go: actris_example.go:4:6 *)
 Definition DSPExampleⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
-    exception_do (let: "c" := (GoAlloc (go.ChannelType go.sendrecv go.any) (GoZeroVal (go.ChannelType go.sendrecv go.any) #())) in
+    exception_do (let: "signal" := (GoAlloc (go.ChannelType go.sendrecv go.any) (GoZeroVal (go.ChannelType go.sendrecv go.any) #())) in
+    let: "c" := (GoAlloc (go.ChannelType go.sendrecv go.any) (GoZeroVal (go.ChannelType go.sendrecv go.any) #())) in
     let: "$r0" := ((FuncResolve go.make1 [go.ChannelType go.sendrecv go.any] #()) #()) in
+    let: "$r1" := ((FuncResolve go.make1 [go.ChannelType go.sendrecv go.any] #()) #()) in
     do:  ("c" <-[go.ChannelType go.sendrecv go.any] "$r0");;;
-    let: "signal" := (GoAlloc (go.ChannelType go.sendrecv go.any) (GoZeroVal (go.ChannelType go.sendrecv go.any) #())) in
-    let: "$r0" := ((FuncResolve go.make1 [go.ChannelType go.sendrecv go.any] #()) #()) in
-    do:  ("signal" <-[go.ChannelType go.sendrecv go.any] "$r0");;;
+    do:  ("signal" <-[go.ChannelType go.sendrecv go.any] "$r1");;;
     let: "$go" := (λ: <>,
       exception_do (let: "ptr" := (GoAlloc (go.PointerType go.int) (GoZeroVal (go.PointerType go.int) #())) in
       let: "$r0" := (TypeAssert (go.PointerType go.int) (Fst (chan.receive go.any (![go.ChannelType go.sendrecv go.any] "c")))) in
@@ -141,11 +141,8 @@ Definition DSPExampleⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
       return: #())
       ) in
     do:  (Fork ("$go" #()));;;
-    let: "val" := (GoAlloc go.int (GoZeroVal go.int #())) in
-    let: "$r0" := #(W64 40) in
-    do:  ("val" <-[go.int] "$r0");;;
     let: "ptr" := (GoAlloc (go.PointerType go.int) (GoZeroVal (go.PointerType go.int) #())) in
-    let: "$r0" := "val" in
+    let: "$r0" := (GoAlloc go.int #(W64 40)) in
     do:  ("ptr" <-[go.PointerType go.int] "$r0");;;
     do:  (let: "$chan" := (![go.ChannelType go.sendrecv go.any] "c") in
     let: "$v" := (Convert (go.PointerType go.int) go.any (![go.PointerType go.int] "ptr")) in

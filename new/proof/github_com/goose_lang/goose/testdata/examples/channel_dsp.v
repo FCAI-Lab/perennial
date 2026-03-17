@@ -51,6 +51,7 @@ Proof using dspG0 W.
     rewrite -> decide_True; last done. wp_auto.
     wp_send with "[$Hl]". by wp_auto.
   }
+  wp_alloc x as "val". wp_auto.
   wp_send with "[$val]". wp_auto. wp_recv as "Hl".
   wp_auto. by iApply "HΦ".
 Qed.
