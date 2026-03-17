@@ -508,7 +508,7 @@ Definition own_readOnly γ (r : loc) (term : w64) : iProp Σ :=
               (u64_le (word.add ro.(raft.readOnly.confirmedReads') (W64 $ Z.of_nat (S i)))) in
           "#Hhb" ∷ is_heartbeat_ctx_stale γ term hb_ctx stale_ids ∗
           "%Hstale_contains" ∷
-            (⌜ foldl union ∅ (take i read_reqs.*2) ⊆ stale_ids ⌝) ∗
+            (⌜ ⋃ (take i read_reqs.*2) ⊆ stale_ids ⌝) ∗
           "#Hstale_or_safe" ∷
             (⌜ is_quorum stale_ids ⌝ ∨
                (∃ Φ, is_read_req_ctx γ read_req_ctx Φ ∗
@@ -582,7 +582,7 @@ Proof.
   iSelect (£ 1)%I (fun H => iRename H into "Hlc").
   iMod (try_read with "[Hcom Hlc]") as (stale_ids') "(#Hstale & Hcom & #Hmaybe_read)".
   { iNamed "Hread_ctx". iFrame "∗#". word. }
-  set (stale_ids'':=foldl union ∅ (read_reqs.*2 ++ [stale_ids'])).
+  set (stale_ids'':=⋃ (read_reqs.*2 ++ [stale_ids'])).
   iMod (own_heartbeat_auth_new stale_ids'' with "Hhb●") as "[Hhb● #Hhb]".
   { admit. } (* TODO: overflow of incrementing value. *)
   iPersist "req".
@@ -627,7 +627,7 @@ Proof.
        pulling out entries from the HunconfirmedReads big_sepL2, unless this is
        the first entry. *)
     iIntros "!# * %Hin". subst stale_ids''.
-    rewrite foldl_snoc /= in Hin.
+    rewrite union_list_app /= in Hin.
     rewrite elem_of_union in Hin. destruct Hin as [Hin|Hin].
     2:{ iApply "Hstale". iPureIntro. set_solver. }
     destruct read_reqs using rev_ind.
@@ -649,12 +649,12 @@ Proof.
     2:{ rewrite !length_app /= in Hlen. by len. }
     rewrite take_ge in Hstale_contains_sepL.
     2:{ rewrite !length_app /= in Hlen. by len. }
-    rewrite fmap_app foldl_snoc. set_solver.
+    rewrite fmap_app union_list_app. set_solver.
   }
   iSplitR.
   { iPureIntro. simpl. subst stale_ids''.
     rewrite Nat.add_0_r. rewrite fmap_app. rewrite take_app_le; last by len.
-    rewrite take_ge; last by len. rewrite foldl_snoc. set_solver. }
+    rewrite take_ge; last by len. rewrite union_list_app. set_solver. }
   iDestruct "Hmaybe_read" as "[Hread|%]".
   { iRight.
     rewrite /is_read_index.
@@ -662,7 +662,7 @@ Proof.
     iFrame "#". }
   { iLeft. iPureIntro. subst stale_ids''.
     eapply quorums_subseteq; try eassumption.
-    rewrite foldl_snoc. set_solver. }
+    rewrite union_list_app. set_solver. }
 Admitted. (* NOTE: admit for overflow of incrementing value. *)
 
 Lemma wp_readOnly_recvAck γ r term (from : w64) (ctx_sl : slice.t) ctx (v : w64) :
@@ -852,7 +852,8 @@ Proof.
       iSplit.
       { iApply to_named. iExactEq "Hhb_sepL". f_equal. f_equal. word. }
       iPureIntro.
-      admit. (* TODO: reason about smaller union *)
+      rewrite -take_take_drop union_list_app in Hstale_contains_sepL.
+      rewrite fmap_drop. set_solver.
     }
     iApply to_named. iExactEq "Hhb●". f_equal.
     by len.
