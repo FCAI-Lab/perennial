@@ -24,7 +24,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/goose-lang/goose"
+	"github.com/mit-pdos/perennial/goose"
 	"github.com/stretchr/testify/assert"
 )
 

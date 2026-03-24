@@ -5,9 +5,9 @@
 // include user-defined structs in Go as Coq records and a Perennial procedure
 // for each Go function.
 //
-// See the Goose README at https://github.com/goose-lang/goose for a high-level
+// See the Goose README at https://github.com/mit-pdos/perennial/goose for a high-level
 // overview. The source also has some design documentation at
-// https://github.com/goose-lang/goose/tree/master/docs.
+// https://github.com/mit-pdos/perennial/goose/tree/master/docs.
 package goose
 
 import (
@@ -25,10 +25,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/goose-lang/goose/declfilter"
-	"github.com/goose-lang/goose/glang"
-	"github.com/goose-lang/goose/util"
-	"github.com/goose-lang/goose/util/toposort"
+	"github.com/mit-pdos/perennial/goose/declfilter"
+	"github.com/mit-pdos/perennial/goose/glang"
+	"github.com/mit-pdos/perennial/goose/util"
+	"github.com/mit-pdos/perennial/goose/util/toposort"
 	"golang.org/x/tools/go/packages"
 )
 

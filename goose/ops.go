@@ -3,7 +3,7 @@ package goose
 import (
 	"go/token"
 
-	"github.com/goose-lang/goose/glang"
+	"github.com/mit-pdos/perennial/goose/glang"
 )
 
 var gooseLangOps = map[token.Token]glang.OpId{

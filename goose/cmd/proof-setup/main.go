@@ -7,9 +7,9 @@ import (
 	"path"
 
 	"github.com/fatih/color"
-	"github.com/goose-lang/goose/glang"
-	"github.com/goose-lang/goose/proofsetup"
-	"github.com/goose-lang/goose/util"
+	"github.com/mit-pdos/perennial/goose/glang"
+	"github.com/mit-pdos/perennial/goose/proofsetup"
+	"github.com/mit-pdos/perennial/goose/util"
 	"golang.org/x/tools/go/packages"
 )
 

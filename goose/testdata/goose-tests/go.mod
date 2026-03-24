@@ -3,7 +3,6 @@ module example.com/goose-demo/m
 go 1.26
 
 require (
-	github.com/goose-lang/goose v0.6.1
 	github.com/mit-pdos/gokv v0.0.0-20240710184135-76e2d6393889
 	github.com/tchajed/marshal v0.6.1
 )

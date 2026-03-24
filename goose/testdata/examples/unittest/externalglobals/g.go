@@ -1,7 +1,7 @@
 package externalglobals
 
 import (
-	"github.com/goose-lang/goose/testdata/examples/unittest"
+	"github.com/mit-pdos/perennial/goose/testdata/examples/unittest"
 )
 
 func f() {

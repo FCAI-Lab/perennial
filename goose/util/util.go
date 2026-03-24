@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/goose-lang/goose/declfilter"
-	"github.com/goose-lang/goose/glang"
+	"github.com/mit-pdos/perennial/goose/declfilter"
+	"github.com/mit-pdos/perennial/goose/glang"
 	"github.com/pkg/errors"
 	"golang.org/x/tools/go/packages"
 )

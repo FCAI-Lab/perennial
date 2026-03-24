@@ -5,9 +5,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/goose-lang/goose/declfilter"
-	"github.com/goose-lang/goose/glang"
-	"github.com/goose-lang/goose/proofgen/tmpl"
+	"github.com/mit-pdos/perennial/goose/declfilter"
+	"github.com/mit-pdos/perennial/goose/glang"
+	"github.com/mit-pdos/perennial/goose/proofgen/tmpl"
 	"golang.org/x/tools/go/packages"
 )
 

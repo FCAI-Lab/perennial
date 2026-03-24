@@ -8,8 +8,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/goose-lang/goose/declfilter"
-	"github.com/goose-lang/goose/glang"
+	"github.com/mit-pdos/perennial/goose/declfilter"
+	"github.com/mit-pdos/perennial/goose/glang"
 )
 
 // this file has the translations for types themselves

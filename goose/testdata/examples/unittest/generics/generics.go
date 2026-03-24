@@ -1,7 +1,7 @@
 package generics
 
 import (
-	"github.com/goose-lang/goose/testdata/examples/unittest/generics/helpers"
+	"github.com/mit-pdos/perennial/goose/testdata/examples/unittest/generics/helpers"
 )
 
 // Box is the simplest generic struct

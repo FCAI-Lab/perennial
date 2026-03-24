@@ -9,8 +9,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/goose-lang/goose/glang"
-	"github.com/goose-lang/goose/util"
+	"github.com/mit-pdos/perennial/goose/glang"
+	"github.com/mit-pdos/perennial/goose/util"
 	"github.com/pkg/errors"
 	"golang.org/x/tools/go/packages"
 )

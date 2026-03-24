@@ -4,8 +4,8 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/goose-lang/goose/proofgen"
-	"github.com/goose-lang/goose/util"
+	"github.com/mit-pdos/perennial/goose/proofgen"
+	"github.com/mit-pdos/perennial/goose/util"
 )
 
 func main() {

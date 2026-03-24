@@ -8,9 +8,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/goose-lang/goose/declfilter"
-	"github.com/goose-lang/goose/glang"
-	"github.com/goose-lang/goose/util"
+	"github.com/mit-pdos/perennial/goose/declfilter"
+	"github.com/mit-pdos/perennial/goose/glang"
+	"github.com/mit-pdos/perennial/goose/util"
 	"golang.org/x/tools/go/packages"
 )
 

@@ -5,7 +5,7 @@ import (
 	"path"
 	"testing"
 
-	"github.com/goose-lang/goose/util"
+	"github.com/mit-pdos/perennial/goose/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/tools/go/packages"
@@ -21,7 +21,7 @@ func TestNewSetup(t *testing.T) {
 	pkg := pkgs[0]
 	pf := New(pkg, false)
 	assert.Equal(path.Join("new/proof",
-		"github_com/goose_lang/goose/testdata/examples",
+		"github_com/mit_pdos/perennial/goose/testdata/examples",
 		"semantics.v",
 	), pf.ProofPath)
 	_ = pf.SkeletonFile()

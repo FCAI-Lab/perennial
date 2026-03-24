@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/goose-lang/goose/model/channel"
+	"github.com/mit-pdos/perennial/goose/model/channel"
 	"github.com/stretchr/testify/assert"
 )
 

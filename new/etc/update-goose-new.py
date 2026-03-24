@@ -138,9 +138,10 @@ def main():
     )
     parser.add_argument(
         "--goose",
-        help="path to goose repo",
-        required=True,
+        help="path to goose repo (default: goose/ relative to perennial root)",
+        required=False,
         metavar="GOOSE_PATH",
+        default=None,
     )
     parser.add_argument(
         "-a",
@@ -186,7 +187,7 @@ def main():
                 setattr(args, proj_arg, proj_path)
 
     perennial_dir = path.join(path.dirname(os.path.realpath(__file__)), "../..")
-    goose_dir = args.goose
+    goose_dir = args.goose if args.goose else path.join(perennial_dir, "goose")
 
     def proj_dir(name):
         return getattr(args, name.replace("-", "_"))
@@ -214,8 +215,8 @@ def main():
 
     def compile_goose():
         old_dir = os.getcwd()
-        os.chdir(goose_dir)
-        do_run(["go", "install", "./cmd/goose", "./cmd/proofgen"])
+        os.chdir(perennial_dir)
+        do_run(["go", "install", "./goose/cmd/goose", "./goose/cmd/proofgen"])
         os.chdir(old_dir)
         pm.wait_all()
 

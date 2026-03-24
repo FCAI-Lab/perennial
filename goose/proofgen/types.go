@@ -9,11 +9,11 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/goose-lang/goose/declfilter"
-	"github.com/goose-lang/goose/glang"
-	"github.com/goose-lang/goose/proofgen/tmpl"
-	"github.com/goose-lang/goose/util"
-	"github.com/goose-lang/goose/util/toposort"
+	"github.com/mit-pdos/perennial/goose/declfilter"
+	"github.com/mit-pdos/perennial/goose/glang"
+	"github.com/mit-pdos/perennial/goose/proofgen/tmpl"
+	"github.com/mit-pdos/perennial/goose/util"
+	"github.com/mit-pdos/perennial/goose/util/toposort"
 	"golang.org/x/tools/go/packages"
 )
 

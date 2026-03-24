@@ -1,4 +1,4 @@
-module github.com/goose-lang/goose/testdata/examples
+module github.com/mit-pdos/perennial/goose/testdata/examples
 
 go 1.26
 

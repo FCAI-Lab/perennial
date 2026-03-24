@@ -9,9 +9,9 @@ import (
 
 	"github.com/fatih/color"
 
-	"github.com/goose-lang/goose"
-	"github.com/goose-lang/goose/glang"
-	"github.com/goose-lang/goose/util"
+	"github.com/mit-pdos/perennial/goose"
+	"github.com/mit-pdos/perennial/goose/glang"
+	"github.com/mit-pdos/perennial/goose/util"
 )
 
 func coqFileContents(f glang.File) []byte {

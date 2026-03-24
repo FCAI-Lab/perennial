@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	channel "github.com/goose-lang/goose/model/go_channel"
+	channel "github.com/mit-pdos/perennial/goose/model/go_channel"
 	"github.com/stretchr/testify/assert"
 )
 

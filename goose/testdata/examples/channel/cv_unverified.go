@@ -3,7 +3,7 @@ package channel_examples
 import (
 	"time"
 
-	"github.com/goose-lang/goose/testdata/examples/channel/lock"
+	"github.com/mit-pdos/perennial/goose/testdata/examples/channel/lock"
 )
 
 type Cond struct {

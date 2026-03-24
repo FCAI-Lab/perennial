@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/goose-lang/goose/testdata/examples/channel/lock"
+	"github.com/mit-pdos/perennial/goose/testdata/examples/channel/lock"
 )
 
 func TestWait_BlocksUntilSignal(t *testing.T) {

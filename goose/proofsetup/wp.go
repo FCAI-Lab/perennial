@@ -9,7 +9,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/goose-lang/goose/util"
+	"github.com/mit-pdos/perennial/goose/util"
 	"github.com/pkg/errors"
 	"golang.org/x/tools/go/packages"
 )
