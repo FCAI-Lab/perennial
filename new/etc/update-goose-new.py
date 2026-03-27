@@ -72,6 +72,8 @@ projs = [
             # Axiomatized for cindex:
             "go.etcd.io/etcd/server/v3/storage/backend",
             "go.etcd.io/etcd/server/v3/storage/schema",
+            "go.etcd.io/etcd/cache/v3",
+            "k8s.io/utils/third_party/forked/golang/btree",
         ],
     ),
     create_proj(repo="mit-pdos/go-liveness"),
