@@ -6,6 +6,146 @@ Require Export New.code.go_etcd_io.etcd.server.v3.etcdserver.apply.
 Set Default Proof Using "Type".
 
 Module apply.
+Module authApplierV3.
+Section def.
+
+Context `{hG: heapGS Σ, !ffi_semantics _ _}.
+Context {sem : go.Semantics}.
+Context {package_sem' : apply.Assumptions}.
+
+Local Set Default Proof Using "All".
+
+#[global] Instance authApplierV3_typed_pointsto  :
+  TypedPointsto (Σ:=Σ) (apply.authApplierV3.t). Admitted.
+
+#[global] Instance authApplierV3_into_val_typed
+   :
+  IntoValTypedUnderlying (apply.authApplierV3.t) (apply.authApplierV3ⁱᵐᵖˡ).
+Proof. Admitted.
+
+End def.
+End authApplierV3.
+
+Module applierV3backend.
+Section def.
+
+Context `{hG: heapGS Σ, !ffi_semantics _ _}.
+Context {sem : go.Semantics}.
+Context {package_sem' : apply.Assumptions}.
+
+Local Set Default Proof Using "All".
+
+#[global] Instance applierV3backend_typed_pointsto  :
+  TypedPointsto (Σ:=Σ) (apply.applierV3backend.t). Admitted.
+
+#[global] Instance applierV3backend_into_val_typed
+   :
+  IntoValTypedUnderlying (apply.applierV3backend.t) (apply.applierV3backendⁱᵐᵖˡ).
+Proof. Admitted.
+
+End def.
+End applierV3backend.
+
+Module applierV3Capped.
+Section def.
+
+Context `{hG: heapGS Σ, !ffi_semantics _ _}.
+Context {sem : go.Semantics}.
+Context {package_sem' : apply.Assumptions}.
+
+Local Set Default Proof Using "All".
+
+#[global] Instance applierV3Capped_typed_pointsto  :
+  TypedPointsto (Σ:=Σ) (apply.applierV3Capped.t). Admitted.
+
+#[global] Instance applierV3Capped_into_val_typed
+   :
+  IntoValTypedUnderlying (apply.applierV3Capped.t) (apply.applierV3Cappedⁱᵐᵖˡ).
+Proof. Admitted.
+
+End def.
+End applierV3Capped.
+
+Module applierV3Corrupt.
+Section def.
+
+Context `{hG: heapGS Σ, !ffi_semantics _ _}.
+Context {sem : go.Semantics}.
+Context {package_sem' : apply.Assumptions}.
+
+Local Set Default Proof Using "All".
+
+#[global] Instance applierV3Corrupt_typed_pointsto  :
+  TypedPointsto (Σ:=Σ) (apply.applierV3Corrupt.t). Admitted.
+
+#[global] Instance applierV3Corrupt_into_val_typed
+   :
+  IntoValTypedUnderlying (apply.applierV3Corrupt.t) (apply.applierV3Corruptⁱᵐᵖˡ).
+Proof. Admitted.
+
+End def.
+End applierV3Corrupt.
+
+Module applierV3.
+Section def.
+
+Context `{hG: heapGS Σ, !ffi_semantics _ _}.
+Context {sem : go.Semantics}.
+Context {package_sem' : apply.Assumptions}.
+
+Local Set Default Proof Using "All".
+
+#[global] Instance applierV3_typed_pointsto  :
+  TypedPointsto (Σ:=Σ) (apply.applierV3.t). Admitted.
+
+#[global] Instance applierV3_into_val_typed
+   :
+  IntoValTypedUnderlying (apply.applierV3.t) (apply.applierV3ⁱᵐᵖˡ).
+Proof. Admitted.
+
+End def.
+End applierV3.
+
+Module ApplierOptions.
+Section def.
+
+Context `{hG: heapGS Σ, !ffi_semantics _ _}.
+Context {sem : go.Semantics}.
+Context {package_sem' : apply.Assumptions}.
+
+Local Set Default Proof Using "All".
+
+#[global] Instance ApplierOptions_typed_pointsto  :
+  TypedPointsto (Σ:=Σ) (apply.ApplierOptions.t). Admitted.
+
+#[global] Instance ApplierOptions_into_val_typed
+   :
+  IntoValTypedUnderlying (apply.ApplierOptions.t) (apply.ApplierOptionsⁱᵐᵖˡ).
+Proof. Admitted.
+
+End def.
+End ApplierOptions.
+
+Module SnapshotServer.
+Section def.
+
+Context `{hG: heapGS Σ, !ffi_semantics _ _}.
+Context {sem : go.Semantics}.
+Context {package_sem' : apply.Assumptions}.
+
+Local Set Default Proof Using "All".
+
+#[global] Instance SnapshotServer_typed_pointsto  :
+  TypedPointsto (Σ:=Σ) (apply.SnapshotServer.t). Admitted.
+
+#[global] Instance SnapshotServer_into_val_typed
+   :
+  IntoValTypedUnderlying (apply.SnapshotServer.t) (apply.SnapshotServerⁱᵐᵖˡ).
+Proof. Admitted.
+
+End def.
+End SnapshotServer.
+
 Module RaftStatusGetter.
 Section def.
 
@@ -66,106 +206,6 @@ Proof. Admitted.
 End def.
 End applyFunc.
 
-Module applierV3.
-Section def.
-
-Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics}.
-Context {package_sem' : apply.Assumptions}.
-
-Local Set Default Proof Using "All".
-
-#[global] Instance applierV3_typed_pointsto  :
-  TypedPointsto (Σ:=Σ) (apply.applierV3.t). Admitted.
-
-#[global] Instance applierV3_into_val_typed
-   :
-  IntoValTypedUnderlying (apply.applierV3.t) (apply.applierV3ⁱᵐᵖˡ).
-Proof. Admitted.
-
-End def.
-End applierV3.
-
-Module SnapshotServer.
-Section def.
-
-Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics}.
-Context {package_sem' : apply.Assumptions}.
-
-Local Set Default Proof Using "All".
-
-#[global] Instance SnapshotServer_typed_pointsto  :
-  TypedPointsto (Σ:=Σ) (apply.SnapshotServer.t). Admitted.
-
-#[global] Instance SnapshotServer_into_val_typed
-   :
-  IntoValTypedUnderlying (apply.SnapshotServer.t) (apply.SnapshotServerⁱᵐᵖˡ).
-Proof. Admitted.
-
-End def.
-End SnapshotServer.
-
-Module applierV3backend.
-Section def.
-
-Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics}.
-Context {package_sem' : apply.Assumptions}.
-
-Local Set Default Proof Using "All".
-
-#[global] Instance applierV3backend_typed_pointsto  :
-  TypedPointsto (Σ:=Σ) (apply.applierV3backend.t). Admitted.
-
-#[global] Instance applierV3backend_into_val_typed
-   :
-  IntoValTypedUnderlying (apply.applierV3backend.t) (apply.applierV3backendⁱᵐᵖˡ).
-Proof. Admitted.
-
-End def.
-End applierV3backend.
-
-Module applierV3Capped.
-Section def.
-
-Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics}.
-Context {package_sem' : apply.Assumptions}.
-
-Local Set Default Proof Using "All".
-
-#[global] Instance applierV3Capped_typed_pointsto  :
-  TypedPointsto (Σ:=Σ) (apply.applierV3Capped.t). Admitted.
-
-#[global] Instance applierV3Capped_into_val_typed
-   :
-  IntoValTypedUnderlying (apply.applierV3Capped.t) (apply.applierV3Cappedⁱᵐᵖˡ).
-Proof. Admitted.
-
-End def.
-End applierV3Capped.
-
-Module applierMembership.
-Section def.
-
-Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics}.
-Context {package_sem' : apply.Assumptions}.
-
-Local Set Default Proof Using "All".
-
-#[global] Instance applierMembership_typed_pointsto  :
-  TypedPointsto (Σ:=Σ) (apply.applierMembership.t). Admitted.
-
-#[global] Instance applierMembership_into_val_typed
-   :
-  IntoValTypedUnderlying (apply.applierMembership.t) (apply.applierMembershipⁱᵐᵖˡ).
-Proof. Admitted.
-
-End def.
-End applierMembership.
-
 Module quotaApplierV3.
 Section def.
 
@@ -185,46 +225,6 @@ Proof. Admitted.
 
 End def.
 End quotaApplierV3.
-
-Module authApplierV3.
-Section def.
-
-Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics}.
-Context {package_sem' : apply.Assumptions}.
-
-Local Set Default Proof Using "All".
-
-#[global] Instance authApplierV3_typed_pointsto  :
-  TypedPointsto (Σ:=Σ) (apply.authApplierV3.t). Admitted.
-
-#[global] Instance authApplierV3_into_val_typed
-   :
-  IntoValTypedUnderlying (apply.authApplierV3.t) (apply.authApplierV3ⁱᵐᵖˡ).
-Proof. Admitted.
-
-End def.
-End authApplierV3.
-
-Module applierV3Corrupt.
-Section def.
-
-Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics}.
-Context {package_sem' : apply.Assumptions}.
-
-Local Set Default Proof Using "All".
-
-#[global] Instance applierV3Corrupt_typed_pointsto  :
-  TypedPointsto (Σ:=Σ) (apply.applierV3Corrupt.t). Admitted.
-
-#[global] Instance applierV3Corrupt_into_val_typed
-   :
-  IntoValTypedUnderlying (apply.applierV3Corrupt.t) (apply.applierV3Corruptⁱᵐᵖˡ).
-Proof. Admitted.
-
-End def.
-End applierV3Corrupt.
 
 Module UberApplier.
 Section def.

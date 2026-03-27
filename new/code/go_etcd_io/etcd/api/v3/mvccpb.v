@@ -23,6 +23,10 @@ Definition PUT {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val := #(W32 0).
 
 Definition DELETE {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val := #(W32 1).
 
+Axiom Event_PUT : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Event_DELETE : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
 Definition Event_EventType_name {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/mvccpb.Event_EventType_name"%go.
 
 Axiom Event_EventType_name'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.

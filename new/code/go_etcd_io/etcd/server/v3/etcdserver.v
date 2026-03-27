@@ -144,14 +144,6 @@ Definition notifier {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := 
 
 #[global] Opaque notifier.
 
-Definition panicAlternativeStringer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/etcdserver.panicAlternativeStringer"%go [].
-
-#[global] Opaque panicAlternativeStringer.
-
-Definition RequestV2 {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/etcdserver.RequestV2"%go [].
-
-#[global] Opaque RequestV2.
-
 Definition RaftKV {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/etcdserver.RaftKV"%go [].
 
 #[global] Opaque RaftKV.
@@ -230,10 +222,6 @@ Axiom AccessControllerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalCo
 
 Axiom notifierⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
-Axiom panicAlternativeStringerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
-
-Axiom RequestV2ⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
-
 Axiom RaftKVⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom Lessorⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
@@ -275,6 +263,10 @@ Axiom DowngradeEnabledPath : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext},
 Axiom memorySnapshotCount : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
 Definition maxGapBetweenApplyAndCommitIndex {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val := #5000.
+
+Axiom maxNormalGap : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom maxPriorityGap : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
 Axiom traceThreshold : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
@@ -334,6 +326,10 @@ Definition readIndexFailed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_s
 
 Axiom readIndexFailed'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
+Definition requestDurationSec {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.requestDurationSec"%go.
+
+Axiom requestDurationSec'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
 Definition leaseExpired {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.leaseExpired"%go.
 
 Axiom leaseExpired'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
@@ -349,6 +345,10 @@ Axiom currentGoVersion'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}
 Definition serverID {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.serverID"%go.
 
 Axiom serverID'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Definition serverFeatureEnabled {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.serverFeatureEnabled"%go.
+
+Axiom serverFeatureEnabled'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
 Definition fdUsed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.fdUsed"%go.
 
@@ -370,15 +370,11 @@ Definition recommendedMaxRequestBytesString {ext : ffi_syntax} {go_gctx : GoGlob
 
 Axiom recommendedMaxRequestBytesString'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
-Definition storeMemberAttributeRegexp {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.storeMemberAttributeRegexp"%go.
-
-Axiom storeMemberAttributeRegexp'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
-
 Definition NewServerVersionAdapter {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.NewServerVersionAdapter"%go.
 
-Definition v2ToV3Request {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.v2ToV3Request"%go.
-
 Definition bootstrap {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.bootstrap"%go.
+
+Definition buildConfStateFromV3store {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.buildConfStateFromV3store"%go.
 
 Definition bootstrapStorage {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.bootstrapStorage"%go.
 
@@ -458,13 +454,19 @@ Definition verifySnapshotIndex {ext : ffi_syntax} {go_gctx : GoGlobalContext} : 
 
 Definition verifyConsistentIndexIsLatest {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.verifyConsistentIndexIsLatest"%go.
 
-Definition noSideEffect {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.noSideEffect"%go.
-
-Definition removeNeedlessRangeReqs {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.removeNeedlessRangeReqs"%go.
+Definition addFeatureGateMetrics {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.addFeatureGateMetrics"%go.
 
 Definition NewAccessController {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.NewAccessController"%go.
 
 Definition newSnapshotReaderCloser {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.newSnapshotReaderCloser"%go.
+
+Definition firstCompareKey {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.firstCompareKey"%go.
+
+Definition firstOpKey {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.firstOpKey"%go.
+
+Definition firstOpType {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.firstOpType"%go.
+
+Definition firstOpLease {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.firstOpLease"%go.
 
 Definition isConnectedToQuorumSince {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.isConnectedToQuorumSince"%go.
 
@@ -472,11 +474,17 @@ Definition isConnectedSince {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_
 
 Definition isConnectedFullySince {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.isConnectedFullySince"%go.
 
+Definition exceedsRequestLimit {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.exceedsRequestLimit"%go.
+
+Definition isPriorityRequest {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.isPriorityRequest"%go.
+
 Definition numConnectedSince {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.numConnectedSince"%go.
 
 Definition longestConnected {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.longestConnected"%go.
 
 Definition newNotifier {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.newNotifier"%go.
+
+Definition getRequestType {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.getRequestType"%go.
 
 Definition isStopped {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.isStopped"%go.
 
@@ -488,12 +496,33 @@ Definition NewRaftLoggerZap {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_
 
 Definition NewRaftLoggerFromZapCore {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver.NewRaftLoggerFromZapCore"%go.
 
-(* go: v3_server.go:143:22 *)
+(* go: v3_server.go:158:22 *)
 Definition EtcdServer__Putⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "s" "ctx" "r",
-    exception_do (let: "s" := (GoAlloc (go.PointerType EtcdServer) "s") in
+    with_defer: (let: "s" := (GoAlloc (go.PointerType EtcdServer) "s") in
     let: "r" := (GoAlloc (go.PointerType etcdserverpb.PutRequest) "r") in
     let: "ctx" := (GoAlloc context.Context "ctx") in
+    let: "span" := (GoAlloc trace.Span (GoZeroVal trace.Span #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![context.Context] "ctx") in
+    let: "$a1" := #"put"%go in
+    let: "$a2" := ((let: "$sl0" := (Convert trace.SpanStartEventOption trace.SpanStartOption (let: "$a0" := ((let: "$sl0" := (let: "$a0" := #"key"%go in
+    let: "$a1" := (Convert (go.SliceType go.byte) go.string ((MethodResolve (go.PointerType etcdserverpb.PutRequest) "GetKey"%go (![go.PointerType etcdserverpb.PutRequest] "r")) #())) in
+    (FuncResolve attribute.String [] #()) "$a0" "$a1") in
+    CompositeLiteral (go.SliceType attribute.KeyValue) (LiteralValue [KeyedElement None (ElementExpression attribute.KeyValue "$sl0")]))) in
+    (FuncResolve trace.WithAttributes [] #()) "$a0")) in
+    CompositeLiteral (go.SliceType trace.SpanStartOption) (LiteralValue [KeyedElement None (ElementExpression trace.SpanStartOption "$sl0")]))) in
+    (MethodResolve trace.Tracer "Start"%go (![trace.Tracer] (GlobalVarAddr traceutil.Tracer #()))) "$a0" "$a1" "$a2") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  ("ctx" <-[context.Context] "$r0");;;
+    do:  ("span" <-[trace.Span] "$r1");;;
+    do:  (let: "$a0" := #slice.nil in
+    let: "$f" := (MethodResolve trace.Span "End"%go (![trace.Span] "span")) in
+    "$defer" <-[deferType] (let: "$oldf" := (![deferType] "$defer") in
+    (λ: <>,
+      "$f" #();;
+      "$oldf" #()
+      )));;;
     let: "$r0" := (let: "$a0" := (![context.Context] "ctx") in
     let: "$a1" := (Convert traceutil.StartTimeKey go.any (CompositeLiteral traceutil.StartTimeKey (LiteralValue []))) in
     let: "$a2" := (Convert time.Time go.any ((FuncResolve time.Now [] #()) #())) in
@@ -514,7 +543,7 @@ Definition EtcdServer__Putⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCont
     else do:  #());;;
     return: (TypeAssert (go.PointerType etcdserverpb.PutResponse) (![proto.Message] "resp"), Convert go.untyped_nil go.error UntypedNil)).
 
-(* go: v3_server.go:738:22 *)
+(* go: v3_server.go:925:22 *)
 Definition EtcdServer__processInternalRaftRequestOnceⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "s" "ctx" "r",
     with_defer: (let: "s" := (GoAlloc (go.PointerType EtcdServer) "s") in
@@ -526,7 +555,12 @@ Definition EtcdServer__processInternalRaftRequestOnceⁱᵐᵖˡ {ext : ffi_synt
     let: "ci" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
     let: "$r0" := ((MethodResolve (go.PointerType EtcdServer) "getCommittedIndex"%go (![go.PointerType EtcdServer] "s")) #()) in
     do:  ("ci" <-[go.uint64] "$r0");;;
-    (if: Convert go.untyped_bool go.bool ((![go.uint64] "ci") >⟨go.uint64⟩ ((![go.uint64] "ai") +⟨go.uint64⟩ (Convert go.untyped_int go.uint64 maxGapBetweenApplyAndCommitIndex)))
+    (if: let: "$a0" := (![go.uint64] "ai") in
+    let: "$a1" := (![go.uint64] "ci") in
+    let: "$a2" := "r" in
+    let: "$a3" := (let: "$a0" := features.PriorityRequest in
+    (MethodResolve (go.PointerType EtcdServer) "FeatureEnabled"%go (![go.PointerType EtcdServer] "s")) "$a0") in
+    (FuncResolve exceedsRequestLimit [] #()) "$a0" "$a1" "$a2" "$a3"
     then return: (Convert go.untyped_nil (go.PointerType apply.Result) UntypedNil, ![go.error] (GlobalVarAddr errors.ErrTooManyRequests #()))
     else do:  #());;;
     let: "$r0" := (GoAlloc etcdserverpb.RequestHeader (let: "$v0" := ((MethodResolve (go.PointerType idutil.Generator) "Next"%go (![go.PointerType idutil.Generator] (StructFieldRef EtcdServer "reqIDGen"%go (![go.PointerType EtcdServer] "s")))) #()) in
@@ -553,8 +587,33 @@ Definition EtcdServer__processInternalRaftRequestOnceⁱᵐᵖˡ {ext : ffi_synt
         do:  ((StructFieldRef etcdserverpb.RequestHeader "AuthRevision"%go (![go.PointerType etcdserverpb.RequestHeader] (StructFieldRef etcdserverpb.InternalRaftRequest "Header"%go "r"))) <-[go.uint64] "$r0")
       else do:  #())
     else do:  #());;;
+    let: "reqType" := (GoAlloc go.string (GoZeroVal go.string #())) in
+    let: "$r0" := (let: "$a0" := "r" in
+    (FuncResolve getRequestType [] #()) "$a0") in
+    do:  ("reqType" <-[go.string] "$r0");;;
+    let: "start" := (GoAlloc time.Time (GoZeroVal time.Time #())) in
+    let: "$r0" := ((FuncResolve time.Now [] #()) #()) in
+    do:  ("start" <-[time.Time] "$r0");;;
     let: "err" := (GoAlloc go.error (GoZeroVal go.error #())) in
     let: "data" := (GoAlloc (go.SliceType go.byte) (GoZeroVal (go.SliceType go.byte) #())) in
+    do:  (let: "$f" := (λ: <>,
+      exception_do (let: "success" := (GoAlloc go.bool (GoZeroVal go.bool #())) in
+      let: "$r0" := ((![go.error] "err") =⟨go.error⟩ (Convert go.untyped_nil go.error UntypedNil)) in
+      do:  ("success" <-[go.bool] "$r0");;;
+      do:  (let: "$a0" := ((MethodResolve time.Duration "Seconds"%go (let: "$a0" := (![time.Time] "start") in
+      (FuncResolve time.Since [] #()) "$a0")) #()) in
+      (MethodResolve prometheus.Observer "Observe"%go (let: "$a0" := ((let: "$sl0" := (![go.string] "reqType") in
+      let: "$sl1" := (let: "$a0" := (![go.bool] "success") in
+      (FuncResolve strconv.FormatBool [] #()) "$a0") in
+      CompositeLiteral (go.SliceType go.string) (LiteralValue [KeyedElement None (ElementExpression go.string "$sl0"); KeyedElement None (ElementExpression go.string "$sl1")]))) in
+      (MethodResolve (go.PointerType prometheus.HistogramVec) "WithLabelValues"%go (![go.PointerType prometheus.HistogramVec] (GlobalVarAddr requestDurationSec #()))) "$a0")) "$a0");;;
+      return: #())
+      ) in
+    "$defer" <-[deferType] (let: "$oldf" := (![deferType] "$defer") in
+    (λ: <>,
+      "$f" #();;
+      "$oldf" #()
+      )));;;
     let: ("$ret0", "$ret1") := ((MethodResolve (go.PointerType etcdserverpb.InternalRaftRequest) "Marshal"%go "r") #()) in
     let: "$r0" := "$ret0" in
     let: "$r1" := "$ret1" in
@@ -594,9 +653,13 @@ Definition EtcdServer__processInternalRaftRequestOnceⁱᵐᵖˡ {ext : ffi_synt
       "$f" #();;
       "$oldf" #()
       )));;;
-    let: "start" := (GoAlloc time.Time (GoZeroVal time.Time #())) in
-    let: "$r0" := ((FuncResolve time.Now [] #()) #()) in
-    do:  ("start" <-[time.Time] "$r0");;;
+    let: "span" := (GoAlloc trace.Span (GoZeroVal trace.Span #())) in
+    let: "$r0" := (let: "$a0" := (![context.Context] "ctx") in
+    (FuncResolve trace.SpanFromContext [] #()) "$a0") in
+    do:  ("span" <-[trace.Span] "$r0");;;
+    do:  (let: "$a0" := #"Send raft proposal"%go in
+    let: "$a1" := #slice.nil in
+    (MethodResolve trace.Span "AddEvent"%go (![trace.Span] "span")) "$a0" "$a1");;;
     let: "$r0" := (let: "$a0" := (![context.Context] "cctx") in
     let: "$a1" := (![go.SliceType go.byte] "data") in
     (MethodResolve (go.PointerType raftNode) "Propose"%go (StructFieldRef EtcdServer "r"%go (![go.PointerType EtcdServer] "s"))) "$a0" "$a1") in
@@ -625,6 +688,9 @@ Definition EtcdServer__processInternalRaftRequestOnceⁱᵐᵖˡ {ext : ffi_synt
       let: "x" := (GoAlloc go.any (GoZeroVal go.any #())) in
       let: "$r0" := (Fst "$recvVal") in
       do:  ("x" <-[go.any] "$r0");;;
+      do:  (let: "$a0" := #"Receive raft result"%go in
+      let: "$a1" := #slice.nil in
+      (MethodResolve trace.Span "AddEvent"%go (![trace.Span] "span")) "$a0" "$a1");;;
       return: (TypeAssert (go.PointerType apply.Result) (![go.any] "x"), Convert go.untyped_nil go.error UntypedNil)
       )); (CommClause (RecvCase (go.StructType [
 
@@ -679,15 +745,16 @@ Definition initialize' {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
       do:  (proposalsFailed'init #());;;
       do:  (slowReadIndex'init #());;;
       do:  (readIndexFailed'init #());;;
+      do:  (requestDurationSec'init #());;;
       do:  (leaseExpired'init #());;;
       do:  (currentVersion'init #());;;
       do:  (currentGoVersion'init #());;;
       do:  (serverID'init #());;;
+      do:  (serverFeatureEnabled'init #());;;
       do:  (fdUsed'init #());;;
       do:  (fdLimit'init #());;;
       do:  (monitorVersionInterval'init #());;;
-      do:  (recommendedMaxRequestBytesString'init #());;;
-      do:  (storeMemberAttributeRegexp'init #()))
+      do:  (recommendedMaxRequestBytesString'init #()))
       ).
 
 Module serverVersionAdapter.
@@ -1192,38 +1259,6 @@ Class notifier_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalCont
   #[global] notifierⁱᵐᵖˡ_underlying :: (notifierⁱᵐᵖˡ) ↓u (notifierⁱᵐᵖˡ);
 }.
 
-Module panicAlternativeStringer.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End panicAlternativeStringer.
-
-Class panicAlternativeStringer_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] panicAlternativeStringer_type_repr  :: go.TypeReprUnderlying panicAlternativeStringerⁱᵐᵖˡ panicAlternativeStringer.t;
-  #[global] panicAlternativeStringer_underlying :: (panicAlternativeStringer) <u (panicAlternativeStringerⁱᵐᵖˡ);
-  #[global] panicAlternativeStringerⁱᵐᵖˡ_underlying :: (panicAlternativeStringerⁱᵐᵖˡ) ↓u (panicAlternativeStringerⁱᵐᵖˡ);
-}.
-
-Module RequestV2.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End RequestV2.
-
-Class RequestV2_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] RequestV2_type_repr  :: go.TypeReprUnderlying RequestV2ⁱᵐᵖˡ RequestV2.t;
-  #[global] RequestV2_underlying :: (RequestV2) <u (RequestV2ⁱᵐᵖˡ);
-  #[global] RequestV2ⁱᵐᵖˡ_underlying :: (RequestV2ⁱᵐᵖˡ) ↓u (RequestV2ⁱᵐᵖˡ);
-}.
-
 Module RaftKV.
 Section def.
 Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
@@ -1321,8 +1356,6 @@ Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!G
   #[global] confChangeResponse_instance :: confChangeResponse_Assumptions;
   #[global] AccessController_instance :: AccessController_Assumptions;
   #[global] notifier_instance :: notifier_Assumptions;
-  #[global] panicAlternativeStringer_instance :: panicAlternativeStringer_Assumptions;
-  #[global] RequestV2_instance :: RequestV2_Assumptions;
   #[global] RaftKV_instance :: RaftKV_Assumptions;
   #[global] Lessor_instance :: Lessor_Assumptions;
   #[global] Authenticator_instance :: Authenticator_Assumptions;

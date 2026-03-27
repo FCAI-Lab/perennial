@@ -57,7 +57,7 @@ Definition ErrWrongDowngradeVersionFormat {ext : ffi_syntax} {go_gctx : GoGlobal
 
 Definition ErrKeyNotFound {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver/errors.ErrKeyNotFound"%go.
 
-(* go: errors.go:52:25 *)
+(* go: errors.go:53:25 *)
 Definition DiscoveryError__Errorⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "e" <>,
     exception_do (let: "e" := (GoAlloc DiscoveryError "e") in

@@ -500,6 +500,8 @@ Definition Dict {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "g
 
 Definition dictField {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.uber.org/zap.dictField"%go.
 
+Definition DictObject {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.uber.org/zap.DictObject"%go.
+
 Definition Any {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.uber.org/zap.Any"%go.
 
 Definition LevelFlag {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.uber.org/zap.LevelFlag"%go.

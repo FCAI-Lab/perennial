@@ -285,6 +285,8 @@ Definition decomposeOpts {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_str
 
 Definition NewTokenProvider {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/auth.NewTokenProvider"%go.
 
+Definition redactToken {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/auth.redactToken"%go.
+
 #[global] Instance info' : PkgInfo pkg_id.auth :=
 {|
   pkg_imported_pkgs := []
@@ -301,6 +303,7 @@ Definition initialize' {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
       do:  (DefaultTTL'init #());;;
       do:  (simpleTokenTTLDefault'init #());;;
       do:  (simpleTokenTTLResolution'init #());;;
+      do:  (_'init #());;;
       do:  (rootPerm'init #());;;
       do:  (ErrRootUserNotExist'init #());;;
       do:  (ErrRootRoleNotExist'init #());;;

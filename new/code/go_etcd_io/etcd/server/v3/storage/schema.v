@@ -23,6 +23,10 @@ Definition ActionList {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type :
 
 #[global] Opaque ActionList.
 
+Definition AlarmBackend {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/storage/schema.AlarmBackend"%go [].
+
+#[global] Opaque AlarmBackend.
+
 Definition alarmBackend {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/storage/schema.alarmBackend"%go [].
 
 #[global] Opaque alarmBackend.
@@ -63,10 +67,6 @@ Definition migrationStep {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.typ
 
 #[global] Opaque migrationStep.
 
-Definition WALVersion {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/storage/schema.WALVersion"%go [].
-
-#[global] Opaque WALVersion.
-
 Axiom actionⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom setKeyActionⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
@@ -74,6 +74,8 @@ Axiom setKeyActionⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContex
 Axiom deleteKeyActionⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom ActionListⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
+Axiom AlarmBackendⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom alarmBackendⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
@@ -94,8 +96,6 @@ Axiom membershipBackendⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalC
 Axiom migrationPlanⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom migrationStepⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
-
-Axiom WALVersionⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom revBytesLen : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
@@ -461,6 +461,22 @@ Class ActionList_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalCo
   #[global] ActionListⁱᵐᵖˡ_underlying :: (ActionListⁱᵐᵖˡ) ↓u (ActionListⁱᵐᵖˡ);
 }.
 
+Module AlarmBackend.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End AlarmBackend.
+
+Class AlarmBackend_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] AlarmBackend_type_repr  :: go.TypeReprUnderlying AlarmBackendⁱᵐᵖˡ AlarmBackend.t;
+  #[global] AlarmBackend_underlying :: (AlarmBackend) <u (AlarmBackendⁱᵐᵖˡ);
+  #[global] AlarmBackendⁱᵐᵖˡ_underlying :: (AlarmBackendⁱᵐᵖˡ) ↓u (AlarmBackendⁱᵐᵖˡ);
+}.
+
 Module alarmBackend.
 Section def.
 Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
@@ -621,28 +637,13 @@ Class migrationStep_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLoca
   #[global] migrationStepⁱᵐᵖˡ_underlying :: (migrationStepⁱᵐᵖˡ) ↓u (migrationStepⁱᵐᵖˡ);
 }.
 
-Module WALVersion.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End WALVersion.
-
-Class WALVersion_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] WALVersion_type_repr  :: go.TypeReprUnderlying WALVersionⁱᵐᵖˡ WALVersion.t;
-  #[global] WALVersion_underlying :: (WALVersion) <u (WALVersionⁱᵐᵖˡ);
-  #[global] WALVersionⁱᵐᵖˡ_underlying :: (WALVersionⁱᵐᵖˡ) ↓u (WALVersionⁱᵐᵖˡ);
-}.
-
 Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
   #[global] action_instance :: action_Assumptions;
   #[global] setKeyAction_instance :: setKeyAction_Assumptions;
   #[global] deleteKeyAction_instance :: deleteKeyAction_Assumptions;
   #[global] ActionList_instance :: ActionList_Assumptions;
+  #[global] AlarmBackend_instance :: AlarmBackend_Assumptions;
   #[global] alarmBackend_instance :: alarmBackend_Assumptions;
   #[global] authBackend_instance :: authBackend_Assumptions;
   #[global] authReadTx_instance :: authReadTx_Assumptions;
@@ -653,6 +654,5 @@ Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!G
   #[global] membershipBackend_instance :: membershipBackend_Assumptions;
   #[global] migrationPlan_instance :: migrationPlan_Assumptions;
   #[global] migrationStep_instance :: migrationStep_Assumptions;
-  #[global] WALVersion_instance :: WALVersion_Assumptions;
 }.
 End schema.

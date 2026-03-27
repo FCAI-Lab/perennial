@@ -55,6 +55,10 @@ Definition addrConn {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := 
 
 #[global] Opaque addrConn.
 
+Definition securityLevelKey {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "google.golang.org/grpc.securityLevelKey"%go [].
+
+#[global] Opaque securityLevelKey.
+
 Definition retryThrottler {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "google.golang.org/grpc.retryThrottler"%go [].
 
 #[global] Opaque retryThrottler.
@@ -151,6 +155,10 @@ Definition pickerWrapper {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.typ
 
 #[global] Opaque pickerWrapper.
 
+Definition pick {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "google.golang.org/grpc.pick"%go [].
+
+#[global] Opaque pick.
+
 Definition dropError {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "google.golang.org/grpc.dropError"%go [].
 
 #[global] Opaque dropError.
@@ -219,6 +227,10 @@ Definition MaxRecvMsgSizeCallOption {ext : ffi_syntax} {go_gctx : GoGlobalContex
 
 #[global] Opaque MaxRecvMsgSizeCallOption.
 
+Definition AuthorityOverrideCallOption {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "google.golang.org/grpc.AuthorityOverrideCallOption"%go [].
+
+#[global] Opaque AuthorityOverrideCallOption.
+
 Definition MaxSendMsgSizeCallOption {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "google.golang.org/grpc.MaxSendMsgSizeCallOption"%go [].
 
 #[global] Opaque MaxSendMsgSizeCallOption.
@@ -230,6 +242,10 @@ Definition PerRPCCredsCallOption {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
 Definition CompressorCallOption {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "google.golang.org/grpc.CompressorCallOption"%go [].
 
 #[global] Opaque CompressorCallOption.
+
+Definition acceptCompressorsCallOption {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "google.golang.org/grpc.acceptCompressorsCallOption"%go [].
+
+#[global] Opaque acceptCompressorsCallOption.
 
 Definition ContentSubtypeCallOption {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "google.golang.org/grpc.ContentSubtypeCallOption"%go [].
 
@@ -258,6 +274,10 @@ Definition payloadFormat {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.typ
 Definition streamReader {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "google.golang.org/grpc.streamReader"%go [].
 
 #[global] Opaque streamReader.
+
+Definition noCopy {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "google.golang.org/grpc.noCopy"%go [].
+
+#[global] Opaque noCopy.
 
 Definition parser {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "google.golang.org/grpc.parser"%go [].
 
@@ -499,6 +519,8 @@ Axiom healthDataⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}
 
 Axiom refCountedProducerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
+Axiom healthProducerRegisterFn : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
 Axiom defaultConfigSelectorⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom idlerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
@@ -510,6 +532,8 @@ Axiom ClientConnInterfaceⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGloba
 Axiom ClientConnⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom addrConnⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
+Axiom securityLevelKeyⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom retryThrottlerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
@@ -559,6 +583,8 @@ Axiom pickerGenerationⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalCo
 
 Axiom pickerWrapperⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
+Axiom pickⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
 Axiom dropErrorⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom PreparedMsgⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
@@ -593,11 +619,15 @@ Axiom OnFinishCallOptionⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobal
 
 Axiom MaxRecvMsgSizeCallOptionⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
+Axiom AuthorityOverrideCallOptionⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
 Axiom MaxSendMsgSizeCallOptionⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom PerRPCCredsCallOptionⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom CompressorCallOptionⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
+Axiom acceptCompressorsCallOptionⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom ContentSubtypeCallOptionⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
@@ -612,6 +642,8 @@ Axiom MaxRetryRPCBufferSizeCallOptionⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gc
 Axiom payloadFormatⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom streamReaderⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
+Axiom noCopyⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom parserⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
@@ -785,9 +817,9 @@ Definition DefaultBackoffConfig {ext : ffi_syntax} {go_gctx : GoGlobalContext} :
 
 Axiom DefaultBackoffConfig'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
-Definition setConnectedAddress {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.setConnectedAddress"%go.
+Definition noOpRegisterHealthListenerFn {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.noOpRegisterHealthListenerFn"%go.
 
-Axiom setConnectedAddress'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+Axiom noOpRegisterHealthListenerFn'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
 Definition unaryStreamDesc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.unaryStreamDesc"%go.
 
@@ -832,6 +864,22 @@ Axiom errNoTransportCredsInBundle'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlo
 Definition errTransportCredentialsMissing {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.errTransportCredentialsMissing"%go.
 
 Axiom errTransportCredentialsMissing'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Definition disconnectionsMetric {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.disconnectionsMetric"%go.
+
+Axiom disconnectionsMetric'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Definition connectionAttemptsSucceededMetric {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.connectionAttemptsSucceededMetric"%go.
+
+Axiom connectionAttemptsSucceededMetric'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Definition connectionAttemptsFailedMetric {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.connectionAttemptsFailedMetric"%go.
+
+Axiom connectionAttemptsFailedMetric'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Definition openConnectionsMetric {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.openConnectionsMetric"%go.
+
+Axiom openConnectionsMetric'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
 Definition emptyServiceConfig {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.emptyServiceConfig"%go.
 
@@ -880,6 +928,10 @@ Axiom errEmptyServiceNonEmptyMethod'init : ∀ {ext : ffi_syntax} {go_gctx : GoG
 Definition metadataFromOutgoingContextRaw {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.metadataFromOutgoingContextRaw"%go.
 
 Axiom metadataFromOutgoingContextRaw'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Definition emptyMethodConfig {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.emptyMethodConfig"%go.
+
+Axiom emptyMethodConfig'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
 Definition EnableTracing {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.EnableTracing"%go.
 
@@ -943,6 +995,10 @@ Definition WithInitialWindowSize {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
 
 Definition WithInitialConnWindowSize {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.WithInitialConnWindowSize"%go.
 
+Definition WithStaticStreamWindowSize {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.WithStaticStreamWindowSize"%go.
+
+Definition WithStaticConnWindowSize {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.WithStaticConnWindowSize"%go.
+
 Definition WithMaxMsgSize {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.WithMaxMsgSize"%go.
 
 Definition WithDefaultCallOptions {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.WithDefaultCallOptions"%go.
@@ -968,6 +1024,8 @@ Definition WithReturnConnectionError {ext : ffi_syntax} {go_gctx : GoGlobalConte
 Definition WithInsecure {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.WithInsecure"%go.
 
 Definition WithNoProxy {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.WithNoProxy"%go.
+
+Definition WithLocalDNSResolution {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.WithLocalDNSResolution"%go.
 
 Definition WithTransportCredentials {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.WithTransportCredentials"%go.
 
@@ -1033,13 +1091,19 @@ Definition doneChannelzWrapper {ext : ffi_syntax} {go_gctx : GoGlobalContext} : 
 
 Definition newCCResolverWrapper {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.newCCResolverWrapper"%go.
 
+Definition addressesToEndpoints {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.addressesToEndpoints"%go.
+
 Definition NewGZIPCompressor {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.NewGZIPCompressor"%go.
 
 Definition NewGZIPCompressorWithLevel {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.NewGZIPCompressorWithLevel"%go.
 
 Definition NewGZIPDecompressor {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.NewGZIPDecompressor"%go.
 
+Definition acceptedCompressorAllows {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.acceptedCompressorAllows"%go.
+
 Definition defaultCallInfo {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.defaultCallInfo"%go.
+
+Definition newAcceptedCompressionConfig {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.newAcceptedCompressionConfig"%go.
 
 Definition StaticMethod {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.StaticMethod"%go.
 
@@ -1057,11 +1121,15 @@ Definition OnFinish {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string :
 
 Definition MaxCallRecvMsgSize {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.MaxCallRecvMsgSize"%go.
 
+Definition CallAuthority {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.CallAuthority"%go.
+
 Definition MaxCallSendMsgSize {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.MaxCallSendMsgSize"%go.
 
 Definition PerRPCCredentials {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.PerRPCCredentials"%go.
 
 Definition UseCompressor {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.UseCompressor"%go.
+
+Definition acceptCompressors {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.acceptCompressors"%go.
 
 Definition CallContentSubtype {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.CallContentSubtype"%go.
 
@@ -1116,6 +1184,10 @@ Definition ReadBufferSize {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_st
 Definition InitialWindowSize {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.InitialWindowSize"%go.
 
 Definition InitialConnWindowSize {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.InitialConnWindowSize"%go.
+
+Definition StaticStreamWindowSize {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.StaticStreamWindowSize"%go.
+
+Definition StaticConnWindowSize {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.StaticConnWindowSize"%go.
 
 Definition KeepaliveParams {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.KeepaliveParams"%go.
 
@@ -1209,6 +1281,8 @@ Definition newHandlerQuota {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_s
 
 Definition parseServiceConfig {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.parseServiceConfig"%go.
 
+Definition isValidRetryPolicy {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.isValidRetryPolicy"%go.
+
 Definition convertRetryPolicy {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.convertRetryPolicy"%go.
 
 Definition minPointers {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.minPointers"%go.
@@ -1220,6 +1294,8 @@ Definition newInt {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := 
 Definition equalServiceConfig {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.equalServiceConfig"%go.
 
 Definition NewClientStream {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.NewClientStream"%go.
+
+Definition endOfClientStream {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.endOfClientStream"%go.
 
 Definition newClientStream {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "google.golang.org/grpc.newClientStream"%go.
 
@@ -1252,7 +1328,7 @@ Definition initialize' {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     package.init pkg_id.grpc (λ: <>,
       exception_do (do:  (DefaultBackoffConfig'init #());;;
-      do:  (setConnectedAddress'init #());;;
+      do:  (noOpRegisterHealthListenerFn'init #());;;
       do:  (unaryStreamDesc'init #());;;
       do:  (ErrClientConnClosing'init #());;;
       do:  (errConnDrain'init #());;;
@@ -1264,6 +1340,10 @@ Definition initialize' {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
       do:  (errTransportCredsAndBundle'init #());;;
       do:  (errNoTransportCredsInBundle'init #());;;
       do:  (errTransportCredentialsMissing'init #());;;
+      do:  (disconnectionsMetric'init #());;;
+      do:  (connectionAttemptsSucceededMetric'init #());;;
+      do:  (connectionAttemptsFailedMetric'init #());;;
+      do:  (openConnectionsMetric'init #());;;
       do:  (_'init #());;;
       do:  (ErrClientConnTimeout'init #());;;
       do:  (_'init #());;;
@@ -1278,6 +1358,7 @@ Definition initialize' {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
       do:  (errDuplicatedName'init #());;;
       do:  (errEmptyServiceNonEmptyMethod'init #());;;
       do:  (metadataFromOutgoingContextRaw'init #());;;
+      do:  (emptyMethodConfig'init #());;;
       do:  (_'init #());;;
       do:  (_'init #());;;
       do:  (_'init #());;;
@@ -1476,6 +1557,22 @@ Class addrConn_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalCont
   #[global] addrConn_type_repr  :: go.TypeReprUnderlying addrConnⁱᵐᵖˡ addrConn.t;
   #[global] addrConn_underlying :: (addrConn) <u (addrConnⁱᵐᵖˡ);
   #[global] addrConnⁱᵐᵖˡ_underlying :: (addrConnⁱᵐᵖˡ) ↓u (addrConnⁱᵐᵖˡ);
+}.
+
+Module securityLevelKey.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End securityLevelKey.
+
+Class securityLevelKey_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] securityLevelKey_type_repr  :: go.TypeReprUnderlying securityLevelKeyⁱᵐᵖˡ securityLevelKey.t;
+  #[global] securityLevelKey_underlying :: (securityLevelKey) <u (securityLevelKeyⁱᵐᵖˡ);
+  #[global] securityLevelKeyⁱᵐᵖˡ_underlying :: (securityLevelKeyⁱᵐᵖˡ) ↓u (securityLevelKeyⁱᵐᵖˡ);
 }.
 
 Module retryThrottler.
@@ -1862,6 +1959,22 @@ Class pickerWrapper_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLoca
   #[global] pickerWrapperⁱᵐᵖˡ_underlying :: (pickerWrapperⁱᵐᵖˡ) ↓u (pickerWrapperⁱᵐᵖˡ);
 }.
 
+Module pick.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End pick.
+
+Class pick_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] pick_type_repr  :: go.TypeReprUnderlying pickⁱᵐᵖˡ pick.t;
+  #[global] pick_underlying :: (pick) <u (pickⁱᵐᵖˡ);
+  #[global] pickⁱᵐᵖˡ_underlying :: (pickⁱᵐᵖˡ) ↓u (pickⁱᵐᵖˡ);
+}.
+
 Module dropError.
 Section def.
 Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
@@ -2134,6 +2247,22 @@ Class MaxRecvMsgSizeCallOption_Assumptions {ext : ffi_syntax} `{!GoGlobalContext
   #[global] MaxRecvMsgSizeCallOptionⁱᵐᵖˡ_underlying :: (MaxRecvMsgSizeCallOptionⁱᵐᵖˡ) ↓u (MaxRecvMsgSizeCallOptionⁱᵐᵖˡ);
 }.
 
+Module AuthorityOverrideCallOption.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End AuthorityOverrideCallOption.
+
+Class AuthorityOverrideCallOption_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] AuthorityOverrideCallOption_type_repr  :: go.TypeReprUnderlying AuthorityOverrideCallOptionⁱᵐᵖˡ AuthorityOverrideCallOption.t;
+  #[global] AuthorityOverrideCallOption_underlying :: (AuthorityOverrideCallOption) <u (AuthorityOverrideCallOptionⁱᵐᵖˡ);
+  #[global] AuthorityOverrideCallOptionⁱᵐᵖˡ_underlying :: (AuthorityOverrideCallOptionⁱᵐᵖˡ) ↓u (AuthorityOverrideCallOptionⁱᵐᵖˡ);
+}.
+
 Module MaxSendMsgSizeCallOption.
 Section def.
 Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
@@ -2180,6 +2309,22 @@ Class CompressorCallOption_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{
   #[global] CompressorCallOption_type_repr  :: go.TypeReprUnderlying CompressorCallOptionⁱᵐᵖˡ CompressorCallOption.t;
   #[global] CompressorCallOption_underlying :: (CompressorCallOption) <u (CompressorCallOptionⁱᵐᵖˡ);
   #[global] CompressorCallOptionⁱᵐᵖˡ_underlying :: (CompressorCallOptionⁱᵐᵖˡ) ↓u (CompressorCallOptionⁱᵐᵖˡ);
+}.
+
+Module acceptCompressorsCallOption.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End acceptCompressorsCallOption.
+
+Class acceptCompressorsCallOption_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] acceptCompressorsCallOption_type_repr  :: go.TypeReprUnderlying acceptCompressorsCallOptionⁱᵐᵖˡ acceptCompressorsCallOption.t;
+  #[global] acceptCompressorsCallOption_underlying :: (acceptCompressorsCallOption) <u (acceptCompressorsCallOptionⁱᵐᵖˡ);
+  #[global] acceptCompressorsCallOptionⁱᵐᵖˡ_underlying :: (acceptCompressorsCallOptionⁱᵐᵖˡ) ↓u (acceptCompressorsCallOptionⁱᵐᵖˡ);
 }.
 
 Module ContentSubtypeCallOption.
@@ -2292,6 +2437,22 @@ Class streamReader_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocal
   #[global] streamReader_type_repr  :: go.TypeReprUnderlying streamReaderⁱᵐᵖˡ streamReader.t;
   #[global] streamReader_underlying :: (streamReader) <u (streamReaderⁱᵐᵖˡ);
   #[global] streamReaderⁱᵐᵖˡ_underlying :: (streamReaderⁱᵐᵖˡ) ↓u (streamReaderⁱᵐᵖˡ);
+}.
+
+Module noCopy.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End noCopy.
+
+Class noCopy_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] noCopy_type_repr  :: go.TypeReprUnderlying noCopyⁱᵐᵖˡ noCopy.t;
+  #[global] noCopy_underlying :: (noCopy) <u (noCopyⁱᵐᵖˡ);
+  #[global] noCopyⁱᵐᵖˡ_underlying :: (noCopyⁱᵐᵖˡ) ↓u (noCopyⁱᵐᵖˡ);
 }.
 
 Module parser.
@@ -3220,6 +3381,7 @@ Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!G
   #[global] ClientConnInterface_instance :: ClientConnInterface_Assumptions;
   #[global] ClientConn_instance :: ClientConn_Assumptions;
   #[global] addrConn_instance :: addrConn_Assumptions;
+  #[global] securityLevelKey_instance :: securityLevelKey_Assumptions;
   #[global] retryThrottler_instance :: retryThrottler_Assumptions;
   #[global] baseCodec_instance :: baseCodec_Assumptions;
   #[global] codecV0Bridge_instance :: codecV0Bridge_Assumptions;
@@ -3244,6 +3406,7 @@ Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!G
   #[global] StreamServerInterceptor_instance :: StreamServerInterceptor_Assumptions;
   #[global] pickerGeneration_instance :: pickerGeneration_Assumptions;
   #[global] pickerWrapper_instance :: pickerWrapper_Assumptions;
+  #[global] pick_instance :: pick_Assumptions;
   #[global] dropError_instance :: dropError_Assumptions;
   #[global] PreparedMsg_instance :: PreparedMsg_Assumptions;
   #[global] ccResolverWrapper_instance :: ccResolverWrapper_Assumptions;
@@ -3261,9 +3424,11 @@ Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!G
   #[global] FailFastCallOption_instance :: FailFastCallOption_Assumptions;
   #[global] OnFinishCallOption_instance :: OnFinishCallOption_Assumptions;
   #[global] MaxRecvMsgSizeCallOption_instance :: MaxRecvMsgSizeCallOption_Assumptions;
+  #[global] AuthorityOverrideCallOption_instance :: AuthorityOverrideCallOption_Assumptions;
   #[global] MaxSendMsgSizeCallOption_instance :: MaxSendMsgSizeCallOption_Assumptions;
   #[global] PerRPCCredsCallOption_instance :: PerRPCCredsCallOption_Assumptions;
   #[global] CompressorCallOption_instance :: CompressorCallOption_Assumptions;
+  #[global] acceptCompressorsCallOption_instance :: acceptCompressorsCallOption_Assumptions;
   #[global] ContentSubtypeCallOption_instance :: ContentSubtypeCallOption_Assumptions;
   #[global] ForceCodecCallOption_instance :: ForceCodecCallOption_Assumptions;
   #[global] ForceCodecV2CallOption_instance :: ForceCodecV2CallOption_Assumptions;
@@ -3271,6 +3436,7 @@ Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!G
   #[global] MaxRetryRPCBufferSizeCallOption_instance :: MaxRetryRPCBufferSizeCallOption_Assumptions;
   #[global] payloadFormat_instance :: payloadFormat_Assumptions;
   #[global] streamReader_instance :: streamReader_Assumptions;
+  #[global] noCopy_instance :: noCopy_Assumptions;
   #[global] parser_instance :: parser_Assumptions;
   #[global] payloadInfo_instance :: payloadInfo_Assumptions;
   #[global] recvCompressor_instance :: recvCompressor_Assumptions;

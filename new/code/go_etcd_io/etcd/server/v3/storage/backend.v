@@ -237,6 +237,8 @@ Definition New {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go
 
 Definition WithMmapSize {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/storage/backend.WithMmapSize"%go.
 
+Definition WithTimeout {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/storage/backend.WithTimeout"%go.
+
 Definition NewDefaultBackend {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/storage/backend.NewDefaultBackend"%go.
 
 Definition newBackend {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/storage/backend.newBackend"%go.

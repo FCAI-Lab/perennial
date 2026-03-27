@@ -7,6 +7,34 @@ End pkg_id.
 Export pkg_id.
 Module apply.
 
+Definition authApplierV3 {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/etcdserver/apply.authApplierV3"%go [].
+
+#[global] Opaque authApplierV3.
+
+Definition applierV3backend {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/etcdserver/apply.applierV3backend"%go [].
+
+#[global] Opaque applierV3backend.
+
+Definition applierV3Capped {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/etcdserver/apply.applierV3Capped"%go [].
+
+#[global] Opaque applierV3Capped.
+
+Definition applierV3Corrupt {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/etcdserver/apply.applierV3Corrupt"%go [].
+
+#[global] Opaque applierV3Corrupt.
+
+Definition applierV3 {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/etcdserver/apply.applierV3"%go [].
+
+#[global] Opaque applierV3.
+
+Definition ApplierOptions {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/etcdserver/apply.ApplierOptions"%go [].
+
+#[global] Opaque ApplierOptions.
+
+Definition SnapshotServer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/etcdserver/apply.SnapshotServer"%go [].
+
+#[global] Opaque SnapshotServer.
+
 Definition RaftStatusGetter {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/etcdserver/apply.RaftStatusGetter"%go [].
 
 #[global] Opaque RaftStatusGetter.
@@ -19,37 +47,9 @@ Definition applyFunc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type :=
 
 #[global] Opaque applyFunc.
 
-Definition applierV3 {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/etcdserver/apply.applierV3"%go [].
-
-#[global] Opaque applierV3.
-
-Definition SnapshotServer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/etcdserver/apply.SnapshotServer"%go [].
-
-#[global] Opaque SnapshotServer.
-
-Definition applierV3backend {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/etcdserver/apply.applierV3backend"%go [].
-
-#[global] Opaque applierV3backend.
-
-Definition applierV3Capped {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/etcdserver/apply.applierV3Capped"%go [].
-
-#[global] Opaque applierV3Capped.
-
-Definition applierMembership {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/etcdserver/apply.applierMembership"%go [].
-
-#[global] Opaque applierMembership.
-
 Definition quotaApplierV3 {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/etcdserver/apply.quotaApplierV3"%go [].
 
 #[global] Opaque quotaApplierV3.
-
-Definition authApplierV3 {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/etcdserver/apply.authApplierV3"%go [].
-
-#[global] Opaque authApplierV3.
-
-Definition applierV3Corrupt {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/etcdserver/apply.applierV3Corrupt"%go [].
-
-#[global] Opaque applierV3Corrupt.
 
 Definition UberApplier {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/server/v3/etcdserver/apply.UberApplier"%go [].
 
@@ -59,51 +59,53 @@ Definition uberApplier {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type 
 
 #[global] Opaque uberApplier.
 
+Axiom authApplierV3ⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
+Axiom applierV3backendⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
+Axiom applierV3Cappedⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
+Axiom applierV3Corruptⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
+Axiom applierV3ⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
+Axiom ApplierOptionsⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
+Axiom SnapshotServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
 Axiom RaftStatusGetterⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom Resultⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom applyFuncⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
-Axiom applierV3ⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
-
-Axiom SnapshotServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
-
-Axiom applierV3backendⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
-
-Axiom applierV3Cappedⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
-
-Axiom applierMembershipⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
-
 Axiom quotaApplierV3ⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
-
-Axiom authApplierV3ⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
-
-Axiom applierV3Corruptⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom UberApplierⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom uberApplierⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
-Axiom v3Version : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
-
 Definition alarms {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver/apply.alarms"%go.
 
 Axiom alarms'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
-Definition newApplierV3Backend {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver/apply.newApplierV3Backend"%go.
+Definition Apply {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver/apply.Apply"%go.
 
-Definition newApplierV3Capped {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver/apply.newApplierV3Capped"%go.
+Definition noSideEffect {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver/apply.noSideEffect"%go.
 
-Definition NewApplierMembership {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver/apply.NewApplierMembership"%go.
-
-Definition newQuotaApplierV3 {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver/apply.newQuotaApplierV3"%go.
+Definition removeNeedlessRangeReqs {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver/apply.removeNeedlessRangeReqs"%go.
 
 Definition newAuthApplierV3 {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver/apply.newAuthApplierV3"%go.
 
 Definition needAdminPermission {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver/apply.needAdminPermission"%go.
 
+Definition newApplierV3Backend {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver/apply.newApplierV3Backend"%go.
+
+Definition newApplierV3Capped {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver/apply.newApplierV3Capped"%go.
+
 Definition newApplierV3Corrupt {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver/apply.newApplierV3Corrupt"%go.
+
+Definition newQuotaApplierV3 {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver/apply.newQuotaApplierV3"%go.
 
 Definition NewUberApplier {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/server/v3/etcdserver/apply.NewUberApplier"%go.
 
@@ -121,6 +123,118 @@ Definition initialize' {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
     package.init pkg_id.apply (λ: <>,
       exception_do (do:  (alarms'init #()))
       ).
+
+Module authApplierV3.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End authApplierV3.
+
+Class authApplierV3_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] authApplierV3_type_repr  :: go.TypeReprUnderlying authApplierV3ⁱᵐᵖˡ authApplierV3.t;
+  #[global] authApplierV3_underlying :: (authApplierV3) <u (authApplierV3ⁱᵐᵖˡ);
+  #[global] authApplierV3ⁱᵐᵖˡ_underlying :: (authApplierV3ⁱᵐᵖˡ) ↓u (authApplierV3ⁱᵐᵖˡ);
+}.
+
+Module applierV3backend.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End applierV3backend.
+
+Class applierV3backend_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] applierV3backend_type_repr  :: go.TypeReprUnderlying applierV3backendⁱᵐᵖˡ applierV3backend.t;
+  #[global] applierV3backend_underlying :: (applierV3backend) <u (applierV3backendⁱᵐᵖˡ);
+  #[global] applierV3backendⁱᵐᵖˡ_underlying :: (applierV3backendⁱᵐᵖˡ) ↓u (applierV3backendⁱᵐᵖˡ);
+}.
+
+Module applierV3Capped.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End applierV3Capped.
+
+Class applierV3Capped_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] applierV3Capped_type_repr  :: go.TypeReprUnderlying applierV3Cappedⁱᵐᵖˡ applierV3Capped.t;
+  #[global] applierV3Capped_underlying :: (applierV3Capped) <u (applierV3Cappedⁱᵐᵖˡ);
+  #[global] applierV3Cappedⁱᵐᵖˡ_underlying :: (applierV3Cappedⁱᵐᵖˡ) ↓u (applierV3Cappedⁱᵐᵖˡ);
+}.
+
+Module applierV3Corrupt.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End applierV3Corrupt.
+
+Class applierV3Corrupt_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] applierV3Corrupt_type_repr  :: go.TypeReprUnderlying applierV3Corruptⁱᵐᵖˡ applierV3Corrupt.t;
+  #[global] applierV3Corrupt_underlying :: (applierV3Corrupt) <u (applierV3Corruptⁱᵐᵖˡ);
+  #[global] applierV3Corruptⁱᵐᵖˡ_underlying :: (applierV3Corruptⁱᵐᵖˡ) ↓u (applierV3Corruptⁱᵐᵖˡ);
+}.
+
+Module applierV3.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End applierV3.
+
+Class applierV3_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] applierV3_type_repr  :: go.TypeReprUnderlying applierV3ⁱᵐᵖˡ applierV3.t;
+  #[global] applierV3_underlying :: (applierV3) <u (applierV3ⁱᵐᵖˡ);
+  #[global] applierV3ⁱᵐᵖˡ_underlying :: (applierV3ⁱᵐᵖˡ) ↓u (applierV3ⁱᵐᵖˡ);
+}.
+
+Module ApplierOptions.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End ApplierOptions.
+
+Class ApplierOptions_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] ApplierOptions_type_repr  :: go.TypeReprUnderlying ApplierOptionsⁱᵐᵖˡ ApplierOptions.t;
+  #[global] ApplierOptions_underlying :: (ApplierOptions) <u (ApplierOptionsⁱᵐᵖˡ);
+  #[global] ApplierOptionsⁱᵐᵖˡ_underlying :: (ApplierOptionsⁱᵐᵖˡ) ↓u (ApplierOptionsⁱᵐᵖˡ);
+}.
+
+Module SnapshotServer.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End SnapshotServer.
+
+Class SnapshotServer_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] SnapshotServer_type_repr  :: go.TypeReprUnderlying SnapshotServerⁱᵐᵖˡ SnapshotServer.t;
+  #[global] SnapshotServer_underlying :: (SnapshotServer) <u (SnapshotServerⁱᵐᵖˡ);
+  #[global] SnapshotServerⁱᵐᵖˡ_underlying :: (SnapshotServerⁱᵐᵖˡ) ↓u (SnapshotServerⁱᵐᵖˡ);
+}.
 
 Module RaftStatusGetter.
 Section def.
@@ -170,86 +284,6 @@ Class applyFunc_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalCon
   #[global] applyFuncⁱᵐᵖˡ_underlying :: (applyFuncⁱᵐᵖˡ) ↓u (applyFuncⁱᵐᵖˡ);
 }.
 
-Module applierV3.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End applierV3.
-
-Class applierV3_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] applierV3_type_repr  :: go.TypeReprUnderlying applierV3ⁱᵐᵖˡ applierV3.t;
-  #[global] applierV3_underlying :: (applierV3) <u (applierV3ⁱᵐᵖˡ);
-  #[global] applierV3ⁱᵐᵖˡ_underlying :: (applierV3ⁱᵐᵖˡ) ↓u (applierV3ⁱᵐᵖˡ);
-}.
-
-Module SnapshotServer.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End SnapshotServer.
-
-Class SnapshotServer_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] SnapshotServer_type_repr  :: go.TypeReprUnderlying SnapshotServerⁱᵐᵖˡ SnapshotServer.t;
-  #[global] SnapshotServer_underlying :: (SnapshotServer) <u (SnapshotServerⁱᵐᵖˡ);
-  #[global] SnapshotServerⁱᵐᵖˡ_underlying :: (SnapshotServerⁱᵐᵖˡ) ↓u (SnapshotServerⁱᵐᵖˡ);
-}.
-
-Module applierV3backend.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End applierV3backend.
-
-Class applierV3backend_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] applierV3backend_type_repr  :: go.TypeReprUnderlying applierV3backendⁱᵐᵖˡ applierV3backend.t;
-  #[global] applierV3backend_underlying :: (applierV3backend) <u (applierV3backendⁱᵐᵖˡ);
-  #[global] applierV3backendⁱᵐᵖˡ_underlying :: (applierV3backendⁱᵐᵖˡ) ↓u (applierV3backendⁱᵐᵖˡ);
-}.
-
-Module applierV3Capped.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End applierV3Capped.
-
-Class applierV3Capped_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] applierV3Capped_type_repr  :: go.TypeReprUnderlying applierV3Cappedⁱᵐᵖˡ applierV3Capped.t;
-  #[global] applierV3Capped_underlying :: (applierV3Capped) <u (applierV3Cappedⁱᵐᵖˡ);
-  #[global] applierV3Cappedⁱᵐᵖˡ_underlying :: (applierV3Cappedⁱᵐᵖˡ) ↓u (applierV3Cappedⁱᵐᵖˡ);
-}.
-
-Module applierMembership.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End applierMembership.
-
-Class applierMembership_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] applierMembership_type_repr  :: go.TypeReprUnderlying applierMembershipⁱᵐᵖˡ applierMembership.t;
-  #[global] applierMembership_underlying :: (applierMembership) <u (applierMembershipⁱᵐᵖˡ);
-  #[global] applierMembershipⁱᵐᵖˡ_underlying :: (applierMembershipⁱᵐᵖˡ) ↓u (applierMembershipⁱᵐᵖˡ);
-}.
-
 Module quotaApplierV3.
 Section def.
 Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
@@ -264,38 +298,6 @@ Class quotaApplierV3_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLoc
   #[global] quotaApplierV3_type_repr  :: go.TypeReprUnderlying quotaApplierV3ⁱᵐᵖˡ quotaApplierV3.t;
   #[global] quotaApplierV3_underlying :: (quotaApplierV3) <u (quotaApplierV3ⁱᵐᵖˡ);
   #[global] quotaApplierV3ⁱᵐᵖˡ_underlying :: (quotaApplierV3ⁱᵐᵖˡ) ↓u (quotaApplierV3ⁱᵐᵖˡ);
-}.
-
-Module authApplierV3.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End authApplierV3.
-
-Class authApplierV3_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] authApplierV3_type_repr  :: go.TypeReprUnderlying authApplierV3ⁱᵐᵖˡ authApplierV3.t;
-  #[global] authApplierV3_underlying :: (authApplierV3) <u (authApplierV3ⁱᵐᵖˡ);
-  #[global] authApplierV3ⁱᵐᵖˡ_underlying :: (authApplierV3ⁱᵐᵖˡ) ↓u (authApplierV3ⁱᵐᵖˡ);
-}.
-
-Module applierV3Corrupt.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End applierV3Corrupt.
-
-Class applierV3Corrupt_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] applierV3Corrupt_type_repr  :: go.TypeReprUnderlying applierV3Corruptⁱᵐᵖˡ applierV3Corrupt.t;
-  #[global] applierV3Corrupt_underlying :: (applierV3Corrupt) <u (applierV3Corruptⁱᵐᵖˡ);
-  #[global] applierV3Corruptⁱᵐᵖˡ_underlying :: (applierV3Corruptⁱᵐᵖˡ) ↓u (applierV3Corruptⁱᵐᵖˡ);
 }.
 
 Module UberApplier.
@@ -332,17 +334,17 @@ Class uberApplier_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalC
 
 Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
+  #[global] authApplierV3_instance :: authApplierV3_Assumptions;
+  #[global] applierV3backend_instance :: applierV3backend_Assumptions;
+  #[global] applierV3Capped_instance :: applierV3Capped_Assumptions;
+  #[global] applierV3Corrupt_instance :: applierV3Corrupt_Assumptions;
+  #[global] applierV3_instance :: applierV3_Assumptions;
+  #[global] ApplierOptions_instance :: ApplierOptions_Assumptions;
+  #[global] SnapshotServer_instance :: SnapshotServer_Assumptions;
   #[global] RaftStatusGetter_instance :: RaftStatusGetter_Assumptions;
   #[global] Result_instance :: Result_Assumptions;
   #[global] applyFunc_instance :: applyFunc_Assumptions;
-  #[global] applierV3_instance :: applierV3_Assumptions;
-  #[global] SnapshotServer_instance :: SnapshotServer_Assumptions;
-  #[global] applierV3backend_instance :: applierV3backend_Assumptions;
-  #[global] applierV3Capped_instance :: applierV3Capped_Assumptions;
-  #[global] applierMembership_instance :: applierMembership_Assumptions;
   #[global] quotaApplierV3_instance :: quotaApplierV3_Assumptions;
-  #[global] authApplierV3_instance :: authApplierV3_Assumptions;
-  #[global] applierV3Corrupt_instance :: applierV3Corrupt_Assumptions;
   #[global] UberApplier_instance :: UberApplier_Assumptions;
   #[global] uberApplier_instance :: uberApplier_Assumptions;
 }.
