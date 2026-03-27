@@ -32,6 +32,21 @@ Context {sem : go.Semantics} {package_sem : cache.Assumptions}.
 Collection W := sem + package_sem.
 Local Set Default Proof Using "W".
 
+(* [buf] is an append-only list of everything that has ever been appended. An
+   arbitrary prefix of the appended stuff might have been physically compacted
+   away. *)
+Axiom own_ringBuffer :
+  ∀ (r : loc) [T'] `[!ZeroVal T'] `[!TypedPointsto (Σ:=Σ) T'] [V]
+    (is_item : T' → V → iProp Σ) (item_rev : V → w64) (buf : list V), iProp Σ.
+
+Axiom wp_ringBuffer__PeekOldest :
+  ∀ (r : loc) [T'] `[!ZeroVal T'] `[!TypedPointsto (Σ:=Σ) T'] `[!IntoValTyped T' T] [V]
+    (is_item : T' → V → iProp Σ) (item_rev : V → w64) (buf : list V),
+  {{{ is_pkg_init cache ∗
+      own_ringBuffer r is_item item_rev buf }}}
+    r @! (go.PointerType (cache.ringBuffer T)) @! "PeekOldest" #()
+  {{{ RET #(last (item_rev <$> buf) (W64 0));
+      own_ringBuffer r is_item item_rev buf }}}.
 
 End ring_buffer.
 
