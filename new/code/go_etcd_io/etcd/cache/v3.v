@@ -262,10 +262,12 @@ Definition store__getSnapshotⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalC
       do:  ("targetSnapshot" <-[go.PointerType snapshot] "$r0");;;
       return: (#false))
       ) in
-    (MethodResolve (go.PointerType (ringBuffer (go.PointerType snapshot))) "AscendGreaterOrEqual"%go (StructFieldRef store "history"%go (![go.PointerType store] "s"))) "$a0" "$a1");;;
+    (MethodResolve (go.PointerType (ringBuffer (go.PointerType snapshot))) "DescendLessOrEqual"%go (StructFieldRef store "history"%go (![go.PointerType store] "s"))) "$a0" "$a1");;;
     (if: Convert go.untyped_bool go.bool ((![go.PointerType snapshot] "targetSnapshot") =⟨go.PointerType snapshot⟩ (Convert go.untyped_nil (go.PointerType snapshot) UntypedNil))
     then
-      let: "$r0" := (StructFieldRef store "latest"%go (![go.PointerType store] "s")) in
+      let: "$r0" := (let: "$a0" := (![go.int64] "rev") in
+      let: "$a1" := (![go.PointerType (btree.BTree (go.PointerType kvItem))] (StructFieldRef snapshot "tree"%go (StructFieldRef store "latest"%go (![go.PointerType store] "s")))) in
+      (FuncResolve newClonedSnapshot [] #()) "$a0" "$a1") in
       do:  ("targetSnapshot" <-[go.PointerType snapshot] "$r0")
     else do:  #());;;
     return: (![go.PointerType snapshot] "targetSnapshot", ![go.int64] (StructFieldRef snapshot "rev"%go (StructFieldRef store "latest"%go (![go.PointerType store] "s"))), Convert go.untyped_nil go.error UntypedNil)).

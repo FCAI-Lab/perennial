@@ -42,6 +42,7 @@ Axiom own_ringBuffer :
 Context [T'] `[!ZeroVal T'] `[!TypedPointsto (Σ:=Σ) T'] [V] `[!IntoValTyped T' T]
     (is_item : T' → V → iProp Σ) (rev_item : V → w64).
 
+(* FIXME: this is the spec for PeekLatest; need to track the exact buf. *)
 Axiom wp_ringBuffer__PeekOldest :
   ∀ r buf,
   {{{ is_pkg_init cache ∗
@@ -51,18 +52,16 @@ Axiom wp_ringBuffer__PeekOldest :
       own_ringBuffer r is_item rev_item buf }}}.
 
 Axiom wp_ringBuffer__DescendLessOrEqual_once :
-  ∀ (pivot : w64) (iter : func.t) r buf,
-  {{{ is_pkg_init cache ∗
-      own_ringBuffer r is_item rev_item buf ∗
-      (∀ Ψ i item,
-         ⌜ buf !! i = Some item ⌝ ∗
-         ⌜ sint.Z (rev_item item) ≤ sint.Z pivot ⌝ ∗
-         ⌜ Forall (λ itm, sint.Z pivot < sint.Z (rev_item itm)) (drop i buf) ⌝ -∗
-         Ψ #false -∗
-         WP #iter #(rev_item item) #item {{ Ψ }})
-  }}}
-    r @! (go.PointerType (cache.ringBuffer T)) @! "DescendLessOrEqual " #pivot #iter
-  {{{ RET #(); own_ringBuffer r is_item rev_item buf }}}.
+  ∀ (pivot : w64) (iter : func.t) r buf Φ,
+  is_pkg_init cache ∗
+  own_ringBuffer r is_item rev_item buf ∗
+  (⌜ buf = [] ∨ last buf = item ⌝ -∗ Φ #())
+  (∀ i item,
+     ⌜ buf !! i = Some item ⌝ ∗
+     ⌜ sint.Z (rev_item item) ≤ sint.Z pivot ⌝ ∗
+     ⌜ Forall (λ itm, sint.Z pivot < sint.Z (rev_item itm)) (drop i buf) ⌝ -∗
+     WP #iter #(rev_item item) #item {{ v, ⌜ v = #false ⌝ ∗ Φ #() }})
+  WP r @! (go.PointerType (cache.ringBuffer T)) @! "DescendLessOrEqual" #pivot #iter {{ Φ }}.
 
 End ring_buffer.
 
@@ -121,6 +120,15 @@ Definition is_snapshot (snap_ptr : loc) (kvs : gmap go_string KeyValue.t) : iPro
 Definition is_etcd_state (rev : w64) (kvs : gmap go_string KeyValue.t) : iProp Σ :=
   True.
 
+
+(* FIXME: the history can be empty only if there was a progres notification, but
+   no normal watch response. That's the only case in which DescendLessOrEqual
+   would never run iter. Otherwise, by the time it's called, DescendLessOrEqual
+   is guaranteed to run.
+
+   TODO: have to reason about PeekOldest guaranteeing that DescendLessOrEqual
+   will succeed.
+ *)
 Lemma wp_store__getSnapshot s (rev : w64) prefix :
   {{{ is_pkg_init cache ∗ "Hs" ∷ own_store s prefix }}}
     s @! (go.PointerType cache.store) @! "getSnapshot" #rev
@@ -150,11 +158,12 @@ Proof.
   wp_if_destruct.
   { (* TODO: rpctypes global error variable. *) admit. }
   (* TODO: spec for peekoldest *)
-  wp_apply (wp_ringBuffer__PeekOldest with "[$Hhistory_inv]").
-  iIntros "Hhistory_inv". wp_auto.
+  wp_apply (wp_ringBuffer__PeekOldest with "[$history_inv]").
+  iIntros "history_inv". wp_auto.
   wp_if_destruct.
   { (* TODO: global rpctypes.ErrCompacted *) admit. }
-  (* FIXME: the next line is buggy. *)
+  wp_apply (wp_ringBuffer__DescendLessOrEqual_once with "[$history_inv]").
+  { }
   wp_auto.
 
 Admitted.
