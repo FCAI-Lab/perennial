@@ -141,8 +141,6 @@ Axiom kvItemⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go
 
 Axiom watcherⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
-Axiom revisionPollInterval : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
-
 Definition ErrUnsupportedRequest {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/cache/v3.ErrUnsupportedRequest"%go.
 
 Axiom ErrUnsupportedRequest'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
@@ -226,7 +224,7 @@ Definition newClonedSnapshotⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCo
      let: "$v1" := ((MethodResolve (go.PointerType (btree.BTree (go.PointerType kvItem))) "Clone"%go (![go.PointerType (btree.BTree (go.PointerType kvItem))] "t")) #()) in
      CompositeLiteral snapshot (LiteralValue [KeyedElement (Some (KeyField "rev"%go)) (ElementExpression go.int64 "$v0"); KeyedElement (Some (KeyField "tree"%go)) (ElementExpression (go.PointerType (btree.BTree (go.PointerType kvItem))) "$v1")])))).
 
-(* go: store.go:70:17 *)
+(* go: store.go:74:17 *)
 Definition store__getSnapshotⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "s" "rev",
     with_defer: (let: "s" := (GoAlloc (go.PointerType store) "s") in
@@ -256,12 +254,6 @@ Definition store__getSnapshotⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalC
     (if: Convert go.untyped_bool go.bool ((![go.int64] "rev") >⟨go.int64⟩ (![go.int64] (StructFieldRef snapshot "rev"%go (StructFieldRef store "latest"%go (![go.PointerType store] "s")))))
     then return: (Convert go.untyped_nil (go.PointerType snapshot) UntypedNil, #(W64 0), ![go.error] (GlobalVarAddr rpctypes.ErrFutureRev #()))
     else do:  #());;;
-    let: "oldestRev" := (GoAlloc go.int64 (GoZeroVal go.int64 #())) in
-    let: "$r0" := ((MethodResolve (go.PointerType (ringBuffer (go.PointerType snapshot))) "PeekOldest"%go (StructFieldRef store "history"%go (![go.PointerType store] "s"))) #()) in
-    do:  ("oldestRev" <-[go.int64] "$r0");;;
-    (if: Convert go.untyped_bool go.bool ((![go.int64] "rev") <⟨go.int64⟩ (![go.int64] "oldestRev"))
-    then return: (Convert go.untyped_nil (go.PointerType snapshot) UntypedNil, #(W64 0), ![go.error] (GlobalVarAddr rpctypes.ErrCompacted #()))
-    else do:  #());;;
     let: "targetSnapshot" := (GoAlloc (go.PointerType snapshot) (GoZeroVal (go.PointerType snapshot) #())) in
     do:  (let: "$a0" := (![go.int64] "rev") in
     let: "$a1" := (λ: "rev" "snap",
@@ -273,11 +265,7 @@ Definition store__getSnapshotⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalC
       ) in
     (MethodResolve (go.PointerType (ringBuffer (go.PointerType snapshot))) "DescendLessOrEqual"%go (StructFieldRef store "history"%go (![go.PointerType store] "s"))) "$a0" "$a1");;;
     (if: Convert go.untyped_bool go.bool ((![go.PointerType snapshot] "targetSnapshot") =⟨go.PointerType snapshot⟩ (Convert go.untyped_nil (go.PointerType snapshot) UntypedNil))
-    then
-      let: "$r0" := (let: "$a0" := (![go.int64] "rev") in
-      let: "$a1" := (![go.PointerType (btree.BTree (go.PointerType kvItem))] (StructFieldRef snapshot "tree"%go (StructFieldRef store "latest"%go (![go.PointerType store] "s")))) in
-      (FuncResolve newClonedSnapshot [] #()) "$a0" "$a1") in
-      do:  ("targetSnapshot" <-[go.PointerType snapshot] "$r0")
+    then return: (Convert go.untyped_nil (go.PointerType snapshot) UntypedNil, #(W64 0), ![go.error] (GlobalVarAddr rpctypes.ErrCompacted #()))
     else do:  #());;;
     return: (![go.PointerType snapshot] "targetSnapshot", ![go.int64] (StructFieldRef snapshot "rev"%go (StructFieldRef store "latest"%go (![go.PointerType store] "s"))), Convert go.untyped_nil go.error UntypedNil)).
 
@@ -630,12 +618,13 @@ Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
 Record t :=
 mk {
   mu' : sync.RWMutex.t;
+  revCond' : loc;
   degree' : w64;
   latest' : cache.snapshot.t;
   history' : (cache.ringBuffer.t loc);
 }.
 
-#[global] Instance zero_val : ZeroVal t := {| zero_val := mk (zero_val _) (zero_val _) (zero_val _) (zero_val _)|}.
+#[global] Instance zero_val : ZeroVal t := {| zero_val := mk (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _)|}.
 #[global] Arguments mk : clear implicits.
 #[global] Arguments t : clear implicits.
 End def.
@@ -643,6 +632,7 @@ End store.
 
 Definition store'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
   (go.FieldDecl "mu"%go sync.RWMutex);
+  (go.FieldDecl "revCond"%go (go.PointerType sync.Cond));
   (go.FieldDecl "degree"%go go.int);
   (go.FieldDecl "latest"%go snapshot);
   (go.FieldDecl "history"%go (ringBuffer (go.PointerType snapshot)))
@@ -659,6 +649,8 @@ Class store_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext
   #[global] store_underlying :: (store) <u (storeⁱᵐᵖˡ);
   #[global] store_get_mu (x : store.t) :: ⟦StructFieldGet (storeⁱᵐᵖˡ) "mu", #x⟧ ⤳[under] #x.(store.mu');
   #[global] store_set_mu (x : store.t) y :: ⟦StructFieldSet (storeⁱᵐᵖˡ) "mu", (#x, #y)⟧ ⤳[under] #(x <|store.mu' := y|>);
+  #[global] store_get_revCond (x : store.t) :: ⟦StructFieldGet (storeⁱᵐᵖˡ) "revCond", #x⟧ ⤳[under] #x.(store.revCond');
+  #[global] store_set_revCond (x : store.t) y :: ⟦StructFieldSet (storeⁱᵐᵖˡ) "revCond", (#x, #y)⟧ ⤳[under] #(x <|store.revCond' := y|>);
   #[global] store_get_degree (x : store.t) :: ⟦StructFieldGet (storeⁱᵐᵖˡ) "degree", #x⟧ ⤳[under] #x.(store.degree');
   #[global] store_set_degree (x : store.t) y :: ⟦StructFieldSet (storeⁱᵐᵖˡ) "degree", (#x, #y)⟧ ⤳[under] #(x <|store.degree' := y|>);
   #[global] store_get_latest (x : store.t) :: ⟦StructFieldGet (storeⁱᵐᵖˡ) "latest", #x⟧ ⤳[under] #x.(store.latest');

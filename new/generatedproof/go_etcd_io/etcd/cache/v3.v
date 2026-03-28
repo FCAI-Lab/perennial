@@ -440,6 +440,7 @@ Local Set Default Proof Using "All".
     typed_pointsto_def l v dq :=
       (
       "mu" ∷ l.[(cache.store.t), "mu"] ↦{dq} v.(cache.store.mu') ∗
+      "revCond" ∷ l.[(cache.store.t), "revCond"] ↦{dq} v.(cache.store.revCond') ∗
       "degree" ∷ l.[(cache.store.t), "degree"] ↦{dq} v.(cache.store.degree') ∗
       "latest" ∷ l.[(cache.store.t), "latest"] ↦{dq} v.(cache.store.latest') ∗
       "history" ∷ l.[(cache.store.t), "history"] ↦{dq} v.(cache.store.history') ∗
@@ -464,6 +465,19 @@ Proof. solve_pointsto_access_struct. Qed.
     (l.[(cache.store.t), "mu"] ↦ (v.(cache.store.mu')))
     (l.[(cache.store.t), "mu"] ↦ mu')
     (l ↦ v) (l ↦ (v <|(cache.store.mu') := mu'|>))%I.
+Proof. solve_pointsto_access_struct. Qed.
+#[global] Instance store_access_load_revCond l (v : (cache.store.t)) dq :
+  AccessStrict
+    (l.[(cache.store.t), "revCond"] ↦{dq} (v.(cache.store.revCond')))
+    (l.[(cache.store.t), "revCond"] ↦{dq} (v.(cache.store.revCond')))
+    (l ↦{dq} v) (l ↦{dq} v)%I.
+Proof. solve_pointsto_access_struct. Qed.
+
+#[global] Instance store_access_store_revCond l (v : (cache.store.t)) revCond' :
+  AccessStrict
+    (l.[(cache.store.t), "revCond"] ↦ (v.(cache.store.revCond')))
+    (l.[(cache.store.t), "revCond"] ↦ revCond')
+    (l ↦ v) (l ↦ (v <|(cache.store.revCond') := revCond'|>))%I.
 Proof. solve_pointsto_access_struct. Qed.
 #[global] Instance store_access_load_degree l (v : (cache.store.t)) dq :
   AccessStrict
