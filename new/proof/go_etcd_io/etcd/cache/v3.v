@@ -18,10 +18,17 @@ Local Set Default Proof Using "W".
 #[global] Instance : IsPkgInit (iProp Σ) codes := define_is_pkg_init True%I.
 #[global] Instance : GetIsPkgInitWf (iProp Σ) codes := build_get_is_pkg_init_wf.
 
-#[global] Instance : IsPkgInit (iProp Σ) rpctypes := define_is_pkg_init True%I.
+Definition is_rpctypes_init : iProp Σ :=
+  ∃ err_future_rev err_compacted,
+  "#ErrFutureRev" ∷ (global_addr rpctypes.ErrFutureRev) ↦□ interface.ok err_future_rev ∗
+  "#ErrCompacted" ∷ (global_addr rpctypes.ErrCompacted) ↦□ interface.ok err_compacted.
+#[global] Instance : IsPkgInit (iProp Σ) rpctypes := define_is_pkg_init is_rpctypes_init%I.
 #[global] Instance : GetIsPkgInitWf (iProp Σ) rpctypes := build_get_is_pkg_init_wf.
 
-#[global] Instance : IsPkgInit (iProp Σ) cache := define_is_pkg_init True%I.
+Definition is_init : iProp Σ :=
+  ∃ err_not_ready,
+  "#ErrNotRead" ∷ (global_addr cache.ErrNotReady) ↦□ interface.ok err_not_ready.
+#[global] Instance : IsPkgInit (iProp Σ) cache := define_is_pkg_init is_init.
 #[global] Instance : GetIsPkgInitWf (iProp Σ) cache := build_get_is_pkg_init_wf.
 
 End init.
@@ -151,15 +158,33 @@ Proof.
   iIntros "[Hrlocked Hown]". wp_auto.
   iNamedSuffix "Hown" "_inv". wp_auto.
   wp_if_destruct.
-  { (* TODO: global ErrNotReady pointsto *) admit. }
+  { iDestruct (is_pkg_init_access with "[$]") as "@".
+    wp_auto.
+    iCombineNamed "*_inv" as "Hinv".
+    wp_apply (wp_RWMutex__RUnlock with "[$Hrlocked Hinv]").
+    { iNamed "Hinv". iFrame "∗#%". }
+    iIntros "Hmu". wp_auto. wp_end. }
   wp_if_destruct.
-  { (* TODO: fmt.Errorf spec *) admit. }
+  { wp_apply wp_slice_literal.
+    { iIntros. wp_auto. iFrame. }
+    iIntros "% Hsl". wp_auto.
+    wp_apply (wp_Errorf with "[$Hsl]") as "%err _".
+    wp_auto.
+    iCombineNamed "*_inv" as "Hinv".
+    wp_apply (wp_RWMutex__RUnlock with "[$Hrlocked Hinv]").
+    { iNamed "Hinv". iFrame "∗#%". }
+    iIntros "Hmu". wp_auto. wp_end. }
   wp_if_destruct.
   { (* TODO: join the proof of the case rev==0. *) admit. }
   wp_if_destruct.
-  { (* TODO: rpctypes global error variable. *) admit. }
-  (* TODO: spec for peekoldest *)
-
+  { iAssert (is_pkg_init rpctypes) with "[]" as "#H".
+    { iPkgInit. }
+    iDestruct (is_pkg_init_access with "[$H]") as "@".
+    wp_auto.
+    iCombineNamed "*_inv" as "Hinv".
+    wp_apply (wp_RWMutex__RUnlock with "[$Hrlocked Hinv]").
+    { iNamed "Hinv". iFrame "∗#%". }
+    iIntros "Hmu". wp_auto. wp_end. }
   simpl in *.
   rename Φ into Ψ. iRename "HΦ" into "HΨ".
   wp_apply (wp_ringBuffer__DescendLessOrEqual (λ i, "->" ∷ ⌜ i = O ⌝ ∗ _)%I with "[-]").
@@ -197,8 +222,14 @@ Proof.
   }
   {
     iIntros "history_inv @". wp_auto.
-    (* TODO: global ErrCompacted *)
-    admit.
+    iAssert (is_pkg_init rpctypes) with "[]" as "#H".
+    { iPkgInit. }
+    iDestruct (is_pkg_init_access with "[$H]") as "@".
+    wp_auto.
+    iCombineNamed "*_inv" as "Hinv".
+    wp_apply (wp_RWMutex__RUnlock with "[$Hrlocked Hinv]").
+    { iNamed "Hinv". iFrame "∗#%". }
+    iIntros "Hmu". wp_auto. iApply "HΨ". iFrame.
   }
 Admitted.
 

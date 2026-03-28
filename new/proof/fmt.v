@@ -23,4 +23,13 @@ Proof.
   iEval (rewrite is_pkg_init_unfold /=). iFrame "∗#".
 Admitted.
 
+(* This is unsound. Really need to know that all of the args are safe to convert
+   into string. *)
+Lemma wp_Errorf (format : go_string) args_sl (args : list any.t):
+  {{{ is_pkg_init fmt ∗ args_sl ↦* args }}}
+    @! fmt.Errorf #format #args_sl
+  {{{ err, RET #(interface.ok err); True }}}.
+Proof.
+Admitted.
+
 End wps.
