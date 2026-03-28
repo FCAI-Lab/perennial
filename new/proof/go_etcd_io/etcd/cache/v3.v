@@ -32,35 +32,36 @@ Context {sem : go.Semantics} {package_sem : cache.Assumptions}.
 Collection W := sem + package_sem.
 Local Set Default Proof Using "W".
 
-(* [buf] is an append-only list of everything that has ever been appended. An
-   arbitrary prefix of the appended stuff might have been physically compacted
-   away. *)
+(* If [buf] reaches capacity, the first entry may be removed during Append() to make space *)
 Axiom own_ringBuffer :
   ∀ (r : loc) [T'] `[!ZeroVal T'] `[!TypedPointsto (Σ:=Σ) T'] [V]
     (is_item : T' → V → iProp Σ) (rev_item : V → w64) (buf : list V), iProp Σ.
 
 Context [T'] `[!ZeroVal T'] `[!TypedPointsto (Σ:=Σ) T'] [V] `[!IntoValTyped T' T]
-    (is_item : T' → V → iProp Σ) (rev_item : V → w64).
+    {is_item : T' → V → iProp Σ} {rev_item : V → w64}.
 
-(* FIXME: this is the spec for PeekLatest; need to track the exact buf. *)
 Axiom wp_ringBuffer__PeekOldest :
   ∀ r buf,
   {{{ is_pkg_init cache ∗
       own_ringBuffer r is_item rev_item buf }}}
     r @! (go.PointerType (cache.ringBuffer T)) @! "PeekOldest" #()
-  {{{ RET #(last (rev_item <$> buf) (W64 0));
+  {{{ RET #(hd (W64 0) (rev_item <$> buf));
       own_ringBuffer r is_item rev_item buf }}}.
 
-Axiom wp_ringBuffer__DescendLessOrEqual_once :
-  ∀ (pivot : w64) (iter : func.t) r buf Φ,
+(* [P i] is the invariant that holds after [iter] has been called [i] times on
+   the appropriate items. *)
+Axiom wp_ringBuffer__DescendLessOrEqual :
+  ∀ P (pivot : w64) (iter : func.t) r buf Φ,
+  let iter_itemvs := reverse (filter (λ item, sint.Z (rev_item item) ≤ sint.Z pivot) buf) in
   is_pkg_init cache ∗
   own_ringBuffer r is_item rev_item buf ∗
-  (⌜ buf = [] ∨ last buf = item ⌝ -∗ Φ #())
-  (∀ i item,
-     ⌜ buf !! i = Some item ⌝ ∗
-     ⌜ sint.Z (rev_item item) ≤ sint.Z pivot ⌝ ∗
-     ⌜ Forall (λ itm, sint.Z pivot < sint.Z (rev_item itm)) (drop i buf) ⌝ -∗
-     WP #iter #(rev_item item) #item {{ v, ⌜ v = #false ⌝ ∗ Φ #() }})
+  P O -∗
+  (∀ i item itemv,
+     {{{ P i ∗ ⌜ iter_itemvs !! i = Some itemv ⌝ ∗ is_item item itemv }}}
+       #iter #(rev_item itemv) #item
+     {{{ (continue : bool), RET #continue;
+         if continue then P (S i) else (own_ringBuffer r is_item rev_item buf -∗ Φ #()) }}}) -∗
+  (own_ringBuffer r is_item rev_item buf -∗ P (length iter_itemvs) -∗ Φ #()) -∗
   WP r @! (go.PointerType (cache.ringBuffer T)) @! "DescendLessOrEqual" #pivot #iter {{ Φ }}.
 
 End ring_buffer.
@@ -120,7 +121,6 @@ Definition is_snapshot (snap_ptr : loc) (kvs : gmap go_string KeyValue.t) : iPro
 Definition is_etcd_state (rev : w64) (kvs : gmap go_string KeyValue.t) : iProp Σ :=
   True.
 
-
 (* FIXME: the history can be empty only if there was a progres notification, but
    no normal watch response. That's the only case in which DescendLessOrEqual
    would never run iter. Otherwise, by the time it's called, DescendLessOrEqual
@@ -133,6 +133,7 @@ Lemma wp_store__getSnapshot s (rev : w64) prefix :
   {{{ is_pkg_init cache ∗ "Hs" ∷ own_store s prefix }}}
     s @! (go.PointerType cache.store) @! "getSnapshot" #rev
   {{{ snap_ptr snap_rev err, RET (#snap_ptr, #snap_rev, #err);
+      own_store s prefix ∗
       match err with
       | interface.nil =>
           (∃ kvs,
@@ -162,10 +163,31 @@ Proof.
   iIntros "history_inv". wp_auto.
   wp_if_destruct.
   { (* TODO: global rpctypes.ErrCompacted *) admit. }
-  wp_apply (wp_ringBuffer__DescendLessOrEqual_once with "[$history_inv]").
-  { }
-  wp_auto.
 
+  simpl in *.
+  rename Φ into Ψ. iRename "HΦ" into "HΨ".
+  wp_apply (wp_ringBuffer__DescendLessOrEqual (λ i, "->" ∷ ⌜ i = O ⌝ ∗ _)%I with "[-]").
+  { iFrame. iSplitR; first done. iNamedAccu. }
+  { iIntros "*".
+    wp_start as "(@ & %Hlookup & Hitem)".
+    wp_auto. wp_alloc rev_ptr2 as "rev2". wp_auto.
+    wp_end. iIntros "history_inv". wp_auto. wp_if_destruct.
+    { exfalso. admit. (* TODO: prove is_snapshotItem -> non-null *) }
+    iCombineNamed "*_inv" as "Hinv".
+    wp_apply (wp_RWMutex__RUnlock with "[$Hrlocked Hinv]").
+    { iNamed "Hinv". iFrame "∗#%". }
+    iIntros "Hmu". wp_auto.
+    iApply "HΨ".
+    iFrame. admit. (* TODO: fill in postcondition *)
+  }
+  {
+    iIntros "history_inv @". wp_auto.
+    (* TODO: spec for newClonedSnapshot *)
+    wp_func_call. wp_call. wp_auto.
+    wp_apply (wp_BTree__Clone with "[latest_tree_inv]").
+    { (* FIXME: data race in implementation. *) admit. }
+    admit.
+  }
 Admitted.
 
 End store.

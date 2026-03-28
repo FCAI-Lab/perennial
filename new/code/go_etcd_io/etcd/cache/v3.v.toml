@@ -2,6 +2,7 @@ translate = [
   "store",
   "store.getSnapshot",
   "snapshot",
+  "newClonedSnapshot",
 ]
 
 imports = [

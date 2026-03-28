@@ -217,6 +217,15 @@ Definition validateRevisions {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go
 
 Definition newWatcher {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/cache/v3.newWatcher"%go.
 
+(* go: snapshot.go:29:6 *)
+Definition newClonedSnapshotⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "rev" "t",
+    exception_do (let: "t" := (GoAlloc (go.PointerType (btree.BTree (go.PointerType kvItem))) "t") in
+    let: "rev" := (GoAlloc go.int64 "rev") in
+    return: (GoAlloc snapshot (let: "$v0" := (![go.int64] "rev") in
+     let: "$v1" := ((MethodResolve (go.PointerType (btree.BTree (go.PointerType kvItem))) "Clone"%go (![go.PointerType (btree.BTree (go.PointerType kvItem))] "t")) #()) in
+     CompositeLiteral snapshot (LiteralValue [KeyedElement (Some (KeyField "rev"%go)) (ElementExpression go.int64 "$v0"); KeyedElement (Some (KeyField "tree"%go)) (ElementExpression (go.PointerType (btree.BTree (go.PointerType kvItem))) "$v1")])))).
+
 (* go: store.go:70:17 *)
 Definition store__getSnapshotⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "s" "rev",
@@ -715,6 +724,7 @@ Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!G
   #[global] store_instance :: store_Assumptions;
   #[global] kvItem_instance :: kvItem_Assumptions;
   #[global] watcher_instance :: watcher_Assumptions;
+  #[global] newClonedSnapshot_unfold :: FuncUnfold newClonedSnapshot [] (newClonedSnapshotⁱᵐᵖˡ);
   #[global] import_fmt_Assumption :: fmt.Assumptions;
   #[global] import_sync_Assumption :: sync.Assumptions;
   #[global] import_rpctypes_Assumption :: rpctypes.Assumptions;
