@@ -106,12 +106,14 @@ Definition own_store (s : loc) (prefix : go_string) : iProp Σ :=
        "history" ∷ (own_ringBuffer (s.[cache.store.t, "history"])
                        is_snapshotItem rev_snapshotItem history) ∗
        "#Hhistory" ∷ (
-           let history' := history ++ [(snapshot.(cache.snapshot.rev'), kvs_ordered)] in
-           ∀ revision i prev next,
-             ⌜ (history' !! i) = Some prev ∧
-               (history' !! (S i)) = Some next ∧
-               (sint.Z prev.1 ≤ sint.Z revision < sint.Z next.1) ⌝ →
-             is_etcd_kvs revision prefix (ordered_kvs_to_map prev.2)
+           ∀ revision i s,
+             ⌜ (history !! i) = Some s ∧
+               (sint.Z s.1 ≤ sint.Z revision ∧
+                (match history !! (S i) with
+                 | Some next => sint.Z revision < sint.Z next.1
+                 | None => sint.Z revision ≤ sint.Z snapshot.(cache.snapshot.rev')
+                 end)) ⌝ →
+             is_etcd_kvs revision prefix (ordered_kvs_to_map s.2)
          ) ∗
        (* latest.rev seems like it must be monotonic, since linearizable Get
           relies on checking lower bound before reading. *)
@@ -157,10 +159,6 @@ Proof.
   wp_if_destruct.
   { (* TODO: rpctypes global error variable. *) admit. }
   (* TODO: spec for peekoldest *)
-  wp_apply (wp_ringBuffer__PeekOldest with "[$history_inv]").
-  iIntros "history_inv". wp_auto.
-  wp_if_destruct.
-  { (* TODO: global rpctypes.ErrCompacted *) admit. }
 
   simpl in *.
   rename Φ into Ψ. iRename "HΦ" into "HΨ".
@@ -168,8 +166,7 @@ Proof.
   { iFrame. iSplitR; first done. iNamedAccu. }
   { iIntros "*".
     wp_start as "(@ & %Hlookup & Hitem)".
-    wp_auto. wp_alloc rev_ptr2 as "rev2". wp_auto.
-    wp_end. iIntros "history_inv". wp_auto. wp_if_destruct.
+    wp_auto. wp_end. iIntros "history_inv". wp_auto. wp_if_destruct.
     { iExFalso. iNamed "Hitem". iDestruct (typed_pointsto_not_null with "snapshot") as %Hbad.
       done. }
     iCombineNamed "*_inv" as "Hinv".
@@ -188,28 +185,19 @@ Proof.
     subst. iApply "Hhistory_inv". iPureIntro.
     split_and!.
     - instantiate (1:=length old_history).
-      rewrite lookup_app_l; last by len.
       rewrite lookup_app_r; last by len.
       rewrite Nat.sub_diag. done.
-    - instantiate (1:=hd (snapshot.(cache.snapshot.rev'), kvs_ordered) new_history).
-      rewrite -app_assoc.
-      rewrite lookup_app_r.
-      2:{ clear. unfold w64. lia. }
-      ereplace (S ?[x] - ?x)%nat with 1%nat by lia.
-      rewrite /= lookup_app /=.
-      destruct new_history; done.
     - destruct itemv; simpl in *. word.
-    - destruct new_history.
-      + simpl. admit. (* FIXME: handle the case that rev = cache.snapshot.rev *)
-      + simpl. destruct p; simpl in *.
-        rewrite Forall_cons_iff in Hnot. simpl in *. word.
+    - rewrite lookup_app_r.
+      2:{ word. }
+      ereplace (S ?[x] - ?x)%nat with 1%nat by lia. simpl.
+      destruct new_history; simpl.
+      { word. }
+      { destruct p. rewrite Forall_cons_iff in Hnot. simpl in *. word. }
   }
   {
     iIntros "history_inv @". wp_auto.
-    (* TODO: spec for newClonedSnapshot *)
-    wp_func_call. wp_call. wp_auto.
-    wp_apply (wp_BTree__Clone with "[latest_tree_inv]").
-    { (* FIXME: data race in implementation. *) admit. }
+    (* TODO: global ErrCompacted *)
     admit.
   }
 Admitted.
