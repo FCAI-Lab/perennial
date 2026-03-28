@@ -102,8 +102,13 @@ Global Existing Instance is_etcd_kvmap_pers.
 Definition ordered_kvs_to_map (kvs : list KeyValue.t) : gmap go_string KeyValue.t :=
   list_to_map ((λ kv, (kv.(KeyValue.key), kv)) <$> kvs).
 
+Record store_names :=
+  {
+    latest_rev_gn : gname
+  }.
+
 (* Cannot be persistent because of RWMutex. *)
-Definition own_store (s : loc) (prefix : go_string) : iProp Σ :=
+Definition own_store (s : loc) γstore (prefix : go_string) : iProp Σ :=
   "Hmu" ∷ own_RWMutex (s.[cache.store.t, "mu"])
     (λ q,
        ∃ snapshot kvs_ordered history,
@@ -112,6 +117,7 @@ Definition own_store (s : loc) (prefix : go_string) : iProp Σ :=
                           is_kvItem less_kvItem (inr <$> kvs_ordered) (DfracOwn q)) ∗
        "history" ∷ (own_ringBuffer (s.[cache.store.t, "history"])
                        is_snapshotItem rev_snapshotItem history) ∗
+       "Hrev" ∷ mono_nat_auth_own γstore.(latest_rev_gn) 1 (sint.nat snapshot.(cache.snapshot.rev')) ∗
        "#Hhistory" ∷ (
            ∀ revision i s,
              ⌜ (history !! i) = Some s ∧
@@ -128,24 +134,23 @@ Definition own_store (s : loc) (prefix : go_string) : iProp Σ :=
     ) ∗
   "_" ∷ True.
 
-(* FIXME: the history can be empty only if there was a progres notification, but
-   no normal watch response. That's the only case in which DescendLessOrEqual
-   would never run iter. Otherwise, by the time it's called, DescendLessOrEqual
-   is guaranteed to run.
-
-   TODO: have to reason about PeekOldest guaranteeing that DescendLessOrEqual
-   will succeed.
- *)
-Lemma wp_store__getSnapshot s (rev : w64) prefix :
-  {{{ is_pkg_init cache ∗ "Hs" ∷ own_store s prefix }}}
+Lemma wp_store__getSnapshot s γstore (rev : w64) prefix rev_lb :
+  {{{ is_pkg_init cache ∗ "Hs" ∷ own_store s γstore prefix ∗
+      mono_nat_lb_own γstore.(latest_rev_gn) rev_lb
+  }}}
     s @! (go.PointerType cache.store) @! "getSnapshot" #rev
   {{{ snap_ptr (latest_rev : w64) err, RET (#snap_ptr, #latest_rev, #err);
-      own_store s prefix ∗
+      own_store s γstore prefix ∗
       match err with
       | interface.nil =>
           (∃ kvs snap_rev,
               is_snapshotItem snap_ptr (snap_rev, kvs) ∗
-              is_etcd_kvs rev prefix (ordered_kvs_to_map kvs))
+              if decide (rev = W64 0) then
+                ∃ rev',
+                  ⌜ rev_lb ≤ sint.Z rev' ⌝ ∗
+                  is_etcd_kvs rev' prefix (ordered_kvs_to_map kvs)
+              else
+                is_etcd_kvs rev prefix (ordered_kvs_to_map kvs))
       | _ => True
       end
   }}}.
