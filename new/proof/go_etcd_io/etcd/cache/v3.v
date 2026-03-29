@@ -263,19 +263,28 @@ Proof.
   iIntros "Hmu". wp_auto. wp_end.
 Qed.
 
-Lemma wp_Cache__Get (c : loc) (ctx : interface.t) (key : go_string) opts_sl (opts : list v3.clientv3.OpOption.t):
+Definition own_Cache c_ptr : iProp Σ :=
+  ∃ c γstore,
+    "c" ∷ c_ptr ↦ c ∗
+    "store" ∷ own_store c.(cache.Cache.store') γstore c.(cache.Cache.prefix')
+.
+
+Lemma wp_Cache__Get c (ctx : interface.t) (key : go_string) opts_sl (opts : list v3.clientv3.OpOption.t):
   {{{ is_pkg_init cache ∗
-      opts_sl ↦* opts
+      "opts_sl" ∷ opts_sl ↦* opts ∗
+      "cache" ∷ own_Cache c
   }}}
     c @! (go.PointerType cache.Cache) @! "Get" #ctx #key #opts_sl
   {{{
         (resp : loc) (err : error.t), RET (#resp, #err); True
   }}}.
 Proof.
-  wp_start.
+  wp_start as "@". iNamedSuffix "cache" "_c".
   wp_auto.
-  (* TODO: define own_Cache *)
-  (* TODO: spec for WaitReady() *)
+  wp_apply (wp_store__LatestRev with "[$store_c]") as "% store_c".
+  wp_auto.
+  wp_if_destruct.
+  { (* TODO: spec for WaitReady() *) admit. }
 Admitted.
 
 End store.

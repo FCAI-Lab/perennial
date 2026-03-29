@@ -11,7 +11,10 @@ Require Export New.code.go_etcd_io.etcd.pkg.v3.traceutil.
 Require Export New.code.go_etcd_io.etcd.pkg.v3.wait.
 Require Export New.code.go_etcd_io.etcd.server.v3.auth.
 Require Export New.code.go_etcd_io.etcd.server.v3.etcdserver.apply.
+Require Export New.code.go_etcd_io.etcd.server.v3.features.
 Require Export New.code.github_com.gogo.protobuf.proto.
+Require Export New.code.go_opentelemetry_io.otel.attribute.
+Require Export New.code.go_opentelemetry_io.otel.trace.
 From New.golang Require Import defn.
 Module pkg_id.
 Definition etcdserver : go_string := "go.etcd.io/etcd/server/v3/etcdserver".
@@ -710,7 +713,7 @@ Definition EtcdServer__processInternalRaftRequestOnceⁱᵐᵖˡ {ext : ffi_synt
 
 #[global] Instance info' : PkgInfo pkg_id.etcdserver :=
 {|
-  pkg_imported_pkgs := [code.context.pkg_id.context; code.go_etcd_io.etcd.api.v3.etcdserverpb.pkg_id.etcdserverpb; code.time.pkg_id.time; code.go_etcd_io.etcd.server.v3.config.pkg_id.config; code.go_etcd_io.etcd.server.v3.etcdserver.errors.pkg_id.errors; code.go_etcd_io.raft.v3.pkg_id.raft; code.github_com.prometheus.client_golang.prometheus.pkg_id.prometheus; code.go_etcd_io.etcd.pkg.v3.idutil.pkg_id.idutil; code.go_etcd_io.etcd.pkg.v3.traceutil.pkg_id.traceutil; code.go_etcd_io.etcd.pkg.v3.wait.pkg_id.wait; code.go_etcd_io.etcd.server.v3.auth.pkg_id.auth; code.go_etcd_io.etcd.server.v3.etcdserver.apply.pkg_id.apply; code.github_com.gogo.protobuf.proto.pkg_id.proto]
+  pkg_imported_pkgs := [code.context.pkg_id.context; code.go_etcd_io.etcd.api.v3.etcdserverpb.pkg_id.etcdserverpb; code.time.pkg_id.time; code.go_etcd_io.etcd.server.v3.config.pkg_id.config; code.go_etcd_io.etcd.server.v3.etcdserver.errors.pkg_id.errors; code.go_etcd_io.raft.v3.pkg_id.raft; code.github_com.prometheus.client_golang.prometheus.pkg_id.prometheus; code.go_etcd_io.etcd.pkg.v3.idutil.pkg_id.idutil; code.go_etcd_io.etcd.pkg.v3.traceutil.pkg_id.traceutil; code.go_etcd_io.etcd.pkg.v3.wait.pkg_id.wait; code.go_etcd_io.etcd.server.v3.auth.pkg_id.auth; code.go_etcd_io.etcd.server.v3.etcdserver.apply.pkg_id.apply; code.go_etcd_io.etcd.server.v3.features.pkg_id.features; code.github_com.gogo.protobuf.proto.pkg_id.proto; code.go_opentelemetry_io.otel.attribute.pkg_id.attribute; code.go_opentelemetry_io.otel.trace.pkg_id.trace]
 |}.
 
 Axiom _'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
@@ -718,7 +721,10 @@ Axiom _'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 Definition initialize' {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     package.init pkg_id.etcdserver (λ: <>,
-      exception_do (do:  (proto.initialize' #());;;
+      exception_do (do:  (trace.initialize' #());;;
+      do:  (attribute.initialize' #());;;
+      do:  (proto.initialize' #());;;
+      do:  (features.initialize' #());;;
       do:  (apply.initialize' #());;;
       do:  (auth.initialize' #());;;
       do:  (wait.initialize' #());;;
@@ -1372,6 +1378,9 @@ Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!G
   #[global] import_wait_Assumption :: wait.Assumptions;
   #[global] import_auth_Assumption :: auth.Assumptions;
   #[global] import_apply_Assumption :: apply.Assumptions;
+  #[global] import_features_Assumption :: features.Assumptions;
   #[global] import_proto_Assumption :: proto.Assumptions;
+  #[global] import_attribute_Assumption :: attribute.Assumptions;
+  #[global] import_trace_Assumption :: trace.Assumptions;
 }.
 End etcdserver.

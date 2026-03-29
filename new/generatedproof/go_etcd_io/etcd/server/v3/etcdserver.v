@@ -11,7 +11,10 @@ Require Export New.generatedproof.go_etcd_io.etcd.server.v3.auth.
 Require Export New.generatedproof.go_etcd_io.etcd.server.v3.config.
 Require Export New.generatedproof.go_etcd_io.etcd.server.v3.etcdserver.apply.
 Require Export New.generatedproof.go_etcd_io.etcd.server.v3.etcdserver.errors.
+Require Export New.generatedproof.go_etcd_io.etcd.server.v3.features.
 Require Export New.generatedproof.go_etcd_io.raft.v3.
+Require Export New.generatedproof.go_opentelemetry_io.otel.attribute.
+Require Export New.generatedproof.go_opentelemetry_io.otel.trace.
 Require Export New.generatedproof.time.
 Require Export New.golang.theory.
 Require Export New.code.go_etcd_io.etcd.server.v3.etcdserver.
