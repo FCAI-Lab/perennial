@@ -2185,7 +2185,7 @@ Local Set Default Proof Using "All".
       "Canceled" ∷ l.[(clientv3.WatchResponse.t), "Canceled"] ↦{dq} v.(clientv3.WatchResponse.Canceled') ∗
       "Created" ∷ l.[(clientv3.WatchResponse.t), "Created"] ↦{dq} v.(clientv3.WatchResponse.Created') ∗
       "closeErr" ∷ l.[(clientv3.WatchResponse.t), "closeErr"] ↦{dq} v.(clientv3.WatchResponse.closeErr') ∗
-      "cancelReason" ∷ l.[(clientv3.WatchResponse.t), "cancelReason"] ↦{dq} v.(clientv3.WatchResponse.cancelReason') ∗
+      "CancelReason" ∷ l.[(clientv3.WatchResponse.t), "CancelReason"] ↦{dq} v.(clientv3.WatchResponse.CancelReason') ∗
       "_" ∷ True
       )%I
   |}.
@@ -2273,18 +2273,18 @@ Proof. Admitted.
     (l.[(clientv3.WatchResponse.t), "closeErr"] ↦ closeErr')
     (l ↦ v) (l ↦ (v <|(clientv3.WatchResponse.closeErr') := closeErr'|>))%I.
 Proof. Admitted.
-#[global] Instance WatchResponse_access_load_cancelReason l (v : (clientv3.WatchResponse.t)) dq :
+#[global] Instance WatchResponse_access_load_CancelReason l (v : (clientv3.WatchResponse.t)) dq :
   AccessStrict
-    (l.[(clientv3.WatchResponse.t), "cancelReason"] ↦{dq} (v.(clientv3.WatchResponse.cancelReason')))
-    (l.[(clientv3.WatchResponse.t), "cancelReason"] ↦{dq} (v.(clientv3.WatchResponse.cancelReason')))
+    (l.[(clientv3.WatchResponse.t), "CancelReason"] ↦{dq} (v.(clientv3.WatchResponse.CancelReason')))
+    (l.[(clientv3.WatchResponse.t), "CancelReason"] ↦{dq} (v.(clientv3.WatchResponse.CancelReason')))
     (l ↦{dq} v) (l ↦{dq} v)%I.
 Proof. Admitted.
 
-#[global] Instance WatchResponse_access_store_cancelReason l (v : (clientv3.WatchResponse.t)) cancelReason' :
+#[global] Instance WatchResponse_access_store_CancelReason l (v : (clientv3.WatchResponse.t)) CancelReason' :
   AccessStrict
-    (l.[(clientv3.WatchResponse.t), "cancelReason"] ↦ (v.(clientv3.WatchResponse.cancelReason')))
-    (l.[(clientv3.WatchResponse.t), "cancelReason"] ↦ cancelReason')
-    (l ↦ v) (l ↦ (v <|(clientv3.WatchResponse.cancelReason') := cancelReason'|>))%I.
+    (l.[(clientv3.WatchResponse.t), "CancelReason"] ↦ (v.(clientv3.WatchResponse.CancelReason')))
+    (l.[(clientv3.WatchResponse.t), "CancelReason"] ↦ CancelReason')
+    (l ↦ v) (l ↦ (v <|(clientv3.WatchResponse.CancelReason') := CancelReason'|>))%I.
 Proof. Admitted.
 
 End def.

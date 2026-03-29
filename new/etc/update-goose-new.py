@@ -67,11 +67,16 @@ projs = [
             "github.com/prometheus/client_golang/prometheus",
             "go.etcd.io/etcd/server/v3/config",
             "go.etcd.io/etcd/server/v3/auth",
+            "go.opentelemetry.io/otel/trace",
+            "go.opentelemetry.io/otel/attribute",
+            "go.etcd.io/etcd/server/v3/features",
             # cindex:
             "go.etcd.io/etcd/server/v3/etcdserver/cindex",
             # Axiomatized for cindex:
             "go.etcd.io/etcd/server/v3/storage/backend",
             "go.etcd.io/etcd/server/v3/storage/schema",
+            "go.etcd.io/etcd/cache/v3",
+            "k8s.io/utils/third_party/forked/golang/btree",
         ],
     ),
     create_proj(repo="mit-pdos/go-liveness"),

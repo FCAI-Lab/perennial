@@ -514,7 +514,7 @@ Definition Election__observeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCo
           slice.for_range (go.PointerType clientv3.Event) "$range" (λ: "$key" "$value",
             do:  ("ev" <-[go.PointerType clientv3.Event] "$value");;;
             do:  "$key";;;
-            (if: Convert go.untyped_bool go.bool ((![mvccpb.Event_EventType] (StructFieldRef clientv3.Event "Type"%go (![go.PointerType clientv3.Event] "ev"))) =⟨mvccpb.Event_EventType⟩ mvccpb.PUT)
+            (if: Convert go.untyped_bool go.bool ((![mvccpb.Event_EventType] (StructFieldRef clientv3.Event "Type"%go (![go.PointerType clientv3.Event] "ev"))) =⟨mvccpb.Event_EventType⟩ mvccpb.Event_PUT)
             then
               let: "$r0" := (StructFieldRef clientv3.WatchResponse "Header"%go "wr") in
               let: "$r1" := (![go.PointerType mvccpb.KeyValue] (StructFieldRef clientv3.Event "Kv"%go (![go.PointerType clientv3.Event] "ev"))) in
@@ -578,7 +578,7 @@ Definition Election__observeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCo
         slice.for_range (go.PointerType clientv3.Event) "$range" (λ: "$key" "$value",
           do:  ("ev" <-[go.PointerType clientv3.Event] "$value");;;
           do:  "$key";;;
-          (if: Convert go.untyped_bool go.bool ((![mvccpb.Event_EventType] (StructFieldRef clientv3.Event "Type"%go (![go.PointerType clientv3.Event] "ev"))) =⟨mvccpb.Event_EventType⟩ mvccpb.DELETE)
+          (if: Convert go.untyped_bool go.bool ((![mvccpb.Event_EventType] (StructFieldRef clientv3.Event "Type"%go (![go.PointerType clientv3.Event] "ev"))) =⟨mvccpb.Event_EventType⟩ mvccpb.Event_DELETE)
           then
             let: "$r0" := #true in
             do:  ("keyDeleted" <-[go.bool] "$r0");;;
@@ -663,7 +663,7 @@ Definition waitDeleteⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
       slice.for_range (go.PointerType clientv3.Event) "$range" (λ: "$key" "$value",
         do:  ("ev" <-[go.PointerType clientv3.Event] "$value");;;
         do:  "$key";;;
-        (if: Convert go.untyped_bool go.bool ((![mvccpb.Event_EventType] (StructFieldRef clientv3.Event "Type"%go (![go.PointerType clientv3.Event] "ev"))) =⟨mvccpb.Event_EventType⟩ mvccpb.DELETE)
+        (if: Convert go.untyped_bool go.bool ((![mvccpb.Event_EventType] (StructFieldRef clientv3.Event "Type"%go (![go.PointerType clientv3.Event] "ev"))) =⟨mvccpb.Event_EventType⟩ mvccpb.Event_DELETE)
         then return: (Convert go.untyped_nil go.error UntypedNil)
         else do:  #()))));;;
     (let: "err" := (GoAlloc go.error (GoZeroVal go.error #())) in

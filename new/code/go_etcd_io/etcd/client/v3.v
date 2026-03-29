@@ -661,6 +661,10 @@ Definition ErrOldCluster {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_str
 
 Axiom ErrOldCluster'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
+Definition ErrMutuallyExclusiveCfg {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/client/v3.ErrMutuallyExclusiveCfg"%go.
+
+Axiom ErrMutuallyExclusiveCfg'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
 Definition LeaseResponseChSize {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/client/v3.LeaseResponseChSize"%go.
 
 Axiom LeaseResponseChSize'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
@@ -733,6 +737,8 @@ Definition NewFromURLs {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_strin
 
 Definition WithZapLogger {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/client/v3.WithZapLogger"%go.
 
+Definition waitForConnection {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/client/v3.waitForConnection"%go.
+
 Definition authority {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/client/v3.authority"%go.
 
 Definition newClient {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/client/v3.newClient"%go.
@@ -791,7 +797,7 @@ Definition NewLeaseFromLeaseClient {ext : ffi_syntax} {go_gctx : GoGlobalContext
 
 Definition SetLogger {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/client/v3.SetLogger"%go.
 
-Definition etcdClientDebugLevel {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/client/v3.etcdClientDebugLevel"%go.
+Definition ClientLogLevel {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/client/v3.ClientLogLevel"%go.
 
 Definition NewMaintenance {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/client/v3.NewMaintenance"%go.
 
@@ -807,7 +813,7 @@ Definition OpPut {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "
 
 Definition OpTxn {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/client/v3.OpTxn"%go.
 
-Definition opWatch {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/client/v3.opWatch"%go.
+Definition OpWatch {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/client/v3.OpWatch"%go.
 
 Definition WithLease {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/client/v3.WithLease"%go.
 
@@ -923,14 +929,14 @@ Definition streamKeyFromCtx {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_
 
 (* WithZapLogger is a NewCtxClient option that overrides the logger
 
-   go: client.go:119:6 *)
+   go: client.go:124:6 *)
 Definition WithZapLoggerⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "lg",
     exception_do (let: "lg" := (GoAlloc (go.PointerType zap.Logger) "lg") in
     return: ((λ: "c",
        exception_do (let: "c" := (GoAlloc (go.PointerType Client) "c") in
-       let: "$r0" := (![go.PointerType zap.Logger] "lg") in
-       do:  ((StructFieldRef Client "lg"%go (![go.PointerType Client] "c")) <-[go.PointerType zap.Logger] "$r0");;;
+       do:  (let: "$a0" := (![go.PointerType zap.Logger] "lg") in
+       (MethodResolve (go.PointerType (atomic.Pointer zap.Logger)) "Store"%go (StructFieldRef Client "lg"%go (![go.PointerType Client] "c"))) "$a0");;;
        return: #())
        ))).
 
@@ -985,9 +991,17 @@ Definition Op__Revⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : v
     exception_do (let: "op" := (GoAlloc Op "op") in
     return: (![go.int64] (StructFieldRef Op "rev"%go "op"))).
 
-(* IsPut returns true iff the operation is a Put.
+(* Limit returns limit of the result, if any.
 
    go: op.go:110:14 *)
+Definition Op__Limitⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "op" <>,
+    exception_do (let: "op" := (GoAlloc Op "op") in
+    return: (![go.int64] (StructFieldRef Op "limit"%go "op"))).
+
+(* IsPut returns true iff the operation is a Put.
+
+   go: op.go:113:14 *)
 Definition Op__IsPutⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" <>,
     exception_do (let: "op" := (GoAlloc Op "op") in
@@ -995,7 +1009,7 @@ Definition Op__IsPutⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} :
 
 (* IsGet returns true iff the operation is a Get.
 
-   go: op.go:113:14 *)
+   go: op.go:116:14 *)
 Definition Op__IsGetⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" <>,
     exception_do (let: "op" := (GoAlloc Op "op") in
@@ -1003,7 +1017,7 @@ Definition Op__IsGetⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} :
 
 (* IsDelete returns true iff the operation is a Delete.
 
-   go: op.go:116:14 *)
+   go: op.go:119:14 *)
 Definition Op__IsDeleteⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" <>,
     exception_do (let: "op" := (GoAlloc Op "op") in
@@ -1011,7 +1025,7 @@ Definition Op__IsDeleteⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext
 
 (* IsSerializable returns true if the serializable field is true.
 
-   go: op.go:119:14 *)
+   go: op.go:122:14 *)
 Definition Op__IsSerializableⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" <>,
     exception_do (let: "op" := (GoAlloc Op "op") in
@@ -1019,7 +1033,7 @@ Definition Op__IsSerializableⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalC
 
 (* IsKeysOnly returns whether keysOnly is set.
 
-   go: op.go:122:14 *)
+   go: op.go:125:14 *)
 Definition Op__IsKeysOnlyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" <>,
     exception_do (let: "op" := (GoAlloc Op "op") in
@@ -1027,27 +1041,83 @@ Definition Op__IsKeysOnlyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalConte
 
 (* IsCountOnly returns whether countOnly is set.
 
-   go: op.go:125:14 *)
+   go: op.go:128:14 *)
 Definition Op__IsCountOnlyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" <>,
     exception_do (let: "op" := (GoAlloc Op "op") in
     return: (![go.bool] (StructFieldRef Op "countOnly"%go "op"))).
 
-(* go: op.go:127:14 *)
+(* IsSortSet returns true if WithSort is set.
+
+   go: op.go:131:14 *)
+Definition Op__IsSortSetⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "op" <>,
+    exception_do (let: "op" := (GoAlloc Op "op") in
+    return: ((![go.PointerType SortOption] (StructFieldRef Op "sort"%go "op")) ≠⟨go.PointerType SortOption⟩ (Convert go.untyped_nil (go.PointerType SortOption) UntypedNil))).
+
+(* go: op.go:133:14 *)
 Definition Op__IsOptsWithFromKeyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" <>,
     exception_do (let: "op" := (GoAlloc Op "op") in
     return: (![go.bool] (StructFieldRef Op "isOptsWithFromKey"%go "op"))).
 
-(* go: op.go:129:14 *)
+(* go: op.go:135:14 *)
 Definition Op__IsOptsWithPrefixⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" <>,
     exception_do (let: "op" := (GoAlloc Op "op") in
     return: (![go.bool] (StructFieldRef Op "isOptsWithPrefix"%go "op"))).
 
+(* IsPrevKV returns whether WithPrevKV() is set.
+
+   go: op.go:138:14 *)
+Definition Op__IsPrevKVⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "op" <>,
+    exception_do (let: "op" := (GoAlloc Op "op") in
+    return: (![go.bool] (StructFieldRef Op "prevKV"%go "op"))).
+
+(* IsFragment returns whether WithFragment() is set.
+
+   go: op.go:141:14 *)
+Definition Op__IsFragmentⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "op" <>,
+    exception_do (let: "op" := (GoAlloc Op "op") in
+    return: (![go.bool] (StructFieldRef Op "fragment"%go "op"))).
+
+(* IsProgressNotify returns whether WithProgressNotify() is set.
+
+   go: op.go:144:14 *)
+Definition Op__IsProgressNotifyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "op" <>,
+    exception_do (let: "op" := (GoAlloc Op "op") in
+    return: (![go.bool] (StructFieldRef Op "progressNotify"%go "op"))).
+
+(* IsCreatedNotify returns whether WithCreatedNotify() is set.
+
+   go: op.go:147:14 *)
+Definition Op__IsCreatedNotifyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "op" <>,
+    exception_do (let: "op" := (GoAlloc Op "op") in
+    return: (![go.bool] (StructFieldRef Op "createdNotify"%go "op"))).
+
+(* IsFilterPut returns whether WithFilterPut() is set.
+
+   go: op.go:150:14 *)
+Definition Op__IsFilterPutⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "op" <>,
+    exception_do (let: "op" := (GoAlloc Op "op") in
+    return: (![go.bool] (StructFieldRef Op "filterPut"%go "op"))).
+
+(* IsFilterDelete returns whether WithFilterDelete() is set.
+
+   go: op.go:153:14 *)
+Definition Op__IsFilterDeleteⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "op" <>,
+    exception_do (let: "op" := (GoAlloc Op "op") in
+    return: (![go.bool] (StructFieldRef Op "filterDelete"%go "op"))).
+
 (* MinModRev returns the operation's minimum modify revision.
 
-   go: op.go:132:14 *)
+   go: op.go:156:14 *)
 Definition Op__MinModRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" <>,
     exception_do (let: "op" := (GoAlloc Op "op") in
@@ -1055,7 +1125,7 @@ Definition Op__MinModRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContex
 
 (* MaxModRev returns the operation's maximum modify revision.
 
-   go: op.go:135:14 *)
+   go: op.go:159:14 *)
 Definition Op__MaxModRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" <>,
     exception_do (let: "op" := (GoAlloc Op "op") in
@@ -1063,7 +1133,7 @@ Definition Op__MaxModRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContex
 
 (* MinCreateRev returns the operation's minimum create revision.
 
-   go: op.go:138:14 *)
+   go: op.go:162:14 *)
 Definition Op__MinCreateRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" <>,
     exception_do (let: "op" := (GoAlloc Op "op") in
@@ -1071,7 +1141,7 @@ Definition Op__MinCreateRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCon
 
 (* MaxCreateRev returns the operation's maximum create revision.
 
-   go: op.go:141:14 *)
+   go: op.go:165:14 *)
 Definition Op__MaxCreateRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" <>,
     exception_do (let: "op" := (GoAlloc Op "op") in
@@ -1079,7 +1149,7 @@ Definition Op__MaxCreateRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCon
 
 (* WithRangeBytes sets the byte slice for the Op's range end.
 
-   go: op.go:144:15 *)
+   go: op.go:168:15 *)
 Definition Op__WithRangeBytesⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" "end",
     exception_do (let: "op" := (GoAlloc (go.PointerType Op) "op") in
@@ -1090,7 +1160,7 @@ Definition Op__WithRangeBytesⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalC
 
 (* ValueBytes returns the byte slice holding the Op's value, if any.
 
-   go: op.go:147:14 *)
+   go: op.go:171:14 *)
 Definition Op__ValueBytesⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" <>,
     exception_do (let: "op" := (GoAlloc Op "op") in
@@ -1098,7 +1168,7 @@ Definition Op__ValueBytesⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalConte
 
 (* WithValueBytes sets the byte slice for the Op's value.
 
-   go: op.go:150:15 *)
+   go: op.go:174:15 *)
 Definition Op__WithValueBytesⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" "v",
     exception_do (let: "op" := (GoAlloc (go.PointerType Op) "op") in
@@ -1107,7 +1177,7 @@ Definition Op__WithValueBytesⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalC
     do:  ((StructFieldRef Op "val"%go (![go.PointerType Op] "op")) <-[go.SliceType go.byte] "$r0");;;
     return: #()).
 
-(* go: op.go:152:14 *)
+(* go: op.go:176:14 *)
 Definition Op__toRangeRequestⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" <>,
     exception_do (let: "op" := (GoAlloc Op "op") in
@@ -1139,7 +1209,7 @@ Definition Op__toRangeRequestⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalC
     else do:  #());;;
     return: (![go.PointerType etcdserverpb.RangeRequest] "r")).
 
-(* go: op.go:176:14 *)
+(* go: op.go:200:14 *)
 Definition Op__toTxnRequestⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" <>,
     exception_do (let: "op" := (GoAlloc Op "op") in
@@ -1182,7 +1252,7 @@ Definition Op__toTxnRequestⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCon
      let: "$v2" := (![go.SliceType (go.PointerType etcdserverpb.RequestOp)] "elseOps") in
      CompositeLiteral etcdserverpb.TxnRequest (LiteralValue [KeyedElement (Some (KeyField "Compare"%go)) (ElementExpression (go.SliceType (go.PointerType etcdserverpb.Compare)) "$v0"); KeyedElement (Some (KeyField "Success"%go)) (ElementExpression (go.SliceType (go.PointerType etcdserverpb.RequestOp)) "$v1"); KeyedElement (Some (KeyField "Failure"%go)) (ElementExpression (go.SliceType (go.PointerType etcdserverpb.RequestOp)) "$v2")])))).
 
-(* go: op.go:192:14 *)
+(* go: op.go:216:14 *)
 Definition Op__toRequestOpⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" <>,
     exception_do (let: "op" := (GoAlloc Op "op") in
@@ -1229,7 +1299,7 @@ Definition Op__toRequestOpⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCont
             do:  (let: "$a0" := (Convert go.string (go.InterfaceType []) #"Unknown Op"%go) in
             (FuncResolve go.panic [] #()) "$a0")))))).
 
-(* go: op.go:209:14 *)
+(* go: op.go:233:14 *)
 Definition Op__isWriteⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" <>,
     exception_do (let: "op" := (GoAlloc Op "op") in
@@ -1257,7 +1327,7 @@ Definition Op__isWriteⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext}
 
 (* OpGet returns "get" operation based on given key and operation options.
 
-   go: op.go:231:6 *)
+   go: op.go:255:6 *)
 Definition OpGetⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "key" "opts",
     exception_do (let: "opts" := (GoAlloc (go.SliceType OpOption) "opts") in
@@ -1280,7 +1350,7 @@ Definition OpGetⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val
 
 (* OpDelete returns "delete" operation based on given key and operation options.
 
-   go: op.go:242:6 *)
+   go: op.go:266:6 *)
 Definition OpDeleteⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "key" "opts",
     exception_do (let: "opts" := (GoAlloc (go.SliceType OpOption) "opts") in
@@ -1354,7 +1424,7 @@ Definition OpDeleteⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : 
 
 (* OpPut returns "put" operation based on given key-value and operation options.
 
-   go: op.go:275:6 *)
+   go: op.go:299:6 *)
 Definition OpPutⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "key" "val" "opts",
     exception_do (let: "opts" := (GoAlloc (go.SliceType OpOption) "opts") in
@@ -1423,7 +1493,7 @@ Definition OpPutⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val
 
 (* OpTxn returns "txn" operation based on given transaction conditions.
 
-   go: op.go:304:6 *)
+   go: op.go:328:6 *)
 Definition OpTxnⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "cmps" "thenOps" "elseOps",
     exception_do (let: "elseOps" := (GoAlloc (go.SliceType Op) "elseOps") in
@@ -1435,7 +1505,7 @@ Definition OpTxnⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val
      let: "$v3" := (![go.SliceType Op] "elseOps") in
      CompositeLiteral Op (LiteralValue [KeyedElement (Some (KeyField "t"%go)) (ElementExpression opType "$v0"); KeyedElement (Some (KeyField "cmps"%go)) (ElementExpression (go.SliceType Cmp) "$v1"); KeyedElement (Some (KeyField "thenOps"%go)) (ElementExpression (go.SliceType Op) "$v2"); KeyedElement (Some (KeyField "elseOps"%go)) (ElementExpression (go.SliceType Op) "$v3")]))).
 
-(* go: op.go:330:15 *)
+(* go: op.go:354:15 *)
 Definition Op__applyOptsⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" "opts",
     exception_do (let: "op" := (GoAlloc (go.PointerType Op) "op") in
@@ -1451,7 +1521,7 @@ Definition Op__applyOptsⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContex
 
 (* WithLease attaches a lease ID to a key in 'Put' request.
 
-   go: op.go:340:6 *)
+   go: op.go:364:6 *)
 Definition WithLeaseⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "leaseID",
     exception_do (let: "leaseID" := (GoAlloc LeaseID "leaseID") in
@@ -1465,7 +1535,7 @@ Definition WithLeaseⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} :
 (* WithLimit limits the number of results to return from 'Get' request.
    If WithLimit is given a 0 limit, it is treated as no limit.
 
-   go: op.go:346:6 *)
+   go: op.go:370:6 *)
 Definition WithLimitⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "n",
     exception_do (let: "n" := (GoAlloc go.int64 "n") in
@@ -1479,7 +1549,7 @@ Definition WithLimitⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} :
 (* WithRev specifies the store revision for 'Get' request.
    Or the start revision of 'Watch' request.
 
-   go: op.go:350:6 *)
+   go: op.go:374:6 *)
 Definition WithRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "rev",
     exception_do (let: "rev" := (GoAlloc go.int64 "rev") in
@@ -1495,7 +1565,7 @@ Definition WithRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : v
    'target' specifies the target to sort by: key, version, revisions, value.
    'order' can be either 'SortNone', 'SortAscend', 'SortDescend'.
 
-   go: op.go:356:6 *)
+   go: op.go:380:6 *)
 Definition WithSortⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "target" "order",
     exception_do (let: "order" := (GoAlloc SortOrder "order") in
@@ -1518,7 +1588,7 @@ Definition WithSortⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : 
    on the keys with matching prefix. For example, 'Get(foo, WithPrefix())'
    can return 'foo1', 'foo2', and so on.
 
-   go: op.go:394:6 *)
+   go: op.go:418:6 *)
 Definition WithPrefixⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: ((λ: "op",
@@ -1547,7 +1617,7 @@ Definition WithPrefixⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
    the keys in the range [key, end).
    endKey must be lexicographically greater than start key.
 
-   go: op.go:409:6 *)
+   go: op.go:433:6 *)
 Definition WithRangeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "endKey",
     exception_do (let: "endKey" := (GoAlloc go.string "endKey") in
@@ -1561,7 +1631,7 @@ Definition WithRangeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} :
 (* WithFromKey specifies the range of 'Get', 'Delete', 'Watch' requests
    to be equal or greater than the key in the argument.
 
-   go: op.go:415:6 *)
+   go: op.go:439:6 *)
 Definition WithFromKeyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: ((λ: "op",
@@ -1590,7 +1660,7 @@ Definition WithFromKeyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext}
    and safe to use serializable request before the new added member gets
    started.
 
-   go: op.go:434:6 *)
+   go: op.go:458:6 *)
 Definition WithSerializableⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: ((λ: "op",
@@ -1603,7 +1673,7 @@ Definition WithSerializableⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCon
 (* WithKeysOnly makes the 'Get' request return only the keys and the corresponding
    values will be omitted.
 
-   go: op.go:440:6 *)
+   go: op.go:464:6 *)
 Definition WithKeysOnlyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: ((λ: "op",
@@ -1615,7 +1685,7 @@ Definition WithKeysOnlyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext
 
 (* WithCountOnly makes the 'Get' request return only the count of keys.
 
-   go: op.go:445:6 *)
+   go: op.go:469:6 *)
 Definition WithCountOnlyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: ((λ: "op",
@@ -1627,7 +1697,7 @@ Definition WithCountOnlyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContex
 
 (* WithMinModRev filters out keys for Get with modification revisions less than the given revision.
 
-   go: op.go:450:6 *)
+   go: op.go:474:6 *)
 Definition WithMinModRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "rev",
     exception_do (let: "rev" := (GoAlloc go.int64 "rev") in
@@ -1640,7 +1710,7 @@ Definition WithMinModRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContex
 
 (* WithMaxModRev filters out keys for Get with modification revisions greater than the given revision.
 
-   go: op.go:453:6 *)
+   go: op.go:477:6 *)
 Definition WithMaxModRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "rev",
     exception_do (let: "rev" := (GoAlloc go.int64 "rev") in
@@ -1653,7 +1723,7 @@ Definition WithMaxModRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContex
 
 (* WithMinCreateRev filters out keys for Get with creation revisions less than the given revision.
 
-   go: op.go:456:6 *)
+   go: op.go:480:6 *)
 Definition WithMinCreateRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "rev",
     exception_do (let: "rev" := (GoAlloc go.int64 "rev") in
@@ -1666,7 +1736,7 @@ Definition WithMinCreateRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCon
 
 (* WithMaxCreateRev filters out keys for Get with creation revisions greater than the given revision.
 
-   go: op.go:459:6 *)
+   go: op.go:483:6 *)
 Definition WithMaxCreateRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "rev",
     exception_do (let: "rev" := (GoAlloc go.int64 "rev") in
@@ -1679,7 +1749,7 @@ Definition WithMaxCreateRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCon
 
 (* WithFirstCreate gets the key with the oldest creation revision in the request range.
 
-   go: op.go:462:6 *)
+   go: op.go:486:6 *)
 Definition WithFirstCreateⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: (let: "$a0" := SortByCreateRevision in
@@ -1688,7 +1758,7 @@ Definition WithFirstCreateⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCont
 
 (* WithLastCreate gets the key with the latest creation revision in the request range.
 
-   go: op.go:465:6 *)
+   go: op.go:489:6 *)
 Definition WithLastCreateⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: (let: "$a0" := SortByCreateRevision in
@@ -1697,7 +1767,7 @@ Definition WithLastCreateⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalConte
 
 (* WithFirstKey gets the lexically first key in the request range.
 
-   go: op.go:468:6 *)
+   go: op.go:492:6 *)
 Definition WithFirstKeyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: (let: "$a0" := SortByKey in
@@ -1706,7 +1776,7 @@ Definition WithFirstKeyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext
 
 (* WithLastKey gets the lexically last key in the request range.
 
-   go: op.go:471:6 *)
+   go: op.go:495:6 *)
 Definition WithLastKeyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: (let: "$a0" := SortByKey in
@@ -1715,7 +1785,7 @@ Definition WithLastKeyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext}
 
 (* WithFirstRev gets the key with the oldest modification revision in the request range.
 
-   go: op.go:474:6 *)
+   go: op.go:498:6 *)
 Definition WithFirstRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: (let: "$a0" := SortByModRevision in
@@ -1724,7 +1794,7 @@ Definition WithFirstRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext
 
 (* WithLastRev gets the key with the latest modification revision in the request range.
 
-   go: op.go:477:6 *)
+   go: op.go:501:6 *)
 Definition WithLastRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: (let: "$a0" := SortByModRevision in
@@ -1735,7 +1805,7 @@ Definition WithLastRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext}
    every 10 minutes when there is no incoming events.
    Progress updates have zero events in WatchResponse.
 
-   go: op.go:487:6 *)
+   go: op.go:511:6 *)
 Definition WithProgressNotifyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: ((λ: "op",
@@ -1747,7 +1817,7 @@ Definition WithProgressNotifyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalC
 
 (* WithCreatedNotify makes watch server sends the created event.
 
-   go: op.go:494:6 *)
+   go: op.go:518:6 *)
 Definition WithCreatedNotifyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: ((λ: "op",
@@ -1759,7 +1829,7 @@ Definition WithCreatedNotifyⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCo
 
 (* WithFilterPut discards PUT events from the watcher.
 
-   go: op.go:501:6 *)
+   go: op.go:525:6 *)
 Definition WithFilterPutⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: ((λ: "op",
@@ -1771,7 +1841,7 @@ Definition WithFilterPutⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContex
 
 (* WithFilterDelete discards DELETE events from the watcher.
 
-   go: op.go:506:6 *)
+   go: op.go:530:6 *)
 Definition WithFilterDeleteⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: ((λ: "op",
@@ -1784,7 +1854,7 @@ Definition WithFilterDeleteⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCon
 (* WithPrevKV gets the previous key-value pair before the event happens. If the previous KV is already compacted,
    nothing will be returned.
 
-   go: op.go:512:6 *)
+   go: op.go:536:6 *)
 Definition WithPrevKVⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: ((λ: "op",
@@ -1802,7 +1872,7 @@ Definition WithPrevKVⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
    as "--max-request-bytes" flag value + gRPC-overhead 512 bytes.
    See "etcdserver/api/v3rpc/watch.go" for more details.
 
-   go: op.go:525:6 *)
+   go: op.go:549:6 *)
 Definition WithFragmentⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: ((λ: "op",
@@ -1816,7 +1886,7 @@ Definition WithFragmentⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext
    This option can not be combined with non-empty values.
    Returns an error if the key does not exist.
 
-   go: op.go:532:6 *)
+   go: op.go:556:6 *)
 Definition WithIgnoreValueⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: ((λ: "op",
@@ -1830,7 +1900,7 @@ Definition WithIgnoreValueⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCont
    This option can not be combined with WithLease.
    Returns an error if the key does not exist.
 
-   go: op.go:541:6 *)
+   go: op.go:565:6 *)
 Definition WithIgnoreLeaseⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: ((λ: "op",
@@ -1842,7 +1912,7 @@ Definition WithIgnoreLeaseⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCont
 
 (* WithAttachedKeys makes TimeToLive list the keys attached to the given lease ID.
 
-   go: op.go:565:6 *)
+   go: op.go:589:6 *)
 Definition WithAttachedKeysⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: ((λ: "op",
@@ -1852,7 +1922,7 @@ Definition WithAttachedKeysⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalCon
        return: #())
        ))).
 
-(* go: op.go:595:14 *)
+(* go: op.go:619:14 *)
 Definition Op__IsSortOptionValidⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "op" <>,
     exception_do (let: "op" := (GoAlloc Op "op") in
@@ -1901,6 +1971,7 @@ Definition initialize' {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
       do:  (context.initialize' #());;;
       do:  (ErrNoAvailableEndpoints'init #());;;
       do:  (ErrOldCluster'init #());;;
+      do:  (ErrMutuallyExclusiveCfg'init #());;;
       do:  (LeaseResponseChSize'init #());;;
       do:  (noPrefixEnd'init #());;;
       do:  (defaultWaitForReady'init #());;;
@@ -3283,16 +3354,24 @@ Class Op_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `
   #[global] Op_get_isOptsWithPrefix (x : Op.t) :: ⟦StructFieldGet (Opⁱᵐᵖˡ) "isOptsWithPrefix", #x⟧ ⤳[under] #x.(Op.isOptsWithPrefix');
   #[global] Op_set_isOptsWithPrefix (x : Op.t) y :: ⟦StructFieldSet (Opⁱᵐᵖˡ) "isOptsWithPrefix", (#x, #y)⟧ ⤳[under] #(x <|Op.isOptsWithPrefix' := y|>);
   #[global] Op_IsCountOnly_unfold :: MethodUnfold (Op) "IsCountOnly" (Op__IsCountOnlyⁱᵐᵖˡ);
+  #[global] Op_IsCreatedNotify_unfold :: MethodUnfold (Op) "IsCreatedNotify" (Op__IsCreatedNotifyⁱᵐᵖˡ);
   #[global] Op_IsDelete_unfold :: MethodUnfold (Op) "IsDelete" (Op__IsDeleteⁱᵐᵖˡ);
+  #[global] Op_IsFilterDelete_unfold :: MethodUnfold (Op) "IsFilterDelete" (Op__IsFilterDeleteⁱᵐᵖˡ);
+  #[global] Op_IsFilterPut_unfold :: MethodUnfold (Op) "IsFilterPut" (Op__IsFilterPutⁱᵐᵖˡ);
+  #[global] Op_IsFragment_unfold :: MethodUnfold (Op) "IsFragment" (Op__IsFragmentⁱᵐᵖˡ);
   #[global] Op_IsGet_unfold :: MethodUnfold (Op) "IsGet" (Op__IsGetⁱᵐᵖˡ);
   #[global] Op_IsKeysOnly_unfold :: MethodUnfold (Op) "IsKeysOnly" (Op__IsKeysOnlyⁱᵐᵖˡ);
   #[global] Op_IsOptsWithFromKey_unfold :: MethodUnfold (Op) "IsOptsWithFromKey" (Op__IsOptsWithFromKeyⁱᵐᵖˡ);
   #[global] Op_IsOptsWithPrefix_unfold :: MethodUnfold (Op) "IsOptsWithPrefix" (Op__IsOptsWithPrefixⁱᵐᵖˡ);
+  #[global] Op_IsPrevKV_unfold :: MethodUnfold (Op) "IsPrevKV" (Op__IsPrevKVⁱᵐᵖˡ);
+  #[global] Op_IsProgressNotify_unfold :: MethodUnfold (Op) "IsProgressNotify" (Op__IsProgressNotifyⁱᵐᵖˡ);
   #[global] Op_IsPut_unfold :: MethodUnfold (Op) "IsPut" (Op__IsPutⁱᵐᵖˡ);
   #[global] Op_IsSerializable_unfold :: MethodUnfold (Op) "IsSerializable" (Op__IsSerializableⁱᵐᵖˡ);
   #[global] Op_IsSortOptionValid_unfold :: MethodUnfold (Op) "IsSortOptionValid" (Op__IsSortOptionValidⁱᵐᵖˡ);
+  #[global] Op_IsSortSet_unfold :: MethodUnfold (Op) "IsSortSet" (Op__IsSortSetⁱᵐᵖˡ);
   #[global] Op_IsTxn_unfold :: MethodUnfold (Op) "IsTxn" (Op__IsTxnⁱᵐᵖˡ);
   #[global] Op_KeyBytes_unfold :: MethodUnfold (Op) "KeyBytes" (Op__KeyBytesⁱᵐᵖˡ);
+  #[global] Op_Limit_unfold :: MethodUnfold (Op) "Limit" (Op__Limitⁱᵐᵖˡ);
   #[global] Op_MaxCreateRev_unfold :: MethodUnfold (Op) "MaxCreateRev" (Op__MaxCreateRevⁱᵐᵖˡ);
   #[global] Op_MaxModRev_unfold :: MethodUnfold (Op) "MaxModRev" (Op__MaxModRevⁱᵐᵖˡ);
   #[global] Op_MinCreateRev_unfold :: MethodUnfold (Op) "MinCreateRev" (Op__MinCreateRevⁱᵐᵖˡ);
@@ -3306,16 +3385,24 @@ Class Op_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `
   #[global] Op_toRequestOp_unfold :: MethodUnfold (Op) "toRequestOp" (Op__toRequestOpⁱᵐᵖˡ);
   #[global] Op_toTxnRequest_unfold :: MethodUnfold (Op) "toTxnRequest" (Op__toTxnRequestⁱᵐᵖˡ);
   #[global] Op'ptr_IsCountOnly_unfold :: MethodUnfold (go.PointerType (Op)) "IsCountOnly" (λ: "$r", MethodResolve (Op) "IsCountOnly" (![(Op)] "$r"));
+  #[global] Op'ptr_IsCreatedNotify_unfold :: MethodUnfold (go.PointerType (Op)) "IsCreatedNotify" (λ: "$r", MethodResolve (Op) "IsCreatedNotify" (![(Op)] "$r"));
   #[global] Op'ptr_IsDelete_unfold :: MethodUnfold (go.PointerType (Op)) "IsDelete" (λ: "$r", MethodResolve (Op) "IsDelete" (![(Op)] "$r"));
+  #[global] Op'ptr_IsFilterDelete_unfold :: MethodUnfold (go.PointerType (Op)) "IsFilterDelete" (λ: "$r", MethodResolve (Op) "IsFilterDelete" (![(Op)] "$r"));
+  #[global] Op'ptr_IsFilterPut_unfold :: MethodUnfold (go.PointerType (Op)) "IsFilterPut" (λ: "$r", MethodResolve (Op) "IsFilterPut" (![(Op)] "$r"));
+  #[global] Op'ptr_IsFragment_unfold :: MethodUnfold (go.PointerType (Op)) "IsFragment" (λ: "$r", MethodResolve (Op) "IsFragment" (![(Op)] "$r"));
   #[global] Op'ptr_IsGet_unfold :: MethodUnfold (go.PointerType (Op)) "IsGet" (λ: "$r", MethodResolve (Op) "IsGet" (![(Op)] "$r"));
   #[global] Op'ptr_IsKeysOnly_unfold :: MethodUnfold (go.PointerType (Op)) "IsKeysOnly" (λ: "$r", MethodResolve (Op) "IsKeysOnly" (![(Op)] "$r"));
   #[global] Op'ptr_IsOptsWithFromKey_unfold :: MethodUnfold (go.PointerType (Op)) "IsOptsWithFromKey" (λ: "$r", MethodResolve (Op) "IsOptsWithFromKey" (![(Op)] "$r"));
   #[global] Op'ptr_IsOptsWithPrefix_unfold :: MethodUnfold (go.PointerType (Op)) "IsOptsWithPrefix" (λ: "$r", MethodResolve (Op) "IsOptsWithPrefix" (![(Op)] "$r"));
+  #[global] Op'ptr_IsPrevKV_unfold :: MethodUnfold (go.PointerType (Op)) "IsPrevKV" (λ: "$r", MethodResolve (Op) "IsPrevKV" (![(Op)] "$r"));
+  #[global] Op'ptr_IsProgressNotify_unfold :: MethodUnfold (go.PointerType (Op)) "IsProgressNotify" (λ: "$r", MethodResolve (Op) "IsProgressNotify" (![(Op)] "$r"));
   #[global] Op'ptr_IsPut_unfold :: MethodUnfold (go.PointerType (Op)) "IsPut" (λ: "$r", MethodResolve (Op) "IsPut" (![(Op)] "$r"));
   #[global] Op'ptr_IsSerializable_unfold :: MethodUnfold (go.PointerType (Op)) "IsSerializable" (λ: "$r", MethodResolve (Op) "IsSerializable" (![(Op)] "$r"));
   #[global] Op'ptr_IsSortOptionValid_unfold :: MethodUnfold (go.PointerType (Op)) "IsSortOptionValid" (λ: "$r", MethodResolve (Op) "IsSortOptionValid" (![(Op)] "$r"));
+  #[global] Op'ptr_IsSortSet_unfold :: MethodUnfold (go.PointerType (Op)) "IsSortSet" (λ: "$r", MethodResolve (Op) "IsSortSet" (![(Op)] "$r"));
   #[global] Op'ptr_IsTxn_unfold :: MethodUnfold (go.PointerType (Op)) "IsTxn" (λ: "$r", MethodResolve (Op) "IsTxn" (![(Op)] "$r"));
   #[global] Op'ptr_KeyBytes_unfold :: MethodUnfold (go.PointerType (Op)) "KeyBytes" (λ: "$r", MethodResolve (Op) "KeyBytes" (![(Op)] "$r"));
+  #[global] Op'ptr_Limit_unfold :: MethodUnfold (go.PointerType (Op)) "Limit" (λ: "$r", MethodResolve (Op) "Limit" (![(Op)] "$r"));
   #[global] Op'ptr_MaxCreateRev_unfold :: MethodUnfold (go.PointerType (Op)) "MaxCreateRev" (λ: "$r", MethodResolve (Op) "MaxCreateRev" (![(Op)] "$r"));
   #[global] Op'ptr_MaxModRev_unfold :: MethodUnfold (go.PointerType (Op)) "MaxModRev" (λ: "$r", MethodResolve (Op) "MaxModRev" (![(Op)] "$r"));
   #[global] Op'ptr_MinCreateRev_unfold :: MethodUnfold (go.PointerType (Op)) "MinCreateRev" (λ: "$r", MethodResolve (Op) "MinCreateRev" (![(Op)] "$r"));
@@ -3711,7 +3798,7 @@ mk {
   Canceled' : bool;
   Created' : bool;
   closeErr' : error.t;
-  cancelReason' : go_string;
+  CancelReason' : go_string;
 }.
 
 #[global] Instance zero_val : ZeroVal t := {| zero_val := mk (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _)|}.
@@ -3727,7 +3814,7 @@ Definition WatchResponse'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalCont
   (go.FieldDecl "Canceled"%go go.bool);
   (go.FieldDecl "Created"%go go.bool);
   (go.FieldDecl "closeErr"%go go.error);
-  (go.FieldDecl "cancelReason"%go go.string)
+  (go.FieldDecl "CancelReason"%go go.string)
 ].
 Program Definition WatchResponse'fds {ext : ffi_syntax} {go_gctx : GoGlobalContext} := sealed (WatchResponse'fds_unsealed).
 Global Instance equals_unfold_WatchResponse {ext : ffi_syntax} {go_gctx : GoGlobalContext} : WatchResponse'fds =→ WatchResponse'fds_unsealed.
@@ -3751,8 +3838,8 @@ Class WatchResponse_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLoca
   #[global] WatchResponse_set_Created (x : WatchResponse.t) y :: ⟦StructFieldSet (WatchResponseⁱᵐᵖˡ) "Created", (#x, #y)⟧ ⤳[under] #(x <|WatchResponse.Created' := y|>);
   #[global] WatchResponse_get_closeErr (x : WatchResponse.t) :: ⟦StructFieldGet (WatchResponseⁱᵐᵖˡ) "closeErr", #x⟧ ⤳[under] #x.(WatchResponse.closeErr');
   #[global] WatchResponse_set_closeErr (x : WatchResponse.t) y :: ⟦StructFieldSet (WatchResponseⁱᵐᵖˡ) "closeErr", (#x, #y)⟧ ⤳[under] #(x <|WatchResponse.closeErr' := y|>);
-  #[global] WatchResponse_get_cancelReason (x : WatchResponse.t) :: ⟦StructFieldGet (WatchResponseⁱᵐᵖˡ) "cancelReason", #x⟧ ⤳[under] #x.(WatchResponse.cancelReason');
-  #[global] WatchResponse_set_cancelReason (x : WatchResponse.t) y :: ⟦StructFieldSet (WatchResponseⁱᵐᵖˡ) "cancelReason", (#x, #y)⟧ ⤳[under] #(x <|WatchResponse.cancelReason' := y|>);
+  #[global] WatchResponse_get_CancelReason (x : WatchResponse.t) :: ⟦StructFieldGet (WatchResponseⁱᵐᵖˡ) "CancelReason", #x⟧ ⤳[under] #x.(WatchResponse.CancelReason');
+  #[global] WatchResponse_set_CancelReason (x : WatchResponse.t) y :: ⟦StructFieldSet (WatchResponseⁱᵐᵖˡ) "CancelReason", (#x, #y)⟧ ⤳[under] #(x <|WatchResponse.CancelReason' := y|>);
 }.
 
 Module watcher.

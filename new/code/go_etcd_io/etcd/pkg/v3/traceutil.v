@@ -37,13 +37,23 @@ Axiom Traceⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.
 
 Axiom stepⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
+Axiom instrumentationScope : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Definition Tracer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/pkg/v3/traceutil.Tracer"%go.
+
+Axiom Tracer'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Definition Init {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/pkg/v3/traceutil.Init"%go.
+
 Definition writeFields {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/pkg/v3/traceutil.writeFields"%go.
 
-Definition New {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/pkg/v3/traceutil.New"%go.
+Definition newTrace {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/pkg/v3/traceutil.newTrace"%go.
 
 Definition TODO {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/pkg/v3/traceutil.TODO"%go.
 
 Definition Get {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/pkg/v3/traceutil.Get"%go.
+
+Definition EnsureTrace {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/pkg/v3/traceutil.EnsureTrace"%go.
 
 #[global] Instance info' : PkgInfo pkg_id.traceutil :=
 {|
@@ -55,7 +65,7 @@ Axiom _'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 Definition initialize' {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     package.init pkg_id.traceutil (λ: <>,
-      exception_do (do:  #())
+      exception_do (do:  (Tracer'init #()))
       ).
 
 Module TraceKey.

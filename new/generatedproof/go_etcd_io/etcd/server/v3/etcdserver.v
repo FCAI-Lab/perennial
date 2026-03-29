@@ -11,7 +11,10 @@ Require Export New.generatedproof.go_etcd_io.etcd.server.v3.auth.
 Require Export New.generatedproof.go_etcd_io.etcd.server.v3.config.
 Require Export New.generatedproof.go_etcd_io.etcd.server.v3.etcdserver.apply.
 Require Export New.generatedproof.go_etcd_io.etcd.server.v3.etcdserver.errors.
+Require Export New.generatedproof.go_etcd_io.etcd.server.v3.features.
 Require Export New.generatedproof.go_etcd_io.raft.v3.
+Require Export New.generatedproof.go_opentelemetry_io.otel.attribute.
+Require Export New.generatedproof.go_opentelemetry_io.otel.trace.
 Require Export New.generatedproof.time.
 Require Export New.golang.theory.
 Require Export New.code.go_etcd_io.etcd.server.v3.etcdserver.
@@ -638,46 +641,6 @@ Proof. Admitted.
 
 End def.
 End notifier.
-
-Module panicAlternativeStringer.
-Section def.
-
-Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics}.
-Context {package_sem' : etcdserver.Assumptions}.
-
-Local Set Default Proof Using "All".
-
-#[global] Instance panicAlternativeStringer_typed_pointsto  :
-  TypedPointsto (Σ:=Σ) (etcdserver.panicAlternativeStringer.t). Admitted.
-
-#[global] Instance panicAlternativeStringer_into_val_typed
-   :
-  IntoValTypedUnderlying (etcdserver.panicAlternativeStringer.t) (etcdserver.panicAlternativeStringerⁱᵐᵖˡ).
-Proof. Admitted.
-
-End def.
-End panicAlternativeStringer.
-
-Module RequestV2.
-Section def.
-
-Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics}.
-Context {package_sem' : etcdserver.Assumptions}.
-
-Local Set Default Proof Using "All".
-
-#[global] Instance RequestV2_typed_pointsto  :
-  TypedPointsto (Σ:=Σ) (etcdserver.RequestV2.t). Admitted.
-
-#[global] Instance RequestV2_into_val_typed
-   :
-  IntoValTypedUnderlying (etcdserver.RequestV2.t) (etcdserver.RequestV2ⁱᵐᵖˡ).
-Proof. Admitted.
-
-End def.
-End RequestV2.
 
 Module RaftKV.
 Section def.

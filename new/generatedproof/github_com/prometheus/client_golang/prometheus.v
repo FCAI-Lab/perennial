@@ -66,6 +66,26 @@ Proof. Admitted.
 End def.
 End collectorMetric.
 
+Module CollectorFunc.
+Section def.
+
+Context `{hG: heapGS Σ, !ffi_semantics _ _}.
+Context {sem : go.Semantics}.
+Context {package_sem' : prometheus.Assumptions}.
+
+Local Set Default Proof Using "All".
+
+#[global] Instance CollectorFunc_typed_pointsto  :
+  TypedPointsto (Σ:=Σ) (prometheus.CollectorFunc.t). Admitted.
+
+#[global] Instance CollectorFunc_into_val_typed
+   :
+  IntoValTypedUnderlying (prometheus.CollectorFunc.t) (prometheus.CollectorFuncⁱᵐᵖˡ).
+Proof. Admitted.
+
+End def.
+End CollectorFunc.
+
 Module Counter.
 Section def.
 
@@ -645,6 +665,26 @@ Proof. Admitted.
 
 End def.
 End nativeExemplars.
+
+Module constNativeHistogram.
+Section def.
+
+Context `{hG: heapGS Σ, !ffi_semantics _ _}.
+Context {sem : go.Semantics}.
+Context {package_sem' : prometheus.Assumptions}.
+
+Local Set Default Proof Using "All".
+
+#[global] Instance constNativeHistogram_typed_pointsto  :
+  TypedPointsto (Σ:=Σ) (prometheus.constNativeHistogram.t). Admitted.
+
+#[global] Instance constNativeHistogram_into_val_typed
+   :
+  IntoValTypedUnderlying (prometheus.constNativeHistogram.t) (prometheus.constNativeHistogramⁱᵐᵖˡ).
+Proof. Admitted.
+
+End def.
+End constNativeHistogram.
 
 Module Labels.
 Section def.

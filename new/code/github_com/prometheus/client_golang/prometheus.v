@@ -19,6 +19,10 @@ Definition collectorMetric {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.t
 
 #[global] Opaque collectorMetric.
 
+Definition CollectorFunc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "github.com/prometheus/client_golang/prometheus.CollectorFunc"%go [].
+
+#[global] Opaque CollectorFunc.
+
 Definition Counter {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "github.com/prometheus/client_golang/prometheus.Counter"%go [].
 
 #[global] Opaque Counter.
@@ -134,6 +138,10 @@ Definition buckSort {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := 
 Definition nativeExemplars {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "github.com/prometheus/client_golang/prometheus.nativeExemplars"%go [].
 
 #[global] Opaque nativeExemplars.
+
+Definition constNativeHistogram {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "github.com/prometheus/client_golang/prometheus.constNativeHistogram"%go [].
+
+#[global] Opaque constNativeHistogram.
 
 Definition Labels {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "github.com/prometheus/client_golang/prometheus.Labels"%go [].
 
@@ -349,6 +357,8 @@ Axiom selfCollectorⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalConte
 
 Axiom collectorMetricⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
+Axiom CollectorFuncⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
 Axiom Counterⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom ExemplarAdderⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
@@ -406,6 +416,8 @@ Axiom constHistogramⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalCont
 Axiom buckSortⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom nativeExemplarsⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
+Axiom constNativeHistogramⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom Labelsⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
@@ -556,6 +568,10 @@ Axiom goMemoryClassesProfilingBucketsBytes : ∀ {ext : ffi_syntax} {go_gctx : G
 Axiom goMemoryClassesMetadataOtherBytes : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
 Axiom goMemoryClassesOtherBytes : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom nativeHistogramSchemaMaximum : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom nativeHistogramSchemaMinimum : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
 Axiom bucketLabel : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
@@ -741,6 +757,14 @@ Definition addAndResetCounts {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go
 
 Definition makeNativeExemplars {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/prometheus/client_golang/prometheus.makeNativeExemplars"%go.
 
+Definition validateCount {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/prometheus/client_golang/prometheus.validateCount"%go.
+
+Definition NewConstNativeHistogram {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/prometheus/client_golang/prometheus.NewConstNativeHistogram"%go.
+
+Definition MustNewConstNativeHistogram {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/prometheus/client_golang/prometheus.MustNewConstNativeHistogram"%go.
+
+Definition makeBucketsFromMap {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/prometheus/client_golang/prometheus.makeBucketsFromMap"%go.
+
 Definition makeInconsistentCardinalityError {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/prometheus/client_golang/prometheus.makeInconsistentCardinalityError"%go.
 
 Definition validateValuesInLabels {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/prometheus/client_golang/prometheus.validateValuesInLabels"%go.
@@ -855,6 +879,10 @@ Definition WrapRegistererWith {ext : ffi_syntax} {go_gctx : GoGlobalContext} : g
 
 Definition WrapRegistererWithPrefix {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/prometheus/client_golang/prometheus.WrapRegistererWithPrefix"%go.
 
+Definition WrapCollectorWith {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/prometheus/client_golang/prometheus.WrapCollectorWith"%go.
+
+Definition WrapCollectorWithPrefix {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/prometheus/client_golang/prometheus.WrapCollectorWithPrefix"%go.
+
 Definition wrapDesc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "github.com/prometheus/client_golang/prometheus.wrapDesc"%go.
 
 #[global] Instance info' : PkgInfo pkg_id.prometheus :=
@@ -931,6 +959,22 @@ Class collectorMetric_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLo
   #[global] collectorMetric_type_repr  :: go.TypeReprUnderlying collectorMetricⁱᵐᵖˡ collectorMetric.t;
   #[global] collectorMetric_underlying :: (collectorMetric) <u (collectorMetricⁱᵐᵖˡ);
   #[global] collectorMetricⁱᵐᵖˡ_underlying :: (collectorMetricⁱᵐᵖˡ) ↓u (collectorMetricⁱᵐᵖˡ);
+}.
+
+Module CollectorFunc.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End CollectorFunc.
+
+Class CollectorFunc_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] CollectorFunc_type_repr  :: go.TypeReprUnderlying CollectorFuncⁱᵐᵖˡ CollectorFunc.t;
+  #[global] CollectorFunc_underlying :: (CollectorFunc) <u (CollectorFuncⁱᵐᵖˡ);
+  #[global] CollectorFuncⁱᵐᵖˡ_underlying :: (CollectorFuncⁱᵐᵖˡ) ↓u (CollectorFuncⁱᵐᵖˡ);
 }.
 
 Module Counter.
@@ -1395,6 +1439,22 @@ Class nativeExemplars_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLo
   #[global] nativeExemplars_type_repr  :: go.TypeReprUnderlying nativeExemplarsⁱᵐᵖˡ nativeExemplars.t;
   #[global] nativeExemplars_underlying :: (nativeExemplars) <u (nativeExemplarsⁱᵐᵖˡ);
   #[global] nativeExemplarsⁱᵐᵖˡ_underlying :: (nativeExemplarsⁱᵐᵖˡ) ↓u (nativeExemplarsⁱᵐᵖˡ);
+}.
+
+Module constNativeHistogram.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End constNativeHistogram.
+
+Class constNativeHistogram_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] constNativeHistogram_type_repr  :: go.TypeReprUnderlying constNativeHistogramⁱᵐᵖˡ constNativeHistogram.t;
+  #[global] constNativeHistogram_underlying :: (constNativeHistogram) <u (constNativeHistogramⁱᵐᵖˡ);
+  #[global] constNativeHistogramⁱᵐᵖˡ_underlying :: (constNativeHistogramⁱᵐᵖˡ) ↓u (constNativeHistogramⁱᵐᵖˡ);
 }.
 
 Module Labels.
@@ -2234,6 +2294,7 @@ Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!G
   #[global] Collector_instance :: Collector_Assumptions;
   #[global] selfCollector_instance :: selfCollector_Assumptions;
   #[global] collectorMetric_instance :: collectorMetric_Assumptions;
+  #[global] CollectorFunc_instance :: CollectorFunc_Assumptions;
   #[global] Counter_instance :: Counter_Assumptions;
   #[global] ExemplarAdder_instance :: ExemplarAdder_Assumptions;
   #[global] CounterOpts_instance :: CounterOpts_Assumptions;
@@ -2263,6 +2324,7 @@ Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!G
   #[global] constHistogram_instance :: constHistogram_Assumptions;
   #[global] buckSort_instance :: buckSort_Assumptions;
   #[global] nativeExemplars_instance :: nativeExemplars_Assumptions;
+  #[global] constNativeHistogram_instance :: constNativeHistogram_Assumptions;
   #[global] Labels_instance :: Labels_Assumptions;
   #[global] LabelConstraint_instance :: LabelConstraint_Assumptions;
   #[global] ConstrainedLabel_instance :: ConstrainedLabel_Assumptions;

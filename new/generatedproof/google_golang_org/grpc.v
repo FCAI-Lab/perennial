@@ -246,6 +246,26 @@ Proof. Admitted.
 End def.
 End addrConn.
 
+Module securityLevelKey.
+Section def.
+
+Context `{hG: heapGS Σ, !ffi_semantics _ _}.
+Context {sem : go.Semantics}.
+Context {package_sem' : grpc.Assumptions}.
+
+Local Set Default Proof Using "All".
+
+#[global] Instance securityLevelKey_typed_pointsto  :
+  TypedPointsto (Σ:=Σ) (grpc.securityLevelKey.t). Admitted.
+
+#[global] Instance securityLevelKey_into_val_typed
+   :
+  IntoValTypedUnderlying (grpc.securityLevelKey.t) (grpc.securityLevelKeyⁱᵐᵖˡ).
+Proof. Admitted.
+
+End def.
+End securityLevelKey.
+
 Module retryThrottler.
 Section def.
 
@@ -726,6 +746,26 @@ Proof. Admitted.
 End def.
 End pickerWrapper.
 
+Module pick.
+Section def.
+
+Context `{hG: heapGS Σ, !ffi_semantics _ _}.
+Context {sem : go.Semantics}.
+Context {package_sem' : grpc.Assumptions}.
+
+Local Set Default Proof Using "All".
+
+#[global] Instance pick_typed_pointsto  :
+  TypedPointsto (Σ:=Σ) (grpc.pick.t). Admitted.
+
+#[global] Instance pick_into_val_typed
+   :
+  IntoValTypedUnderlying (grpc.pick.t) (grpc.pickⁱᵐᵖˡ).
+Proof. Admitted.
+
+End def.
+End pick.
+
 Module dropError.
 Section def.
 
@@ -1066,6 +1106,26 @@ Proof. Admitted.
 End def.
 End MaxRecvMsgSizeCallOption.
 
+Module AuthorityOverrideCallOption.
+Section def.
+
+Context `{hG: heapGS Σ, !ffi_semantics _ _}.
+Context {sem : go.Semantics}.
+Context {package_sem' : grpc.Assumptions}.
+
+Local Set Default Proof Using "All".
+
+#[global] Instance AuthorityOverrideCallOption_typed_pointsto  :
+  TypedPointsto (Σ:=Σ) (grpc.AuthorityOverrideCallOption.t). Admitted.
+
+#[global] Instance AuthorityOverrideCallOption_into_val_typed
+   :
+  IntoValTypedUnderlying (grpc.AuthorityOverrideCallOption.t) (grpc.AuthorityOverrideCallOptionⁱᵐᵖˡ).
+Proof. Admitted.
+
+End def.
+End AuthorityOverrideCallOption.
+
 Module MaxSendMsgSizeCallOption.
 Section def.
 
@@ -1125,6 +1185,26 @@ Proof. Admitted.
 
 End def.
 End CompressorCallOption.
+
+Module acceptCompressorsCallOption.
+Section def.
+
+Context `{hG: heapGS Σ, !ffi_semantics _ _}.
+Context {sem : go.Semantics}.
+Context {package_sem' : grpc.Assumptions}.
+
+Local Set Default Proof Using "All".
+
+#[global] Instance acceptCompressorsCallOption_typed_pointsto  :
+  TypedPointsto (Σ:=Σ) (grpc.acceptCompressorsCallOption.t). Admitted.
+
+#[global] Instance acceptCompressorsCallOption_into_val_typed
+   :
+  IntoValTypedUnderlying (grpc.acceptCompressorsCallOption.t) (grpc.acceptCompressorsCallOptionⁱᵐᵖˡ).
+Proof. Admitted.
+
+End def.
+End acceptCompressorsCallOption.
 
 Module ContentSubtypeCallOption.
 Section def.
@@ -1265,6 +1345,26 @@ Proof. Admitted.
 
 End def.
 End streamReader.
+
+Module noCopy.
+Section def.
+
+Context `{hG: heapGS Σ, !ffi_semantics _ _}.
+Context {sem : go.Semantics}.
+Context {package_sem' : grpc.Assumptions}.
+
+Local Set Default Proof Using "All".
+
+#[global] Instance noCopy_typed_pointsto  :
+  TypedPointsto (Σ:=Σ) (grpc.noCopy.t). Admitted.
+
+#[global] Instance noCopy_into_val_typed
+   :
+  IntoValTypedUnderlying (grpc.noCopy.t) (grpc.noCopyⁱᵐᵖˡ).
+Proof. Admitted.
+
+End def.
+End noCopy.
 
 Module parser.
 Section def.

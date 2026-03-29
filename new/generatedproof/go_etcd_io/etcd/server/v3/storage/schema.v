@@ -86,6 +86,26 @@ Proof. Admitted.
 End def.
 End ActionList.
 
+Module AlarmBackend.
+Section def.
+
+Context `{hG: heapGS Σ, !ffi_semantics _ _}.
+Context {sem : go.Semantics}.
+Context {package_sem' : schema.Assumptions}.
+
+Local Set Default Proof Using "All".
+
+#[global] Instance AlarmBackend_typed_pointsto  :
+  TypedPointsto (Σ:=Σ) (schema.AlarmBackend.t). Admitted.
+
+#[global] Instance AlarmBackend_into_val_typed
+   :
+  IntoValTypedUnderlying (schema.AlarmBackend.t) (schema.AlarmBackendⁱᵐᵖˡ).
+Proof. Admitted.
+
+End def.
+End AlarmBackend.
+
 Module alarmBackend.
 Section def.
 
@@ -285,25 +305,5 @@ Proof. Admitted.
 
 End def.
 End migrationStep.
-
-Module WALVersion.
-Section def.
-
-Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics}.
-Context {package_sem' : schema.Assumptions}.
-
-Local Set Default Proof Using "All".
-
-#[global] Instance WALVersion_typed_pointsto  :
-  TypedPointsto (Σ:=Σ) (schema.WALVersion.t). Admitted.
-
-#[global] Instance WALVersion_into_val_typed
-   :
-  IntoValTypedUnderlying (schema.WALVersion.t) (schema.WALVersionⁱᵐᵖˡ).
-Proof. Admitted.
-
-End def.
-End WALVersion.
 
 End schema.

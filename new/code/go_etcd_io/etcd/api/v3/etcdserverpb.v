@@ -9,10 +9,6 @@ End pkg_id.
 Export pkg_id.
 Module etcdserverpb.
 
-Definition Request {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.Request"%go [].
-
-#[global] Opaque Request.
-
 Definition Metadata {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.Metadata"%go [].
 
 #[global] Opaque Metadata.
@@ -401,6 +397,10 @@ Definition DowngradeResponse {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go
 
 #[global] Opaque DowngradeResponse.
 
+Definition DowngradeVersionTestRequest {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.DowngradeVersionTestRequest"%go [].
+
+#[global] Opaque DowngradeVersionTestRequest.
+
 Definition StatusRequest {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.StatusRequest"%go [].
 
 #[global] Opaque StatusRequest.
@@ -408,6 +408,10 @@ Definition StatusRequest {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.typ
 Definition StatusResponse {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.StatusResponse"%go [].
 
 #[global] Opaque StatusResponse.
+
+Definition DowngradeInfo {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.DowngradeInfo"%go [].
+
+#[global] Opaque DowngradeInfo.
 
 Definition AuthEnableRequest {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.AuthEnableRequest"%go [].
 
@@ -561,6 +565,10 @@ Definition UnimplementedKVServer {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
 
 #[global] Opaque UnimplementedKVServer.
 
+Definition UnsafeKVServer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.UnsafeKVServer"%go [].
+
+#[global] Opaque UnsafeKVServer.
+
 Definition WatchClient {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.WatchClient"%go [].
 
 #[global] Opaque WatchClient.
@@ -568,14 +576,6 @@ Definition WatchClient {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type 
 Definition watchClient {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.watchClient"%go [].
 
 #[global] Opaque watchClient.
-
-Definition Watch_WatchClient {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.Watch_WatchClient"%go [].
-
-#[global] Opaque Watch_WatchClient.
-
-Definition watchWatchClient {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.watchWatchClient"%go [].
-
-#[global] Opaque watchWatchClient.
 
 Definition WatchServer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.WatchServer"%go [].
 
@@ -585,13 +585,9 @@ Definition UnimplementedWatchServer {ext : ffi_syntax} {go_gctx : GoGlobalContex
 
 #[global] Opaque UnimplementedWatchServer.
 
-Definition Watch_WatchServer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.Watch_WatchServer"%go [].
+Definition UnsafeWatchServer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.UnsafeWatchServer"%go [].
 
-#[global] Opaque Watch_WatchServer.
-
-Definition watchWatchServer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.watchWatchServer"%go [].
-
-#[global] Opaque watchWatchServer.
+#[global] Opaque UnsafeWatchServer.
 
 Definition LeaseClient {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.LeaseClient"%go [].
 
@@ -601,14 +597,6 @@ Definition leaseClient {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type 
 
 #[global] Opaque leaseClient.
 
-Definition Lease_LeaseKeepAliveClient {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.Lease_LeaseKeepAliveClient"%go [].
-
-#[global] Opaque Lease_LeaseKeepAliveClient.
-
-Definition leaseLeaseKeepAliveClient {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.leaseLeaseKeepAliveClient"%go [].
-
-#[global] Opaque leaseLeaseKeepAliveClient.
-
 Definition LeaseServer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.LeaseServer"%go [].
 
 #[global] Opaque LeaseServer.
@@ -617,13 +605,9 @@ Definition UnimplementedLeaseServer {ext : ffi_syntax} {go_gctx : GoGlobalContex
 
 #[global] Opaque UnimplementedLeaseServer.
 
-Definition Lease_LeaseKeepAliveServer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.Lease_LeaseKeepAliveServer"%go [].
+Definition UnsafeLeaseServer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.UnsafeLeaseServer"%go [].
 
-#[global] Opaque Lease_LeaseKeepAliveServer.
-
-Definition leaseLeaseKeepAliveServer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.leaseLeaseKeepAliveServer"%go [].
-
-#[global] Opaque leaseLeaseKeepAliveServer.
+#[global] Opaque UnsafeLeaseServer.
 
 Definition ClusterClient {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.ClusterClient"%go [].
 
@@ -641,6 +625,10 @@ Definition UnimplementedClusterServer {ext : ffi_syntax} {go_gctx : GoGlobalCont
 
 #[global] Opaque UnimplementedClusterServer.
 
+Definition UnsafeClusterServer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.UnsafeClusterServer"%go [].
+
+#[global] Opaque UnsafeClusterServer.
+
 Definition MaintenanceClient {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.MaintenanceClient"%go [].
 
 #[global] Opaque MaintenanceClient.
@@ -648,14 +636,6 @@ Definition MaintenanceClient {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go
 Definition maintenanceClient {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.maintenanceClient"%go [].
 
 #[global] Opaque maintenanceClient.
-
-Definition Maintenance_SnapshotClient {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.Maintenance_SnapshotClient"%go [].
-
-#[global] Opaque Maintenance_SnapshotClient.
-
-Definition maintenanceSnapshotClient {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.maintenanceSnapshotClient"%go [].
-
-#[global] Opaque maintenanceSnapshotClient.
 
 Definition MaintenanceServer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.MaintenanceServer"%go [].
 
@@ -665,13 +645,9 @@ Definition UnimplementedMaintenanceServer {ext : ffi_syntax} {go_gctx : GoGlobal
 
 #[global] Opaque UnimplementedMaintenanceServer.
 
-Definition Maintenance_SnapshotServer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.Maintenance_SnapshotServer"%go [].
+Definition UnsafeMaintenanceServer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.UnsafeMaintenanceServer"%go [].
 
-#[global] Opaque Maintenance_SnapshotServer.
-
-Definition maintenanceSnapshotServer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.maintenanceSnapshotServer"%go [].
-
-#[global] Opaque maintenanceSnapshotServer.
+#[global] Opaque UnsafeMaintenanceServer.
 
 Definition AuthClient {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.AuthClient"%go [].
 
@@ -689,7 +665,9 @@ Definition UnimplementedAuthServer {ext : ffi_syntax} {go_gctx : GoGlobalContext
 
 #[global] Opaque UnimplementedAuthServer.
 
-Axiom Requestⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+Definition UnsafeAuthServer {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/api/v3/etcdserverpb.UnsafeAuthServer"%go [].
+
+#[global] Opaque UnsafeAuthServer.
 
 Axiom Metadataⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
@@ -817,9 +795,13 @@ Axiom DowngradeRequestⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalCo
 
 Axiom DowngradeResponseⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
+Axiom DowngradeVersionTestRequestⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
 Axiom StatusRequestⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom StatusResponseⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
+Axiom DowngradeInfoⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom AuthEnableRequestⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
@@ -897,37 +879,35 @@ Axiom KVServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, 
 
 Axiom UnimplementedKVServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
+Axiom UnsafeKVServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
 Axiom WatchClientⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom watchClientⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
-Axiom Watch_WatchClientⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
-
-Axiom watchWatchClientⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+Axiom Watch_WatchClient : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom WatchServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom UnimplementedWatchServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
-Axiom Watch_WatchServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+Axiom UnsafeWatchServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
-Axiom watchWatchServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+Axiom Watch_WatchServer : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom LeaseClientⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom leaseClientⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
-Axiom Lease_LeaseKeepAliveClientⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
-
-Axiom leaseLeaseKeepAliveClientⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+Axiom Lease_LeaseKeepAliveClient : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom LeaseServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom UnimplementedLeaseServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
-Axiom Lease_LeaseKeepAliveServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+Axiom UnsafeLeaseServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
-Axiom leaseLeaseKeepAliveServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+Axiom Lease_LeaseKeepAliveServer : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom ClusterClientⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
@@ -937,21 +917,21 @@ Axiom ClusterServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalConte
 
 Axiom UnimplementedClusterServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
+Axiom UnsafeClusterServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
 Axiom MaintenanceClientⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom maintenanceClientⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
-Axiom Maintenance_SnapshotClientⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
-
-Axiom maintenanceSnapshotClientⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+Axiom Maintenance_SnapshotClient : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom MaintenanceServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom UnimplementedMaintenanceServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
-Axiom Maintenance_SnapshotServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+Axiom UnsafeMaintenanceServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
-Axiom maintenanceSnapshotServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+Axiom Maintenance_SnapshotServer : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom AuthClientⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
@@ -960,6 +940,8 @@ Axiom authClientⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}
 Axiom AuthServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom UnimplementedAuthServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
+
+Axiom UnsafeAuthServerⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom AlarmType_NONE : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
@@ -1017,7 +999,87 @@ Axiom DowngradeRequest_ENABLE : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContex
 
 Axiom DowngradeRequest_CANCEL : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
-Definition xxx_messageInfo_Request {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.xxx_messageInfo_Request"%go.
+Axiom KV_Range_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom KV_Put_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom KV_DeleteRange_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom KV_Txn_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom KV_Compact_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Watch_Watch_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Lease_LeaseGrant_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Lease_LeaseRevoke_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Lease_LeaseKeepAlive_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Lease_LeaseTimeToLive_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Lease_LeaseLeases_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Cluster_MemberAdd_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Cluster_MemberRemove_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Cluster_MemberUpdate_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Cluster_MemberList_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Cluster_MemberPromote_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Maintenance_Alarm_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Maintenance_Status_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Maintenance_Defragment_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Maintenance_Hash_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Maintenance_HashKV_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Maintenance_Snapshot_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Maintenance_MoveLeader_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Maintenance_Downgrade_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Auth_AuthEnable_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Auth_AuthDisable_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Auth_AuthStatus_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Auth_Authenticate_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Auth_UserAdd_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Auth_UserGet_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Auth_UserList_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Auth_UserDelete_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Auth_UserChangePassword_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Auth_UserGrantRole_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Auth_UserRevokeRole_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Auth_RoleAdd_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Auth_RoleGet_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Auth_RoleList_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Auth_RoleDelete_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Auth_RoleGrantPermission_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Axiom Auth_RoleRevokePermission_FullMethodName : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
 Definition xxx_messageInfo_Metadata {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.xxx_messageInfo_Metadata"%go.
 
@@ -1227,9 +1289,13 @@ Definition xxx_messageInfo_DowngradeRequest {ext : ffi_syntax} {go_gctx : GoGlob
 
 Definition xxx_messageInfo_DowngradeResponse {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.xxx_messageInfo_DowngradeResponse"%go.
 
+Definition xxx_messageInfo_DowngradeVersionTestRequest {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.xxx_messageInfo_DowngradeVersionTestRequest"%go.
+
 Definition xxx_messageInfo_StatusRequest {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.xxx_messageInfo_StatusRequest"%go.
 
 Definition xxx_messageInfo_StatusResponse {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.xxx_messageInfo_StatusResponse"%go.
+
+Definition xxx_messageInfo_DowngradeInfo {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.xxx_messageInfo_DowngradeInfo"%go.
 
 Definition xxx_messageInfo_AuthEnableRequest {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.xxx_messageInfo_AuthEnableRequest"%go.
 
@@ -1303,30 +1369,6 @@ Definition fileDescriptor_77a6da22d6a3feb1 {ext : ffi_syntax} {go_gctx : GoGloba
 
 Axiom fileDescriptor_77a6da22d6a3feb1'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
-Definition _KV_serviceDesc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb._KV_serviceDesc"%go.
-
-Axiom _KV_serviceDesc'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
-
-Definition _Watch_serviceDesc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb._Watch_serviceDesc"%go.
-
-Axiom _Watch_serviceDesc'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
-
-Definition _Lease_serviceDesc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb._Lease_serviceDesc"%go.
-
-Axiom _Lease_serviceDesc'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
-
-Definition _Cluster_serviceDesc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb._Cluster_serviceDesc"%go.
-
-Axiom _Cluster_serviceDesc'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
-
-Definition _Maintenance_serviceDesc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb._Maintenance_serviceDesc"%go.
-
-Axiom _Maintenance_serviceDesc'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
-
-Definition _Auth_serviceDesc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb._Auth_serviceDesc"%go.
-
-Axiom _Auth_serviceDesc'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
-
 Definition ErrInvalidLengthRpc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.ErrInvalidLengthRpc"%go.
 
 Axiom ErrInvalidLengthRpc'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
@@ -1338,6 +1380,30 @@ Axiom ErrIntOverflowRpc'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext
 Definition ErrUnexpectedEndOfGroupRpc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.ErrUnexpectedEndOfGroupRpc"%go.
 
 Axiom ErrUnexpectedEndOfGroupRpc'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Definition KV_ServiceDesc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.KV_ServiceDesc"%go.
+
+Axiom KV_ServiceDesc'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Definition Watch_ServiceDesc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.Watch_ServiceDesc"%go.
+
+Axiom Watch_ServiceDesc'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Definition Lease_ServiceDesc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.Lease_ServiceDesc"%go.
+
+Axiom Lease_ServiceDesc'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Definition Cluster_ServiceDesc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.Cluster_ServiceDesc"%go.
+
+Axiom Cluster_ServiceDesc'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Definition Maintenance_ServiceDesc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.Maintenance_ServiceDesc"%go.
+
+Axiom Maintenance_ServiceDesc'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
+
+Definition Auth_ServiceDesc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.Auth_ServiceDesc"%go.
+
+Axiom Auth_ServiceDesc'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
 
 Definition encodeVarintEtcdserver {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.encodeVarintEtcdserver"%go.
 
@@ -1362,6 +1428,14 @@ Definition newLoggableRequestOp {ext : ffi_syntax} {go_gctx : GoGlobalContext} :
 Definition newLoggableValueCompare {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.newLoggableValueCompare"%go.
 
 Definition NewLoggablePutRequest {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.NewLoggablePutRequest"%go.
+
+Definition encodeVarintRpc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.encodeVarintRpc"%go.
+
+Definition sovRpc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.sovRpc"%go.
+
+Definition sozRpc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.sozRpc"%go.
+
+Definition skipRpc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.skipRpc"%go.
 
 Definition NewKVClient {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.NewKVClient"%go.
 
@@ -1469,108 +1543,100 @@ Definition _Auth_RoleGrantPermission_Handler {ext : ffi_syntax} {go_gctx : GoGlo
 
 Definition _Auth_RoleRevokePermission_Handler {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb._Auth_RoleRevokePermission_Handler"%go.
 
-Definition encodeVarintRpc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.encodeVarintRpc"%go.
-
-Definition sovRpc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.sovRpc"%go.
-
-Definition sozRpc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.sozRpc"%go.
-
-Definition skipRpc {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/api/v3/etcdserverpb.skipRpc"%go.
-
-(* go: rpc.pb.go:88:31 *)
+(* go: rpc.pb.go:83:31 *)
 Definition RangeRequest_SortOrder__EnumDescriptorⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <> <>,
     exception_do (return: (![go.SliceType go.byte] (GlobalVarAddr fileDescriptor_77a6da22d6a3feb1 #()), let: "$v0" := #(W64 1) in
      let: "$v1" := #(W64 0) in
      CompositeLiteral (go.SliceType go.int) (LiteralValue [KeyedElement None (ElementExpression go.int "$v0"); KeyedElement None (ElementExpression go.int "$v1")]))).
 
-(* go: rpc.pb.go:122:32 *)
+(* go: rpc.pb.go:117:32 *)
 Definition RangeRequest_SortTarget__EnumDescriptorⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <> <>,
     exception_do (return: (![go.SliceType go.byte] (GlobalVarAddr fileDescriptor_77a6da22d6a3feb1 #()), let: "$v0" := #(W64 1) in
      let: "$v1" := #(W64 1) in
      CompositeLiteral (go.SliceType go.int) (LiteralValue [KeyedElement None (ElementExpression go.int "$v0"); KeyedElement None (ElementExpression go.int "$v1")]))).
 
-(* go: rpc.pb.go:153:30 *)
+(* go: rpc.pb.go:148:30 *)
 Definition Compare_CompareResult__EnumDescriptorⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <> <>,
     exception_do (return: (![go.SliceType go.byte] (GlobalVarAddr fileDescriptor_77a6da22d6a3feb1 #()), let: "$v0" := #(W64 9) in
      let: "$v1" := #(W64 0) in
      CompositeLiteral (go.SliceType go.int) (LiteralValue [KeyedElement None (ElementExpression go.int "$v0"); KeyedElement None (ElementExpression go.int "$v1")]))).
 
-(* go: rpc.pb.go:187:30 *)
+(* go: rpc.pb.go:182:30 *)
 Definition Compare_CompareTarget__EnumDescriptorⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <> <>,
     exception_do (return: (![go.SliceType go.byte] (GlobalVarAddr fileDescriptor_77a6da22d6a3feb1 #()), let: "$v0" := #(W64 9) in
      let: "$v1" := #(W64 1) in
      CompositeLiteral (go.SliceType go.int) (LiteralValue [KeyedElement None (ElementExpression go.int "$v0"); KeyedElement None (ElementExpression go.int "$v1")]))).
 
-(* go: rpc.pb.go:955:32 *)
+(* go: rpc.pb.go:952:32 *)
 Definition RequestOp_RequestRange__isRequestOp_Requestⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <> <>,
     exception_do (do:  #()).
 
-(* go: rpc.pb.go:956:30 *)
+(* go: rpc.pb.go:953:30 *)
 Definition RequestOp_RequestPut__isRequestOp_Requestⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <> <>,
     exception_do (do:  #()).
 
-(* go: rpc.pb.go:957:38 *)
+(* go: rpc.pb.go:954:38 *)
 Definition RequestOp_RequestDeleteRange__isRequestOp_Requestⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <> <>,
     exception_do (do:  #()).
 
-(* go: rpc.pb.go:958:30 *)
+(* go: rpc.pb.go:955:30 *)
 Definition RequestOp_RequestTxn__isRequestOp_Requestⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <> <>,
     exception_do (do:  #()).
 
-(* go: rpc.pb.go:1071:34 *)
+(* go: rpc.pb.go:1068:34 *)
 Definition ResponseOp_ResponseRange__isResponseOp_Responseⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <> <>,
     exception_do (do:  #()).
 
-(* go: rpc.pb.go:1072:32 *)
+(* go: rpc.pb.go:1069:32 *)
 Definition ResponseOp_ResponsePut__isResponseOp_Responseⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <> <>,
     exception_do (do:  #()).
 
-(* go: rpc.pb.go:1073:40 *)
+(* go: rpc.pb.go:1070:40 *)
 Definition ResponseOp_ResponseDeleteRange__isResponseOp_Responseⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <> <>,
     exception_do (do:  #()).
 
-(* go: rpc.pb.go:1074:32 *)
+(* go: rpc.pb.go:1071:32 *)
 Definition ResponseOp_ResponseTxn__isResponseOp_Responseⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <> <>,
     exception_do (do:  #()).
 
-(* go: rpc.pb.go:1198:25 *)
+(* go: rpc.pb.go:1195:25 *)
 Definition Compare_Version__isCompare_TargetUnionⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <> <>,
     exception_do (do:  #()).
 
-(* go: rpc.pb.go:1199:32 *)
+(* go: rpc.pb.go:1196:32 *)
 Definition Compare_CreateRevision__isCompare_TargetUnionⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <> <>,
     exception_do (do:  #()).
 
-(* go: rpc.pb.go:1200:29 *)
+(* go: rpc.pb.go:1197:29 *)
 Definition Compare_ModRevision__isCompare_TargetUnionⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <> <>,
     exception_do (do:  #()).
 
-(* go: rpc.pb.go:1201:23 *)
+(* go: rpc.pb.go:1198:23 *)
 Definition Compare_Value__isCompare_TargetUnionⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <> <>,
     exception_do (do:  #()).
 
-(* go: rpc.pb.go:1202:23 *)
+(* go: rpc.pb.go:1199:23 *)
 Definition Compare_Lease__isCompare_TargetUnionⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <> <>,
     exception_do (do:  #()).
 
-(* go: rpc.pb.go:8905:34 *)
+(* go: rpc.pb.go:7102:34 *)
 Definition RequestOp_RequestRange__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType RequestOp_RequestRange) "m") in
@@ -1583,7 +1649,7 @@ Definition RequestOp_RequestRange__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_g
     (MethodResolve (go.PointerType RequestOp_RequestRange) "MarshalToSizedBuffer"%go (![go.PointerType RequestOp_RequestRange] "m")) "$a0")) in
     return: ("$ret0", "$ret1")).
 
-(* go: rpc.pb.go:8910:34 *)
+(* go: rpc.pb.go:7107:34 *)
 Definition RequestOp_RequestRange__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType RequestOp_RequestRange) "m") in
@@ -1619,7 +1685,7 @@ Definition RequestOp_RequestRange__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_sy
     return: ((let: "$a0" := (![go.SliceType go.byte] "dAtA") in
      (FuncResolve go.len [go.SliceType go.byte] #()) "$a0") -⟨go.int⟩ (![go.int] "i"), Convert go.untyped_nil go.error UntypedNil)).
 
-(* go: rpc.pb.go:8926:32 *)
+(* go: rpc.pb.go:7123:32 *)
 Definition RequestOp_RequestPut__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType RequestOp_RequestPut) "m") in
@@ -1632,7 +1698,7 @@ Definition RequestOp_RequestPut__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_gct
     (MethodResolve (go.PointerType RequestOp_RequestPut) "MarshalToSizedBuffer"%go (![go.PointerType RequestOp_RequestPut] "m")) "$a0")) in
     return: ("$ret0", "$ret1")).
 
-(* go: rpc.pb.go:8931:32 *)
+(* go: rpc.pb.go:7128:32 *)
 Definition RequestOp_RequestPut__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType RequestOp_RequestPut) "m") in
@@ -1668,7 +1734,7 @@ Definition RequestOp_RequestPut__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_synt
     return: ((let: "$a0" := (![go.SliceType go.byte] "dAtA") in
      (FuncResolve go.len [go.SliceType go.byte] #()) "$a0") -⟨go.int⟩ (![go.int] "i"), Convert go.untyped_nil go.error UntypedNil)).
 
-(* go: rpc.pb.go:8947:40 *)
+(* go: rpc.pb.go:7144:40 *)
 Definition RequestOp_RequestDeleteRange__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType RequestOp_RequestDeleteRange) "m") in
@@ -1681,7 +1747,7 @@ Definition RequestOp_RequestDeleteRange__MarshalToⁱᵐᵖˡ {ext : ffi_syntax}
     (MethodResolve (go.PointerType RequestOp_RequestDeleteRange) "MarshalToSizedBuffer"%go (![go.PointerType RequestOp_RequestDeleteRange] "m")) "$a0")) in
     return: ("$ret0", "$ret1")).
 
-(* go: rpc.pb.go:8952:40 *)
+(* go: rpc.pb.go:7149:40 *)
 Definition RequestOp_RequestDeleteRange__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType RequestOp_RequestDeleteRange) "m") in
@@ -1717,7 +1783,7 @@ Definition RequestOp_RequestDeleteRange__MarshalToSizedBufferⁱᵐᵖˡ {ext : 
     return: ((let: "$a0" := (![go.SliceType go.byte] "dAtA") in
      (FuncResolve go.len [go.SliceType go.byte] #()) "$a0") -⟨go.int⟩ (![go.int] "i"), Convert go.untyped_nil go.error UntypedNil)).
 
-(* go: rpc.pb.go:8968:32 *)
+(* go: rpc.pb.go:7165:32 *)
 Definition RequestOp_RequestTxn__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType RequestOp_RequestTxn) "m") in
@@ -1730,7 +1796,7 @@ Definition RequestOp_RequestTxn__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_gct
     (MethodResolve (go.PointerType RequestOp_RequestTxn) "MarshalToSizedBuffer"%go (![go.PointerType RequestOp_RequestTxn] "m")) "$a0")) in
     return: ("$ret0", "$ret1")).
 
-(* go: rpc.pb.go:8973:32 *)
+(* go: rpc.pb.go:7170:32 *)
 Definition RequestOp_RequestTxn__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType RequestOp_RequestTxn) "m") in
@@ -1766,7 +1832,7 @@ Definition RequestOp_RequestTxn__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_synt
     return: ((let: "$a0" := (![go.SliceType go.byte] "dAtA") in
      (FuncResolve go.len [go.SliceType go.byte] #()) "$a0") -⟨go.int⟩ (![go.int] "i"), Convert go.untyped_nil go.error UntypedNil)).
 
-(* go: rpc.pb.go:9025:36 *)
+(* go: rpc.pb.go:7222:36 *)
 Definition ResponseOp_ResponseRange__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType ResponseOp_ResponseRange) "m") in
@@ -1779,7 +1845,7 @@ Definition ResponseOp_ResponseRange__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go
     (MethodResolve (go.PointerType ResponseOp_ResponseRange) "MarshalToSizedBuffer"%go (![go.PointerType ResponseOp_ResponseRange] "m")) "$a0")) in
     return: ("$ret0", "$ret1")).
 
-(* go: rpc.pb.go:9030:36 *)
+(* go: rpc.pb.go:7227:36 *)
 Definition ResponseOp_ResponseRange__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType ResponseOp_ResponseRange) "m") in
@@ -1815,7 +1881,7 @@ Definition ResponseOp_ResponseRange__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_
     return: ((let: "$a0" := (![go.SliceType go.byte] "dAtA") in
      (FuncResolve go.len [go.SliceType go.byte] #()) "$a0") -⟨go.int⟩ (![go.int] "i"), Convert go.untyped_nil go.error UntypedNil)).
 
-(* go: rpc.pb.go:9046:34 *)
+(* go: rpc.pb.go:7243:34 *)
 Definition ResponseOp_ResponsePut__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType ResponseOp_ResponsePut) "m") in
@@ -1828,7 +1894,7 @@ Definition ResponseOp_ResponsePut__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_g
     (MethodResolve (go.PointerType ResponseOp_ResponsePut) "MarshalToSizedBuffer"%go (![go.PointerType ResponseOp_ResponsePut] "m")) "$a0")) in
     return: ("$ret0", "$ret1")).
 
-(* go: rpc.pb.go:9051:34 *)
+(* go: rpc.pb.go:7248:34 *)
 Definition ResponseOp_ResponsePut__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType ResponseOp_ResponsePut) "m") in
@@ -1864,7 +1930,7 @@ Definition ResponseOp_ResponsePut__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_sy
     return: ((let: "$a0" := (![go.SliceType go.byte] "dAtA") in
      (FuncResolve go.len [go.SliceType go.byte] #()) "$a0") -⟨go.int⟩ (![go.int] "i"), Convert go.untyped_nil go.error UntypedNil)).
 
-(* go: rpc.pb.go:9067:42 *)
+(* go: rpc.pb.go:7264:42 *)
 Definition ResponseOp_ResponseDeleteRange__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType ResponseOp_ResponseDeleteRange) "m") in
@@ -1877,7 +1943,7 @@ Definition ResponseOp_ResponseDeleteRange__MarshalToⁱᵐᵖˡ {ext : ffi_synta
     (MethodResolve (go.PointerType ResponseOp_ResponseDeleteRange) "MarshalToSizedBuffer"%go (![go.PointerType ResponseOp_ResponseDeleteRange] "m")) "$a0")) in
     return: ("$ret0", "$ret1")).
 
-(* go: rpc.pb.go:9072:42 *)
+(* go: rpc.pb.go:7269:42 *)
 Definition ResponseOp_ResponseDeleteRange__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType ResponseOp_ResponseDeleteRange) "m") in
@@ -1913,7 +1979,7 @@ Definition ResponseOp_ResponseDeleteRange__MarshalToSizedBufferⁱᵐᵖˡ {ext 
     return: ((let: "$a0" := (![go.SliceType go.byte] "dAtA") in
      (FuncResolve go.len [go.SliceType go.byte] #()) "$a0") -⟨go.int⟩ (![go.int] "i"), Convert go.untyped_nil go.error UntypedNil)).
 
-(* go: rpc.pb.go:9088:34 *)
+(* go: rpc.pb.go:7285:34 *)
 Definition ResponseOp_ResponseTxn__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType ResponseOp_ResponseTxn) "m") in
@@ -1926,7 +1992,7 @@ Definition ResponseOp_ResponseTxn__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_g
     (MethodResolve (go.PointerType ResponseOp_ResponseTxn) "MarshalToSizedBuffer"%go (![go.PointerType ResponseOp_ResponseTxn] "m")) "$a0")) in
     return: ("$ret0", "$ret1")).
 
-(* go: rpc.pb.go:9093:34 *)
+(* go: rpc.pb.go:7290:34 *)
 Definition ResponseOp_ResponseTxn__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType ResponseOp_ResponseTxn) "m") in
@@ -1962,7 +2028,7 @@ Definition ResponseOp_ResponseTxn__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_sy
     return: ((let: "$a0" := (![go.SliceType go.byte] "dAtA") in
      (FuncResolve go.len [go.SliceType go.byte] #()) "$a0") -⟨go.int⟩ (![go.int] "i"), Convert go.untyped_nil go.error UntypedNil)).
 
-(* go: rpc.pb.go:9171:27 *)
+(* go: rpc.pb.go:7368:27 *)
 Definition Compare_Version__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType Compare_Version) "m") in
@@ -1975,7 +2041,7 @@ Definition Compare_Version__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : G
     (MethodResolve (go.PointerType Compare_Version) "MarshalToSizedBuffer"%go (![go.PointerType Compare_Version] "m")) "$a0")) in
     return: ("$ret0", "$ret1")).
 
-(* go: rpc.pb.go:9176:27 *)
+(* go: rpc.pb.go:7373:27 *)
 Definition Compare_Version__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType Compare_Version) "m") in
@@ -1995,7 +2061,7 @@ Definition Compare_Version__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_syntax} {
     return: ((let: "$a0" := (![go.SliceType go.byte] "dAtA") in
      (FuncResolve go.len [go.SliceType go.byte] #()) "$a0") -⟨go.int⟩ (![go.int] "i"), Convert go.untyped_nil go.error UntypedNil)).
 
-(* go: rpc.pb.go:9183:34 *)
+(* go: rpc.pb.go:7380:34 *)
 Definition Compare_CreateRevision__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType Compare_CreateRevision) "m") in
@@ -2008,7 +2074,7 @@ Definition Compare_CreateRevision__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_g
     (MethodResolve (go.PointerType Compare_CreateRevision) "MarshalToSizedBuffer"%go (![go.PointerType Compare_CreateRevision] "m")) "$a0")) in
     return: ("$ret0", "$ret1")).
 
-(* go: rpc.pb.go:9188:34 *)
+(* go: rpc.pb.go:7385:34 *)
 Definition Compare_CreateRevision__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType Compare_CreateRevision) "m") in
@@ -2028,7 +2094,7 @@ Definition Compare_CreateRevision__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_sy
     return: ((let: "$a0" := (![go.SliceType go.byte] "dAtA") in
      (FuncResolve go.len [go.SliceType go.byte] #()) "$a0") -⟨go.int⟩ (![go.int] "i"), Convert go.untyped_nil go.error UntypedNil)).
 
-(* go: rpc.pb.go:9195:31 *)
+(* go: rpc.pb.go:7392:31 *)
 Definition Compare_ModRevision__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType Compare_ModRevision) "m") in
@@ -2041,7 +2107,7 @@ Definition Compare_ModRevision__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx
     (MethodResolve (go.PointerType Compare_ModRevision) "MarshalToSizedBuffer"%go (![go.PointerType Compare_ModRevision] "m")) "$a0")) in
     return: ("$ret0", "$ret1")).
 
-(* go: rpc.pb.go:9200:31 *)
+(* go: rpc.pb.go:7397:31 *)
 Definition Compare_ModRevision__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType Compare_ModRevision) "m") in
@@ -2061,7 +2127,7 @@ Definition Compare_ModRevision__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_synta
     return: ((let: "$a0" := (![go.SliceType go.byte] "dAtA") in
      (FuncResolve go.len [go.SliceType go.byte] #()) "$a0") -⟨go.int⟩ (![go.int] "i"), Convert go.untyped_nil go.error UntypedNil)).
 
-(* go: rpc.pb.go:9207:25 *)
+(* go: rpc.pb.go:7404:25 *)
 Definition Compare_Value__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType Compare_Value) "m") in
@@ -2074,7 +2140,7 @@ Definition Compare_Value__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoG
     (MethodResolve (go.PointerType Compare_Value) "MarshalToSizedBuffer"%go (![go.PointerType Compare_Value] "m")) "$a0")) in
     return: ("$ret0", "$ret1")).
 
-(* go: rpc.pb.go:9212:25 *)
+(* go: rpc.pb.go:7409:25 *)
 Definition Compare_Value__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType Compare_Value) "m") in
@@ -2104,7 +2170,7 @@ Definition Compare_Value__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_syntax} {go
     return: ((let: "$a0" := (![go.SliceType go.byte] "dAtA") in
      (FuncResolve go.len [go.SliceType go.byte] #()) "$a0") -⟨go.int⟩ (![go.int] "i"), Convert go.untyped_nil go.error UntypedNil)).
 
-(* go: rpc.pb.go:9223:25 *)
+(* go: rpc.pb.go:7420:25 *)
 Definition Compare_Lease__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType Compare_Lease) "m") in
@@ -2117,7 +2183,7 @@ Definition Compare_Lease__MarshalToⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoG
     (MethodResolve (go.PointerType Compare_Lease) "MarshalToSizedBuffer"%go (![go.PointerType Compare_Lease] "m")) "$a0")) in
     return: ("$ret0", "$ret1")).
 
-(* go: rpc.pb.go:9228:25 *)
+(* go: rpc.pb.go:7425:25 *)
 Definition Compare_Lease__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "dAtA",
     exception_do (let: "m" := (GoAlloc (go.PointerType Compare_Lease) "m") in
@@ -2137,7 +2203,7 @@ Definition Compare_Lease__MarshalToSizedBufferⁱᵐᵖˡ {ext : ffi_syntax} {go
     return: ((let: "$a0" := (![go.SliceType go.byte] "dAtA") in
      (FuncResolve go.len [go.SliceType go.byte] #()) "$a0") -⟨go.int⟩ (![go.int] "i"), Convert go.untyped_nil go.error UntypedNil)).
 
-(* go: rpc.pb.go:13233:34 *)
+(* go: rpc.pb.go:11520:34 *)
 Definition RequestOp_RequestRange__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" <>,
     exception_do (let: "n" := (GoAlloc go.int (GoZeroVal go.int #())) in
@@ -2157,7 +2223,7 @@ Definition RequestOp_RequestRange__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx :
     else do:  #());;;
     return: (![go.int] "n")).
 
-(* go: rpc.pb.go:13245:32 *)
+(* go: rpc.pb.go:11532:32 *)
 Definition RequestOp_RequestPut__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" <>,
     exception_do (let: "n" := (GoAlloc go.int (GoZeroVal go.int #())) in
@@ -2177,7 +2243,7 @@ Definition RequestOp_RequestPut__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : G
     else do:  #());;;
     return: (![go.int] "n")).
 
-(* go: rpc.pb.go:13257:40 *)
+(* go: rpc.pb.go:11544:40 *)
 Definition RequestOp_RequestDeleteRange__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" <>,
     exception_do (let: "n" := (GoAlloc go.int (GoZeroVal go.int #())) in
@@ -2197,7 +2263,7 @@ Definition RequestOp_RequestDeleteRange__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_
     else do:  #());;;
     return: (![go.int] "n")).
 
-(* go: rpc.pb.go:13269:32 *)
+(* go: rpc.pb.go:11556:32 *)
 Definition RequestOp_RequestTxn__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" <>,
     exception_do (let: "n" := (GoAlloc go.int (GoZeroVal go.int #())) in
@@ -2217,7 +2283,7 @@ Definition RequestOp_RequestTxn__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : G
     else do:  #());;;
     return: (![go.int] "n")).
 
-(* go: rpc.pb.go:13296:36 *)
+(* go: rpc.pb.go:11583:36 *)
 Definition ResponseOp_ResponseRange__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" <>,
     exception_do (let: "n" := (GoAlloc go.int (GoZeroVal go.int #())) in
@@ -2237,7 +2303,7 @@ Definition ResponseOp_ResponseRange__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx
     else do:  #());;;
     return: (![go.int] "n")).
 
-(* go: rpc.pb.go:13308:34 *)
+(* go: rpc.pb.go:11595:34 *)
 Definition ResponseOp_ResponsePut__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" <>,
     exception_do (let: "n" := (GoAlloc go.int (GoZeroVal go.int #())) in
@@ -2257,7 +2323,7 @@ Definition ResponseOp_ResponsePut__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx :
     else do:  #());;;
     return: (![go.int] "n")).
 
-(* go: rpc.pb.go:13320:42 *)
+(* go: rpc.pb.go:11607:42 *)
 Definition ResponseOp_ResponseDeleteRange__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" <>,
     exception_do (let: "n" := (GoAlloc go.int (GoZeroVal go.int #())) in
@@ -2277,7 +2343,7 @@ Definition ResponseOp_ResponseDeleteRange__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {g
     else do:  #());;;
     return: (![go.int] "n")).
 
-(* go: rpc.pb.go:13332:34 *)
+(* go: rpc.pb.go:11619:34 *)
 Definition ResponseOp_ResponseTxn__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" <>,
     exception_do (let: "n" := (GoAlloc go.int (GoZeroVal go.int #())) in
@@ -2297,7 +2363,7 @@ Definition ResponseOp_ResponseTxn__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx :
     else do:  #());;;
     return: (![go.int] "n")).
 
-(* go: rpc.pb.go:13373:27 *)
+(* go: rpc.pb.go:11660:27 *)
 Definition Compare_Version__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" <>,
     exception_do (let: "n" := (GoAlloc go.int (GoZeroVal go.int #())) in
@@ -2312,7 +2378,7 @@ Definition Compare_Version__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlob
     (FuncResolve sovRpc [] #()) "$a0"))));;;
     return: (![go.int] "n")).
 
-(* go: rpc.pb.go:13382:34 *)
+(* go: rpc.pb.go:11669:34 *)
 Definition Compare_CreateRevision__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" <>,
     exception_do (let: "n" := (GoAlloc go.int (GoZeroVal go.int #())) in
@@ -2327,7 +2393,7 @@ Definition Compare_CreateRevision__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx :
     (FuncResolve sovRpc [] #()) "$a0"))));;;
     return: (![go.int] "n")).
 
-(* go: rpc.pb.go:13391:31 *)
+(* go: rpc.pb.go:11678:31 *)
 Definition Compare_ModRevision__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" <>,
     exception_do (let: "n" := (GoAlloc go.int (GoZeroVal go.int #())) in
@@ -2342,7 +2408,7 @@ Definition Compare_ModRevision__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : Go
     (FuncResolve sovRpc [] #()) "$a0"))));;;
     return: (![go.int] "n")).
 
-(* go: rpc.pb.go:13400:25 *)
+(* go: rpc.pb.go:11687:25 *)
 Definition Compare_Value__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" <>,
     exception_do (let: "n" := (GoAlloc go.int (GoZeroVal go.int #())) in
@@ -2363,7 +2429,7 @@ Definition Compare_Value__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobal
     else do:  #());;;
     return: (![go.int] "n")).
 
-(* go: rpc.pb.go:13412:25 *)
+(* go: rpc.pb.go:11699:25 *)
 Definition Compare_Lease__Sizeⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" <>,
     exception_do (let: "n" := (GoAlloc go.int (GoZeroVal go.int #())) in
@@ -2508,32 +2574,16 @@ Definition initialize' {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
       do:  (DowngradeRequest_DowngradeAction_name'init #());;;
       do:  (DowngradeRequest_DowngradeAction_value'init #());;;
       do:  (fileDescriptor_77a6da22d6a3feb1'init #());;;
-      do:  (_KV_serviceDesc'init #());;;
-      do:  (_Watch_serviceDesc'init #());;;
-      do:  (_Lease_serviceDesc'init #());;;
-      do:  (_Cluster_serviceDesc'init #());;;
-      do:  (_Maintenance_serviceDesc'init #());;;
-      do:  (_Auth_serviceDesc'init #());;;
       do:  (ErrInvalidLengthRpc'init #());;;
       do:  (ErrIntOverflowRpc'init #());;;
-      do:  (ErrUnexpectedEndOfGroupRpc'init #()))
+      do:  (ErrUnexpectedEndOfGroupRpc'init #());;;
+      do:  (KV_ServiceDesc'init #());;;
+      do:  (Watch_ServiceDesc'init #());;;
+      do:  (Lease_ServiceDesc'init #());;;
+      do:  (Cluster_ServiceDesc'init #());;;
+      do:  (Maintenance_ServiceDesc'init #());;;
+      do:  (Auth_ServiceDesc'init #()))
       ).
-
-Module Request.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End Request.
-
-Class Request_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] Request_type_repr  :: go.TypeReprUnderlying Requestⁱᵐᵖˡ Request.t;
-  #[global] Request_underlying :: (Request) <u (Requestⁱᵐᵖˡ);
-  #[global] Requestⁱᵐᵖˡ_underlying :: (Requestⁱᵐᵖˡ) ↓u (Requestⁱᵐᵖˡ);
-}.
 
 Module Metadata.
 Section def.
@@ -2611,7 +2661,6 @@ Record t :=
 mk {
   Header' : loc;
   ID' : w64;
-  V2' : loc;
   Range' : loc;
   Put' : loc;
   DeleteRange' : loc;
@@ -2641,6 +2690,7 @@ mk {
   ClusterVersionSet' : loc;
   ClusterMemberAttrSet' : loc;
   DowngradeInfoSet' : loc;
+  DowngradeVersionTest' : loc;
   XXX_NoUnkeyedLiteral' : unit;
   XXX_unrecognized' : slice.t;
   XXX_sizecache' : w32;
@@ -2655,7 +2705,6 @@ End InternalRaftRequest.
 Definition InternalRaftRequest'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
   (go.FieldDecl "Header"%go (go.PointerType RequestHeader));
   (go.FieldDecl "ID"%go go.uint64);
-  (go.FieldDecl "V2"%go (go.PointerType Request));
   (go.FieldDecl "Range"%go (go.PointerType RangeRequest));
   (go.FieldDecl "Put"%go (go.PointerType PutRequest));
   (go.FieldDecl "DeleteRange"%go (go.PointerType DeleteRangeRequest));
@@ -2685,6 +2734,7 @@ Definition InternalRaftRequest'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlob
   (go.FieldDecl "ClusterVersionSet"%go (go.PointerType membershippb.ClusterVersionSetRequest));
   (go.FieldDecl "ClusterMemberAttrSet"%go (go.PointerType membershippb.ClusterMemberAttrSetRequest));
   (go.FieldDecl "DowngradeInfoSet"%go (go.PointerType membershippb.DowngradeInfoSetRequest));
+  (go.FieldDecl "DowngradeVersionTest"%go (go.PointerType DowngradeVersionTestRequest));
   (go.FieldDecl "XXX_NoUnkeyedLiteral"%go (go.StructType [
 
   ]));
@@ -2705,8 +2755,6 @@ Class InternalRaftRequest_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!
   #[global] InternalRaftRequest_set_Header (x : InternalRaftRequest.t) y :: ⟦StructFieldSet (InternalRaftRequestⁱᵐᵖˡ) "Header", (#x, #y)⟧ ⤳[under] #(x <|InternalRaftRequest.Header' := y|>);
   #[global] InternalRaftRequest_get_ID (x : InternalRaftRequest.t) :: ⟦StructFieldGet (InternalRaftRequestⁱᵐᵖˡ) "ID", #x⟧ ⤳[under] #x.(InternalRaftRequest.ID');
   #[global] InternalRaftRequest_set_ID (x : InternalRaftRequest.t) y :: ⟦StructFieldSet (InternalRaftRequestⁱᵐᵖˡ) "ID", (#x, #y)⟧ ⤳[under] #(x <|InternalRaftRequest.ID' := y|>);
-  #[global] InternalRaftRequest_get_V2 (x : InternalRaftRequest.t) :: ⟦StructFieldGet (InternalRaftRequestⁱᵐᵖˡ) "V2", #x⟧ ⤳[under] #x.(InternalRaftRequest.V2');
-  #[global] InternalRaftRequest_set_V2 (x : InternalRaftRequest.t) y :: ⟦StructFieldSet (InternalRaftRequestⁱᵐᵖˡ) "V2", (#x, #y)⟧ ⤳[under] #(x <|InternalRaftRequest.V2' := y|>);
   #[global] InternalRaftRequest_get_Range (x : InternalRaftRequest.t) :: ⟦StructFieldGet (InternalRaftRequestⁱᵐᵖˡ) "Range", #x⟧ ⤳[under] #x.(InternalRaftRequest.Range');
   #[global] InternalRaftRequest_set_Range (x : InternalRaftRequest.t) y :: ⟦StructFieldSet (InternalRaftRequestⁱᵐᵖˡ) "Range", (#x, #y)⟧ ⤳[under] #(x <|InternalRaftRequest.Range' := y|>);
   #[global] InternalRaftRequest_get_Put (x : InternalRaftRequest.t) :: ⟦StructFieldGet (InternalRaftRequestⁱᵐᵖˡ) "Put", #x⟧ ⤳[under] #x.(InternalRaftRequest.Put');
@@ -2765,6 +2813,8 @@ Class InternalRaftRequest_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!
   #[global] InternalRaftRequest_set_ClusterMemberAttrSet (x : InternalRaftRequest.t) y :: ⟦StructFieldSet (InternalRaftRequestⁱᵐᵖˡ) "ClusterMemberAttrSet", (#x, #y)⟧ ⤳[under] #(x <|InternalRaftRequest.ClusterMemberAttrSet' := y|>);
   #[global] InternalRaftRequest_get_DowngradeInfoSet (x : InternalRaftRequest.t) :: ⟦StructFieldGet (InternalRaftRequestⁱᵐᵖˡ) "DowngradeInfoSet", #x⟧ ⤳[under] #x.(InternalRaftRequest.DowngradeInfoSet');
   #[global] InternalRaftRequest_set_DowngradeInfoSet (x : InternalRaftRequest.t) y :: ⟦StructFieldSet (InternalRaftRequestⁱᵐᵖˡ) "DowngradeInfoSet", (#x, #y)⟧ ⤳[under] #(x <|InternalRaftRequest.DowngradeInfoSet' := y|>);
+  #[global] InternalRaftRequest_get_DowngradeVersionTest (x : InternalRaftRequest.t) :: ⟦StructFieldGet (InternalRaftRequestⁱᵐᵖˡ) "DowngradeVersionTest", #x⟧ ⤳[under] #x.(InternalRaftRequest.DowngradeVersionTest');
+  #[global] InternalRaftRequest_set_DowngradeVersionTest (x : InternalRaftRequest.t) y :: ⟦StructFieldSet (InternalRaftRequestⁱᵐᵖˡ) "DowngradeVersionTest", (#x, #y)⟧ ⤳[under] #(x <|InternalRaftRequest.DowngradeVersionTest' := y|>);
   #[global] InternalRaftRequest_get_XXX_NoUnkeyedLiteral (x : InternalRaftRequest.t) :: ⟦StructFieldGet (InternalRaftRequestⁱᵐᵖˡ) "XXX_NoUnkeyedLiteral", #x⟧ ⤳[under] #x.(InternalRaftRequest.XXX_NoUnkeyedLiteral');
   #[global] InternalRaftRequest_set_XXX_NoUnkeyedLiteral (x : InternalRaftRequest.t) y :: ⟦StructFieldSet (InternalRaftRequestⁱᵐᵖˡ) "XXX_NoUnkeyedLiteral", (#x, #y)⟧ ⤳[under] #(x <|InternalRaftRequest.XXX_NoUnkeyedLiteral' := y|>);
   #[global] InternalRaftRequest_get_XXX_unrecognized (x : InternalRaftRequest.t) :: ⟦StructFieldGet (InternalRaftRequestⁱᵐᵖˡ) "XXX_unrecognized", #x⟧ ⤳[under] #x.(InternalRaftRequest.XXX_unrecognized');
@@ -5017,6 +5067,22 @@ Class DowngradeResponse_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!Go
   #[global] DowngradeResponseⁱᵐᵖˡ_underlying :: (DowngradeResponseⁱᵐᵖˡ) ↓u (DowngradeResponseⁱᵐᵖˡ);
 }.
 
+Module DowngradeVersionTestRequest.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End DowngradeVersionTestRequest.
+
+Class DowngradeVersionTestRequest_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] DowngradeVersionTestRequest_type_repr  :: go.TypeReprUnderlying DowngradeVersionTestRequestⁱᵐᵖˡ DowngradeVersionTestRequest.t;
+  #[global] DowngradeVersionTestRequest_underlying :: (DowngradeVersionTestRequest) <u (DowngradeVersionTestRequestⁱᵐᵖˡ);
+  #[global] DowngradeVersionTestRequestⁱᵐᵖˡ_underlying :: (DowngradeVersionTestRequestⁱᵐᵖˡ) ↓u (DowngradeVersionTestRequestⁱᵐᵖˡ);
+}.
+
 Module StatusRequest.
 Section def.
 Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
@@ -5047,6 +5113,22 @@ Class StatusResponse_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLoc
   #[global] StatusResponse_type_repr  :: go.TypeReprUnderlying StatusResponseⁱᵐᵖˡ StatusResponse.t;
   #[global] StatusResponse_underlying :: (StatusResponse) <u (StatusResponseⁱᵐᵖˡ);
   #[global] StatusResponseⁱᵐᵖˡ_underlying :: (StatusResponseⁱᵐᵖˡ) ↓u (StatusResponseⁱᵐᵖˡ);
+}.
+
+Module DowngradeInfo.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End DowngradeInfo.
+
+Class DowngradeInfo_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] DowngradeInfo_type_repr  :: go.TypeReprUnderlying DowngradeInfoⁱᵐᵖˡ DowngradeInfo.t;
+  #[global] DowngradeInfo_underlying :: (DowngradeInfo) <u (DowngradeInfoⁱᵐᵖˡ);
+  #[global] DowngradeInfoⁱᵐᵖˡ_underlying :: (DowngradeInfoⁱᵐᵖˡ) ↓u (DowngradeInfoⁱᵐᵖˡ);
 }.
 
 Module AuthEnableRequest.
@@ -5657,6 +5739,22 @@ Class UnimplementedKVServer_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `
   #[global] UnimplementedKVServerⁱᵐᵖˡ_underlying :: (UnimplementedKVServerⁱᵐᵖˡ) ↓u (UnimplementedKVServerⁱᵐᵖˡ);
 }.
 
+Module UnsafeKVServer.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End UnsafeKVServer.
+
+Class UnsafeKVServer_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] UnsafeKVServer_type_repr  :: go.TypeReprUnderlying UnsafeKVServerⁱᵐᵖˡ UnsafeKVServer.t;
+  #[global] UnsafeKVServer_underlying :: (UnsafeKVServer) <u (UnsafeKVServerⁱᵐᵖˡ);
+  #[global] UnsafeKVServerⁱᵐᵖˡ_underlying :: (UnsafeKVServerⁱᵐᵖˡ) ↓u (UnsafeKVServerⁱᵐᵖˡ);
+}.
+
 Module WatchClient.
 Section def.
 Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
@@ -5687,38 +5785,6 @@ Class watchClient_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalC
   #[global] watchClient_type_repr  :: go.TypeReprUnderlying watchClientⁱᵐᵖˡ watchClient.t;
   #[global] watchClient_underlying :: (watchClient) <u (watchClientⁱᵐᵖˡ);
   #[global] watchClientⁱᵐᵖˡ_underlying :: (watchClientⁱᵐᵖˡ) ↓u (watchClientⁱᵐᵖˡ);
-}.
-
-Module Watch_WatchClient.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End Watch_WatchClient.
-
-Class Watch_WatchClient_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] Watch_WatchClient_type_repr  :: go.TypeReprUnderlying Watch_WatchClientⁱᵐᵖˡ Watch_WatchClient.t;
-  #[global] Watch_WatchClient_underlying :: (Watch_WatchClient) <u (Watch_WatchClientⁱᵐᵖˡ);
-  #[global] Watch_WatchClientⁱᵐᵖˡ_underlying :: (Watch_WatchClientⁱᵐᵖˡ) ↓u (Watch_WatchClientⁱᵐᵖˡ);
-}.
-
-Module watchWatchClient.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End watchWatchClient.
-
-Class watchWatchClient_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] watchWatchClient_type_repr  :: go.TypeReprUnderlying watchWatchClientⁱᵐᵖˡ watchWatchClient.t;
-  #[global] watchWatchClient_underlying :: (watchWatchClient) <u (watchWatchClientⁱᵐᵖˡ);
-  #[global] watchWatchClientⁱᵐᵖˡ_underlying :: (watchWatchClientⁱᵐᵖˡ) ↓u (watchWatchClientⁱᵐᵖˡ);
 }.
 
 Module WatchServer.
@@ -5753,36 +5819,20 @@ Class UnimplementedWatchServer_Assumptions {ext : ffi_syntax} `{!GoGlobalContext
   #[global] UnimplementedWatchServerⁱᵐᵖˡ_underlying :: (UnimplementedWatchServerⁱᵐᵖˡ) ↓u (UnimplementedWatchServerⁱᵐᵖˡ);
 }.
 
-Module Watch_WatchServer.
+Module UnsafeWatchServer.
 Section def.
 Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
 Axiom t : Type.
 Axiom zero_val : ZeroVal t.
 #[global] Existing Instance zero_val.
 End def.
-End Watch_WatchServer.
+End UnsafeWatchServer.
 
-Class Watch_WatchServer_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+Class UnsafeWatchServer_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
-  #[global] Watch_WatchServer_type_repr  :: go.TypeReprUnderlying Watch_WatchServerⁱᵐᵖˡ Watch_WatchServer.t;
-  #[global] Watch_WatchServer_underlying :: (Watch_WatchServer) <u (Watch_WatchServerⁱᵐᵖˡ);
-  #[global] Watch_WatchServerⁱᵐᵖˡ_underlying :: (Watch_WatchServerⁱᵐᵖˡ) ↓u (Watch_WatchServerⁱᵐᵖˡ);
-}.
-
-Module watchWatchServer.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End watchWatchServer.
-
-Class watchWatchServer_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] watchWatchServer_type_repr  :: go.TypeReprUnderlying watchWatchServerⁱᵐᵖˡ watchWatchServer.t;
-  #[global] watchWatchServer_underlying :: (watchWatchServer) <u (watchWatchServerⁱᵐᵖˡ);
-  #[global] watchWatchServerⁱᵐᵖˡ_underlying :: (watchWatchServerⁱᵐᵖˡ) ↓u (watchWatchServerⁱᵐᵖˡ);
+  #[global] UnsafeWatchServer_type_repr  :: go.TypeReprUnderlying UnsafeWatchServerⁱᵐᵖˡ UnsafeWatchServer.t;
+  #[global] UnsafeWatchServer_underlying :: (UnsafeWatchServer) <u (UnsafeWatchServerⁱᵐᵖˡ);
+  #[global] UnsafeWatchServerⁱᵐᵖˡ_underlying :: (UnsafeWatchServerⁱᵐᵖˡ) ↓u (UnsafeWatchServerⁱᵐᵖˡ);
 }.
 
 Module LeaseClient.
@@ -5817,38 +5867,6 @@ Class leaseClient_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalC
   #[global] leaseClientⁱᵐᵖˡ_underlying :: (leaseClientⁱᵐᵖˡ) ↓u (leaseClientⁱᵐᵖˡ);
 }.
 
-Module Lease_LeaseKeepAliveClient.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End Lease_LeaseKeepAliveClient.
-
-Class Lease_LeaseKeepAliveClient_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] Lease_LeaseKeepAliveClient_type_repr  :: go.TypeReprUnderlying Lease_LeaseKeepAliveClientⁱᵐᵖˡ Lease_LeaseKeepAliveClient.t;
-  #[global] Lease_LeaseKeepAliveClient_underlying :: (Lease_LeaseKeepAliveClient) <u (Lease_LeaseKeepAliveClientⁱᵐᵖˡ);
-  #[global] Lease_LeaseKeepAliveClientⁱᵐᵖˡ_underlying :: (Lease_LeaseKeepAliveClientⁱᵐᵖˡ) ↓u (Lease_LeaseKeepAliveClientⁱᵐᵖˡ);
-}.
-
-Module leaseLeaseKeepAliveClient.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End leaseLeaseKeepAliveClient.
-
-Class leaseLeaseKeepAliveClient_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] leaseLeaseKeepAliveClient_type_repr  :: go.TypeReprUnderlying leaseLeaseKeepAliveClientⁱᵐᵖˡ leaseLeaseKeepAliveClient.t;
-  #[global] leaseLeaseKeepAliveClient_underlying :: (leaseLeaseKeepAliveClient) <u (leaseLeaseKeepAliveClientⁱᵐᵖˡ);
-  #[global] leaseLeaseKeepAliveClientⁱᵐᵖˡ_underlying :: (leaseLeaseKeepAliveClientⁱᵐᵖˡ) ↓u (leaseLeaseKeepAliveClientⁱᵐᵖˡ);
-}.
-
 Module LeaseServer.
 Section def.
 Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
@@ -5881,36 +5899,20 @@ Class UnimplementedLeaseServer_Assumptions {ext : ffi_syntax} `{!GoGlobalContext
   #[global] UnimplementedLeaseServerⁱᵐᵖˡ_underlying :: (UnimplementedLeaseServerⁱᵐᵖˡ) ↓u (UnimplementedLeaseServerⁱᵐᵖˡ);
 }.
 
-Module Lease_LeaseKeepAliveServer.
+Module UnsafeLeaseServer.
 Section def.
 Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
 Axiom t : Type.
 Axiom zero_val : ZeroVal t.
 #[global] Existing Instance zero_val.
 End def.
-End Lease_LeaseKeepAliveServer.
+End UnsafeLeaseServer.
 
-Class Lease_LeaseKeepAliveServer_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+Class UnsafeLeaseServer_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
-  #[global] Lease_LeaseKeepAliveServer_type_repr  :: go.TypeReprUnderlying Lease_LeaseKeepAliveServerⁱᵐᵖˡ Lease_LeaseKeepAliveServer.t;
-  #[global] Lease_LeaseKeepAliveServer_underlying :: (Lease_LeaseKeepAliveServer) <u (Lease_LeaseKeepAliveServerⁱᵐᵖˡ);
-  #[global] Lease_LeaseKeepAliveServerⁱᵐᵖˡ_underlying :: (Lease_LeaseKeepAliveServerⁱᵐᵖˡ) ↓u (Lease_LeaseKeepAliveServerⁱᵐᵖˡ);
-}.
-
-Module leaseLeaseKeepAliveServer.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End leaseLeaseKeepAliveServer.
-
-Class leaseLeaseKeepAliveServer_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] leaseLeaseKeepAliveServer_type_repr  :: go.TypeReprUnderlying leaseLeaseKeepAliveServerⁱᵐᵖˡ leaseLeaseKeepAliveServer.t;
-  #[global] leaseLeaseKeepAliveServer_underlying :: (leaseLeaseKeepAliveServer) <u (leaseLeaseKeepAliveServerⁱᵐᵖˡ);
-  #[global] leaseLeaseKeepAliveServerⁱᵐᵖˡ_underlying :: (leaseLeaseKeepAliveServerⁱᵐᵖˡ) ↓u (leaseLeaseKeepAliveServerⁱᵐᵖˡ);
+  #[global] UnsafeLeaseServer_type_repr  :: go.TypeReprUnderlying UnsafeLeaseServerⁱᵐᵖˡ UnsafeLeaseServer.t;
+  #[global] UnsafeLeaseServer_underlying :: (UnsafeLeaseServer) <u (UnsafeLeaseServerⁱᵐᵖˡ);
+  #[global] UnsafeLeaseServerⁱᵐᵖˡ_underlying :: (UnsafeLeaseServerⁱᵐᵖˡ) ↓u (UnsafeLeaseServerⁱᵐᵖˡ);
 }.
 
 Module ClusterClient.
@@ -5977,6 +5979,22 @@ Class UnimplementedClusterServer_Assumptions {ext : ffi_syntax} `{!GoGlobalConte
   #[global] UnimplementedClusterServerⁱᵐᵖˡ_underlying :: (UnimplementedClusterServerⁱᵐᵖˡ) ↓u (UnimplementedClusterServerⁱᵐᵖˡ);
 }.
 
+Module UnsafeClusterServer.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End UnsafeClusterServer.
+
+Class UnsafeClusterServer_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] UnsafeClusterServer_type_repr  :: go.TypeReprUnderlying UnsafeClusterServerⁱᵐᵖˡ UnsafeClusterServer.t;
+  #[global] UnsafeClusterServer_underlying :: (UnsafeClusterServer) <u (UnsafeClusterServerⁱᵐᵖˡ);
+  #[global] UnsafeClusterServerⁱᵐᵖˡ_underlying :: (UnsafeClusterServerⁱᵐᵖˡ) ↓u (UnsafeClusterServerⁱᵐᵖˡ);
+}.
+
 Module MaintenanceClient.
 Section def.
 Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
@@ -6007,38 +6025,6 @@ Class maintenanceClient_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!Go
   #[global] maintenanceClient_type_repr  :: go.TypeReprUnderlying maintenanceClientⁱᵐᵖˡ maintenanceClient.t;
   #[global] maintenanceClient_underlying :: (maintenanceClient) <u (maintenanceClientⁱᵐᵖˡ);
   #[global] maintenanceClientⁱᵐᵖˡ_underlying :: (maintenanceClientⁱᵐᵖˡ) ↓u (maintenanceClientⁱᵐᵖˡ);
-}.
-
-Module Maintenance_SnapshotClient.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End Maintenance_SnapshotClient.
-
-Class Maintenance_SnapshotClient_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] Maintenance_SnapshotClient_type_repr  :: go.TypeReprUnderlying Maintenance_SnapshotClientⁱᵐᵖˡ Maintenance_SnapshotClient.t;
-  #[global] Maintenance_SnapshotClient_underlying :: (Maintenance_SnapshotClient) <u (Maintenance_SnapshotClientⁱᵐᵖˡ);
-  #[global] Maintenance_SnapshotClientⁱᵐᵖˡ_underlying :: (Maintenance_SnapshotClientⁱᵐᵖˡ) ↓u (Maintenance_SnapshotClientⁱᵐᵖˡ);
-}.
-
-Module maintenanceSnapshotClient.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End maintenanceSnapshotClient.
-
-Class maintenanceSnapshotClient_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] maintenanceSnapshotClient_type_repr  :: go.TypeReprUnderlying maintenanceSnapshotClientⁱᵐᵖˡ maintenanceSnapshotClient.t;
-  #[global] maintenanceSnapshotClient_underlying :: (maintenanceSnapshotClient) <u (maintenanceSnapshotClientⁱᵐᵖˡ);
-  #[global] maintenanceSnapshotClientⁱᵐᵖˡ_underlying :: (maintenanceSnapshotClientⁱᵐᵖˡ) ↓u (maintenanceSnapshotClientⁱᵐᵖˡ);
 }.
 
 Module MaintenanceServer.
@@ -6073,36 +6059,20 @@ Class UnimplementedMaintenanceServer_Assumptions {ext : ffi_syntax} `{!GoGlobalC
   #[global] UnimplementedMaintenanceServerⁱᵐᵖˡ_underlying :: (UnimplementedMaintenanceServerⁱᵐᵖˡ) ↓u (UnimplementedMaintenanceServerⁱᵐᵖˡ);
 }.
 
-Module Maintenance_SnapshotServer.
+Module UnsafeMaintenanceServer.
 Section def.
 Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
 Axiom t : Type.
 Axiom zero_val : ZeroVal t.
 #[global] Existing Instance zero_val.
 End def.
-End Maintenance_SnapshotServer.
+End UnsafeMaintenanceServer.
 
-Class Maintenance_SnapshotServer_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+Class UnsafeMaintenanceServer_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
-  #[global] Maintenance_SnapshotServer_type_repr  :: go.TypeReprUnderlying Maintenance_SnapshotServerⁱᵐᵖˡ Maintenance_SnapshotServer.t;
-  #[global] Maintenance_SnapshotServer_underlying :: (Maintenance_SnapshotServer) <u (Maintenance_SnapshotServerⁱᵐᵖˡ);
-  #[global] Maintenance_SnapshotServerⁱᵐᵖˡ_underlying :: (Maintenance_SnapshotServerⁱᵐᵖˡ) ↓u (Maintenance_SnapshotServerⁱᵐᵖˡ);
-}.
-
-Module maintenanceSnapshotServer.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End maintenanceSnapshotServer.
-
-Class maintenanceSnapshotServer_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] maintenanceSnapshotServer_type_repr  :: go.TypeReprUnderlying maintenanceSnapshotServerⁱᵐᵖˡ maintenanceSnapshotServer.t;
-  #[global] maintenanceSnapshotServer_underlying :: (maintenanceSnapshotServer) <u (maintenanceSnapshotServerⁱᵐᵖˡ);
-  #[global] maintenanceSnapshotServerⁱᵐᵖˡ_underlying :: (maintenanceSnapshotServerⁱᵐᵖˡ) ↓u (maintenanceSnapshotServerⁱᵐᵖˡ);
+  #[global] UnsafeMaintenanceServer_type_repr  :: go.TypeReprUnderlying UnsafeMaintenanceServerⁱᵐᵖˡ UnsafeMaintenanceServer.t;
+  #[global] UnsafeMaintenanceServer_underlying :: (UnsafeMaintenanceServer) <u (UnsafeMaintenanceServerⁱᵐᵖˡ);
+  #[global] UnsafeMaintenanceServerⁱᵐᵖˡ_underlying :: (UnsafeMaintenanceServerⁱᵐᵖˡ) ↓u (UnsafeMaintenanceServerⁱᵐᵖˡ);
 }.
 
 Module AuthClient.
@@ -6169,9 +6139,24 @@ Class UnimplementedAuthServer_Assumptions {ext : ffi_syntax} `{!GoGlobalContext}
   #[global] UnimplementedAuthServerⁱᵐᵖˡ_underlying :: (UnimplementedAuthServerⁱᵐᵖˡ) ↓u (UnimplementedAuthServerⁱᵐᵖˡ);
 }.
 
+Module UnsafeAuthServer.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End UnsafeAuthServer.
+
+Class UnsafeAuthServer_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] UnsafeAuthServer_type_repr  :: go.TypeReprUnderlying UnsafeAuthServerⁱᵐᵖˡ UnsafeAuthServer.t;
+  #[global] UnsafeAuthServer_underlying :: (UnsafeAuthServer) <u (UnsafeAuthServerⁱᵐᵖˡ);
+  #[global] UnsafeAuthServerⁱᵐᵖˡ_underlying :: (UnsafeAuthServerⁱᵐᵖˡ) ↓u (UnsafeAuthServerⁱᵐᵖˡ);
+}.
+
 Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
-  #[global] Request_instance :: Request_Assumptions;
   #[global] Metadata_instance :: Metadata_Assumptions;
   #[global] RequestHeader_instance :: RequestHeader_Assumptions;
   #[global] InternalRaftRequest_instance :: InternalRaftRequest_Assumptions;
@@ -6269,8 +6254,10 @@ Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!G
   #[global] AlarmResponse_instance :: AlarmResponse_Assumptions;
   #[global] DowngradeRequest_instance :: DowngradeRequest_Assumptions;
   #[global] DowngradeResponse_instance :: DowngradeResponse_Assumptions;
+  #[global] DowngradeVersionTestRequest_instance :: DowngradeVersionTestRequest_Assumptions;
   #[global] StatusRequest_instance :: StatusRequest_Assumptions;
   #[global] StatusResponse_instance :: StatusResponse_Assumptions;
+  #[global] DowngradeInfo_instance :: DowngradeInfo_Assumptions;
   #[global] AuthEnableRequest_instance :: AuthEnableRequest_Assumptions;
   #[global] AuthDisableRequest_instance :: AuthDisableRequest_Assumptions;
   #[global] AuthStatusRequest_instance :: AuthStatusRequest_Assumptions;
@@ -6309,38 +6296,32 @@ Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!G
   #[global] kVClient_instance :: kVClient_Assumptions;
   #[global] KVServer_instance :: KVServer_Assumptions;
   #[global] UnimplementedKVServer_instance :: UnimplementedKVServer_Assumptions;
+  #[global] UnsafeKVServer_instance :: UnsafeKVServer_Assumptions;
   #[global] WatchClient_instance :: WatchClient_Assumptions;
   #[global] watchClient_instance :: watchClient_Assumptions;
-  #[global] Watch_WatchClient_instance :: Watch_WatchClient_Assumptions;
-  #[global] watchWatchClient_instance :: watchWatchClient_Assumptions;
   #[global] WatchServer_instance :: WatchServer_Assumptions;
   #[global] UnimplementedWatchServer_instance :: UnimplementedWatchServer_Assumptions;
-  #[global] Watch_WatchServer_instance :: Watch_WatchServer_Assumptions;
-  #[global] watchWatchServer_instance :: watchWatchServer_Assumptions;
+  #[global] UnsafeWatchServer_instance :: UnsafeWatchServer_Assumptions;
   #[global] LeaseClient_instance :: LeaseClient_Assumptions;
   #[global] leaseClient_instance :: leaseClient_Assumptions;
-  #[global] Lease_LeaseKeepAliveClient_instance :: Lease_LeaseKeepAliveClient_Assumptions;
-  #[global] leaseLeaseKeepAliveClient_instance :: leaseLeaseKeepAliveClient_Assumptions;
   #[global] LeaseServer_instance :: LeaseServer_Assumptions;
   #[global] UnimplementedLeaseServer_instance :: UnimplementedLeaseServer_Assumptions;
-  #[global] Lease_LeaseKeepAliveServer_instance :: Lease_LeaseKeepAliveServer_Assumptions;
-  #[global] leaseLeaseKeepAliveServer_instance :: leaseLeaseKeepAliveServer_Assumptions;
+  #[global] UnsafeLeaseServer_instance :: UnsafeLeaseServer_Assumptions;
   #[global] ClusterClient_instance :: ClusterClient_Assumptions;
   #[global] clusterClient_instance :: clusterClient_Assumptions;
   #[global] ClusterServer_instance :: ClusterServer_Assumptions;
   #[global] UnimplementedClusterServer_instance :: UnimplementedClusterServer_Assumptions;
+  #[global] UnsafeClusterServer_instance :: UnsafeClusterServer_Assumptions;
   #[global] MaintenanceClient_instance :: MaintenanceClient_Assumptions;
   #[global] maintenanceClient_instance :: maintenanceClient_Assumptions;
-  #[global] Maintenance_SnapshotClient_instance :: Maintenance_SnapshotClient_Assumptions;
-  #[global] maintenanceSnapshotClient_instance :: maintenanceSnapshotClient_Assumptions;
   #[global] MaintenanceServer_instance :: MaintenanceServer_Assumptions;
   #[global] UnimplementedMaintenanceServer_instance :: UnimplementedMaintenanceServer_Assumptions;
-  #[global] Maintenance_SnapshotServer_instance :: Maintenance_SnapshotServer_Assumptions;
-  #[global] maintenanceSnapshotServer_instance :: maintenanceSnapshotServer_Assumptions;
+  #[global] UnsafeMaintenanceServer_instance :: UnsafeMaintenanceServer_Assumptions;
   #[global] AuthClient_instance :: AuthClient_Assumptions;
   #[global] authClient_instance :: authClient_Assumptions;
   #[global] AuthServer_instance :: AuthServer_Assumptions;
   #[global] UnimplementedAuthServer_instance :: UnimplementedAuthServer_Assumptions;
+  #[global] UnsafeAuthServer_instance :: UnsafeAuthServer_Assumptions;
   #[global] import_membershippb_Assumption :: membershippb.Assumptions;
   #[global] import_mvccpb_Assumption :: mvccpb.Assumptions;
 }.

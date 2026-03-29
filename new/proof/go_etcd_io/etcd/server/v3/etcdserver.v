@@ -24,6 +24,9 @@ Collection W := sem + package_sem.
 #[global] Instance : IsPkgInit (iProp Σ) errors.pkg_id.errors := define_is_pkg_init True%I.
 #[global] Instance : IsPkgInit (iProp Σ) config := define_is_pkg_init True%I.
 
+#[global] Instance : IsPkgInit (iProp Σ) trace := define_is_pkg_init True%I.
+#[global] Instance : IsPkgInit (iProp Σ) attribute := define_is_pkg_init True%I.
+#[global] Instance : IsPkgInit (iProp Σ) features := define_is_pkg_init True%I.
 #[global] Instance : IsPkgInit (iProp Σ) etcdserver := define_is_pkg_init True%I.
 
 Lemma wp_EtcdServer__Put (s : loc) ctx (r : loc) :
@@ -31,9 +34,7 @@ Lemma wp_EtcdServer__Put (s : loc) ctx (r : loc) :
     s @! (go.PointerType etcdserver.EtcdServer) @! "Put" #(interface.ok ctx) #r
   {{{ RET #(); True }}}.
 Proof.
-  wp_start. wp_auto.
-  wp_bind.
-  (* Need to translate traceutil.StartTimeKey. so struct literal can be allocated *)
+  wp_start.
 Abort.
 
 Axiom EtcdServer_names : Type.
@@ -139,6 +140,10 @@ Proof.
   iDestruct (own_EtcdServer_access with "Hsrv") as "H". iNamed "H".
   wp_apply (wp_EtcdServer__getAppliedIndex with "[$Hinternal]") as "%ai _".
   wp_apply (wp_EtcdServer__getCommittedIndex with "[$Hinternal]") as "%ci _".
+  wp_bind.
+  (* FIXME: this was commented out when the PriorityRequest feature was added
+     here, along with exceedsRequestLimit. *)
+  (*
   wp_if_destruct.
   {
     (* FIXME: declare then access init predicate of errors. *)
@@ -211,7 +216,7 @@ Proof.
   (* TODO:
      axiomatize prometheus Counter inc
      axiomatize `parseProposeCtxErr`
-   *)
+   *) *)
 Admitted.
 
 End wps.
