@@ -2446,12 +2446,6 @@ func stringLitValue(lit *ast.BasicLit) string {
 	return s
 }
 
-var ffiMapping = map[string]string{
-	"github.com/mit-pdos/gokv/grove_ffi":         "grove",
-	"github.com/goose-lang/primitive/disk":       "disk",
-	"github.com/goose-lang/primitive/async_disk": "async_disk",
-}
-
 func (ctx *Ctx) imports(d []ast.Spec) {
 	for _, s := range d {
 		s := s.(*ast.ImportSpec)
