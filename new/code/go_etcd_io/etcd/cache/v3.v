@@ -357,6 +357,19 @@ Definition store__getSnapshotⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalC
     else do:  #());;;
     return: (![go.PointerType snapshot] "targetSnapshot", ![go.int64] (StructFieldRef snapshot "rev"%go (StructFieldRef store "latest"%go (![go.PointerType store] "s"))), Convert go.untyped_nil go.error UntypedNil)).
 
+(* go: store.go:172:17 *)
+Definition store__LatestRevⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "s" <>,
+    with_defer: (let: "s" := (GoAlloc (go.PointerType store) "s") in
+    do:  ((MethodResolve (go.PointerType sync.RWMutex) "RLock"%go (StructFieldRef store "mu"%go (![go.PointerType store] "s"))) #());;;
+    do:  (let: "$f" := (MethodResolve (go.PointerType sync.RWMutex) "RUnlock"%go (StructFieldRef store "mu"%go (![go.PointerType store] "s"))) in
+    "$defer" <-[deferType] (let: "$oldf" := (![deferType] "$defer") in
+    (λ: <>,
+      "$f" #();;
+      "$oldf" #()
+      )));;;
+    return: (![go.int64] (StructFieldRef snapshot "rev"%go (StructFieldRef store "latest"%go (![go.PointerType store] "s"))))).
+
 #[global] Instance info' : PkgInfo pkg_id.cache :=
 {|
   pkg_imported_pkgs := [code.fmt.pkg_id.fmt; code.sync.pkg_id.sync; code.go_etcd_io.etcd.api.v3.v3rpc.rpctypes.pkg_id.rpctypes; code.go_etcd_io.etcd.client.v3.pkg_id.clientv3; code.k8s_io.utils.third_party.forked.golang.btree.pkg_id.btree]
@@ -802,6 +815,7 @@ Class store_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext
   #[global] store_set_latest (x : store.t) y :: ⟦StructFieldSet (storeⁱᵐᵖˡ) "latest", (#x, #y)⟧ ⤳[under] #(x <|store.latest' := y|>);
   #[global] store_get_history (x : store.t) :: ⟦StructFieldGet (storeⁱᵐᵖˡ) "history", #x⟧ ⤳[under] #x.(store.history');
   #[global] store_set_history (x : store.t) y :: ⟦StructFieldSet (storeⁱᵐᵖˡ) "history", (#x, #y)⟧ ⤳[under] #(x <|store.history' := y|>);
+  #[global] store'ptr_LatestRev_unfold :: MethodUnfold (go.PointerType (store)) "LatestRev" (store__LatestRevⁱᵐᵖˡ);
   #[global] store'ptr_getSnapshot_unfold :: MethodUnfold (go.PointerType (store)) "getSnapshot" (store__getSnapshotⁱᵐᵖˡ);
 }.
 

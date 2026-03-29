@@ -247,4 +247,35 @@ Proof.
   }
 Qed.
 
+Lemma wp_store__LatestRev s γstore prefix :
+  {{{ is_pkg_init cache ∗ own_store s γstore prefix }}}
+    s @! (go.PointerType cache.store) @! "LatestRev" #()
+  {{{ (r : w64), RET #r; own_store s γstore prefix }}}.
+Proof.
+  wp_start as "@". wp_apply wp_with_defer as "%defer defer". simpl subst.
+  wp_auto.
+  wp_apply (wp_RWMutex__RLock with "[$Hmu]").
+  iIntros "[Hrlocked Hown]". wp_auto.
+  iNamedSuffix "Hown" "_inv". wp_auto.
+  iCombineNamed "*_inv" as "Hinv".
+  wp_apply (wp_RWMutex__RUnlock with "[$Hrlocked Hinv]").
+  { iNamed "Hinv". iFrame "∗#%". }
+  iIntros "Hmu". wp_auto. wp_end.
+Qed.
+
+Lemma wp_Cache__Get (c : loc) (ctx : interface.t) (key : go_string) opts_sl (opts : list v3.clientv3.OpOption.t):
+  {{{ is_pkg_init cache ∗
+      opts_sl ↦* opts
+  }}}
+    c @! (go.PointerType cache.Cache) @! "Get" #ctx #key #opts_sl
+  {{{
+        (resp : loc) (err : error.t), RET (#resp, #err); True
+  }}}.
+Proof.
+  wp_start.
+  wp_auto.
+  (* TODO: define own_Cache *)
+  (* TODO: spec for WaitReady() *)
+Admitted.
+
 End store.
