@@ -3,11 +3,14 @@ translate = [
   "store.getSnapshot",
   "snapshot",
   "newClonedSnapshot",
+  "Cache",
+  "Cache.Get",
 ]
 
 imports = [
 	"k8s.io/utils/third_party/forked/golang/btree",
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes",
+    "go.etcd.io/etcd/client/v3",
     "fmt",
     "sync",
 ]

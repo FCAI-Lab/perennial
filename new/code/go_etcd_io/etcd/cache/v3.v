@@ -2,6 +2,7 @@
 Require Export New.code.fmt.
 Require Export New.code.sync.
 Require Export New.code.go_etcd_io.etcd.api.v3.v3rpc.rpctypes.
+Require Export New.code.go_etcd_io.etcd.client.v3.
 Require Export New.code.k8s_io.utils.third_party.forked.golang.btree.
 From New.golang Require Import defn.
 Module pkg_id.
@@ -98,8 +99,6 @@ Definition kvItem {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go
 Definition watcher {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.Named "go.etcd.io/etcd/cache/v3.watcher"%go [].
 
 #[global] Opaque watcher.
-
-Axiom Cacheⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
 Axiom Clockⁱᵐᵖˡ : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, go.type.
 
@@ -215,6 +214,95 @@ Definition validateRevisions {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go
 
 Definition newWatcher {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "go.etcd.io/etcd/cache/v3.newWatcher"%go.
 
+(* go: cache.go:163:17 *)
+Definition Cache__Getⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
+  λ: "c" "ctx" "key" "opts",
+    exception_do (let: "c" := (GoAlloc (go.PointerType Cache) "c") in
+    let: "opts" := (GoAlloc (go.SliceType clientv3.OpOption) "opts") in
+    let: "key" := (GoAlloc go.string "key") in
+    let: "ctx" := (GoAlloc context.Context "ctx") in
+    (if: Convert go.untyped_bool go.bool (((MethodResolve (go.PointerType store) "LatestRev"%go (![go.PointerType store] (StructFieldRef Cache "store"%go (![go.PointerType Cache] "c")))) #()) =⟨go.int64⟩ #(W64 0))
+    then
+      (let: "err" := (GoAlloc go.error (GoZeroVal go.error #())) in
+      let: "$r0" := (let: "$a0" := (![context.Context] "ctx") in
+      (MethodResolve (go.PointerType Cache) "WaitReady"%go (![go.PointerType Cache] "c")) "$a0") in
+      do:  ("err" <-[go.error] "$r0");;;
+      (if: Convert go.untyped_bool go.bool ((![go.error] "err") ≠⟨go.error⟩ (Convert go.untyped_nil go.error UntypedNil))
+      then return: (Convert go.untyped_nil (go.PointerType clientv3.GetResponse) UntypedNil, ![go.error] "err")
+      else do:  #()))
+    else do:  #());;;
+    let: "op" := (GoAlloc clientv3.Op (GoZeroVal clientv3.Op #())) in
+    let: "$r0" := (let: "$a0" := (![go.string] "key") in
+    let: "$a1" := (![go.SliceType clientv3.OpOption] "opts") in
+    (FuncResolve clientv3.OpGet [] #()) "$a0" "$a1") in
+    do:  ("op" <-[clientv3.Op] "$r0");;;
+    (let: "err" := (GoAlloc go.error (GoZeroVal go.error #())) in
+    let: ("$ret0", "$ret1") := (let: "$a0" := (![go.string] "key") in
+    let: "$a1" := (![clientv3.Op] "op") in
+    (MethodResolve (go.PointerType Cache) "validateGet"%go (![go.PointerType Cache] "c")) "$a0" "$a1") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    do:  "$r0";;;
+    do:  ("err" <-[go.error] "$r1");;;
+    (if: Convert go.untyped_bool go.bool ((![go.error] "err") ≠⟨go.error⟩ (Convert go.untyped_nil go.error UntypedNil))
+    then return: (Convert go.untyped_nil (go.PointerType clientv3.GetResponse) UntypedNil, ![go.error] "err")
+    else do:  #()));;;
+    let: "startKey" := (GoAlloc (go.SliceType go.byte) (GoZeroVal (go.SliceType go.byte) #())) in
+    let: "$r0" := (Convert go.string (go.SliceType go.byte) (![go.string] "key")) in
+    do:  ("startKey" <-[go.SliceType go.byte] "$r0");;;
+    let: "endKey" := (GoAlloc (go.SliceType go.byte) (GoZeroVal (go.SliceType go.byte) #())) in
+    let: "$r0" := ((MethodResolve (go.PointerType clientv3.Op) "RangeBytes"%go "op") #()) in
+    do:  ("endKey" <-[go.SliceType go.byte] "$r0");;;
+    let: "requestedRev" := (GoAlloc go.int64 (GoZeroVal go.int64 #())) in
+    let: "$r0" := ((MethodResolve (go.PointerType clientv3.Op) "Rev"%go "op") #()) in
+    do:  ("requestedRev" <-[go.int64] "$r0");;;
+    (if: (⟨go.bool⟩! ((MethodResolve (go.PointerType clientv3.Op) "IsSerializable"%go "op") #()))
+    then
+      let: "err" := (GoAlloc go.error (GoZeroVal go.error #())) in
+      let: "serverRev" := (GoAlloc go.int64 (GoZeroVal go.int64 #())) in
+      let: ("$ret0", "$ret1") := (let: "$a0" := (![context.Context] "ctx") in
+      (MethodResolve (go.PointerType Cache) "serverRevision"%go (![go.PointerType Cache] "c")) "$a0") in
+      let: "$r0" := "$ret0" in
+      let: "$r1" := "$ret1" in
+      do:  ("serverRev" <-[go.int64] "$r0");;;
+      do:  ("err" <-[go.error] "$r1");;;
+      (if: Convert go.untyped_bool go.bool ((![go.error] "err") ≠⟨go.error⟩ (Convert go.untyped_nil go.error UntypedNil))
+      then return: (Convert go.untyped_nil (go.PointerType clientv3.GetResponse) UntypedNil, ![go.error] "err")
+      else do:  #());;;
+      (if: Convert go.untyped_bool go.bool ((![go.int64] "requestedRev") >⟨go.int64⟩ (![go.int64] "serverRev"))
+      then return: (Convert go.untyped_nil (go.PointerType clientv3.GetResponse) UntypedNil, ![go.error] (GlobalVarAddr rpctypes.ErrFutureRev #()))
+      else do:  #());;;
+      (let: "$r0" := (let: "$a0" := (![context.Context] "ctx") in
+      let: "$a1" := (![go.int64] "serverRev") in
+      (MethodResolve (go.PointerType Cache) "waitTillRevision"%go (![go.PointerType Cache] "c")) "$a0" "$a1") in
+      do:  ("err" <-[go.error] "$r0");;;
+      (if: Convert go.untyped_bool go.bool ((![go.error] "err") ≠⟨go.error⟩ (Convert go.untyped_nil go.error UntypedNil))
+      then return: (Convert go.untyped_nil (go.PointerType clientv3.GetResponse) UntypedNil, ![go.error] "err")
+      else do:  #()))
+    else do:  #());;;
+    let: "err" := (GoAlloc go.error (GoZeroVal go.error #())) in
+    let: "latestRev" := (GoAlloc go.int64 (GoZeroVal go.int64 #())) in
+    let: "kvs" := (GoAlloc (go.SliceType (go.PointerType mvccpb.KeyValue)) (GoZeroVal (go.SliceType (go.PointerType mvccpb.KeyValue)) #())) in
+    let: (("$ret0", "$ret1"), "$ret2") := (let: "$a0" := (![go.SliceType go.byte] "startKey") in
+    let: "$a1" := (![go.SliceType go.byte] "endKey") in
+    let: "$a2" := (![go.int64] "requestedRev") in
+    (MethodResolve (go.PointerType store) "Get"%go (![go.PointerType store] (StructFieldRef Cache "store"%go (![go.PointerType Cache] "c")))) "$a0" "$a1" "$a2") in
+    let: "$r0" := "$ret0" in
+    let: "$r1" := "$ret1" in
+    let: "$r2" := "$ret2" in
+    do:  ("kvs" <-[go.SliceType (go.PointerType mvccpb.KeyValue)] "$r0");;;
+    do:  ("latestRev" <-[go.int64] "$r1");;;
+    do:  ("err" <-[go.error] "$r2");;;
+    (if: Convert go.untyped_bool go.bool ((![go.error] "err") ≠⟨go.error⟩ (Convert go.untyped_nil go.error UntypedNil))
+    then return: (Convert go.untyped_nil (go.PointerType clientv3.GetResponse) UntypedNil, ![go.error] "err")
+    else do:  #());;;
+    return: (GoAlloc clientv3.GetResponse (let: "$v0" := (GoAlloc etcdserverpb.ResponseHeader (let: "$v0" := (![go.int64] "latestRev") in
+     CompositeLiteral etcdserverpb.ResponseHeader (LiteralValue [KeyedElement (Some (KeyField "Revision"%go)) (ElementExpression go.int64 "$v0")]))) in
+     let: "$v1" := (![go.SliceType (go.PointerType mvccpb.KeyValue)] "kvs") in
+     let: "$v2" := (Convert go.int go.int64 (let: "$a0" := (![go.SliceType (go.PointerType mvccpb.KeyValue)] "kvs") in
+     (FuncResolve go.len [go.SliceType (go.PointerType mvccpb.KeyValue)] #()) "$a0")) in
+     CompositeLiteral clientv3.GetResponse (LiteralValue [KeyedElement (Some (KeyField "Header"%go)) (ElementExpression (go.PointerType etcdserverpb.ResponseHeader) "$v0"); KeyedElement (Some (KeyField "Kvs"%go)) (ElementExpression (go.SliceType (go.PointerType mvccpb.KeyValue)) "$v1"); KeyedElement (Some (KeyField "Count"%go)) (ElementExpression go.int64 "$v2")])), Convert go.untyped_nil go.error UntypedNil)).
+
 (* go: snapshot.go:29:6 *)
 Definition newClonedSnapshotⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "rev" "t",
@@ -271,7 +359,7 @@ Definition store__getSnapshotⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalC
 
 #[global] Instance info' : PkgInfo pkg_id.cache :=
 {|
-  pkg_imported_pkgs := [code.fmt.pkg_id.fmt; code.sync.pkg_id.sync; code.go_etcd_io.etcd.api.v3.v3rpc.rpctypes.pkg_id.rpctypes; code.k8s_io.utils.third_party.forked.golang.btree.pkg_id.btree]
+  pkg_imported_pkgs := [code.fmt.pkg_id.fmt; code.sync.pkg_id.sync; code.go_etcd_io.etcd.api.v3.v3rpc.rpctypes.pkg_id.rpctypes; code.go_etcd_io.etcd.client.v3.pkg_id.clientv3; code.k8s_io.utils.third_party.forked.golang.btree.pkg_id.btree]
 |}.
 
 Axiom _'init : ∀ {ext : ffi_syntax} {go_gctx : GoGlobalContext}, val.
@@ -280,6 +368,7 @@ Definition initialize' {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     package.init pkg_id.cache (λ: <>,
       exception_do (do:  (btree.initialize' #());;;
+      do:  (clientv3.initialize' #());;;
       do:  (rpctypes.initialize' #());;;
       do:  (sync.initialize' #());;;
       do:  (fmt.initialize' #());;;
@@ -289,20 +378,108 @@ Definition initialize' {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
       do:  (ErrNotReady'init #()))
       ).
 
-Module Cache.
+Module Config.
 Section def.
 Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
 Axiom t : Type.
 Axiom zero_val : ZeroVal t.
 #[global] Existing Instance zero_val.
 End def.
+End Config.
+
+Class Config_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] Config_type_repr  :: go.TypeReprUnderlying Configⁱᵐᵖˡ Config.t;
+  #[global] Config_underlying :: (Config) <u (Configⁱᵐᵖˡ);
+  #[global] Configⁱᵐᵖˡ_underlying :: (Configⁱᵐᵖˡ) ↓u (Configⁱᵐᵖˡ);
+}.
+
+Module progressRequestor.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Axiom t : Type.
+Axiom zero_val : ZeroVal t.
+#[global] Existing Instance zero_val.
+End def.
+End progressRequestor.
+
+Class progressRequestor_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
+{
+  #[global] progressRequestor_type_repr  :: go.TypeReprUnderlying progressRequestorⁱᵐᵖˡ progressRequestor.t;
+  #[global] progressRequestor_underlying :: (progressRequestor) <u (progressRequestorⁱᵐᵖˡ);
+  #[global] progressRequestorⁱᵐᵖˡ_underlying :: (progressRequestorⁱᵐᵖˡ) ↓u (progressRequestorⁱᵐᵖˡ);
+}.
+
+Module Cache.
+Section def.
+Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
+Record t :=
+mk {
+  prefix' : go_string;
+  cfg' : cache.Config.t;
+  watcher' : clientv3.Watcher.t;
+  kv' : clientv3.KV.t;
+  demux' : loc;
+  store' : loc;
+  ready' : loc;
+  stop' : context.CancelFunc.t;
+  waitGroup' : sync.WaitGroup.t;
+  internalCtx' : context.Context.t;
+  progressRequestor' : cache.progressRequestor.t;
+}.
+
+#[global] Instance zero_val : ZeroVal t := {| zero_val := mk (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _)|}.
+#[global] Arguments mk : clear implicits.
+#[global] Arguments t : clear implicits.
+End def.
 End Cache.
+
+Definition Cache'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : list go.field_decl := [
+  (go.FieldDecl "prefix"%go go.string);
+  (go.FieldDecl "cfg"%go Config);
+  (go.FieldDecl "watcher"%go clientv3.Watcher);
+  (go.FieldDecl "kv"%go clientv3.KV);
+  (go.FieldDecl "demux"%go (go.PointerType demux));
+  (go.FieldDecl "store"%go (go.PointerType store));
+  (go.FieldDecl "ready"%go (go.PointerType ready));
+  (go.FieldDecl "stop"%go context.CancelFunc);
+  (go.FieldDecl "waitGroup"%go sync.WaitGroup);
+  (go.FieldDecl "internalCtx"%go context.Context);
+  (go.FieldDecl "progressRequestor"%go progressRequestor)
+].
+Program Definition Cache'fds {ext : ffi_syntax} {go_gctx : GoGlobalContext} := sealed (Cache'fds_unsealed).
+Global Instance equals_unfold_Cache {ext : ffi_syntax} {go_gctx : GoGlobalContext} : Cache'fds =→ Cache'fds_unsealed.
+Proof. rewrite /Cache'fds seal_eq //. Qed.
+
+Definition Cacheⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go.type := go.StructType (Cache'fds).
 
 Class Cache_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
 {
   #[global] Cache_type_repr  :: go.TypeReprUnderlying Cacheⁱᵐᵖˡ Cache.t;
   #[global] Cache_underlying :: (Cache) <u (Cacheⁱᵐᵖˡ);
-  #[global] Cacheⁱᵐᵖˡ_underlying :: (Cacheⁱᵐᵖˡ) ↓u (Cacheⁱᵐᵖˡ);
+  #[global] Cache_get_prefix (x : Cache.t) :: ⟦StructFieldGet (Cacheⁱᵐᵖˡ) "prefix", #x⟧ ⤳[under] #x.(Cache.prefix');
+  #[global] Cache_set_prefix (x : Cache.t) y :: ⟦StructFieldSet (Cacheⁱᵐᵖˡ) "prefix", (#x, #y)⟧ ⤳[under] #(x <|Cache.prefix' := y|>);
+  #[global] Cache_get_cfg (x : Cache.t) :: ⟦StructFieldGet (Cacheⁱᵐᵖˡ) "cfg", #x⟧ ⤳[under] #x.(Cache.cfg');
+  #[global] Cache_set_cfg (x : Cache.t) y :: ⟦StructFieldSet (Cacheⁱᵐᵖˡ) "cfg", (#x, #y)⟧ ⤳[under] #(x <|Cache.cfg' := y|>);
+  #[global] Cache_get_watcher (x : Cache.t) :: ⟦StructFieldGet (Cacheⁱᵐᵖˡ) "watcher", #x⟧ ⤳[under] #x.(Cache.watcher');
+  #[global] Cache_set_watcher (x : Cache.t) y :: ⟦StructFieldSet (Cacheⁱᵐᵖˡ) "watcher", (#x, #y)⟧ ⤳[under] #(x <|Cache.watcher' := y|>);
+  #[global] Cache_get_kv (x : Cache.t) :: ⟦StructFieldGet (Cacheⁱᵐᵖˡ) "kv", #x⟧ ⤳[under] #x.(Cache.kv');
+  #[global] Cache_set_kv (x : Cache.t) y :: ⟦StructFieldSet (Cacheⁱᵐᵖˡ) "kv", (#x, #y)⟧ ⤳[under] #(x <|Cache.kv' := y|>);
+  #[global] Cache_get_demux (x : Cache.t) :: ⟦StructFieldGet (Cacheⁱᵐᵖˡ) "demux", #x⟧ ⤳[under] #x.(Cache.demux');
+  #[global] Cache_set_demux (x : Cache.t) y :: ⟦StructFieldSet (Cacheⁱᵐᵖˡ) "demux", (#x, #y)⟧ ⤳[under] #(x <|Cache.demux' := y|>);
+  #[global] Cache_get_store (x : Cache.t) :: ⟦StructFieldGet (Cacheⁱᵐᵖˡ) "store", #x⟧ ⤳[under] #x.(Cache.store');
+  #[global] Cache_set_store (x : Cache.t) y :: ⟦StructFieldSet (Cacheⁱᵐᵖˡ) "store", (#x, #y)⟧ ⤳[under] #(x <|Cache.store' := y|>);
+  #[global] Cache_get_ready (x : Cache.t) :: ⟦StructFieldGet (Cacheⁱᵐᵖˡ) "ready", #x⟧ ⤳[under] #x.(Cache.ready');
+  #[global] Cache_set_ready (x : Cache.t) y :: ⟦StructFieldSet (Cacheⁱᵐᵖˡ) "ready", (#x, #y)⟧ ⤳[under] #(x <|Cache.ready' := y|>);
+  #[global] Cache_get_stop (x : Cache.t) :: ⟦StructFieldGet (Cacheⁱᵐᵖˡ) "stop", #x⟧ ⤳[under] #x.(Cache.stop');
+  #[global] Cache_set_stop (x : Cache.t) y :: ⟦StructFieldSet (Cacheⁱᵐᵖˡ) "stop", (#x, #y)⟧ ⤳[under] #(x <|Cache.stop' := y|>);
+  #[global] Cache_get_waitGroup (x : Cache.t) :: ⟦StructFieldGet (Cacheⁱᵐᵖˡ) "waitGroup", #x⟧ ⤳[under] #x.(Cache.waitGroup');
+  #[global] Cache_set_waitGroup (x : Cache.t) y :: ⟦StructFieldSet (Cacheⁱᵐᵖˡ) "waitGroup", (#x, #y)⟧ ⤳[under] #(x <|Cache.waitGroup' := y|>);
+  #[global] Cache_get_internalCtx (x : Cache.t) :: ⟦StructFieldGet (Cacheⁱᵐᵖˡ) "internalCtx", #x⟧ ⤳[under] #x.(Cache.internalCtx');
+  #[global] Cache_set_internalCtx (x : Cache.t) y :: ⟦StructFieldSet (Cacheⁱᵐᵖˡ) "internalCtx", (#x, #y)⟧ ⤳[under] #(x <|Cache.internalCtx' := y|>);
+  #[global] Cache_get_progressRequestor (x : Cache.t) :: ⟦StructFieldGet (Cacheⁱᵐᵖˡ) "progressRequestor", #x⟧ ⤳[under] #x.(Cache.progressRequestor');
+  #[global] Cache_set_progressRequestor (x : Cache.t) y :: ⟦StructFieldSet (Cacheⁱᵐᵖˡ) "progressRequestor", (#x, #y)⟧ ⤳[under] #(x <|Cache.progressRequestor' := y|>);
+  #[global] Cache'ptr_Get_unfold :: MethodUnfold (go.PointerType (Cache)) "Get" (Cache__Getⁱᵐᵖˡ);
 }.
 
 Module Clock.
@@ -367,22 +544,6 @@ Class realTimer_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalCon
   #[global] realTimer_type_repr  :: go.TypeReprUnderlying realTimerⁱᵐᵖˡ realTimer.t;
   #[global] realTimer_underlying :: (realTimer) <u (realTimerⁱᵐᵖˡ);
   #[global] realTimerⁱᵐᵖˡ_underlying :: (realTimerⁱᵐᵖˡ) ↓u (realTimerⁱᵐᵖˡ);
-}.
-
-Module Config.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End Config.
-
-Class Config_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] Config_type_repr  :: go.TypeReprUnderlying Configⁱᵐᵖˡ Config.t;
-  #[global] Config_underlying :: (Config) <u (Configⁱᵐᵖˡ);
-  #[global] Configⁱᵐᵖˡ_underlying :: (Configⁱᵐᵖˡ) ↓u (Configⁱᵐᵖˡ);
 }.
 
 Module Option.
@@ -463,22 +624,6 @@ Class progressNotifier_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoL
   #[global] progressNotifier_type_repr  :: go.TypeReprUnderlying progressNotifierⁱᵐᵖˡ progressNotifier.t;
   #[global] progressNotifier_underlying :: (progressNotifier) <u (progressNotifierⁱᵐᵖˡ);
   #[global] progressNotifierⁱᵐᵖˡ_underlying :: (progressNotifierⁱᵐᵖˡ) ↓u (progressNotifierⁱᵐᵖˡ);
-}.
-
-Module progressRequestor.
-Section def.
-Context {ext : ffi_syntax} {go_gctx : GoGlobalContext}.
-Axiom t : Type.
-Axiom zero_val : ZeroVal t.
-#[global] Existing Instance zero_val.
-End def.
-End progressRequestor.
-
-Class progressRequestor_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!GoSemanticsFunctions} : Prop :=
-{
-  #[global] progressRequestor_type_repr  :: go.TypeReprUnderlying progressRequestorⁱᵐᵖˡ progressRequestor.t;
-  #[global] progressRequestor_underlying :: (progressRequestor) <u (progressRequestorⁱᵐᵖˡ);
-  #[global] progressRequestorⁱᵐᵖˡ_underlying :: (progressRequestorⁱᵐᵖˡ) ↓u (progressRequestorⁱᵐᵖˡ);
 }.
 
 Module conditionalProgressRequestor.
@@ -720,6 +865,7 @@ Class Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} `{!G
   #[global] import_fmt_Assumption :: fmt.Assumptions;
   #[global] import_sync_Assumption :: sync.Assumptions;
   #[global] import_rpctypes_Assumption :: rpctypes.Assumptions;
+  #[global] import_clientv3_Assumption :: clientv3.Assumptions;
   #[global] import_btree_Assumption :: btree.Assumptions;
 }.
 End cache.

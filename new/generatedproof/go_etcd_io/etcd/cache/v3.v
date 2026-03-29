@@ -2,6 +2,7 @@
 Require Export New.proof.proof_prelude.
 Require Export New.generatedproof.fmt.
 Require Export New.generatedproof.go_etcd_io.etcd.api.v3.v3rpc.rpctypes.
+Require Export New.generatedproof.go_etcd_io.etcd.client.v3.
 Require Export New.generatedproof.k8s_io.utils.third_party.forked.golang.btree.
 Require Export New.generatedproof.sync.
 Require Export New.golang.theory.
@@ -10,6 +11,46 @@ Require Export New.code.go_etcd_io.etcd.cache.v3.
 Set Default Proof Using "Type".
 
 Module cache.
+Module Config.
+Section def.
+
+Context `{hG: heapGS Σ, !ffi_semantics _ _}.
+Context {sem : go.Semantics}.
+Context {package_sem' : cache.Assumptions}.
+
+Local Set Default Proof Using "All".
+
+#[global] Instance Config_typed_pointsto  :
+  TypedPointsto (Σ:=Σ) (cache.Config.t). Admitted.
+
+#[global] Instance Config_into_val_typed
+   :
+  IntoValTypedUnderlying (cache.Config.t) (cache.Configⁱᵐᵖˡ).
+Proof. Admitted.
+
+End def.
+End Config.
+
+Module progressRequestor.
+Section def.
+
+Context `{hG: heapGS Σ, !ffi_semantics _ _}.
+Context {sem : go.Semantics}.
+Context {package_sem' : cache.Assumptions}.
+
+Local Set Default Proof Using "All".
+
+#[global] Instance progressRequestor_typed_pointsto  :
+  TypedPointsto (Σ:=Σ) (cache.progressRequestor.t). Admitted.
+
+#[global] Instance progressRequestor_into_val_typed
+   :
+  IntoValTypedUnderlying (cache.progressRequestor.t) (cache.progressRequestorⁱᵐᵖˡ).
+Proof. Admitted.
+
+End def.
+End progressRequestor.
+
 Module Cache.
 Section def.
 
@@ -19,13 +60,174 @@ Context {package_sem' : cache.Assumptions}.
 
 Local Set Default Proof Using "All".
 
-#[global] Instance Cache_typed_pointsto  :
-  TypedPointsto (Σ:=Σ) (cache.Cache.t). Admitted.
+#[global]Program Instance Cache_typed_pointsto  :
+  TypedPointsto (Σ:=Σ) (cache.Cache.t) :=
+  {|
+    typed_pointsto_def l v dq :=
+      (
+      "prefix" ∷ l.[(cache.Cache.t), "prefix"] ↦{dq} v.(cache.Cache.prefix') ∗
+      "cfg" ∷ l.[(cache.Cache.t), "cfg"] ↦{dq} v.(cache.Cache.cfg') ∗
+      "watcher" ∷ l.[(cache.Cache.t), "watcher"] ↦{dq} v.(cache.Cache.watcher') ∗
+      "kv" ∷ l.[(cache.Cache.t), "kv"] ↦{dq} v.(cache.Cache.kv') ∗
+      "demux" ∷ l.[(cache.Cache.t), "demux"] ↦{dq} v.(cache.Cache.demux') ∗
+      "store" ∷ l.[(cache.Cache.t), "store"] ↦{dq} v.(cache.Cache.store') ∗
+      "ready" ∷ l.[(cache.Cache.t), "ready"] ↦{dq} v.(cache.Cache.ready') ∗
+      "stop" ∷ l.[(cache.Cache.t), "stop"] ↦{dq} v.(cache.Cache.stop') ∗
+      "waitGroup" ∷ l.[(cache.Cache.t), "waitGroup"] ↦{dq} v.(cache.Cache.waitGroup') ∗
+      "internalCtx" ∷ l.[(cache.Cache.t), "internalCtx"] ↦{dq} v.(cache.Cache.internalCtx') ∗
+      "progressRequestor" ∷ l.[(cache.Cache.t), "progressRequestor"] ↦{dq} v.(cache.Cache.progressRequestor') ∗
+      "_" ∷ True
+      )%I
+  |}.
+Final Obligation. solve_typed_pointsto_agree. Qed.
 
 #[global] Instance Cache_into_val_typed
    :
   IntoValTypedUnderlying (cache.Cache.t) (cache.Cacheⁱᵐᵖˡ).
-Proof. Admitted.
+Proof. solve_into_val_typed_struct. Qed.
+#[global] Instance Cache_access_load_prefix l (v : (cache.Cache.t)) dq :
+  AccessStrict
+    (l.[(cache.Cache.t), "prefix"] ↦{dq} (v.(cache.Cache.prefix')))
+    (l.[(cache.Cache.t), "prefix"] ↦{dq} (v.(cache.Cache.prefix')))
+    (l ↦{dq} v) (l ↦{dq} v)%I.
+Proof. solve_pointsto_access_struct. Qed.
+
+#[global] Instance Cache_access_store_prefix l (v : (cache.Cache.t)) prefix' :
+  AccessStrict
+    (l.[(cache.Cache.t), "prefix"] ↦ (v.(cache.Cache.prefix')))
+    (l.[(cache.Cache.t), "prefix"] ↦ prefix')
+    (l ↦ v) (l ↦ (v <|(cache.Cache.prefix') := prefix'|>))%I.
+Proof. solve_pointsto_access_struct. Qed.
+#[global] Instance Cache_access_load_cfg l (v : (cache.Cache.t)) dq :
+  AccessStrict
+    (l.[(cache.Cache.t), "cfg"] ↦{dq} (v.(cache.Cache.cfg')))
+    (l.[(cache.Cache.t), "cfg"] ↦{dq} (v.(cache.Cache.cfg')))
+    (l ↦{dq} v) (l ↦{dq} v)%I.
+Proof. solve_pointsto_access_struct. Qed.
+
+#[global] Instance Cache_access_store_cfg l (v : (cache.Cache.t)) cfg' :
+  AccessStrict
+    (l.[(cache.Cache.t), "cfg"] ↦ (v.(cache.Cache.cfg')))
+    (l.[(cache.Cache.t), "cfg"] ↦ cfg')
+    (l ↦ v) (l ↦ (v <|(cache.Cache.cfg') := cfg'|>))%I.
+Proof. solve_pointsto_access_struct. Qed.
+#[global] Instance Cache_access_load_watcher l (v : (cache.Cache.t)) dq :
+  AccessStrict
+    (l.[(cache.Cache.t), "watcher"] ↦{dq} (v.(cache.Cache.watcher')))
+    (l.[(cache.Cache.t), "watcher"] ↦{dq} (v.(cache.Cache.watcher')))
+    (l ↦{dq} v) (l ↦{dq} v)%I.
+Proof. solve_pointsto_access_struct. Qed.
+
+#[global] Instance Cache_access_store_watcher l (v : (cache.Cache.t)) watcher' :
+  AccessStrict
+    (l.[(cache.Cache.t), "watcher"] ↦ (v.(cache.Cache.watcher')))
+    (l.[(cache.Cache.t), "watcher"] ↦ watcher')
+    (l ↦ v) (l ↦ (v <|(cache.Cache.watcher') := watcher'|>))%I.
+Proof. solve_pointsto_access_struct. Qed.
+#[global] Instance Cache_access_load_kv l (v : (cache.Cache.t)) dq :
+  AccessStrict
+    (l.[(cache.Cache.t), "kv"] ↦{dq} (v.(cache.Cache.kv')))
+    (l.[(cache.Cache.t), "kv"] ↦{dq} (v.(cache.Cache.kv')))
+    (l ↦{dq} v) (l ↦{dq} v)%I.
+Proof. solve_pointsto_access_struct. Qed.
+
+#[global] Instance Cache_access_store_kv l (v : (cache.Cache.t)) kv' :
+  AccessStrict
+    (l.[(cache.Cache.t), "kv"] ↦ (v.(cache.Cache.kv')))
+    (l.[(cache.Cache.t), "kv"] ↦ kv')
+    (l ↦ v) (l ↦ (v <|(cache.Cache.kv') := kv'|>))%I.
+Proof. solve_pointsto_access_struct. Qed.
+#[global] Instance Cache_access_load_demux l (v : (cache.Cache.t)) dq :
+  AccessStrict
+    (l.[(cache.Cache.t), "demux"] ↦{dq} (v.(cache.Cache.demux')))
+    (l.[(cache.Cache.t), "demux"] ↦{dq} (v.(cache.Cache.demux')))
+    (l ↦{dq} v) (l ↦{dq} v)%I.
+Proof. solve_pointsto_access_struct. Qed.
+
+#[global] Instance Cache_access_store_demux l (v : (cache.Cache.t)) demux' :
+  AccessStrict
+    (l.[(cache.Cache.t), "demux"] ↦ (v.(cache.Cache.demux')))
+    (l.[(cache.Cache.t), "demux"] ↦ demux')
+    (l ↦ v) (l ↦ (v <|(cache.Cache.demux') := demux'|>))%I.
+Proof. solve_pointsto_access_struct. Qed.
+#[global] Instance Cache_access_load_store l (v : (cache.Cache.t)) dq :
+  AccessStrict
+    (l.[(cache.Cache.t), "store"] ↦{dq} (v.(cache.Cache.store')))
+    (l.[(cache.Cache.t), "store"] ↦{dq} (v.(cache.Cache.store')))
+    (l ↦{dq} v) (l ↦{dq} v)%I.
+Proof. solve_pointsto_access_struct. Qed.
+
+#[global] Instance Cache_access_store_store l (v : (cache.Cache.t)) store' :
+  AccessStrict
+    (l.[(cache.Cache.t), "store"] ↦ (v.(cache.Cache.store')))
+    (l.[(cache.Cache.t), "store"] ↦ store')
+    (l ↦ v) (l ↦ (v <|(cache.Cache.store') := store'|>))%I.
+Proof. solve_pointsto_access_struct. Qed.
+#[global] Instance Cache_access_load_ready l (v : (cache.Cache.t)) dq :
+  AccessStrict
+    (l.[(cache.Cache.t), "ready"] ↦{dq} (v.(cache.Cache.ready')))
+    (l.[(cache.Cache.t), "ready"] ↦{dq} (v.(cache.Cache.ready')))
+    (l ↦{dq} v) (l ↦{dq} v)%I.
+Proof. solve_pointsto_access_struct. Qed.
+
+#[global] Instance Cache_access_store_ready l (v : (cache.Cache.t)) ready' :
+  AccessStrict
+    (l.[(cache.Cache.t), "ready"] ↦ (v.(cache.Cache.ready')))
+    (l.[(cache.Cache.t), "ready"] ↦ ready')
+    (l ↦ v) (l ↦ (v <|(cache.Cache.ready') := ready'|>))%I.
+Proof. solve_pointsto_access_struct. Qed.
+#[global] Instance Cache_access_load_stop l (v : (cache.Cache.t)) dq :
+  AccessStrict
+    (l.[(cache.Cache.t), "stop"] ↦{dq} (v.(cache.Cache.stop')))
+    (l.[(cache.Cache.t), "stop"] ↦{dq} (v.(cache.Cache.stop')))
+    (l ↦{dq} v) (l ↦{dq} v)%I.
+Proof. solve_pointsto_access_struct. Qed.
+
+#[global] Instance Cache_access_store_stop l (v : (cache.Cache.t)) stop' :
+  AccessStrict
+    (l.[(cache.Cache.t), "stop"] ↦ (v.(cache.Cache.stop')))
+    (l.[(cache.Cache.t), "stop"] ↦ stop')
+    (l ↦ v) (l ↦ (v <|(cache.Cache.stop') := stop'|>))%I.
+Proof. solve_pointsto_access_struct. Qed.
+#[global] Instance Cache_access_load_waitGroup l (v : (cache.Cache.t)) dq :
+  AccessStrict
+    (l.[(cache.Cache.t), "waitGroup"] ↦{dq} (v.(cache.Cache.waitGroup')))
+    (l.[(cache.Cache.t), "waitGroup"] ↦{dq} (v.(cache.Cache.waitGroup')))
+    (l ↦{dq} v) (l ↦{dq} v)%I.
+Proof. solve_pointsto_access_struct. Qed.
+
+#[global] Instance Cache_access_store_waitGroup l (v : (cache.Cache.t)) waitGroup' :
+  AccessStrict
+    (l.[(cache.Cache.t), "waitGroup"] ↦ (v.(cache.Cache.waitGroup')))
+    (l.[(cache.Cache.t), "waitGroup"] ↦ waitGroup')
+    (l ↦ v) (l ↦ (v <|(cache.Cache.waitGroup') := waitGroup'|>))%I.
+Proof. solve_pointsto_access_struct. Qed.
+#[global] Instance Cache_access_load_internalCtx l (v : (cache.Cache.t)) dq :
+  AccessStrict
+    (l.[(cache.Cache.t), "internalCtx"] ↦{dq} (v.(cache.Cache.internalCtx')))
+    (l.[(cache.Cache.t), "internalCtx"] ↦{dq} (v.(cache.Cache.internalCtx')))
+    (l ↦{dq} v) (l ↦{dq} v)%I.
+Proof. solve_pointsto_access_struct. Qed.
+
+#[global] Instance Cache_access_store_internalCtx l (v : (cache.Cache.t)) internalCtx' :
+  AccessStrict
+    (l.[(cache.Cache.t), "internalCtx"] ↦ (v.(cache.Cache.internalCtx')))
+    (l.[(cache.Cache.t), "internalCtx"] ↦ internalCtx')
+    (l ↦ v) (l ↦ (v <|(cache.Cache.internalCtx') := internalCtx'|>))%I.
+Proof. solve_pointsto_access_struct. Qed.
+#[global] Instance Cache_access_load_progressRequestor l (v : (cache.Cache.t)) dq :
+  AccessStrict
+    (l.[(cache.Cache.t), "progressRequestor"] ↦{dq} (v.(cache.Cache.progressRequestor')))
+    (l.[(cache.Cache.t), "progressRequestor"] ↦{dq} (v.(cache.Cache.progressRequestor')))
+    (l ↦{dq} v) (l ↦{dq} v)%I.
+Proof. solve_pointsto_access_struct. Qed.
+
+#[global] Instance Cache_access_store_progressRequestor l (v : (cache.Cache.t)) progressRequestor' :
+  AccessStrict
+    (l.[(cache.Cache.t), "progressRequestor"] ↦ (v.(cache.Cache.progressRequestor')))
+    (l.[(cache.Cache.t), "progressRequestor"] ↦ progressRequestor')
+    (l ↦ v) (l ↦ (v <|(cache.Cache.progressRequestor') := progressRequestor'|>))%I.
+Proof. solve_pointsto_access_struct. Qed.
 
 End def.
 End Cache.
@@ -109,26 +311,6 @@ Proof. Admitted.
 
 End def.
 End realTimer.
-
-Module Config.
-Section def.
-
-Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics}.
-Context {package_sem' : cache.Assumptions}.
-
-Local Set Default Proof Using "All".
-
-#[global] Instance Config_typed_pointsto  :
-  TypedPointsto (Σ:=Σ) (cache.Config.t). Admitted.
-
-#[global] Instance Config_into_val_typed
-   :
-  IntoValTypedUnderlying (cache.Config.t) (cache.Configⁱᵐᵖˡ).
-Proof. Admitted.
-
-End def.
-End Config.
 
 Module Option.
 Section def.
@@ -229,26 +411,6 @@ Proof. Admitted.
 
 End def.
 End progressNotifier.
-
-Module progressRequestor.
-Section def.
-
-Context `{hG: heapGS Σ, !ffi_semantics _ _}.
-Context {sem : go.Semantics}.
-Context {package_sem' : cache.Assumptions}.
-
-Local Set Default Proof Using "All".
-
-#[global] Instance progressRequestor_typed_pointsto  :
-  TypedPointsto (Σ:=Σ) (cache.progressRequestor.t). Admitted.
-
-#[global] Instance progressRequestor_into_val_typed
-   :
-  IntoValTypedUnderlying (cache.progressRequestor.t) (cache.progressRequestorⁱᵐᵖˡ).
-Proof. Admitted.
-
-End def.
-End progressRequestor.
 
 Module conditionalProgressRequestor.
 Section def.
