@@ -37,7 +37,7 @@ projs = {
     "etcd": Proj.make(
         "etcd",
         "https://github.com/upamanyus/etcd",
-        commit="4c11e0db9815f8e1d584cafd79b3feff8e4d06fb",
+        commit="goose",
     ),
 }
 
