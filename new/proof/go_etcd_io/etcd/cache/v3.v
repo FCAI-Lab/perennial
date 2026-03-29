@@ -127,16 +127,13 @@ Definition own_store (s : loc) γstore (prefix : go_string) : iProp Σ :=
                  | None => sint.Z revision ≤ sint.Z snapshot.(cache.snapshot.rev')
                  end)) ⌝ →
              is_etcd_kvs revision prefix (ordered_kvs_to_map s.2)
-         ) ∗
-       (* latest.rev seems like it must be monotonic, since linearizable Get
-          relies on checking lower bound before reading. *)
-       True
+         )
     ) ∗
   "_" ∷ True.
 
-Lemma wp_store__getSnapshot s γstore (rev : w64) prefix rev_lb :
+Lemma wp_store__getSnapshot rev_lb s γstore (rev : w64) prefix :
   {{{ is_pkg_init cache ∗ "Hs" ∷ own_store s γstore prefix ∗
-      mono_nat_lb_own γstore.(latest_rev_gn) rev_lb
+      "#Hlb" ∷ mono_nat_lb_own γstore.(latest_rev_gn) rev_lb
   }}}
     s @! (go.PointerType cache.store) @! "getSnapshot" #rev
   {{{ snap_ptr (latest_rev : w64) err, RET (#snap_ptr, #latest_rev, #err);
@@ -145,12 +142,11 @@ Lemma wp_store__getSnapshot s γstore (rev : w64) prefix rev_lb :
       | interface.nil =>
           (∃ kvs snap_rev,
               is_snapshotItem snap_ptr (snap_rev, kvs) ∗
-              if decide (rev = W64 0) then
-                ∃ rev',
-                  ⌜ rev_lb ≤ sint.Z rev' ⌝ ∗
-                  is_etcd_kvs rev' prefix (ordered_kvs_to_map kvs)
-              else
-                is_etcd_kvs rev prefix (ordered_kvs_to_map kvs))
+              ∃ rev',
+                ⌜ if decide (rev = W64 0) then
+                    rev_lb ≤ sint.nat rev'
+                  else rev' = rev ⌝ ∗
+                  is_etcd_kvs rev' prefix (ordered_kvs_to_map kvs))
       | _ => True
       end
   }}}.
@@ -179,8 +175,18 @@ Proof.
     wp_apply (wp_RWMutex__RUnlock with "[$Hrlocked Hinv]").
     { iNamed "Hinv". iFrame "∗#%". }
     iIntros "Hmu". wp_auto. wp_end. }
-  wp_if_destruct.
-  { (* TODO: join the proof of the case rev==0. *) admit. }
+
+  iPersist "s".
+  wp_if_join (λ v, ⌜ v = execute_val ⌝ ∗
+                   "latest_inv" ∷ s.[cache.store.t, "latest"] ↦ snapshot ∗
+                   "rev" ∷ rev_ptr ↦ (if decide (rev = W64 0) then snapshot.(cache.snapshot.rev')
+                                      else rev)
+             )%I with "[latest_inv rev]".
+  { iFrame. done. }
+  { rewrite decide_False //. iFrame. done. }
+  iDestruct (mono_nat_lb_own_valid with "[$] [$]") as "%Hle".
+  iIntros "% [-> @]".
+  wp_auto.
   wp_if_destruct.
   { iAssert (is_pkg_init rpctypes) with "[]" as "#H".
     { iPkgInit. }
@@ -203,8 +209,7 @@ Proof.
     wp_apply (wp_RWMutex__RUnlock with "[$Hrlocked Hinv]").
     { iNamed "Hinv". iFrame "∗#%". }
     iIntros "Hmu". wp_auto.
-    iApply "HΨ".
-    iFrame.
+    iApply "HΨ". iFrame.
     rewrite reverse_lookup_Some in Hlookup. destruct Hlookup as [Hlookup ?].
     ereplace (?[x] - 1)%nat with (Nat.pred ?x) in Hlookup.
     2:{ lia. }
@@ -212,7 +217,11 @@ Proof.
     rewrite list_elem_of_filter in Hitemv.
     rewrite -last_lookup in Hlookup.
     apply last_filter_Some in Hlookup as (old_history & new_history & ? & Hnot).
-    subst. iApply "Hhistory_inv". iPureIntro.
+    subst.
+    iExists (if decide (rev = W64 0) then snapshot.(cache.snapshot.rev') else rev).
+    iSplitR.
+    { iPureIntro. destruct decide; word. }
+    iApply "Hhistory_inv". iPureIntro.
     split_and!.
     - instantiate (1:=length old_history).
       rewrite lookup_app_r; last by len.
@@ -236,6 +245,6 @@ Proof.
     { iNamed "Hinv". iFrame "∗#%". }
     iIntros "Hmu". wp_auto. iApply "HΨ". iFrame.
   }
-Admitted.
+Qed.
 
 End store.
