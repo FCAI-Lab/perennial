@@ -209,8 +209,8 @@ End go_state_definitions.
 *)
 
 Class ffi_interp (ffi: ffi_model) :=
-  { ffiLocalGS: gFunctors -> Set;
-    ffiGlobalGS: gFunctors -> Set;
+  { ffiLocalGS: gFunctors -> Type;
+    ffiGlobalGS: gFunctors -> Type;
     ffi_global_ctx: ∀ `{ffiGlobalGS Σ}, ffi_global_state -> iProp Σ;
     ffi_local_ctx: ∀ `{ffiLocalGS Σ}, ffi_state -> iProp Σ;
     ffi_global_start: ∀ `{ffiGlobalGS Σ}, ffi_global_state -> iProp Σ;
