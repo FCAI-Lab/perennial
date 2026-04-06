@@ -1,6 +1,8 @@
 From stdpp Require Import sorting.
 Require Import New.proof.proof_prelude.
+From New.proof Require Import strings.
 From New.golang Require Export theory.
+From New.golang.defn Require Export string.
 From RecordUpdate Require Import RecordSet.
 
 Inductive ecomp (E : Type → Type) (R : Type) : Type :=
@@ -360,42 +362,6 @@ Inductive Error :=
 Definition relation_pullback {A B} (f : A → B) (R : B → B → Prop) : (A → A → Prop) :=
   λ a1 a2, R (f a1) (f a2).
 
-(* This should be eventually be defined in lang.v *)
-Fixpoint go_string_ltb (x y : go_string) : bool :=
-  match x, y with
-  | [], [] => false
-  | [], _ => true
-  | _, [] => false
-  | (a :: x), (b :: y) => if (word.ltu a b) then
-                         true
-                       else if (word.eqb a b) then
-                              go_string_ltb x y
-                            else false
-  end.
-
-Example go_string_ltb_examples :
-  go_string_ltb "" "" = false ∧
-  go_string_ltb "" "a" = true ∧
-  go_string_ltb "a" "" = false ∧
-  go_string_ltb "ab" "a" = false ∧
-  go_string_ltb "ab" "b" = true
-  := ltac:(auto).
-
-Fixpoint go_string_lt (x y : go_string) : Prop :=
-  match x, y with
-  | [], [] => False
-  | [], _ => True
-  | _, [] => False
-  | (a :: x), (b :: y) => if decide (uint.Z a < uint.Z b) then
-                         True
-                       else if decide (uint.Z a = uint.Z b) then
-                              go_string_lt x y
-                            else false
-  end.
-
-Definition go_string_le (x y : go_string) : Prop :=
-  x = y ∨ go_string_lt x y.
-
 Definition Range (req : RangeRequest.t) : ecomp etcdE (Error + RangeResponse.t) :=
 interp handle_exceptionE (
   do $ Ok $ Assert (req.(RangeRequest.serializable) = false);;
@@ -416,12 +382,12 @@ interp handle_exceptionE (
                               | _ =>
                                   if decide (req.(RangeRequest.range_end) = "\x00"%go) then
                                     (∀ kv, kv ∈ kvs ↔
-                                           (go_string_le req.(RangeRequest.key) kv.(KeyValue.key) ∧
+                                           (go.go_string_le req.(RangeRequest.key) kv.(KeyValue.key) ∧
                                             kv_map !! kv.(KeyValue.key) = Some kv))
                                   else
                                     (∀ kv, kv ∈ kvs ↔
-                                           (go_string_le req.(RangeRequest.key) kv.(KeyValue.key) ∧
-                                            go_string_lt kv.(KeyValue.key) req.(RangeRequest.range_end) ∧
+                                           (go.go_string_le req.(RangeRequest.key) kv.(KeyValue.key) ∧
+                                            go.go_string_lt kv.(KeyValue.key) req.(RangeRequest.range_end) ∧
                                             kv_map !! kv.(KeyValue.key) = Some kv))
                               end
                            );
@@ -444,11 +410,11 @@ interp handle_exceptionE (
   (* for sorting in ascending order; descending means flipping the order of the list. *)
   sort_relation ←
     (match uint.Z req.(RangeRequest.sort_target) with
-     | (* KEY *) 0 => Pure (relation_pullback KeyValue.key go_string_lt)
+     | (* KEY *) 0 => Pure (relation_pullback KeyValue.key go.go_string_lt)
      | (* VERSION *) 1 => Pure (relation_pullback (sint.Z ∘ KeyValue.version) Z.lt)
      | (* CREATE *) 2 => Pure (relation_pullback (sint.Z ∘ KeyValue.create_revision) Z.lt)
      | (* MOD *) 3 => Pure (relation_pullback (sint.Z ∘ KeyValue.mod_revision) Z.lt)
-     | (* VALUE *) 4 => Pure (relation_pullback KeyValue.value go_string_lt)
+     | (* VALUE *) 4 => Pure (relation_pullback KeyValue.value go.go_string_lt)
      | _ => (do $ Ok (Assert False);; do $ Throw $ Bad "unreachable")
      end);
   kvs_sorted ← (do $ Ok $ SuchThat (λ kvs_sorted, StronglySorted sort_relation kvs_sorted ∧ Permutation kvs kvs_sorted));
