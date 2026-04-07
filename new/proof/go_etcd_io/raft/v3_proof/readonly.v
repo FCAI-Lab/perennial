@@ -576,12 +576,9 @@ Proof.
   wp_auto.
   wp_alloc req_ptr as "req".
   wp_auto.
-  wp_apply wp_slice_literal.
-  { iIntros. wp_auto. iFrame. }
-  iIntros "% sl".
+  wp_apply wp_slice_literal. iSplitR; [done|]. iIntros "% [sl _]". wp_auto.
   replace (sint.nat (W64 0)) with (O) by done.
   rewrite /go.array_literal_size /= /Z.max /= /Z.add /=.
-  wp_auto.
   wp_apply (wp_slice_append with "[$unconfirmedReads_cap $unconfirmedReads $sl]").
   iIntros "% (? & ? & ?)". iApply wp_fupd. wp_auto_lc 1.
   iSelect (£ 1)%I (fun H => iRename H into "Hlc").

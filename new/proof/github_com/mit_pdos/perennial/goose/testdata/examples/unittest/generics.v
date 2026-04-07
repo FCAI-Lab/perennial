@@ -105,8 +105,7 @@ Lemma wp_multiParamFunc `[!ZeroVal A'] `[!TypedPointsto A'] `[!IntoValTyped A' A
     #(functions generics.multiParamFunc [A; B]) #x #y
   {{{ s, RET #s; s ↦* [y] }}}.
 Proof.
-  wp_start. wp_auto. wp_apply wp_slice_literal as "% Hsl".
-  { iIntros. wp_auto. iFrame. }
+  wp_start. wp_auto. wp_apply wp_slice_literal. iSplitR; first done. iIntros "% [Hsl _]". wp_auto.
   wp_end.
 Qed.
 

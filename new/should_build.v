@@ -1,3 +1,8 @@
+(** this file references all perennial files that could be used
+by other projects.
+it serves as a target for [perennial-cli install --vos].
+in contrast, CI and [make install] build all .v files in the repo. *)
+
 (* helpers. *)
 From New Require ghost.
 From Perennial.Helpers Require
@@ -17,6 +22,9 @@ From New.proof.math Require Import bits.
 From New.golang.theory.chan.idioms Require idioms.
 
 From New.generatedproof Require math.rand testing.
+
+(* ffi. *)
+From Perennial.goose_lang.ffi.grove_ffi Require Import adequacy.
 
 (* common external pkgs. *)
 From New.proof.github_com.tchajed Require Import marshal.

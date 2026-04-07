@@ -142,9 +142,8 @@ Lemma wp_HigherOrderExample :
   subst.
   wp_apply (wp_get_response with "[$Hawait_r3]") as "%s %Heq".
   subst.
-  wp_apply wp_slice_literal.
-  { iIntros. wp_auto. iFrame. }
-  iIntros (sl) "Hresponse".
+  wp_apply wp_slice_literal. iSplitR; [done|].
+  iIntros (sl) "[Hresponse _]".
   wp_auto.
   iApply "HΦ".
   done.

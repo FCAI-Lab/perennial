@@ -112,8 +112,7 @@ Lemma wp_node__Propose γraft n ctx ctx_desc (data_sl : slice.t) (data : list w8
 Proof.
   (* Inlining proofs of [stepWait] and [stepWithWaitOption (wait:=true)] here. *)
   wp_start. iNamed "Hpre". wp_auto.
-  wp_apply wp_slice_literal as "%entries_sl [entries_sl _]".
-  { iIntros. wp_auto. iFrame. }
+  wp_apply wp_slice_literal. iSplitR; first done. iIntros "%entries_sl [entries_sl _]". wp_auto.
   wp_bind. wp_method_call. wp_call. wp_call.
   wp_auto. wp_bind. wp_method_call. wp_call. wp_call.
   wp_auto. iNamed "Hnode". wp_auto. wp_apply chan.wp_make2.

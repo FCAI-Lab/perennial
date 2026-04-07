@@ -1009,22 +1009,30 @@ Qed.
 
 Lemma wp_slice_literal `[!IntoValTyped V t] `{!st ↓u (go.SliceType t)} (l : list V) kvs Φ :
   let len := (go.array_literal_size kvs) in
-  (∀ Ψ, Ψ #(array.mk len l) -∗
-        WP (CompositeLiteral (go.ArrayType len t) (LiteralValueV kvs)) {{ Ψ }}) -∗
-  (∀ sl_ptr, (slice.mk sl_ptr (W64 len) (W64 len)) ↦* l -∗ Φ #(slice.mk sl_ptr (W64 len) (W64 len))) -∗
+  WP (CompositeLiteral (go.ArrayType len t) (LiteralValueV kvs))
+    {{ v,
+      ⌜ v = #(array.mk len l) ⌝ ∗
+      (∀ sl_ptr,
+        let sl := slice.mk sl_ptr (W64 len) (W64 len) in
+        (sl ↦* l ∗ own_slice_cap V sl 1) -∗
+        Φ #sl) }}
+  -∗
   WP (CompositeLiteral st (LiteralValueV kvs)) {{ Φ }}.
 Proof.
-  iIntros "* Harr HΦ".
+  iIntros "* HΦ".
   pose proof go.composite_literal_slice.
   wp_pures. destruct decide; last by iApply wp_AngelicExit.
   wp_pures. wp_alloc_auto. wp_pure. wp_pure.
-  wp_apply "Harr". rewrite -> decide_True.
+  wp_apply (wp_wand with "HΦ"). iIntros "% [-> HΦ]". wp_auto.
+  rewrite decide_True.
   2:{ enough (0 ≤ go.array_literal_size kvs) by word.
     unfold go.array_literal_size. destruct foldl. lia. }
   wp_auto. iDestruct (array_len with "tmp") as %Hlen.
   rewrite !go.array_index_ref_0 /=.
   wp_end.
-  - iDestruct (slice_array with "tmp") as "$". simpl. word.
+  - iDestruct (slice_array with "tmp") as "$".
+    { simpl. word. }
+    iApply own_slice_cap_empty; simpl; [done|word].
   - ereplace (word.sub ?[a] ?[b]) with (?a) by word. done.
 Qed.
 

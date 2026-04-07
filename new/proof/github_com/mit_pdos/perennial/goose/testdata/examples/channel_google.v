@@ -261,8 +261,7 @@ Proof using All.
       as (k & Hkin & ->).
     iDestruct (contract_of_sound q k v with "HPv") as %->.
     wp_auto.
-    wp_apply wp_slice_literal as "% Hsl1".
-    { iIntros. wp_auto. iFrame. }
+    wp_apply wp_slice_literal. iSplitR; first done. iIntros "% [Hsl1 _]". wp_auto.
     wp_apply (wp_slice_append with "[$Hsl $Hcap $Hsl1]").
     iIntros (sl') "[Hsl' Hcap']".
     wp_auto. set j := length pre. set remk' := delete j remk.
