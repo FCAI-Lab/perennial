@@ -158,7 +158,7 @@ Proof.
     }
     done.
   }
-  wp_apply wp_slice_literal. iSplitR; first done. iIntros "% Hsl". wp_auto.
+  wp_apply wp_slice_literal. iSplitR; first done. iIntros "% [Hsl _]". wp_auto.
   iAssert (∃ (i: nat) (i_v: w64) sl,
               "i" ∷ i_ptr ↦ i_v ∗
               "Hcons"  ∷ spsc_consumer γspsc (fib_list i) ∗
@@ -179,7 +179,7 @@ Proof.
     iIntros "[%Hfib Hcons]". wp_auto.
     iDestruct (slice.own_slice_len with "Hsl") as "[%Hl %Hcap]".
     iDestruct (slice.own_slice_len with "Hsl") as "[%Hlen_slice %Hslgtz]".
-    wp_apply wp_slice_literal. iSplitR; first done. iIntros "%sl0 Hsl0". wp_auto.
+    wp_apply wp_slice_literal. iSplitR; first done. iIntros "%sl0 [Hsl0 _]". wp_auto.
     iDestruct (slice.own_slice_len with "Hsl0") as "[%Hl0 %Hcap0]".
     iDestruct (slice.own_slice_len with "Hsl0") as "[%Hlen_slice0 %Hslgtz0]".
     wp_auto. wp_apply (wp_slice_append with "[$Hsl $Hsl0 $oslc ]").

@@ -578,7 +578,7 @@ Proof.
   wp_auto.
   wp_apply wp_slice_literal.
   { iIntros. wp_auto. iFrame. }
-  iIntros "% sl".
+  iIntros "% [sl _]".
   replace (sint.nat (W64 0)) with (O) by done.
   rewrite /go.array_literal_size /= /Z.max /= /Z.add /=.
   wp_auto.

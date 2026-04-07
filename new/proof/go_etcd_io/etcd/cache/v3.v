@@ -168,7 +168,7 @@ Proof.
   wp_if_destruct.
   { wp_apply wp_slice_literal.
     { iIntros. wp_auto. iFrame. }
-    iIntros "% Hsl". wp_auto.
+    iIntros "% [Hsl _]". wp_auto.
     wp_apply (wp_Errorf with "[$Hsl]") as "%err _".
     wp_auto.
     iCombineNamed "*_inv" as "Hinv".

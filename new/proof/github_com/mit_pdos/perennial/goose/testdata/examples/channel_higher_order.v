@@ -144,7 +144,7 @@ Lemma wp_HigherOrderExample :
   subst.
   wp_apply wp_slice_literal.
   { iIntros. wp_auto. iFrame. }
-  iIntros (sl) "Hresponse".
+  iIntros (sl) "[Hresponse _]".
   wp_auto.
   iApply "HΦ".
   done.
