@@ -114,8 +114,7 @@ Proof.
         iDestruct (own_slice_nil (V:=w8) (DfracOwn 1)) as "Hnil".
         iApply "Hnil".
       * iApply own_slice_cap_nil.
-  - wp_apply wp_slice_literal as "% Hs".
-    { iIntros. wp_auto. iFrame. }
+  - wp_apply wp_slice_literal. iSplitR; first done. iIntros "% Hs". wp_auto.
     wp_apply (wp_slice_append with "[$Hb $Hs]").
     + iApply own_slice_cap_empty; done.
     + rewrite app_nil_l.
