@@ -66,6 +66,8 @@ Definition BVER_MASK {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val := #25
 
 Definition TAKE_POST_NUM {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val := #100.
 
+Definition AD_SET_KEY {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val := #(W64 0).
+
 Definition ResKindNone {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val := #(W8 0).
 
 Definition ResKindBool {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val := #(W8 1).
@@ -160,7 +162,7 @@ Definition countUnique {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_strin
 
 Definition contains {ext : ffi_syntax} {go_gctx : GoGlobalContext} : go_string := "social-media-library/manager.contains"%go.
 
-(* go: manager.go:15:6 *)
+(* go: manager.go:17:6 *)
 Definition PIdFromFieldsⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "userId" "blockVer" "postNum",
     exception_do (let: "postNum" := (GoAlloc go.uint64 "postNum") in
@@ -175,7 +177,7 @@ Definition PIdFromFieldsⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContex
     do:  ("i" <-[go.uint64] "$r0");;;
     return: (![go.uint64] "i")).
 
-(* go: manager.go:22:6 *)
+(* go: manager.go:24:6 *)
 Definition PIdToFieldsⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "i",
     exception_do (let: "i" := (GoAlloc go.uint64 "i") in
@@ -191,20 +193,20 @@ Definition PIdToFieldsⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext}
     do:  ("i" <-[go.uint64] "$r0");;;
     return: (![go.uint64] "uid", ![go.uint64] "bver", ![go.uint64] "i")).
 
-(* go: manager.go:51:6 *)
+(* go: manager.go:53:6 *)
 Definition BodyToNatⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "b",
     exception_do (let: "b" := (GoAlloc PostBody "b") in
     return: (#(W64 0))).
 
-(* go: manager.go:55:6 *)
+(* go: manager.go:57:6 *)
 Definition BodyFromNatⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "n",
     exception_do (let: "n" := (GoAlloc go.uint64 "n") in
     return: (let: "$v0" := PostTypePost in
      CompositeLiteral PostBody (LiteralValue [KeyedElement (Some (KeyField "Type"%go)) (ElementExpression PostType "$v0")]))).
 
-(* go: manager.go:73:6 *)
+(* go: manager.go:77:6 *)
 Definition NewBoolResⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "v",
     exception_do (let: "v" := (GoAlloc go.bool "v") in
@@ -212,7 +214,7 @@ Definition NewBoolResⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
      let: "$v1" := (![go.bool] "v") in
      CompositeLiteral Res (LiteralValue [KeyedElement (Some (KeyField "Kind"%go)) (ElementExpression ResKind "$v0"); KeyedElement (Some (KeyField "Bool"%go)) (ElementExpression go.bool "$v1")]))).
 
-(* go: manager.go:77:6 *)
+(* go: manager.go:81:6 *)
 Definition NewPostIDResⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "pid",
     exception_do (let: "pid" := (GoAlloc go.uint64 "pid") in
@@ -220,7 +222,7 @@ Definition NewPostIDResⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext
      let: "$v1" := (![go.uint64] "pid") in
      CompositeLiteral Res (LiteralValue [KeyedElement (Some (KeyField "Kind"%go)) (ElementExpression ResKind "$v0"); KeyedElement (Some (KeyField "PID"%go)) (ElementExpression go.uint64 "$v1")]))).
 
-(* go: manager.go:81:6 *)
+(* go: manager.go:85:6 *)
 Definition NewTimelineResⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "t",
     exception_do (let: "t" := (GoAlloc Timeline "t") in
@@ -233,24 +235,26 @@ Definition NewTimelineResⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalConte
      let: "$v1" := (![Timeline] "t") in
      CompositeLiteral Res (LiteralValue [KeyedElement (Some (KeyField "Kind"%go)) (ElementExpression ResKind "$v0"); KeyedElement (Some (KeyField "Timeline"%go)) (ElementExpression Timeline "$v1")]))).
 
-(* go: manager.go:88:6 *)
+(* go: manager.go:92:6 *)
 Definition NewUnitResⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: <>,
     exception_do (return: (let: "$v0" := ResKindUnit in
      CompositeLiteral Res (LiteralValue [KeyedElement (Some (KeyField "Kind"%go)) (ElementExpression ResKind "$v0")]))).
 
-(* go: manager.go:204:6 *)
+(* go: manager.go:218:6 *)
 Definition NewCSLManagerⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
-  λ: "myId",
-    exception_do (let: "myId" := (GoAlloc go.uint64 "myId") in
+  λ: "myId" "adsThreshold",
+    exception_do (let: "adsThreshold" := (GoAlloc go.uint64 "adsThreshold") in
+    let: "myId" := (GoAlloc go.uint64 "myId") in
     return: (GoAlloc CSLManager (let: "$v0" := #false in
      let: "$v1" := (![go.uint64] "myId") in
      let: "$v2" := (let: "$v0" := MdIdle in
      CompositeLiteral Mode (LiteralValue [KeyedElement (Some (KeyField "Type"%go)) (ElementExpression go.uint64 "$v0")])) in
      let: "$v3" := #(W64 0) in
-     CompositeLiteral CSLManager (LiteralValue [KeyedElement (Some (KeyField "IsMyId"%go)) (ElementExpression go.bool "$v0"); KeyedElement (Some (KeyField "MyId"%go)) (ElementExpression go.uint64 "$v1"); KeyedElement (Some (KeyField "Mode"%go)) (ElementExpression Mode "$v2"); KeyedElement (Some (KeyField "PNum"%go)) (ElementExpression go.uint64 "$v3")])))).
+     let: "$v4" := (![go.uint64] "adsThreshold") in
+     CompositeLiteral CSLManager (LiteralValue [KeyedElement (Some (KeyField "IsMyId"%go)) (ElementExpression go.bool "$v0"); KeyedElement (Some (KeyField "MyId"%go)) (ElementExpression go.uint64 "$v1"); KeyedElement (Some (KeyField "Mode"%go)) (ElementExpression Mode "$v2"); KeyedElement (Some (KeyField "PNum"%go)) (ElementExpression go.uint64 "$v3"); KeyedElement (Some (KeyField "AdsThreshold"%go)) (ElementExpression go.uint64 "$v4")])))).
 
-(* go: manager.go:213:22 *)
+(* go: manager.go:228:22 *)
 Definition CSLManager__Pcⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" <>,
     exception_do (let: "m" := (GoAlloc (go.PointerType CSLManager) "m") in
@@ -328,16 +332,34 @@ Definition CSLManager__Pcⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalConte
                  let: "$v2" := (let: "$v0" := #(W64 1) in
                  let: "$v1" := (![go.SliceType go.uint64] "keys") in
                  CompositeLiteral wrappers.WrapInput (LiteralValue [KeyedElement (Some (KeyField "Type"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "RdRqKeys"%go)) (ElementExpression (go.SliceType go.uint64) "$v1")])) in
-                 CompositeLiteral MgrRequest (LiteralValue [KeyedElement (Some (KeyField "Type"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "IsGraphReq"%go)) (ElementExpression go.bool "$v1"); KeyedElement (Some (KeyField "GraphReq"%go)) (ElementExpression wrappers.WrapInput "$v2")]))
+                 let: "$v3" := #true in
+                 let: "$v4" := (let: "$v0" := #(W64 1) in
+                 let: "$v1" := (let: "$v0" := AD_SET_KEY in
+                 CompositeLiteral (go.SliceType go.uint64) (LiteralValue [KeyedElement None (ElementExpression go.uint64 "$v0")])) in
+                 CompositeLiteral wrappers.WrapInput (LiteralValue [KeyedElement (Some (KeyField "Type"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "RdRqKeys"%go)) (ElementExpression (go.SliceType go.uint64) "$v1")])) in
+                 CompositeLiteral MgrRequest (LiteralValue [KeyedElement (Some (KeyField "Type"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "IsGraphReq"%go)) (ElementExpression go.bool "$v1"); KeyedElement (Some (KeyField "GraphReq"%go)) (ElementExpression wrappers.WrapInput "$v2"); KeyedElement (Some (KeyField "IsAdReq"%go)) (ElementExpression go.bool "$v3"); KeyedElement (Some (KeyField "AdReq"%go)) (ElementExpression wrappers.WrapInput "$v4")]))
               else do:  #());;;
               (if: Convert go.untyped_bool go.bool ((![go.MapType go.uint64 (go.SliceType go.uint64)] (StructFieldRef ReqMode "OpidMap"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m"))))) =⟨go.MapType go.uint64 (go.SliceType go.uint64)⟩ (Convert go.untyped_nil (go.MapType go.uint64 (go.SliceType go.uint64)) UntypedNil))
               then
-                return: (let: "$v0" := #(W64 1) in
-                 let: "$v1" := #true in
-                 let: "$v2" := (let: "$v0" := #(W64 1) in
-                 let: "$v1" := (![go.SliceType go.uint64] (StructFieldRef ReqMode "Uids"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m"))))) in
-                 CompositeLiteral wrappers.WrapInput (LiteralValue [KeyedElement (Some (KeyField "Type"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "RdRqKeys"%go)) (ElementExpression (go.SliceType go.uint64) "$v1")])) in
-                 CompositeLiteral MgrRequest (LiteralValue [KeyedElement (Some (KeyField "Type"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "IsTimeReq"%go)) (ElementExpression go.bool "$v1"); KeyedElement (Some (KeyField "TimeReq"%go)) (ElementExpression wrappers.WrapInput "$v2")]))
+                let: "req" := (GoAlloc MgrRequest (GoZeroVal MgrRequest #())) in
+                let: "$r0" := (let: "$v0" := #(W64 1) in
+                let: "$v1" := #true in
+                let: "$v2" := (let: "$v0" := #(W64 1) in
+                let: "$v1" := (![go.SliceType go.uint64] (StructFieldRef ReqMode "Uids"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m"))))) in
+                CompositeLiteral wrappers.WrapInput (LiteralValue [KeyedElement (Some (KeyField "Type"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "RdRqKeys"%go)) (ElementExpression (go.SliceType go.uint64) "$v1")])) in
+                CompositeLiteral MgrRequest (LiteralValue [KeyedElement (Some (KeyField "Type"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "IsTimeReq"%go)) (ElementExpression go.bool "$v1"); KeyedElement (Some (KeyField "TimeReq"%go)) (ElementExpression wrappers.WrapInput "$v2")])) in
+                do:  ("req" <-[MgrRequest] "$r0");;;
+                (if: Convert go.untyped_bool go.bool ((![go.PointerType go.uint64] (StructFieldRef ReqMode "OAd"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m"))))) ≠⟨go.PointerType go.uint64⟩ (Convert go.untyped_nil (go.PointerType go.uint64) UntypedNil))
+                then
+                  let: "$r0" := #true in
+                  do:  ((StructFieldRef MgrRequest "IsAdReq"%go "req") <-[go.bool] "$r0");;;
+                  let: "$r0" := (let: "$v0" := #(W64 1) in
+                  let: "$v1" := (let: "$v0" := (![go.uint64] (![go.PointerType go.uint64] (StructFieldRef ReqMode "OAd"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m")))))) in
+                  CompositeLiteral (go.SliceType go.uint64) (LiteralValue [KeyedElement None (ElementExpression go.uint64 "$v0")])) in
+                  CompositeLiteral wrappers.WrapInput (LiteralValue [KeyedElement (Some (KeyField "Type"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "RdRqKeys"%go)) (ElementExpression (go.SliceType go.uint64) "$v1")])) in
+                  do:  ((StructFieldRef MgrRequest "AdReq"%go "req") <-[wrappers.WrapInput] "$r0")
+                else do:  #());;;
+                return: (![MgrRequest] "req")
               else do:  #());;;
               let: "pids" := (GoAlloc (go.SliceType go.uint64) (GoZeroVal (go.SliceType go.uint64) #())) in
               let: "$range" := (![go.MapType go.uint64 (go.SliceType go.uint64)] (StructFieldRef ReqMode "OpidMap"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m"))))) in
@@ -349,12 +371,37 @@ Definition CSLManager__Pcⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalConte
                 let: "$a1" := (![go.SliceType go.uint64] "ids") in
                 (FuncResolve go.append [go.SliceType go.uint64] #()) "$a0" "$a1") in
                 do:  ("pids" <-[go.SliceType go.uint64] "$r0")));;;
-              return: (let: "$v0" := #(W64 1) in
-               let: "$v1" := #true in
-               let: "$v2" := (let: "$v0" := #(W64 1) in
-               let: "$v1" := (![go.SliceType go.uint64] "pids") in
-               CompositeLiteral wrappers.WrapInput (LiteralValue [KeyedElement (Some (KeyField "Type"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "RdRqKeys"%go)) (ElementExpression (go.SliceType go.uint64) "$v1")])) in
-               CompositeLiteral MgrRequest (LiteralValue [KeyedElement (Some (KeyField "Type"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "IsPostReq"%go)) (ElementExpression go.bool "$v1"); KeyedElement (Some (KeyField "PostReq"%go)) (ElementExpression wrappers.WrapInput "$v2")]))
+              let: "req" := (GoAlloc MgrRequest (GoZeroVal MgrRequest #())) in
+              let: "$r0" := (let: "$v0" := #(W64 1) in
+              let: "$v1" := #true in
+              let: "$v2" := (let: "$v0" := #(W64 1) in
+              let: "$v1" := (![go.SliceType go.uint64] "pids") in
+              CompositeLiteral wrappers.WrapInput (LiteralValue [KeyedElement (Some (KeyField "Type"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "RdRqKeys"%go)) (ElementExpression (go.SliceType go.uint64) "$v1")])) in
+              CompositeLiteral MgrRequest (LiteralValue [KeyedElement (Some (KeyField "Type"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "IsPostReq"%go)) (ElementExpression go.bool "$v1"); KeyedElement (Some (KeyField "PostReq"%go)) (ElementExpression wrappers.WrapInput "$v2")])) in
+              do:  ("req" <-[MgrRequest] "$r0");;;
+              (if: Convert go.untyped_bool go.bool (((![go.PointerType go.uint64] (StructFieldRef ReqMode "OAd"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m"))))) ≠⟨go.PointerType go.uint64⟩ (Convert go.untyped_nil (go.PointerType go.uint64) UntypedNil)) && ((![go.PointerType go.uint64] (StructFieldRef ReqMode "OAdCnt"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m"))))) ≠⟨go.PointerType go.uint64⟩ (Convert go.untyped_nil (go.PointerType go.uint64) UntypedNil)))
+              then
+                (if: Convert go.untyped_bool go.bool ((![go.uint64] (![go.PointerType go.uint64] (StructFieldRef ReqMode "OAdCnt"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m")))))) <⟨go.uint64⟩ (![go.uint64] (StructFieldRef CSLManager "AdsThreshold"%go (![go.PointerType CSLManager] "m"))))
+                then
+                  let: "$r0" := #true in
+                  do:  ((StructFieldRef MgrRequest "IsAdReq"%go "req") <-[go.bool] "$r0");;;
+                  let: "$r0" := (let: "$v0" := #(W64 2) in
+                  let: "$v1" := #true in
+                  let: "$v2" := (![go.uint64] (![go.PointerType go.uint64] (StructFieldRef ReqMode "OAd"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m")))))) in
+                  let: "$v3" := #(W64 0) in
+                  CompositeLiteral wrappers.WrapInput (LiteralValue [KeyedElement (Some (KeyField "Type"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "WrRqAdd"%go)) (ElementExpression go.bool "$v1"); KeyedElement (Some (KeyField "WrRqKey"%go)) (ElementExpression go.uint64 "$v2"); KeyedElement (Some (KeyField "WrRqVal"%go)) (ElementExpression go.uint64 "$v3")])) in
+                  do:  ((StructFieldRef MgrRequest "AdReq"%go "req") <-[wrappers.WrapInput] "$r0")
+                else
+                  let: "$r0" := #true in
+                  do:  ((StructFieldRef MgrRequest "IsAdReq"%go "req") <-[go.bool] "$r0");;;
+                  let: "$r0" := (let: "$v0" := #(W64 2) in
+                  let: "$v1" := #false in
+                  let: "$v2" := AD_SET_KEY in
+                  let: "$v3" := (![go.uint64] (![go.PointerType go.uint64] (StructFieldRef ReqMode "OAd"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m")))))) in
+                  CompositeLiteral wrappers.WrapInput (LiteralValue [KeyedElement (Some (KeyField "Type"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "WrRqAdd"%go)) (ElementExpression go.bool "$v1"); KeyedElement (Some (KeyField "WrRqKey"%go)) (ElementExpression go.uint64 "$v2"); KeyedElement (Some (KeyField "WrRqVal"%go)) (ElementExpression go.uint64 "$v3")])) in
+                  do:  ((StructFieldRef MgrRequest "AdReq"%go "req") <-[wrappers.WrapInput] "$r0"))
+              else do:  #());;;
+              return: (![MgrRequest] "req")
             else
               (if: "$sw" =⟨go.uint64⟩ RmdFollow
               then
@@ -424,7 +471,7 @@ Definition CSLManager__Pcⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalConte
     return: (let: "$v0" := #(W64 0) in
      CompositeLiteral MgrRequest (LiteralValue [KeyedElement (Some (KeyField "Type"%go)) (ElementExpression go.uint64 "$v0")]))).
 
-(* go: manager.go:366:22 *)
+(* go: manager.go:420:22 *)
 Definition CSLManager__Doⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "inp",
     exception_do (let: "m" := (GoAlloc (go.PointerType CSLManager) "m") in
@@ -439,7 +486,7 @@ Definition CSLManager__Doⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalConte
     (MethodResolve (go.PointerType CSLManager) "doLoggedOut"%go (![go.PointerType CSLManager] "m")) "$a0")) in
     return: ("$ret0", "$ret1", "$ret2")).
 
-(* go: manager.go:373:22 *)
+(* go: manager.go:427:22 *)
 Definition CSLManager__doLoggedInⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "inp",
     exception_do (let: "m" := (GoAlloc (go.PointerType CSLManager) "m") in
@@ -594,7 +641,7 @@ Definition CSLManager__doLoggedInⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlo
       else
         (if: "$sw" =⟨go.uint64⟩ RmdRdPosts
         then
-          (if: ((((![go.MapType go.uint64 (go.SliceType go.uint64)] (StructFieldRef ReqMode "OblockMap"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m"))))) =⟨go.MapType go.uint64 (go.SliceType go.uint64)⟩ (Convert go.untyped_nil (go.MapType go.uint64 (go.SliceType go.uint64)) UntypedNil)) && ((![go.uint64] (StructFieldRef MgrInput "Type"%go "inp")) =⟨go.uint64⟩ InpWrapRes)) && (![go.bool] (StructFieldRef MgrInput "IsGraphRes"%go "inp"))) && (![go.bool] (StructFieldRef MgrInput "IsGraphResVal"%go "inp"))
+          (if: ((((((![go.MapType go.uint64 (go.SliceType go.uint64)] (StructFieldRef ReqMode "OblockMap"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m"))))) =⟨go.MapType go.uint64 (go.SliceType go.uint64)⟩ (Convert go.untyped_nil (go.MapType go.uint64 (go.SliceType go.uint64)) UntypedNil)) && ((![go.uint64] (StructFieldRef MgrInput "Type"%go "inp")) =⟨go.uint64⟩ InpWrapRes)) && (![go.bool] (StructFieldRef MgrInput "IsGraphRes"%go "inp"))) && (![go.bool] (StructFieldRef MgrInput "IsGraphResVal"%go "inp"))) && (![go.bool] (StructFieldRef MgrInput "IsAdRes"%go "inp"))) && (![go.bool] (StructFieldRef MgrInput "IsAdResVal"%go "inp"))
           then
             let: "blockMap" := (GoAlloc (go.MapType go.uint64 (go.SliceType go.uint64)) (GoZeroVal (go.MapType go.uint64 (go.SliceType go.uint64)) #())) in
             let: "$r0" := (![go.MapType go.uint64 (go.SliceType go.uint64)] (StructFieldRef MgrInput "GraphResVal"%go "inp")) in
@@ -605,10 +652,7 @@ Definition CSLManager__doLoggedInⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlo
             slice.for_range go.uint64 "$range" (λ: "$key" "$value",
               do:  ("uid" <-[go.uint64] "$value");;;
               do:  "$key";;;
-              let: "blockedByUid" := (GoAlloc (go.SliceType go.uint64) (GoZeroVal (go.SliceType go.uint64) #())) in
-              let: "$r0" := (map.lookup1 go.uint64 (go.SliceType go.uint64) (![go.MapType go.uint64 (go.SliceType go.uint64)] "blockMap") ((#(W64 2) *⟨go.uint64⟩ (![go.uint64] "uid")) +⟨go.uint64⟩ #(W64 1))) in
-              do:  ("blockedByUid" <-[go.SliceType go.uint64] "$r0");;;
-              (if: (⟨go.bool⟩! (let: "$a0" := (![go.SliceType go.uint64] "blockedByUid") in
+              (if: (⟨go.bool⟩! (let: "$a0" := (map.lookup1 go.uint64 (go.SliceType go.uint64) (![go.MapType go.uint64 (go.SliceType go.uint64)] "blockMap") ((#(W64 2) *⟨go.uint64⟩ (![go.uint64] "uid")) +⟨go.uint64⟩ #(W64 1))) in
               let: "$a1" := (![go.uint64] (StructFieldRef CSLManager "MyId"%go (![go.PointerType CSLManager] "m"))) in
               (FuncResolve contains [] #()) "$a0" "$a1"))
               then
@@ -622,6 +666,25 @@ Definition CSLManager__doLoggedInⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlo
             do:  ((StructFieldRef ReqMode "Uids"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m")))) <-[go.SliceType go.uint64] "$r0");;;
             let: "$r0" := (![go.MapType go.uint64 (go.SliceType go.uint64)] "blockMap") in
             do:  ((StructFieldRef ReqMode "OblockMap"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m")))) <-[go.MapType go.uint64 (go.SliceType go.uint64)] "$r0");;;
+            let: "oad" := (GoAlloc (go.PointerType go.uint64) (GoZeroVal (go.PointerType go.uint64) #())) in
+            let: "$range" := (map.lookup1 go.uint64 (go.SliceType go.uint64) (![go.MapType go.uint64 (go.SliceType go.uint64)] (StructFieldRef MgrInput "AdResVal"%go "inp")) AD_SET_KEY) in
+            (let: "adID" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
+            slice.for_range go.uint64 "$range" (λ: "$key" "$value",
+              do:  ("adID" <-[go.uint64] "$value");;;
+              do:  "$key";;;
+              (if: Convert go.untyped_bool go.bool ((![go.uint64] "adID") ≠⟨go.uint64⟩ AD_SET_KEY)
+              then
+                let: "id" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
+                let: "$r0" := (![go.uint64] "adID") in
+                do:  ("id" <-[go.uint64] "$r0");;;
+                let: "$r0" := "id" in
+                do:  ("oad" <-[go.PointerType go.uint64] "$r0");;;
+                break: #()
+              else do:  #())));;;
+            let: "$r0" := (![go.PointerType go.uint64] "oad") in
+            do:  ((StructFieldRef ReqMode "OAd"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m")))) <-[go.PointerType go.uint64] "$r0");;;
+            let: "$r0" := (Convert go.untyped_nil (go.PointerType go.uint64) UntypedNil) in
+            do:  ((StructFieldRef ReqMode "OAdCnt"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m")))) <-[go.PointerType go.uint64] "$r0");;;
             return: (![go.PointerType CSLManager] "m", #false, (FuncResolve NewUnitRes [] #()) #())
           else do:  #());;;
           (if: (((((![go.MapType go.uint64 (go.SliceType go.uint64)] (StructFieldRef ReqMode "OblockMap"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m"))))) ≠⟨go.MapType go.uint64 (go.SliceType go.uint64)⟩ (Convert go.untyped_nil (go.MapType go.uint64 (go.SliceType go.uint64)) UntypedNil)) && ((![go.MapType go.uint64 (go.SliceType go.uint64)] (StructFieldRef ReqMode "OpidMap"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m"))))) =⟨go.MapType go.uint64 (go.SliceType go.uint64)⟩ (Convert go.untyped_nil (go.MapType go.uint64 (go.SliceType go.uint64)) UntypedNil))) && ((![go.uint64] (StructFieldRef MgrInput "Type"%go "inp")) =⟨go.uint64⟩ InpWrapRes)) && (![go.bool] (StructFieldRef MgrInput "IsTimeRes"%go "inp"))) && (![go.bool] (StructFieldRef MgrInput "IsTimeResVal"%go "inp"))
@@ -641,11 +704,8 @@ Definition CSLManager__doLoggedInⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlo
               let: "tline" := (GoAlloc (go.SliceType go.uint64) (GoZeroVal (go.SliceType go.uint64) #())) in
               let: "$r0" := (map.lookup1 go.uint64 (go.SliceType go.uint64) (![go.MapType go.uint64 (go.SliceType go.uint64)] "timeMap") (![go.uint64] "uid")) in
               do:  ("tline" <-[go.SliceType go.uint64] "$r0");;;
-              let: "blockedByUid" := (GoAlloc (go.SliceType go.uint64) (GoZeroVal (go.SliceType go.uint64) #())) in
-              let: "$r0" := (map.lookup1 go.uint64 (go.SliceType go.uint64) (![go.MapType go.uint64 (go.SliceType go.uint64)] (StructFieldRef ReqMode "OblockMap"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m"))))) ((#(W64 2) *⟨go.uint64⟩ (![go.uint64] "uid")) +⟨go.uint64⟩ #(W64 1))) in
-              do:  ("blockedByUid" <-[go.SliceType go.uint64] "$r0");;;
               let: "bver" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
-              let: "$r0" := (let: "$a0" := (![go.SliceType go.uint64] "blockedByUid") in
+              let: "$r0" := (let: "$a0" := (map.lookup1 go.uint64 (go.SliceType go.uint64) (![go.MapType go.uint64 (go.SliceType go.uint64)] (StructFieldRef ReqMode "OblockMap"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m"))))) ((#(W64 2) *⟨go.uint64⟩ (![go.uint64] "uid")) +⟨go.uint64⟩ #(W64 1))) in
               (FuncResolve countUnique [] #()) "$a0") in
               do:  ("bver" <-[go.uint64] "$r0");;;
               let: "filtered" := (GoAlloc (go.SliceType go.uint64) (GoZeroVal (go.SliceType go.uint64) #())) in
@@ -682,6 +742,18 @@ Definition CSLManager__doLoggedInⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlo
               do:  (map.insert go.uint64 (![go.MapType go.uint64 (go.SliceType go.uint64)] "pidMap") (![go.uint64] "uid") "$r0")));;;
             let: "$r0" := (![go.MapType go.uint64 (go.SliceType go.uint64)] "pidMap") in
             do:  ((StructFieldRef ReqMode "OpidMap"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m")))) <-[go.MapType go.uint64 (go.SliceType go.uint64)] "$r0");;;
+            let: "oadCnt" := (GoAlloc (go.PointerType go.uint64) (GoZeroVal (go.PointerType go.uint64) #())) in
+            (if: (((![go.PointerType go.uint64] (StructFieldRef ReqMode "OAd"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m"))))) ≠⟨go.PointerType go.uint64⟩ (Convert go.untyped_nil (go.PointerType go.uint64) UntypedNil)) && (![go.bool] (StructFieldRef MgrInput "IsAdRes"%go "inp"))) && (![go.bool] (StructFieldRef MgrInput "IsAdResVal"%go "inp"))
+            then
+              let: "cnt" := (GoAlloc go.uint64 (GoZeroVal go.uint64 #())) in
+              let: "$r0" := (Convert go.int go.uint64 (let: "$a0" := (map.lookup1 go.uint64 (go.SliceType go.uint64) (![go.MapType go.uint64 (go.SliceType go.uint64)] (StructFieldRef MgrInput "AdResVal"%go "inp")) (![go.uint64] (![go.PointerType go.uint64] (StructFieldRef ReqMode "OAd"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m"))))))) in
+              (FuncResolve go.len [go.SliceType go.uint64] #()) "$a0")) in
+              do:  ("cnt" <-[go.uint64] "$r0");;;
+              let: "$r0" := "cnt" in
+              do:  ("oadCnt" <-[go.PointerType go.uint64] "$r0")
+            else do:  #());;;
+            let: "$r0" := (![go.PointerType go.uint64] "oadCnt") in
+            do:  ((StructFieldRef ReqMode "OAdCnt"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m")))) <-[go.PointerType go.uint64] "$r0");;;
             return: (![go.PointerType CSLManager] "m", #false, (FuncResolve NewUnitRes [] #()) #())
           else do:  #());;;
           (if: ((((![go.MapType go.uint64 (go.SliceType go.uint64)] (StructFieldRef ReqMode "OpidMap"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m"))))) ≠⟨go.MapType go.uint64 (go.SliceType go.uint64)⟩ (Convert go.untyped_nil (go.MapType go.uint64 (go.SliceType go.uint64)) UntypedNil)) && ((![go.uint64] (StructFieldRef MgrInput "Type"%go "inp")) =⟨go.uint64⟩ InpWrapRes)) && (![go.bool] (StructFieldRef MgrInput "IsPostRes"%go "inp"))) && (![go.bool] (StructFieldRef MgrInput "IsPostResVal"%go "inp"))
@@ -729,9 +801,19 @@ Definition CSLManager__doLoggedInⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlo
                 else do:  #()))));;;
               let: "$r0" := (![go.SliceType PostRecord] "posts") in
               do:  ((IndexRef Timeline (![Timeline] "timeline", ![go.uint64] "uid")) <-[go.SliceType PostRecord] "$r0")));;;
-            let: "$r0" := (let: "$v0" := RmdRet in
-            let: "$v1" := (let: "$a0" := (![Timeline] "timeline") in
+            let: "rt" := (GoAlloc Res (GoZeroVal Res #())) in
+            let: "$r0" := (let: "$a0" := (![Timeline] "timeline") in
             (FuncResolve NewTimelineRes [] #()) "$a0") in
+            do:  ("rt" <-[Res] "$r0");;;
+            (if: Convert go.untyped_bool go.bool ((![go.PointerType go.uint64] (StructFieldRef ReqMode "OAd"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m"))))) ≠⟨go.PointerType go.uint64⟩ (Convert go.untyped_nil (go.PointerType go.uint64) UntypedNil))
+            then
+              let: "$r0" := #true in
+              do:  ((StructFieldRef Res "HasAd"%go "rt") <-[go.bool] "$r0");;;
+              let: "$r0" := (![go.uint64] (![go.PointerType go.uint64] (StructFieldRef ReqMode "OAd"%go (StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m")))))) in
+              do:  ((StructFieldRef Res "AdID"%go "rt") <-[go.uint64] "$r0")
+            else do:  #());;;
+            let: "$r0" := (let: "$v0" := RmdRet in
+            let: "$v1" := (![Res] "rt") in
             CompositeLiteral ReqMode (LiteralValue [KeyedElement (Some (KeyField "Type"%go)) (ElementExpression go.uint64 "$v0"); KeyedElement (Some (KeyField "Rt"%go)) (ElementExpression Res "$v1")])) in
             do:  ((StructFieldRef Mode "Rmd"%go (StructFieldRef CSLManager "Mode"%go (![go.PointerType CSLManager] "m"))) <-[ReqMode] "$r0")
           else do:  #())
@@ -748,7 +830,7 @@ Definition CSLManager__doLoggedInⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlo
           else do:  #()))));;;
     return: (![go.PointerType CSLManager] "m", #false, (FuncResolve NewUnitRes [] #()) #())).
 
-(* go: manager.go:509:22 *)
+(* go: manager.go:593:22 *)
 Definition CSLManager__doLoggedOutⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "m" "inp",
     exception_do (let: "m" := (GoAlloc (go.PointerType CSLManager) "m") in
@@ -842,7 +924,7 @@ Definition CSLManager__doLoggedOutⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGl
       else do:  #()));;;
     return: (![go.PointerType CSLManager] "m", #false, (FuncResolve NewUnitRes [] #()) #())).
 
-(* go: manager.go:560:6 *)
+(* go: manager.go:644:6 *)
 Definition countUniqueⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "values",
     exception_do (let: "values" := (GoAlloc (go.SliceType go.uint64) "values") in
@@ -880,7 +962,7 @@ Definition countUniqueⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext}
 
       ])] #()) "$a0"))).
 
-(* go: manager.go:571:6 *)
+(* go: manager.go:655:6 *)
 Definition containsⁱᵐᵖˡ {ext : ffi_syntax} {go_gctx : GoGlobalContext} : val :=
   λ: "values" "target",
     exception_do (let: "target" := (GoAlloc go.uint64 "target") in
@@ -1026,9 +1108,11 @@ mk {
   Bool' : bool;
   PID' : w64;
   Timeline' : manager.Timeline.t;
+  HasAd' : bool;
+  AdID' : w64;
 }.
 
-#[global] Instance zero_val : ZeroVal t := {| zero_val := mk (zero_val _) (zero_val _) (zero_val _) (zero_val _)|}.
+#[global] Instance zero_val : ZeroVal t := {| zero_val := mk (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _)|}.
 #[global] Arguments mk : clear implicits.
 #[global] Arguments t : clear implicits.
 End def.
@@ -1038,7 +1122,9 @@ Definition Res'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} : lis
   (go.FieldDecl "Kind"%go ResKind);
   (go.FieldDecl "Bool"%go go.bool);
   (go.FieldDecl "PID"%go go.uint64);
-  (go.FieldDecl "Timeline"%go Timeline)
+  (go.FieldDecl "Timeline"%go Timeline);
+  (go.FieldDecl "HasAd"%go go.bool);
+  (go.FieldDecl "AdID"%go go.uint64)
 ].
 Program Definition Res'fds {ext : ffi_syntax} {go_gctx : GoGlobalContext} := sealed (Res'fds_unsealed).
 Global Instance equals_unfold_Res {ext : ffi_syntax} {go_gctx : GoGlobalContext} : Res'fds =→ Res'fds_unsealed.
@@ -1058,6 +1144,10 @@ Class Res_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalContext} 
   #[global] Res_set_PID (x : Res.t) y :: ⟦StructFieldSet (Resⁱᵐᵖˡ) "PID", (#x, #y)⟧ ⤳[under] #(x <|Res.PID' := y|>);
   #[global] Res_get_Timeline (x : Res.t) :: ⟦StructFieldGet (Resⁱᵐᵖˡ) "Timeline", #x⟧ ⤳[under] #x.(Res.Timeline');
   #[global] Res_set_Timeline (x : Res.t) y :: ⟦StructFieldSet (Resⁱᵐᵖˡ) "Timeline", (#x, #y)⟧ ⤳[under] #(x <|Res.Timeline' := y|>);
+  #[global] Res_get_HasAd (x : Res.t) :: ⟦StructFieldGet (Resⁱᵐᵖˡ) "HasAd", #x⟧ ⤳[under] #x.(Res.HasAd');
+  #[global] Res_set_HasAd (x : Res.t) y :: ⟦StructFieldSet (Resⁱᵐᵖˡ) "HasAd", (#x, #y)⟧ ⤳[under] #(x <|Res.HasAd' := y|>);
+  #[global] Res_get_AdID (x : Res.t) :: ⟦StructFieldGet (Resⁱᵐᵖˡ) "AdID", #x⟧ ⤳[under] #x.(Res.AdID');
+  #[global] Res_set_AdID (x : Res.t) y :: ⟦StructFieldSet (Resⁱᵐᵖˡ) "AdID", (#x, #y)⟧ ⤳[under] #(x <|Res.AdID' := y|>);
 }.
 
 Module Req.
@@ -1112,11 +1202,13 @@ mk {
   PostWritten' : bool;
   Uids' : slice.t;
   OblockMap' : map.t;
+  OAd' : loc;
   OpidMap' : map.t;
+  OAdCnt' : loc;
   Rt' : manager.Res.t;
 }.
 
-#[global] Instance zero_val : ZeroVal t := {| zero_val := mk (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _)|}.
+#[global] Instance zero_val : ZeroVal t := {| zero_val := mk (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _)|}.
 #[global] Arguments mk : clear implicits.
 #[global] Arguments t : clear implicits.
 End def.
@@ -1131,7 +1223,9 @@ Definition ReqMode'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} :
   (go.FieldDecl "PostWritten"%go go.bool);
   (go.FieldDecl "Uids"%go (go.SliceType go.uint64));
   (go.FieldDecl "OblockMap"%go (go.MapType go.uint64 (go.SliceType go.uint64)));
+  (go.FieldDecl "OAd"%go (go.PointerType go.uint64));
   (go.FieldDecl "OpidMap"%go (go.MapType go.uint64 (go.SliceType go.uint64)));
+  (go.FieldDecl "OAdCnt"%go (go.PointerType go.uint64));
   (go.FieldDecl "Rt"%go Res)
 ].
 Program Definition ReqMode'fds {ext : ffi_syntax} {go_gctx : GoGlobalContext} := sealed (ReqMode'fds_unsealed).
@@ -1160,8 +1254,12 @@ Class ReqMode_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalConte
   #[global] ReqMode_set_Uids (x : ReqMode.t) y :: ⟦StructFieldSet (ReqModeⁱᵐᵖˡ) "Uids", (#x, #y)⟧ ⤳[under] #(x <|ReqMode.Uids' := y|>);
   #[global] ReqMode_get_OblockMap (x : ReqMode.t) :: ⟦StructFieldGet (ReqModeⁱᵐᵖˡ) "OblockMap", #x⟧ ⤳[under] #x.(ReqMode.OblockMap');
   #[global] ReqMode_set_OblockMap (x : ReqMode.t) y :: ⟦StructFieldSet (ReqModeⁱᵐᵖˡ) "OblockMap", (#x, #y)⟧ ⤳[under] #(x <|ReqMode.OblockMap' := y|>);
+  #[global] ReqMode_get_OAd (x : ReqMode.t) :: ⟦StructFieldGet (ReqModeⁱᵐᵖˡ) "OAd", #x⟧ ⤳[under] #x.(ReqMode.OAd');
+  #[global] ReqMode_set_OAd (x : ReqMode.t) y :: ⟦StructFieldSet (ReqModeⁱᵐᵖˡ) "OAd", (#x, #y)⟧ ⤳[under] #(x <|ReqMode.OAd' := y|>);
   #[global] ReqMode_get_OpidMap (x : ReqMode.t) :: ⟦StructFieldGet (ReqModeⁱᵐᵖˡ) "OpidMap", #x⟧ ⤳[under] #x.(ReqMode.OpidMap');
   #[global] ReqMode_set_OpidMap (x : ReqMode.t) y :: ⟦StructFieldSet (ReqModeⁱᵐᵖˡ) "OpidMap", (#x, #y)⟧ ⤳[under] #(x <|ReqMode.OpidMap' := y|>);
+  #[global] ReqMode_get_OAdCnt (x : ReqMode.t) :: ⟦StructFieldGet (ReqModeⁱᵐᵖˡ) "OAdCnt", #x⟧ ⤳[under] #x.(ReqMode.OAdCnt');
+  #[global] ReqMode_set_OAdCnt (x : ReqMode.t) y :: ⟦StructFieldSet (ReqModeⁱᵐᵖˡ) "OAdCnt", (#x, #y)⟧ ⤳[under] #(x <|ReqMode.OAdCnt' := y|>);
   #[global] ReqMode_get_Rt (x : ReqMode.t) :: ⟦StructFieldGet (ReqModeⁱᵐᵖˡ) "Rt", #x⟧ ⤳[under] #x.(ReqMode.Rt');
   #[global] ReqMode_set_Rt (x : ReqMode.t) y :: ⟦StructFieldSet (ReqModeⁱᵐᵖˡ) "Rt", (#x, #y)⟧ ⤳[under] #(x <|ReqMode.Rt' := y|>);
 }.
@@ -1214,9 +1312,10 @@ mk {
   MyId' : w64;
   Mode' : manager.Mode.t;
   PNum' : w64;
+  AdsThreshold' : w64;
 }.
 
-#[global] Instance zero_val : ZeroVal t := {| zero_val := mk (zero_val _) (zero_val _) (zero_val _) (zero_val _)|}.
+#[global] Instance zero_val : ZeroVal t := {| zero_val := mk (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _)|}.
 #[global] Arguments mk : clear implicits.
 #[global] Arguments t : clear implicits.
 End def.
@@ -1226,7 +1325,8 @@ Definition CSLManager'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext
   (go.FieldDecl "IsMyId"%go go.bool);
   (go.FieldDecl "MyId"%go go.uint64);
   (go.FieldDecl "Mode"%go Mode);
-  (go.FieldDecl "PNum"%go go.uint64)
+  (go.FieldDecl "PNum"%go go.uint64);
+  (go.FieldDecl "AdsThreshold"%go go.uint64)
 ].
 Program Definition CSLManager'fds {ext : ffi_syntax} {go_gctx : GoGlobalContext} := sealed (CSLManager'fds_unsealed).
 Global Instance equals_unfold_CSLManager {ext : ffi_syntax} {go_gctx : GoGlobalContext} : CSLManager'fds =→ CSLManager'fds_unsealed.
@@ -1246,6 +1346,8 @@ Class CSLManager_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalCo
   #[global] CSLManager_set_Mode (x : CSLManager.t) y :: ⟦StructFieldSet (CSLManagerⁱᵐᵖˡ) "Mode", (#x, #y)⟧ ⤳[under] #(x <|CSLManager.Mode' := y|>);
   #[global] CSLManager_get_PNum (x : CSLManager.t) :: ⟦StructFieldGet (CSLManagerⁱᵐᵖˡ) "PNum", #x⟧ ⤳[under] #x.(CSLManager.PNum');
   #[global] CSLManager_set_PNum (x : CSLManager.t) y :: ⟦StructFieldSet (CSLManagerⁱᵐᵖˡ) "PNum", (#x, #y)⟧ ⤳[under] #(x <|CSLManager.PNum' := y|>);
+  #[global] CSLManager_get_AdsThreshold (x : CSLManager.t) :: ⟦StructFieldGet (CSLManagerⁱᵐᵖˡ) "AdsThreshold", #x⟧ ⤳[under] #x.(CSLManager.AdsThreshold');
+  #[global] CSLManager_set_AdsThreshold (x : CSLManager.t) y :: ⟦StructFieldSet (CSLManagerⁱᵐᵖˡ) "AdsThreshold", (#x, #y)⟧ ⤳[under] #(x <|CSLManager.AdsThreshold' := y|>);
   #[global] CSLManager'ptr_Do_unfold :: MethodUnfold (go.PointerType (CSLManager)) "Do" (CSLManager__Doⁱᵐᵖˡ);
   #[global] CSLManager'ptr_Pc_unfold :: MethodUnfold (go.PointerType (CSLManager)) "Pc" (CSLManager__Pcⁱᵐᵖˡ);
   #[global] CSLManager'ptr_doLoggedIn_unfold :: MethodUnfold (go.PointerType (CSLManager)) "doLoggedIn" (CSLManager__doLoggedInⁱᵐᵖˡ);
@@ -1266,9 +1368,11 @@ mk {
   TimeReq' : wrappers.WrapInput.t;
   IsGraphReq' : bool;
   GraphReq' : wrappers.WrapInput.t;
+  IsAdReq' : bool;
+  AdReq' : wrappers.WrapInput.t;
 }.
 
-#[global] Instance zero_val : ZeroVal t := {| zero_val := mk (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _)|}.
+#[global] Instance zero_val : ZeroVal t := {| zero_val := mk (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _)|}.
 #[global] Arguments mk : clear implicits.
 #[global] Arguments t : clear implicits.
 End def.
@@ -1283,7 +1387,9 @@ Definition MgrRequest'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext
   (go.FieldDecl "IsTimeReq"%go go.bool);
   (go.FieldDecl "TimeReq"%go wrappers.WrapInput);
   (go.FieldDecl "IsGraphReq"%go go.bool);
-  (go.FieldDecl "GraphReq"%go wrappers.WrapInput)
+  (go.FieldDecl "GraphReq"%go wrappers.WrapInput);
+  (go.FieldDecl "IsAdReq"%go go.bool);
+  (go.FieldDecl "AdReq"%go wrappers.WrapInput)
 ].
 Program Definition MgrRequest'fds {ext : ffi_syntax} {go_gctx : GoGlobalContext} := sealed (MgrRequest'fds_unsealed).
 Global Instance equals_unfold_MgrRequest {ext : ffi_syntax} {go_gctx : GoGlobalContext} : MgrRequest'fds =→ MgrRequest'fds_unsealed.
@@ -1313,6 +1419,10 @@ Class MgrRequest_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalCo
   #[global] MgrRequest_set_IsGraphReq (x : MgrRequest.t) y :: ⟦StructFieldSet (MgrRequestⁱᵐᵖˡ) "IsGraphReq", (#x, #y)⟧ ⤳[under] #(x <|MgrRequest.IsGraphReq' := y|>);
   #[global] MgrRequest_get_GraphReq (x : MgrRequest.t) :: ⟦StructFieldGet (MgrRequestⁱᵐᵖˡ) "GraphReq", #x⟧ ⤳[under] #x.(MgrRequest.GraphReq');
   #[global] MgrRequest_set_GraphReq (x : MgrRequest.t) y :: ⟦StructFieldSet (MgrRequestⁱᵐᵖˡ) "GraphReq", (#x, #y)⟧ ⤳[under] #(x <|MgrRequest.GraphReq' := y|>);
+  #[global] MgrRequest_get_IsAdReq (x : MgrRequest.t) :: ⟦StructFieldGet (MgrRequestⁱᵐᵖˡ) "IsAdReq", #x⟧ ⤳[under] #x.(MgrRequest.IsAdReq');
+  #[global] MgrRequest_set_IsAdReq (x : MgrRequest.t) y :: ⟦StructFieldSet (MgrRequestⁱᵐᵖˡ) "IsAdReq", (#x, #y)⟧ ⤳[under] #(x <|MgrRequest.IsAdReq' := y|>);
+  #[global] MgrRequest_get_AdReq (x : MgrRequest.t) :: ⟦StructFieldGet (MgrRequestⁱᵐᵖˡ) "AdReq", #x⟧ ⤳[under] #x.(MgrRequest.AdReq');
+  #[global] MgrRequest_set_AdReq (x : MgrRequest.t) y :: ⟦StructFieldSet (MgrRequestⁱᵐᵖˡ) "AdReq", (#x, #y)⟧ ⤳[under] #(x <|MgrRequest.AdReq' := y|>);
 }.
 
 Module MgrInput.
@@ -1333,11 +1443,14 @@ mk {
   IsGraphRes' : bool;
   IsGraphResVal' : bool;
   GraphResVal' : map.t;
+  IsAdRes' : bool;
+  IsAdResVal' : bool;
+  AdResVal' : map.t;
   ReqUid' : w64;
   ReqPswd' : w64;
 }.
 
-#[global] Instance zero_val : ZeroVal t := {| zero_val := mk (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _)|}.
+#[global] Instance zero_val : ZeroVal t := {| zero_val := mk (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _) (zero_val _)|}.
 #[global] Arguments mk : clear implicits.
 #[global] Arguments t : clear implicits.
 End def.
@@ -1357,6 +1470,9 @@ Definition MgrInput'fds_unsealed {ext : ffi_syntax} {go_gctx : GoGlobalContext} 
   (go.FieldDecl "IsGraphRes"%go go.bool);
   (go.FieldDecl "IsGraphResVal"%go go.bool);
   (go.FieldDecl "GraphResVal"%go (go.MapType go.uint64 (go.SliceType go.uint64)));
+  (go.FieldDecl "IsAdRes"%go go.bool);
+  (go.FieldDecl "IsAdResVal"%go go.bool);
+  (go.FieldDecl "AdResVal"%go (go.MapType go.uint64 (go.SliceType go.uint64)));
   (go.FieldDecl "ReqUid"%go go.uint64);
   (go.FieldDecl "ReqPswd"%go go.uint64)
 ].
@@ -1396,6 +1512,12 @@ Class MgrInput_Assumptions {ext : ffi_syntax} `{!GoGlobalContext} `{!GoLocalCont
   #[global] MgrInput_set_IsGraphResVal (x : MgrInput.t) y :: ⟦StructFieldSet (MgrInputⁱᵐᵖˡ) "IsGraphResVal", (#x, #y)⟧ ⤳[under] #(x <|MgrInput.IsGraphResVal' := y|>);
   #[global] MgrInput_get_GraphResVal (x : MgrInput.t) :: ⟦StructFieldGet (MgrInputⁱᵐᵖˡ) "GraphResVal", #x⟧ ⤳[under] #x.(MgrInput.GraphResVal');
   #[global] MgrInput_set_GraphResVal (x : MgrInput.t) y :: ⟦StructFieldSet (MgrInputⁱᵐᵖˡ) "GraphResVal", (#x, #y)⟧ ⤳[under] #(x <|MgrInput.GraphResVal' := y|>);
+  #[global] MgrInput_get_IsAdRes (x : MgrInput.t) :: ⟦StructFieldGet (MgrInputⁱᵐᵖˡ) "IsAdRes", #x⟧ ⤳[under] #x.(MgrInput.IsAdRes');
+  #[global] MgrInput_set_IsAdRes (x : MgrInput.t) y :: ⟦StructFieldSet (MgrInputⁱᵐᵖˡ) "IsAdRes", (#x, #y)⟧ ⤳[under] #(x <|MgrInput.IsAdRes' := y|>);
+  #[global] MgrInput_get_IsAdResVal (x : MgrInput.t) :: ⟦StructFieldGet (MgrInputⁱᵐᵖˡ) "IsAdResVal", #x⟧ ⤳[under] #x.(MgrInput.IsAdResVal');
+  #[global] MgrInput_set_IsAdResVal (x : MgrInput.t) y :: ⟦StructFieldSet (MgrInputⁱᵐᵖˡ) "IsAdResVal", (#x, #y)⟧ ⤳[under] #(x <|MgrInput.IsAdResVal' := y|>);
+  #[global] MgrInput_get_AdResVal (x : MgrInput.t) :: ⟦StructFieldGet (MgrInputⁱᵐᵖˡ) "AdResVal", #x⟧ ⤳[under] #x.(MgrInput.AdResVal');
+  #[global] MgrInput_set_AdResVal (x : MgrInput.t) y :: ⟦StructFieldSet (MgrInputⁱᵐᵖˡ) "AdResVal", (#x, #y)⟧ ⤳[under] #(x <|MgrInput.AdResVal' := y|>);
   #[global] MgrInput_get_ReqUid (x : MgrInput.t) :: ⟦StructFieldGet (MgrInputⁱᵐᵖˡ) "ReqUid", #x⟧ ⤳[under] #x.(MgrInput.ReqUid');
   #[global] MgrInput_set_ReqUid (x : MgrInput.t) y :: ⟦StructFieldSet (MgrInputⁱᵐᵖˡ) "ReqUid", (#x, #y)⟧ ⤳[under] #(x <|MgrInput.ReqUid' := y|>);
   #[global] MgrInput_get_ReqPswd (x : MgrInput.t) :: ⟦StructFieldGet (MgrInputⁱᵐᵖˡ) "ReqPswd", #x⟧ ⤳[under] #x.(MgrInput.ReqPswd');
