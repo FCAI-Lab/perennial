@@ -53,3 +53,6 @@ _RocqProject.install
 /graph.dpd
 # temporary file
 src/dpdgraph.v
+
+# goose binary
+goose/goose

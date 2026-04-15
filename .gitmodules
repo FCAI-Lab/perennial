@@ -1,0 +1,3 @@
+[submodule "social-media-library"]
+	path = social-media-library
+	url = https://github.com/MDhamani/social-media-library.git
